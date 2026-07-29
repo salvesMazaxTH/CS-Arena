@@ -457,6 +457,25 @@ export class GameMatch {
     return player ? player.team : null;
   }
 
+  getPlayerBySocketId(socketId) {
+    return this.players.find((entry) => entry?.socketId === socketId) || null;
+  }
+
+  assignPlayerToTeam(socketId, team) {
+    const slot = team - 1;
+    const player =
+      this.getPlayer(slot) ||
+      this.players.find((entry) => entry?.socketId === socketId) ||
+      null;
+
+    if (!player) return null;
+
+    player.team = team;
+    player.setSocket(socketId);
+    this.assignSocketToSlot(socketId, slot);
+    return player;
+  }
+
   areBothPlayersConnected() {
     return !!(this.players[0] && this.players[1]);
   }

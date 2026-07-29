@@ -1210,7 +1210,9 @@ io.on("connection", (socket) => {
           }
 
           player.setSelectedChampionKeys(currentSelection);
-          checkAllTeamsSelected();
+          if (checkAllTeamsSelected()) {
+            startGameIfReady();
+          }
         }, CHAMPION_SELECTION_TIME * 1000),
       );
     }
@@ -1280,30 +1282,18 @@ io.on("connection", (socket) => {
     if (!checkAllTeamsSelected()) return;
     if (match.isCombatStarted()) return;
 
-    startNewMatch();
-  }
+    match.combat.start();
 
-  function startNewMatch() {
-    console.log("Iniciando nova partida...");
-    match.reset();
-    io.emit("matchReset"); // Notifica clientes para limparem seus estados
-
-    // Adiciona os jogadores conectados à partida
-    const connectedPlayers = match.getConnectedPlayers();
-    if (connectedPlayers.length < 2) {
-      console.log("Aguardando mais jogadores para iniciar.");
-      return;
-    }
-
-    // Lógica de seleção de time (simplificada para 2 jogadores)
-    match.assignPlayerToTeam(connectedPlayers[0].socketId, 1);
-    match.assignPlayerToTeam(connectedPlayers[1].socketId, 2);
-
-    io.emit("lobbyUpdate", { players: match.players });
-    io.emit("championSelectionStart", {
-      time: CHAMPION_SELECTION_TIME,
-      teamSize: TEAM_SIZE,
+    // Popula a fila de reserva de cada time com o roster confirmado
+    // e inicia a fase de escolha do primeiro campeão (1v1 inicial).
+    match.players.forEach((player) => {
+      if (!player) return;
+      match.combat.reserveQueues.set(player.team, [
+        ...player.selectedChampionKeys,
+      ]);
     });
+
+    startFirstChampionChoicePhase();
   }
 
   /** Inicia a fase de escolha do primeiro campeão (1v1). */
@@ -1501,7 +1491,7 @@ io.on("connection", (socket) => {
   // =============================
   //  chooseFirstChampion (1v1 initial)
   // =============================
-  socket.on("chooseFirstChampion", (championKey) => {
+  socket.on("chooseFirstChampion", ({ championKey } = {}) => {
     handleFirstChampionChoice(socket.id, championKey);
   });
 

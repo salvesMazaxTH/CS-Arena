@@ -1318,6 +1318,7 @@ function updateSelectedChampionsUI() {
 let playerRoster = Array(TEAM_SIZE).fill(null); // copy of the player's confirmed roster
 let firstChoicePending = false;
 let firstChoiceSelected = null;
+let firstChoiceResolved = false; // true once the first champion has been decided; chips stop being clickable
 
 const lineupBanner = document.getElementById("lineupBanner");
 const lineupChips = document.getElementById("lineupChips");
@@ -1334,10 +1335,13 @@ function renderLineupBanner() {
     chip.className = "lineup-chip";
     chip.dataset.index = idx;
     chip.dataset.championKey = champKey || "";
-    chip.setAttribute("role", "button");
     chip.title = champKey
       ? championDB[champKey]?.name || champKey
       : `Slot ${idx + 1}`;
+    chip.classList.toggle(
+      "selected",
+      !!champKey && champKey === firstChoiceSelected,
+    );
 
     if (champKey && championDB[champKey]) {
       const img = document.createElement("img");
@@ -1350,17 +1354,21 @@ function renderLineupBanner() {
       chip.textContent = idx + 1;
     }
 
-    chip.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (!firstChoicePending) {
-        // quick open full overlay
-        openFirstChoiceOverlay();
-        return;
-      }
-      const key = chip.dataset.championKey;
-      if (!key) return;
-      chooseFirstChampion(key);
-    });
+    // Once the first choice is resolved, the banner becomes read-only (no listener attached).
+    if (!firstChoiceResolved) {
+      chip.setAttribute("role", "button");
+      chip.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!firstChoicePending) {
+          // quick open full overlay
+          openFirstChoiceOverlay();
+          return;
+        }
+        const key = chip.dataset.championKey;
+        if (!key) return;
+        chooseFirstChampion(key);
+      });
+    }
 
     lineupChips.appendChild(chip);
   });
@@ -1433,6 +1441,7 @@ socket.on("requestFirstChampionSelection", ({ roster, team }) => {
   if (Array.isArray(roster)) playerRoster = roster.slice(0, TEAM_SIZE);
   firstChoicePending = true;
   firstChoiceSelected = null;
+  firstChoiceResolved = false;
   renderLineupBanner();
   openFirstChoiceOverlay();
 });
@@ -1445,12 +1454,10 @@ socket.on("firstChampionChosenAck", ({ championKey }) => {
 socket.on("firstChampionChoicesFinalized", ({ firstChampions }) => {
   // firstChampions: [team1Key, team2Key]
   firstChoicePending = false;
+  firstChoiceResolved = true;
   closeFirstChoiceOverlay();
-  // highlight final choice
-  Array.from(lineupChips.children).forEach((c) => {
-    const key = c.dataset.championKey;
-    c.classList.toggle("selected", key && key === firstChoiceSelected);
-  });
+  // rebuild banner read-only, without the click listener that opens the overlay
+  renderLineupBanner();
 });
 
 function handleDragStart(e, championKey, fromSlotIndex = -1) {
