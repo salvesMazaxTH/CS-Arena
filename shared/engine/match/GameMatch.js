@@ -448,6 +448,15 @@ export class GameMatch {
     return slot === 0 ? this.players[1] : this.players[0];
   }
 
+  getConnectedPlayers() {
+    return this.players.filter((player) => player?.socketId);
+  }
+
+  getPlayerTeam(socketId) {
+    const player = this.players.find((entry) => entry?.socketId === socketId);
+    return player ? player.team : null;
+  }
+
   areBothPlayersConnected() {
     return !!(this.players[0] && this.players[1]);
   }
