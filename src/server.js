@@ -48,10 +48,11 @@ const editMode = {
   freeCostSkills: false, // Habilidades não consomem recurso. (SERVER-ONLY)
 };
 
-const TEAM_SIZE = 3;
-const ACTIVE_PER_TEAM = 3; // máximo de campeões simultâneos em campo por time
-// const MAX_SCORE = 3; // score system disabled — win condition is now champion-presence-based
+const TEAM_SIZE = 8;
+const ACTIVE_PER_TEAM = 3; // máximo de campeões simultâneos em campo por time (roster=8, active=3)
+const MAX_SCORE = 6; // pontos necessários para vitória
 const CHAMPION_SELECTION_TIME = 120; // Segundos para seleção de campeões
+const FIRST_CHOICE_TIMEOUT = 30 * 1000; // 30s para escolha do 1v1
 const DISCONNECT_TIMEOUT = 30 * 1000; // 30 s para reconexão
 
 // ============================================================
@@ -78,8 +79,6 @@ app.get("/", (_req, res) => {
 
 const match = new GameMatch();
 let waitingForAnimations = false;
-
-// Fila de reserva por time: team (1 ou 2) → array de championKeys ainda não spawnados
 
 /** Garante que a entrada do turno atual existe no histórico. */
 function ensureTurnEntry() {
@@ -397,14 +396,14 @@ function emitChampionDeath(deathResult) {
   });
 
   if (deathResult.scored) {
-    // io.emit("scoreUpdate", match.getScorePayload()); // score system disabled
-    // io.emit(
-    //   "combatLog",
-    //   `${formatPlayerName(
-    //     match.players[deathResult.scoringPlayerSlot]?.username,
-    //     deathResult.scoringTeam,
-    //   )} marcou um ponto!`,
-    // );
+    io.emit("scoreUpdate", match.getScorePayload());
+    io.emit(
+      "combatLog",
+      `${formatPlayerName(
+        match.players[deathResult.scoringPlayerSlot]?.username,
+        deathResult.scoringTeam,
+      )} marcou um ponto!`,
+    );
   }
 
   // Garantimos que o estado do campeão morto (com runtime atualizado) seja enviado
@@ -772,10 +771,18 @@ function handleEndTurn() {
   }
 
   if (match.isGameEnded()) {
-    // const winnerSlot = match.combat.playerScores[0] >= MAX_SCORE ? 0 : 1; // score system disabled
-    const winnerSlot = match.combat.computeWinnerSlot(); // team that still has real champions wins
-    const winnerTeam = winnerSlot + 1;
-    const winnerName = match.players[winnerSlot]?.username;
+    // Prefer score-based determination if available
+    let winnerSlot = null;
+    if (Array.isArray(match.combat.playerScores)) {
+      if ((match.combat.playerScores[0] || 0) >= MAX_SCORE) winnerSlot = 0;
+      else if ((match.combat.playerScores[1] || 0) >= MAX_SCORE) winnerSlot = 1;
+    }
+    if (winnerSlot === null) {
+      winnerSlot = match.combat.computeWinnerSlot(MAX_SCORE);
+    }
+    const winnerTeam = winnerSlot != null ? winnerSlot + 1 : null;
+    const winnerName =
+      winnerSlot != null ? match.players[winnerSlot]?.username : null;
     io.emit("gameOver", { winnerTeam, winnerName });
   }
 
@@ -984,7 +991,10 @@ function handleStartTurn() {
   }
   match.combat.scheduledEffects = remaining;
 
-  const deathResults = resolver.processChampionDeaths(3, turnStartContext);
+  const deathResults = resolver.processChampionDeaths(
+    MAX_SCORE,
+    turnStartContext,
+  );
 
   for (const death of deathResults) {
     emitChampionDeath(death);
@@ -1274,27 +1284,101 @@ io.on("connection", (socket) => {
   }
 
   function startNewMatch() {
-    match.resetCombat();
-    match.startCombat();
+    console.log("Iniciando nova partida...");
+    match.reset();
+    io.emit("matchReset"); // Notifica clientes para limparem seus estados
 
-    assignChampionsToTeam(
-      match.players[0].team,
-      match.players[0].selectedChampionKeys,
+    // Adiciona os jogadores conectados à partida
+    const connectedPlayers = match.getConnectedPlayers();
+    if (connectedPlayers.length < 2) {
+      console.log("Aguardando mais jogadores para iniciar.");
+      return;
+    }
+
+    // Lógica de seleção de time (simplificada para 2 jogadores)
+    match.assignPlayerToTeam(connectedPlayers[0].socketId, 1);
+    match.assignPlayerToTeam(connectedPlayers[1].socketId, 2);
+
+    io.emit("lobbyUpdate", { players: match.players });
+    io.emit("championSelectionStart", {
+      time: CHAMPION_SELECTION_TIME,
+      teamSize: TEAM_SIZE,
+    });
+  }
+
+  /** Inicia a fase de escolha do primeiro campeão (1v1). */
+  function startFirstChampionChoicePhase() {
+    match.players.forEach((player) => {
+      if (!player) return;
+
+      const team = match.getPlayerTeam(player.socketId);
+      const roster = match.combat.reserveQueues.get(team) || [];
+
+      io.to(player.socketId).emit("requestFirstChampionSelection", {
+        roster,
+        timeout: FIRST_CHOICE_TIMEOUT,
+      });
+
+      // Agenda o timeout para escolha automática
+      const timeoutId = setTimeout(() => {
+        // Se o jogador ainda não escolheu, escolhe automaticamente
+        if (!match.combat.firstChampionChoices.has(player.socketId)) {
+          console.log(
+            `[TIMEOUT] Jogador ${player.username} não escolheu. Selecionando automaticamente.`,
+          );
+          const autoSelectedChampion = roster[0]; // Pega o primeiro da lista
+          if (autoSelectedChampion) {
+            handleFirstChampionChoice(player.socketId, autoSelectedChampion);
+          }
+        }
+      }, FIRST_CHOICE_TIMEOUT);
+
+      match.setFirstChoiceTimer(player.socketId, timeoutId);
+    });
+  }
+
+  /** Processa a escolha do primeiro campeão de um jogador. */
+  function handleFirstChampionChoice(socketId, championKey) {
+    const player = match.getPlayerBySocketId(socketId);
+    if (!player) return;
+
+    // Limpa o timeout e registra a escolha no GameMatch
+    const alreadyChosen = !match.setFirstChampionChoice(socketId, championKey);
+    if (alreadyChosen) return;
+
+    console.log(
+      `Jogador ${player.username} escolheu ${formatChampionName(
+        championDB[championKey],
+      )} para o 1v1.`,
     );
-    assignChampionsToTeam(
-      match.players[1].team,
-      match.players[1].selectedChampionKeys,
-    );
 
-    // Sistema de reserva/switch desativado.
-    // initReserveQueue(match.players[0]);
-    // initReserveQueue(match.players[1]);
+    // Verifica se ambos já escolheram
+    if (match.combat.firstChampionChoices.size === 2) {
+      handleAllFirstChampionsChosen();
+    }
+  }
 
-    // io.emit("scoreUpdate", match.getScorePayload()); // score system disabled
+  /** Quando ambos os jogadores escolheram seu campeão inicial. */
+  function handleAllFirstChampionsChosen() {
+    // Previne execuções múltiplas
+    if (match.combat.activeChampions.size > 0) return;
+
+    console.log("Ambos os jogadores escolheram. Iniciando o 1v1.");
+
+    // Finaliza a fase de escolha no GameMatch (spawna, atualiza reservas)
+    const { choices } = match.finalizeFirstChampionChoices(spawnChampion);
+
+    io.emit("firstChampionChoicesFinalized", { choices });
     io.emit("gameStateUpdate", getGameState());
 
-    // emitBackChampionUpdate(match.players[0].team);
-    // emitBackChampionUpdate(match.players[1].team);
+    // Inicia o primeiro turno
+    setTimeout(() => {
+      handleStartTurn();
+      io.emit("turnStart", {
+        turn: match.combat.currentTurn,
+        activeChampions: Array.from(match.combat.activeChampions.keys()),
+      });
+    }, 1000); // Pequeno delay para UI
   }
 
   // =============================
@@ -1415,56 +1499,15 @@ io.on("connection", (socket) => {
   );
 
   // =============================
-  //  requestSwitch (DESATIVADO)
+  //  chooseFirstChampion (1v1 initial)
   // =============================
-
-  // socket.on("requestSwitch", () => {
-  //   return socket.emit("switchDenied", "Sistema de trocas desativado.");
-  // });
-
-  // =============================
-  //  removeChampion (edit mode / debug)
-  // =============================
-
-  socket.on("removeChampion", ({ championId }) => {
-    const playerSlot = match.getSlotBySocket(socket.id);
-    const player = match.players[playerSlot];
-    const championToRemove = match.combat.activeChampions.get(championId);
-
-    if (!player || !championToRemove || championToRemove.team !== player.team) {
-      socket.emit(
-        "actionFailed",
-        "Você não tem permissão para remover este campeão.",
-      );
-      return;
-    }
-
-    const deathResult = match.removeChampionFromGame(championId);
-    emitChampionDeath(deathResult);
-
-    // Sistema de reserva/switch desativado.
-
-    if (match.isGameEnded()) {
-      // const winnerSlot = match.combat.playerScores[0] >= MAX_SCORE ? 0 : 1; // score system disabled
-      const winnerSlot = match.combat.computeWinnerSlot(); // team that still has real champions wins
-      const winnerTeam = winnerSlot + 1;
-      const winnerName = match.players[winnerSlot]?.username;
-      io.emit("gameOver", { winnerTeam, winnerName });
-    }
+  socket.on("chooseFirstChampion", (championKey) => {
+    handleFirstChampionChoice(socket.id, championKey);
   });
 
-  // =============================
-  //  requestSkillUse → skillApproved / skillDenied
-  // =============================
-
-  socket.on("requestSkillUse", ({ userId, skillKey }) => {
-    const playerSlot = match.getSlotBySocket(socket.id);
-    const player = match.players[playerSlot];
+  socket.on("requestSkillUse", ({ userId, skillKey, targetId }) => {
     const user = match.combat.activeChampions.get(userId);
-
-    if (!player || !user || user.team !== player.team) {
-      return socket.emit("skillDenied", "Sem permissão.");
-    }
+    if (!user) return socket.emit("skillDenied", "Sem permissão.");
 
     const skill = user.skills.find((s) => s.key === skillKey);
     if (!skill) return socket.emit("skillDenied", "Skill inválida.");
@@ -1605,9 +1648,9 @@ io.on("connection", (socket) => {
     const winnerSlot = winnerTeam - 1;
     const winnerName = match.players[winnerSlot]?.username;
 
-    // match.setWinnerScore(winnerSlot, MAX_SCORE); // score system disabled
+    match.setWinnerScore(winnerSlot, MAX_SCORE);
     match.combat.gameEnded = true; // mark game as ended on surrender
-    // io.emit("scoreUpdate", match.getScorePayload()); // score system disabled
+    io.emit("scoreUpdate", match.getScorePayload());
 
     io.emit("gameOver", {
       winnerTeam,

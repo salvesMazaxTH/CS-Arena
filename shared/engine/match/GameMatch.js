@@ -63,10 +63,29 @@ class LobbyState {
     }
   }
 
+  setFirstChoiceTimer(socketId, timerId) {
+    this.clearFirstChoiceTimer(socketId);
+    this.firstChoiceTimeouts.set(socketId, timerId);
+  }
+
+  clearFirstChoiceTimer(socketId) {
+    const timer = this.firstChoiceTimeouts.get(socketId);
+    if (!timer) return;
+    clearTimeout(timer);
+    this.firstChoiceTimeouts.delete(socketId);
+  }
+
+  clearAllFirstChoiceTimers() {
+    this.firstChoiceTimeouts.forEach((timer) => clearTimeout(timer));
+    this.firstChoiceTimeouts.clear();
+  }
+
   reset() {
     this.socketToSlot.clear();
     this.clearAllSelectionTimers();
     this.clearAllDisconnectionTimers();
+    this.clearAllFirstChoiceTimers();
+    this.firstChoiceTimeouts = new Map(); // Adicionado para inicialização
   }
 }
 
@@ -82,7 +101,7 @@ class CombatState {
     this.activeChampions = new Map();
     this.deadChampions = new Map();
     this.inactiveChampions = new Map(); // Champions swapped out but can return (e.g., Lana when Tutu enters field)
-    // this.playerScores = [0, 0]; // score system disabled — win condition is champion-presence-based
+    this.playerScores = [0, 0]; // score system enabled — reaching maxScore ends game
     this.gameEnded = false;
     this.started = false;
     this.playersReadyToEndTurn = new Set();
@@ -90,7 +109,8 @@ class CombatState {
     this.combatSnapshot = [];
     this.turnHistory = new Map();
     this.scheduledEffects = [];
-    // this.reserveQueues = new Map();
+    this.reserveQueues = new Map(); // Fila de reserva por time
+    this.firstChampionChoices = new Map(); // Escolha inicial para o 1v1
   }
 
   resetProgress() {
@@ -100,9 +120,10 @@ class CombatState {
     this.finishedAnimationSockets.clear();
     this.turnHistory.clear();
     this.scheduledEffects = [];
-    // this.playerScores = [0, 0]; // score system disabled — win condition is champion-presence-based
+    this.playerScores = [0, 0]; // reset progress also clears score counters
     this.gameEnded = false;
-    // this.reserveQueues = new Map();
+    this.reserveQueues.clear();
+    this.firstChampionChoices.clear();
   }
 
   start() {
@@ -291,7 +312,7 @@ class CombatState {
    * Remove um campeão morto do jogo: registra no histórico, atualiza placar, move para deadChampions.
    * Retorna um objeto com os dados necessários para o server emitir sockets, ou null se não encontrado.
    */
-  removeChampionFromGame(championId, maxScore = 3) {
+  removeChampionFromGame(championId, maxScore = 6) {
     const champion = this.activeChampions.get(championId);
     if (!champion) return null;
 
@@ -303,19 +324,19 @@ class CombatState {
     });
     this.ensureTurnEntry().championsDeadThisTurn.push(championId);
 
-    // Score system disabled — win condition is now champion-presence-based.
-    // const isMinion = champion.entityType === "minion";
-    // let scoringTeam = null;
-    // let scoringPlayerSlot = null;
-    // let scored = false;
-    // if (!isMinion) {
-    //   scoringTeam = champion.team === 1 ? 2 : 1;
-    //   scoringPlayerSlot = scoringTeam - 1;
-    //   if (!this.gameEnded) {
-    //     this.addPointForSlot(scoringPlayerSlot, maxScore);
-    //     scored = true;
-    //   }
-    // }
+    // Score: increment opponent's point unless the dead entity is a minion
+    const isMinion = champion.entityType === "minion";
+    let scoringTeam = null;
+    let scoringPlayerSlot = null;
+    let scored = false;
+    if (!isMinion) {
+      scoringTeam = champion.team === 1 ? 2 : 1;
+      scoringPlayerSlot = scoringTeam - 1;
+      if (!this.gameEnded) {
+        this.addPointForSlot(scoringPlayerSlot, maxScore);
+        scored = true;
+      }
+    }
 
     // Mover para deadChampions
     this.removeChampion(championId);
@@ -328,6 +349,7 @@ class CombatState {
       !this.gameEnded &&
       !this.getAliveChampionsForTeam(champion.team).some(isRealChampion)
     ) {
+      // Fallback: if a team has no real champions, end the game (presence-based)
       this.gameEnded = true;
       console.log(
         `[removeChampionFromGame] Time ${champion.team} não tem mais campeões reais — jogo encerrado.`,
@@ -338,9 +360,9 @@ class CombatState {
       championId,
       championName: champion.name,
       team: champion.team,
-      // scoringTeam, // score system disabled
-      // scoringPlayerSlot, // score system disabled
-      // scored, // score system disabled
+      scoringTeam,
+      scoringPlayerSlot,
+      scored,
       gameEnded: this.gameEnded,
     };
   }
@@ -362,24 +384,26 @@ class CombatState {
     this.playersReadyToEndTurn.clear();
   }
 
-  // addPointForSlot(slot, maxScore = 3) { // score system disabled
-  //   this.playerScores[slot] += 1;
-  //   if (this.playerScores[slot] >= maxScore) {
-  //     this.gameEnded = true;
-  //   }
-  // }
+  addPointForSlot(slot, maxScore = 6) {
+    if (!Array.isArray(this.playerScores)) this.playerScores = [0, 0];
+    this.playerScores[slot] = (this.playerScores[slot] || 0) + 1;
+    if (this.playerScores[slot] >= maxScore) {
+      this.gameEnded = true;
+    }
+  }
 
-  // setWinnerScore(slot, maxScore = 3) { // score system disabled
-  //   this.playerScores[slot] = maxScore;
-  //   this.gameEnded = true;
-  // }
+  setWinnerScore(slot, maxScore = 6) {
+    if (!Array.isArray(this.playerScores)) this.playerScores = [0, 0];
+    this.playerScores[slot] = maxScore;
+    this.gameEnded = true;
+  }
 
-  // getScorePayload() { // score system disabled
-  //   return {
-  //     player1: this.playerScores[0],
-  //     player2: this.playerScores[1],
-  //   };
-  // }
+  getScorePayload() {
+    return {
+      player1: this.playerScores[0] || 0,
+      player2: this.playerScores[1] || 0,
+    };
+  }
 
   /**
    * Returns the slot (0 or 1) of the team that still has real champions
@@ -387,7 +411,14 @@ class CombatState {
    * Used after gameEnded = true to identify the winner.
    * Returns null if neither team qualifies (shouldn't happen in normal play).
    */
-  computeWinnerSlot() {
+  computeWinnerSlot(maxScore = 6) {
+    // Prefer score-based victory if scores exist
+    if (Array.isArray(this.playerScores)) {
+      if ((this.playerScores[0] || 0) >= maxScore) return 0;
+      if ((this.playerScores[1] || 0) >= maxScore) return 1;
+    }
+
+    // Fallback: team that still has a "real" champion on the field
     const isRealChampion = (c) => !c.entityType || c.entityType === "champion";
     for (let team = 1; team <= 2; team++) {
       if (this.getAliveChampionsForTeam(team).some(isRealChampion)) {
@@ -474,6 +505,18 @@ export class GameMatch {
     this.lobby.clearDisconnectionTimer(slot);
   }
 
+  setFirstChoiceTimer(socketId, timerId) {
+    this.lobby.setFirstChoiceTimer(socketId, timerId);
+  }
+
+  clearFirstChoiceTimer(socketId) {
+    this.lobby.clearFirstChoiceTimer(socketId);
+  }
+
+  clearAllFirstChoiceTimers() {
+    this.lobby.clearAllFirstChoiceTimers();
+  }
+
   // Combat delegation
   ensureTurnEntry() {
     return this.combat.ensureTurnEntry();
@@ -491,7 +534,7 @@ export class GameMatch {
     return this.combat.removeChampion(championId);
   }
 
-  removeChampionFromGame(championId, maxScore = 3) {
+  removeChampionFromGame(championId, maxScore = 6) {
     return this.combat.removeChampionFromGame(championId, maxScore);
   }
 
@@ -527,17 +570,17 @@ export class GameMatch {
     return this.combat.gameEnded;
   }
 
-  // addPointForSlot(slot, maxScore = 3) { // score system disabled
-  //   this.combat.addPointForSlot(slot, maxScore);
-  // }
+  addPointForSlot(slot, maxScore = 6) {
+    this.combat.addPointForSlot(slot, maxScore);
+  }
 
-  // setWinnerScore(slot, maxScore = 3) { // score system disabled
-  //   this.combat.setWinnerScore(slot, maxScore);
-  // }
+  setWinnerScore(slot, maxScore = 6) {
+    this.combat.setWinnerScore(slot, maxScore);
+  }
 
-  // getScorePayload() { // score system disabled
-  //   return this.combat.getScorePayload();
-  // }
+  getScorePayload() {
+    return this.combat.getScorePayload();
+  }
 
   computeWinnerSlot() {
     return this.combat.computeWinnerSlot();
@@ -581,6 +624,54 @@ export class GameMatch {
 
   getFinishedAnimationCount() {
     return this.combat.finishedAnimationSockets.size;
+  }
+
+  // ===================================
+  // First Champion Choice Phase Logic
+  // ===================================
+
+  /**
+   * Registra a escolha do primeiro campeão de um jogador e limpa seu timeout.
+   * Retorna `false` se o jogador já escolheu, `true` se a escolha foi registrada.
+   */
+  setFirstChampionChoice(socketId, championKey) {
+    if (this.combat.firstChampionChoices.has(socketId)) {
+      return false; // Já escolheu, ignora.
+    }
+
+    this.clearFirstChoiceTimer(socketId);
+    this.combat.firstChampionChoices.set(socketId, championKey);
+    return true;
+  }
+
+  /**
+   * Finaliza a fase de escolha: spawna os campeões, atualiza as reservas.
+   * Recebe a função `spawnChampion` como dependência para não lidar com sockets.
+   * Retorna as escolhas feitas para o orquestrador emitir.
+   */
+  finalizeFirstChampionChoices(spawnChampionFn) {
+    this.clearAllFirstChoiceTimers();
+
+    const choices = [];
+    this.combat.firstChampionChoices.forEach((championKey, socketId) => {
+      const team = this.getPlayerTeam(socketId);
+      choices.push({ championKey, team });
+
+      // Spawna o campeão escolhido usando a função injetada
+      spawnChampionFn({
+        championKey,
+        team,
+        combatSlot: 0, // Ambos começam no slot 0
+        trackSnapshot: true,
+      });
+
+      // Remove o campeão da fila de reserva
+      const reserve = this.combat.reserveQueues.get(team) || [];
+      const newReserve = reserve.filter((key) => key !== championKey);
+      this.combat.reserveQueues.set(team, newReserve);
+    });
+
+    return { choices };
   }
 
   clearPlayers() {

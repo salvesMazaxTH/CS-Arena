@@ -1358,6 +1358,7 @@
   justify-content: center;
   gap: 12px;
   min-height: 0;
+  flex-wrap: wrap;
 }
 
 .champion-slot {
@@ -1411,6 +1412,128 @@
   width: 60px;
   height: 60px;
   margin-bottom: 4px;
+}
+
+/* Lineup banner (compact roster) */
+.lineup-banner {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1500;
+  background: rgba(10, 10, 10, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 8px 10px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  backdrop-filter: blur(6px);
+}
+.lineup-banner.hidden {
+  display: none;
+}
+.lineup-banner .lineup-title {
+  color: #bfffdc;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.lineup-chips {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.lineup-chip {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    transform 0.12s,
+    box-shadow 0.12s;
+}
+.lineup-chip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.lineup-chip:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+}
+.lineup-chip.selected {
+  outline: 2px solid #00ff99;
+  box-shadow: 0 8px 30px rgba(0, 255, 153, 0.08);
+}
+
+/* First-choice overlay */
+.first-choice-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 2000;
+}
+.first-choice-overlay.hidden {
+  display: none;
+}
+.first-choice-dialog {
+  background: linear-gradient(180deg, #0b0b0b, #111111);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 18px;
+  border-radius: 12px;
+  min-width: 320px;
+  max-width: 620px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  text-align: center;
+}
+.first-choice-dialog h2 {
+  margin: 0 0 8px 0;
+  color: #e6fff2;
+}
+.first-choice-sub {
+  margin: 0 0 12px 0;
+  color: #a9f0d0;
+}
+.first-choice-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.first-choice-chips .lineup-chip {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+}
+.first-choice-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+.first-choice-actions .btn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #222;
+  color: #e6fff2;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+}
+.first-choice-actions .btn:hover {
+  filter: brightness(1.08);
 }
 
 .champion-slot .champion-card h3 {

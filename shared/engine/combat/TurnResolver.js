@@ -106,7 +106,7 @@ export class TurnResolver {
     }
 
     const deathContext = this.createBaseContext({ sourceId: null });
-    const deathResults = this.processChampionDeaths(3, deathContext);
+    const deathResults = this.processChampionDeaths(6, deathContext);
 
     return { actionResults, deathResults, switchResults };
   }
@@ -179,7 +179,7 @@ export class TurnResolver {
   //  PROCESSAMENTO DE MORTES
   // ============================================================
 
-  processChampionDeaths(maxScore = 3, context = null) {
+  processChampionDeaths(maxScore = 6, context = null) {
     const results = [];
     for (const champ of this.combat.activeChampions.values()) {
       if (!champ.alive) {

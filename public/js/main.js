@@ -533,7 +533,7 @@ let gameEnded = false;
 const activeChampions = new Map();
 
 // --- Seleção de campeões ---
-const TEAM_SIZE = 3;
+const TEAM_SIZE = 8;
 let selectedChampions = Array(TEAM_SIZE).fill(null);
 let championSelectionTimer = null;
 let championSelectionTimeLeft = 0;
@@ -932,6 +932,9 @@ socket.on("startChampionSelection", ({ timeLeft }) => {
       clearInterval(championSelectionTimer);
       if (!playerTeamConfirmed) {
         // Tempo esgotado — envia a seleção atual; servidor preenche ausentes
+        // keep a local copy of the roster for lineup UI
+        playerRoster = selectedChampions.slice();
+        renderLineupBanner();
         socket.emit("selectTeam", {
           team: playerTeam,
           champions: selectedChampions,
@@ -973,6 +976,9 @@ confirmTeamBtn.addEventListener("click", () => {
   }
   playerTeamConfirmed = true;
   confirmTeamBtn.disabled = true;
+  // keep a local copy of the roster for lineup UI
+  playerRoster = selectedChampions.slice();
+  renderLineupBanner();
   socket.emit("selectTeam", { team: playerTeam, champions: selectedChampions });
   teamSelectionMessage.textContent =
     "Equipe confirmada! Aguardando o outro jogador...";
@@ -1307,6 +1313,145 @@ function updateSelectedChampionsUI() {
 }
 
 // --- Drag & Drop ---
+
+// --- Lineup banner & initial 1v1 selection UI ---
+let playerRoster = Array(TEAM_SIZE).fill(null); // copy of the player's confirmed roster
+let firstChoicePending = false;
+let firstChoiceSelected = null;
+
+const lineupBanner = document.getElementById("lineupBanner");
+const lineupChips = document.getElementById("lineupChips");
+const firstChoiceOverlay = document.getElementById("firstChoiceOverlay");
+const firstChoiceChips = document.getElementById("firstChoiceChips");
+const firstChoiceCancel = document.getElementById("firstChoiceCancel");
+
+function renderLineupBanner() {
+  if (!lineupBanner || !lineupChips) return;
+  lineupChips.innerHTML = "";
+  let hasAny = false;
+  (playerRoster || []).forEach((champKey, idx) => {
+    const chip = document.createElement("div");
+    chip.className = "lineup-chip";
+    chip.dataset.index = idx;
+    chip.dataset.championKey = champKey || "";
+    chip.setAttribute("role", "button");
+    chip.title = champKey
+      ? championDB[champKey]?.name || champKey
+      : `Slot ${idx + 1}`;
+
+    if (champKey && championDB[champKey]) {
+      const img = document.createElement("img");
+      img.src =
+        championDB[champKey].portrait || "/assets/portraits/placeholder.webp";
+      img.alt = championDB[champKey].name || champKey;
+      chip.appendChild(img);
+      hasAny = true;
+    } else {
+      chip.textContent = idx + 1;
+    }
+
+    chip.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!firstChoicePending) {
+        // quick open full overlay
+        openFirstChoiceOverlay();
+        return;
+      }
+      const key = chip.dataset.championKey;
+      if (!key) return;
+      chooseFirstChampion(key);
+    });
+
+    lineupChips.appendChild(chip);
+  });
+
+  lineupBanner.classList.toggle("hidden", !hasAny);
+}
+
+function openFirstChoiceOverlay() {
+  if (!firstChoiceOverlay) return;
+  firstChoiceOverlay.classList.remove("hidden");
+  firstChoiceOverlay.focus?.();
+  // render chips
+  firstChoiceChips.innerHTML = "";
+  (playerRoster || []).forEach((champKey, idx) => {
+    const chip = document.createElement("div");
+    chip.className = "lineup-chip";
+    chip.dataset.index = idx;
+    chip.dataset.championKey = champKey || "";
+    chip.title = champKey
+      ? championDB[champKey]?.name || champKey
+      : `Slot ${idx + 1}`;
+
+    if (champKey && championDB[champKey]) {
+      const img = document.createElement("img");
+      img.src =
+        championDB[champKey].portrait || "/assets/portraits/placeholder.webp";
+      img.alt = championDB[champKey].name || champKey;
+      chip.appendChild(img);
+    } else {
+      chip.textContent = idx + 1;
+    }
+
+    chip.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const key = chip.dataset.championKey;
+      if (!key) return;
+      chooseFirstChampion(key);
+    });
+
+    firstChoiceChips.appendChild(chip);
+  });
+}
+
+function closeFirstChoiceOverlay() {
+  if (!firstChoiceOverlay) return;
+  firstChoiceOverlay.classList.add("hidden");
+}
+
+function chooseFirstChampion(championKey) {
+  if (!firstChoicePending) return;
+  if (!championKey) return;
+  socket.emit("chooseFirstChampion", { championKey });
+  firstChoiceSelected = championKey;
+  firstChoicePending = false; // disable further picks locally until server ack
+  // show waiting state
+  firstChoiceChips.innerHTML = `<div style="color:#e6fff2;">Aguardando oponente...</div>`;
+  // highlight chosen chip in banner
+  Array.from(lineupChips.children).forEach((c) => {
+    c.classList.toggle("selected", c.dataset.championKey === championKey);
+  });
+}
+
+firstChoiceCancel?.addEventListener("click", () => {
+  closeFirstChoiceOverlay();
+});
+
+// Socket events for first-choice flow
+socket.on("requestFirstChampionSelection", ({ roster, team }) => {
+  // roster: array of championKeys
+  if (Array.isArray(roster)) playerRoster = roster.slice(0, TEAM_SIZE);
+  firstChoicePending = true;
+  firstChoiceSelected = null;
+  renderLineupBanner();
+  openFirstChoiceOverlay();
+});
+
+socket.on("firstChampionChosenAck", ({ championKey }) => {
+  // mark chosen locally; UI already updated when emitting
+  // keep overlay visible showing waiting state
+});
+
+socket.on("firstChampionChoicesFinalized", ({ firstChampions }) => {
+  // firstChampions: [team1Key, team2Key]
+  firstChoicePending = false;
+  closeFirstChoiceOverlay();
+  // highlight final choice
+  Array.from(lineupChips.children).forEach((c) => {
+    const key = c.dataset.championKey;
+    c.classList.toggle("selected", key && key === firstChoiceSelected);
+  });
+});
 
 function handleDragStart(e, championKey, fromSlotIndex = -1) {
   if (playerTeamConfirmed) {

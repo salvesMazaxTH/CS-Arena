@@ -64,6 +64,31 @@
         </div>
       </header>
 
+      <!-- Lineup banner: shows your roster compactly and allows picking first champion -->
+      <div id="lineupBanner" class="lineup-banner hidden" aria-hidden="true">
+        <div class="lineup-title">Sua Line-up</div>
+        <div id="lineupChips" class="lineup-chips" role="list"></div>
+      </div>
+
+      <!-- First-choice overlay (initial 1v1 prompt) - placed before script load so it's available to main.js -->
+      <div
+        id="firstChoiceOverlay"
+        class="first-choice-overlay hidden"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="first-choice-dialog">
+          <h2>Escolha seu primeiro campeão para o combate</h2>
+          <p class="first-choice-sub">
+            Clique em um campeão da sua line-up para selecionar.
+          </p>
+          <div id="firstChoiceChips" class="first-choice-chips"></div>
+          <div class="first-choice-actions">
+            <button id="firstChoiceCancel" class="btn">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Surrender Confirmation Overlay -->
       <div id="surrender-overlay" class="surrender-overlay hidden">
         <div class="surrender-dialog">
@@ -115,7 +140,7 @@
       class="champion-selection-screen hidden"
     >
       <div class="selection-container">
-        <h2>Selecione seus 3 Campeões e defina a ordem!</h2>
+        <h2>Selecione seus 8 Campeões e defina a ordem!</h2>
         <p class="selection-message">
           Arraste e solte para ordenar seus campeões.
         </p>
