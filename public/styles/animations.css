@@ -1,0 +1,1006 @@
+/* ============================================
+   ANIMATIONS - COMBAT & BATTLE EFFECTS
+   ============================================ */
+
+/* ============================================
+   CHARACTER STATUS FLOATS
+   ============================================ */
+
+/* Taunt/Provoked float */
+.taunt-float {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  font-weight: bold;
+  color: #ffb347;
+  text-shadow:
+    0 0 8px #ffb347,
+    0 0 12px #ffb34799,
+    1px 1px 2px #000a;
+  pointer-events: none;
+  z-index: 110;
+  animation: tauntFloat 1850ms ease-out forwards;
+}
+
+@keyframes tauntFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -55%) scale(1.1);
+  }
+  70% {
+    transform: translate(-50%, -75%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -90%) scale(1);
+  }
+}
+
+/* ============================================
+   HEALING ANIMATIONS
+   ============================================ */
+
+.heal {
+  animation: heal 975ms ease-out;
+  will-change: transform, filter;
+}
+
+.heal .portrait::after,
+.portrait.heal::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 75%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(80, 255, 120, 0.4),
+    rgba(0, 255, 100, 0.25) 50%,
+    transparent 75%
+  );
+  opacity: 0.9;
+  filter: blur(5px);
+  pointer-events: none;
+}
+
+@keyframes heal {
+  0% {
+    filter: brightness(1);
+  }
+
+  15% {
+    filter: brightness(1.3) drop-shadow(0 0 8px rgba(0, 255, 100, 0.8));
+  }
+
+  40% {
+    filter: brightness(1.15) drop-shadow(0 0 6px rgba(0, 255, 100, 0.6));
+  }
+
+  100% {
+    filter: brightness(1);
+  }
+}
+
+.heal-float {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: bold;
+  color: #00ff66;
+  text-shadow:
+    0 0 8px rgba(0, 255, 100, 0.9),
+    0 0 12px rgba(0, 255, 100, 0.6),
+    1px 1px 2px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 100;
+  animation: healFloat 1850ms ease-out forwards;
+}
+
+.lifesteal {
+  animation: lifestealPulse 1100ms cubic-bezier(0.18, 0.75, 0.3, 1);
+  will-change: transform, filter;
+}
+
+.lifesteal .portrait::after,
+.portrait.lifesteal::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 75%;
+  background:
+    radial-gradient(
+      circle at 34% 40%,
+      rgba(255, 52, 90, 0.45),
+      rgba(255, 52, 90, 0) 50%
+    ),
+    radial-gradient(
+      circle at 68% 62%,
+      rgba(95, 255, 150, 0.35),
+      rgba(95, 255, 150, 0) 58%
+    );
+  filter: blur(6px) saturate(1.2);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.lifesteal-float {
+  color: #68ff9c;
+  text-shadow:
+    0 0 8px rgba(104, 255, 156, 0.95),
+    0 0 12px rgba(255, 48, 96, 0.55),
+    1px 1px 2px rgba(0, 0, 0, 0.85);
+  animation: lifestealFloat 1900ms ease-out forwards;
+}
+
+.lifesteal-drained {
+  animation: lifestealDrained 760ms ease-out;
+  will-change: filter, transform;
+}
+
+.lifesteal-drained .portrait::after,
+.portrait.lifesteal-drained::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 75%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 44, 86, 0.4),
+    rgba(255, 44, 86, 0.1) 60%,
+    transparent 78%
+  );
+  opacity: 0.75;
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+@keyframes lifestealPulse {
+  0% {
+    filter: brightness(1) saturate(1);
+    transform: scale(1);
+  }
+
+  18% {
+    filter: brightness(1.25) saturate(1.2)
+      drop-shadow(0 0 8px rgba(255, 54, 112, 0.65));
+    transform: scale(1.03);
+  }
+
+  48% {
+    filter: brightness(1.15) saturate(1.15)
+      drop-shadow(0 0 9px rgba(105, 255, 160, 0.6));
+    transform: scale(1.015);
+  }
+
+  100% {
+    filter: brightness(1) saturate(1);
+    transform: scale(1);
+  }
+}
+
+@keyframes lifestealFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.75);
+  }
+
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -58%) scale(1.08);
+  }
+
+  68% {
+    opacity: 1;
+    transform: translate(-50%, -80%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -98%) scale(0.95);
+  }
+}
+
+@keyframes lifestealDrained {
+  0% {
+    filter: brightness(1) saturate(1);
+    transform: scale(1);
+  }
+
+  25% {
+    filter: brightness(0.72) saturate(1.45)
+      drop-shadow(0 0 8px rgba(255, 45, 86, 0.7));
+    transform: scale(0.985);
+  }
+
+  55% {
+    filter: brightness(0.78) saturate(1.2);
+    transform: scale(0.99);
+  }
+
+  100% {
+    filter: brightness(1) saturate(1);
+    transform: scale(1);
+  }
+}
+
+@keyframes healFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -55%) scale(1.1);
+  }
+
+  70% {
+    transform: translate(-50%, -75%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -90%) scale(1);
+  }
+}
+
+/* ============================================
+   RESOURCE REGEN FLOAT
+   ============================================ */
+
+.resource-float {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+  font-weight: 700;
+  pointer-events: none;
+  z-index: 100;
+  animation: resourceFloat 1750ms ease-out forwards;
+}
+
+.resource-float-mana {
+  color: #4aa3ff;
+  text-shadow:
+    0 0 8px rgba(74, 163, 255, 0.9),
+    0 0 12px rgba(74, 163, 255, 0.6),
+    1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.resource-float-energy {
+  color: #f4d03f;
+  text-shadow:
+    0 0 8px rgba(244, 208, 63, 0.9),
+    0 0 12px rgba(244, 208, 63, 0.6),
+    1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.resource-float-spend {
+  color: #ff6b6b;
+  text-shadow:
+    0 0 8px rgba(255, 107, 107, 0.9),
+    0 0 12px rgba(255, 107, 107, 0.6),
+    1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+@keyframes resourceFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -55%) scale(1.05);
+  }
+
+  70% {
+    transform: translate(-50%, -75%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -90%) scale(0.95);
+  }
+}
+
+/* ============================================
+   DAMAGE ANIMATIONS
+   ============================================ */
+
+.damage {
+  animation: damage 950ms ease-out;
+  will-change: transform, opacity;
+}
+
+.damage .portrait::after,
+.portrait.damage::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 75%;
+  background: radial-gradient(
+    circle at 55% 45%,
+    rgba(255, 120, 120, 0.35),
+    rgba(255, 40, 40, 0.2) 55%,
+    transparent 75%
+  );
+  opacity: 0.8;
+  filter: blur(4px);
+  transform: translateX(4px);
+  pointer-events: none;
+}
+
+.damage-float {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: 800;
+  color: #ff2a2a;
+  text-shadow:
+    0 0 8px rgba(255, 40, 40, 0.9),
+    0 0 12px rgba(255, 20, 20, 0.6),
+    1px 1px 2px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+  z-index: 100;
+  animation: damageFloat 1850ms ease-out forwards;
+}
+
+.damage-tier-1 {
+  font-size: 22px;
+}
+
+.damage-tier-2 {
+  font-size: 26px;
+}
+
+.damage-tier-3 {
+  font-size: 30px;
+}
+
+.damage-tier-4 {
+  font-size: 34px;
+}
+
+.damage-tier-5 {
+  font-size: 38px;
+}
+
+.damage-tier-6 {
+  font-size: 44px;
+}
+
+@keyframes damage {
+  0% {
+    transform: translateX(0) scale(1);
+    filter: brightness(1);
+  }
+
+  12% {
+    transform: translateX(-12px) scale(0.97);
+    filter: brightness(0.6) sepia(1) saturate(6) hue-rotate(-50deg);
+  }
+
+  25% {
+    transform: translateX(10px);
+  }
+
+  35% {
+    transform: translateX(-8px);
+  }
+
+  50% {
+    transform: translateX(6px);
+  }
+
+  65% {
+    transform: translateX(-3px);
+  }
+
+  80% {
+    transform: translateX(1px);
+    filter: brightness(1.1);
+  }
+
+  100% {
+    transform: translateX(0) scale(1);
+    filter: none;
+  }
+}
+
+@keyframes damageFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.3);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  65% {
+    transform: translate(-50%, -70%) scale(1);
+    opacity: 1;
+  }
+
+  85% {
+    transform: translate(-50%, -85%) scale(0.95);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translate(-50%, -85%) scale(0.87);
+    opacity: 0;
+  }
+}
+
+.damage-float.obliterate {
+  font-size: 52px;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow:
+    0 0 10px rgba(255, 255, 255, 1),
+    0 0 22px rgba(255, 255, 255, 0.8),
+    0 0 40px rgba(255, 255, 255, 0.6);
+}
+
+.damage-float.finishing {
+  font-size: 36px;
+  font-weight: 900;
+  color: #ffe5e5;
+  text-shadow:
+    0 0 8px rgba(255, 80, 80, 0.95),
+    0 0 18px rgba(160, 20, 20, 0.9);
+}
+
+/* ============================================
+   BUFF ANIMATIONS
+   ============================================ */
+
+.buff {
+  animation: buff 850ms ease-out;
+  will-change: transform, filter;
+}
+
+.buff .portrait::after,
+.portrait.buff::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 75%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 214, 102, 0.45),
+    rgba(255, 193, 7, 0.25) 55%,
+    transparent 78%
+  );
+  opacity: 0.85;
+  filter: blur(5px);
+  pointer-events: none;
+}
+
+@keyframes buff {
+  0% {
+    filter: brightness(1);
+  }
+
+  20% {
+    filter: brightness(1.25) drop-shadow(0 0 10px rgba(255, 193, 7, 0.85));
+  }
+
+  45% {
+    filter: brightness(1.15) drop-shadow(0 0 8px rgba(255, 193, 7, 0.6));
+  }
+
+  100% {
+    filter: brightness(1);
+  }
+}
+
+.buff-float {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  font-weight: bold;
+  color: #ffd166;
+  text-shadow:
+    0 0 8px rgba(255, 209, 102, 0.9),
+    0 0 12px rgba(255, 193, 7, 0.65),
+    1px 1px 2px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 100;
+  animation: buffFloat 1700ms ease-out forwards;
+}
+
+@keyframes buffFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.75);
+  }
+
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -55%) scale(1.1);
+  }
+
+  70% {
+    transform: translate(-50%, -75%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -90%) scale(0.95);
+  }
+}
+
+/* ============================================
+   EVASION ANIMATIONS
+   ============================================ */
+
+.evasion {
+  animation: evade 550ms ease-out;
+  will-change: transform, filter, opacity;
+}
+
+.evasion .portrait::after,
+.portrait.evasion::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 75%;
+  background: radial-gradient(
+    circle at 40% 35%,
+    rgba(255, 255, 255, 0.25),
+    rgba(0, 255, 150, 0.08) 60%,
+    transparent 70%
+  );
+  opacity: 0.7;
+  filter: blur(4px);
+  transform: translateX(-8px);
+  pointer-events: none;
+  animation: afterimage 550ms ease-out;
+}
+
+@keyframes evade {
+  0% {
+    transform: translateX(0) skewX(0) scale(1);
+    filter: blur(0px) brightness(1);
+    opacity: 1;
+  }
+
+  8% {
+    transform: translateX(-28px) skewX(-12deg) scale(0.95);
+    filter: blur(3px) brightness(1.2);
+    opacity: 0.7;
+  }
+
+  15% {
+    transform: translateX(24px) skewX(10deg) scale(1.02);
+    filter: blur(4px) brightness(0.9);
+    opacity: 0.8;
+  }
+
+  25% {
+    transform: translateX(-18px) skewX(-6deg) scale(0.98);
+    filter: blur(2px) brightness(1.1);
+  }
+
+  35% {
+    transform: translateX(14px) skewX(4deg) scale(1.01);
+    filter: blur(2px) brightness(0.95);
+  }
+
+  45% {
+    transform: translateX(-10px) skewX(-3deg);
+    filter: blur(1px);
+    opacity: 0.9;
+  }
+
+  60% {
+    transform: translateX(6px) skewX(2deg);
+    filter: blur(0.5px);
+  }
+
+  75% {
+    transform: translateX(-3px) skewX(-1deg);
+    opacity: 0.95;
+  }
+
+  100% {
+    transform: translateX(0) skewX(0) scale(1);
+    filter: blur(0px) brightness(1);
+    opacity: 1;
+  }
+}
+
+@keyframes afterimage {
+  0% {
+    opacity: 0;
+    transform: translateX(-8px) scale(1);
+  }
+
+  10% {
+    opacity: 0.9;
+    transform: translateX(-35px) scale(0.98);
+    filter: blur(8px);
+  }
+
+  25% {
+    opacity: 0.7;
+    transform: translateX(28px) scale(1.01);
+    filter: blur(10px);
+  }
+
+  40% {
+    opacity: 0.5;
+    transform: translateX(-20px);
+    filter: blur(12px);
+  }
+
+  60% {
+    opacity: 0.3;
+    transform: translateX(12px);
+    filter: blur(14px);
+  }
+
+  80% {
+    opacity: 0.1;
+    filter: blur(16px);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-8px);
+    filter: blur(18px);
+  }
+}
+
+/* ============================================
+   DEATH ANIMATIONS
+   ============================================ */
+
+.champion.dying {
+  opacity: 0.8;
+  animation: collapse 950ms ease-out forwards;
+  pointer-events: none;
+}
+
+.champion.dying::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/death_display.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: clamp(100px, 65vw, 70%);
+  opacity: 0;
+  pointer-events: none;
+  animation: deathOverlay 600ms ease-out forwards;
+}
+
+@keyframes collapse {
+  0% {
+    opacity: 1;
+    filter: saturate(1) brightness(1);
+    transform: scale(1) translateY(0);
+  }
+
+  60% {
+    opacity: 0.6;
+    filter: saturate(0.4) brightness(0.7);
+    transform: scale(0.95) translateY(10px);
+  }
+
+  100% {
+    opacity: 0.15;
+    filter: saturate(0) brightness(0.4);
+    transform: scale(0.85) translateY(20px);
+  }
+}
+
+@keyframes deathOverlay {
+  0% {
+    opacity: 0;
+    transform: scale(1.4) rotate(-10deg);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   SHIELD FLOATS
+   ============================================ */
+
+.shield-float {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: bold;
+  color: #78d2ff;
+  text-shadow:
+    0 0 8px rgba(100, 200, 255, 0.9),
+    0 0 12px rgba(70, 170, 255, 0.6),
+    1px 1px 2px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 100;
+  animation: shieldFloat 1850ms ease-out forwards;
+}
+
+@keyframes shieldFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -55%) scale(1.1);
+  }
+
+  70% {
+    transform: translate(-50%, -75%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -90%) scale(1);
+  }
+}
+
+/* ============================================
+   SHIELD ABSORBED FLOAT
+   Mostra o quanto o escudo absorveu de dano
+   (exibido em paralelo ao float de HP)
+   ============================================ */
+
+.shield-absorbed-float {
+  position: absolute;
+  top: 30%;
+  left: 60%;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  font-weight: bold;
+  color: #ffdd88;
+  text-shadow:
+    0 0 6px rgba(255, 180, 50, 0.9),
+    0 0 12px rgba(255, 120, 0, 0.6),
+    1px 1px 2px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+  z-index: 101;
+  animation: shieldAbsorbedFloat 1850ms ease-out forwards;
+}
+
+@keyframes shieldAbsorbedFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.75);
+  }
+
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -58%) scale(1.15);
+  }
+
+  65% {
+    opacity: 0.9;
+    transform: translate(-50%, -80%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -100%) scale(0.9);
+  }
+}
+
+/* ============================================
+   STATUS INDICATOR ANIMATIONS
+   ============================================ */
+
+.status-indicator {
+  position: absolute;
+  top: 5px;
+  left: 59%;
+  z-index: 30;
+  width: 48px;
+  border-radius: 100%;
+  aspect-ratio: 1/1;
+  border: 3px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  pointer-events: none;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6)) brightness(1.05)
+    contrast(1.1);
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease;
+  animation: indicatorFloat 2.8s ease-in-out infinite;
+  transition: opacity 0.35s ease;
+}
+
+.status-indicator.pulse {
+  animation:
+    indicatorFloat 2.8s ease-in-out infinite,
+    indicatorPulse 0.6s ease-out;
+}
+
+.status-indicator img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: auto;
+  backface-visibility: hidden;
+  display: block;
+  transform: translateZ(0);
+}
+
+.status-indicator::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 210, 80, 0.35),
+    transparent 70%
+  );
+  z-index: -1;
+}
+
+.status-indicator-stack-badge {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+    circle at 35% 35%,
+    #fff2f2 0%,
+    #d61a2f 30%,
+    #6e0010 100%
+  );
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.45),
+    0 0 10px rgba(214, 26, 47, 0.35);
+  color: #fff8f8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  transform: translate(28%, -18%);
+}
+
+@keyframes indicatorFloat {
+  0% {
+    transform: translate(-50%, 0px);
+  }
+
+  50% {
+    transform: translate(-50%, -2px);
+  }
+
+  100% {
+    transform: translate(-50%, 0px);
+  }
+}
+
+@keyframes indicatorPulse {
+  0% {
+    transform: translateX(-50%) scale(0.65);
+    filter: brightness(2.2) drop-shadow(0 0 14px rgba(255, 255, 180, 0.9));
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: translateX(-50%) scale(1.18);
+    filter: brightness(1.8) drop-shadow(0 0 18px rgba(255, 255, 150, 1));
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(-50%) scale(1);
+    filter: brightness(1.05) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   DIALOG & TRANSITION ANIMATIONS
+   ============================================ */
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes dialogIn {
+  from {
+    transform: translateY(10px) scale(0.98);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes dialogOut {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateY(-6px) scale(0.985);
+    opacity: 0;
+  }
+}
+
+/* Add dialogIn animation to combat dialog bubble */
+.combat-dialog-bubble {
+  animation: dialogIn 0.22s ease;
+}
+
+/* Add surrenderDialogIn animation */
+@keyframes surrenderDialogIn {
+  from {
+    transform: scale(0.92) translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.surrender-dialog {
+  animation: surrenderDialogIn 0.3s ease forwards;
+}
+
+/* Add slideIn animation to champion detail overlay */
+.champion-detail-container {
+  animation: slideIn 0.3s ease-out;
+}

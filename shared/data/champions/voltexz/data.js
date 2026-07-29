@@ -1,0 +1,12 @@
+export default {
+  name: "Voltexz",
+  portrait: "/assets/portraits/voltexz.webp",
+  HP: 295,
+  Attack: 365,
+  Defense: 50,
+  Speed: 105,
+
+  elementalAffinities: ["lightning"],
+  classKey: "marksman",
+  species: ["elemental", "divinity"],
+};

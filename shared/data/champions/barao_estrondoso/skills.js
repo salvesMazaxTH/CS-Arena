@@ -1,0 +1,110 @@
+import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { formatChampionName } from "../../../ui/formatters.js";
+import basicStrike from "../basicStrike.js";
+
+const baraoEstrondosoSkills = [
+  // ========================
+  // Ataque Básico
+  // ========================
+  basicStrike,
+  // ========================
+  // Habilidades Especiais
+  // ========================
+
+  {
+    key: "impacto_de_aco",
+    name: "Impacto de Aço",
+    bf: 100,
+    contact: true,
+    damageMode: "standard",
+    priority: -999,
+    targetSpec: ["enemy"],
+    description() {
+      return `Causa dano ao inimigo.`;
+    },
+    resolve({ user, targets, context = {} }) {
+      const [enemy] = targets;
+      const baseDamage = (user.Attack * this.bf) / 100;
+
+      const result = new DamageEvent({
+        baseDamage,
+        attacker: user,
+        defender: enemy,
+        skill: this,
+        type: "physical",
+        context,
+        allChampions: context?.allChampions,
+      }).execute();
+      if (result.totalDamage > 0 && user.runtime) {
+        user.runtime.storedDamage = 0; // Zera o dano armazenado após o ataque
+      }
+      return result;
+    },
+  },
+
+  {
+    key: "blindagem_reforcada",
+    name: "Blindagem Reforçada",
+    contact: false,
+
+    priority: -999,
+    defenseBuff: 20,
+    defBuffDuration: 2,
+
+    description() {
+      return `Aumenta a Defesa em ${this.defenseBuff} por 2 turnos`;
+    },
+    targetSpec: ["self"],
+    resolve({ user, context }) {
+      /*       user.applyStatusEffect("blindagem_reforcada", 2, context); */
+
+      user.modifyStat({
+        statName: "Defense",
+        amount: this.defenseBuff,
+        duration: this.defBuffDuration,
+        context,
+      });
+
+      return {
+        log: `${formatChampionName(user)} reforçou sua blindagem!`,
+      };
+    },
+  },
+
+  {
+    key: "super_hiper_ultra_mega_barrigada_atomico",
+    name: "Super Hiper Ultra Mega Barrigada Atômico",
+    bf: 730,
+    contact: false,
+    damageMode: "standard",
+    priority: -999,
+
+    isUltimate: true,
+    ultCost: 6,
+
+    description() {
+      return `Causa dano ABSURDO ao inimigo somado ao dano armazenado. Este ataque é sempre um acerto Crítico. Após o ataque, o dano armazenado é zerado.`;
+    },
+    targetSpec: ["enemy"],
+    resolve({ user, targets, context = {} }) {
+      const [enemy] = targets;
+      const storedDamage = user.runtime?.storedDamage || 0;
+      const baseDamage = (user.Attack * this.bf) / 100 + storedDamage;
+      const damageResult = new DamageEvent({
+        baseDamage,
+        attacker: user,
+        defender: enemy,
+        skill: this,
+        type: "physical",
+        context,
+        critOptions: { force: true }, // crítico garantido
+        allChampions: context?.allChampions,
+      }).execute();
+      // Zera o dano armazenado após o ataque
+      user.runtime.storedDamage = 0;
+      return damageResult;
+    },
+  },
+];
+
+export default baraoEstrondosoSkills;

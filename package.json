@@ -1,0 +1,21 @@
+{
+  "name": "coha-ucla-rpg",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "export-champions": "node exportChampionsToJson.js",
+    "dev": "nodemon server.js",
+    "damage-lab": "node scripts/damageEventLab.js"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "typescript": "^6.0.2"
+  }
+}

@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Champion Arena</title>
+    <!-- Base styles: resets and global defaults -->
+    <link rel="stylesheet" href="./styles/base.css" />
+    <!-- Layout: main structure and containers -->
+    <link rel="stylesheet" href="./styles/layout.css" />
+    <!-- UI Components: buttons, overlays, bars, dialogs -->
+    <link rel="stylesheet" href="./styles/ui.css" />
+    <!-- Animations: combat effects and transitions -->
+    <link rel="stylesheet" href="./styles/animations.css" />
+    <!-- VFX: visual effects and canvas rendering -->
+    <link rel="stylesheet" href="./styles/vfx.css" />
+    <link
+      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="login-screen" class="login-screen active">
+      <div class="login-container">
+        <h2>Bem-vindo à Arena de CoHA (UCLA RPG)!</h2>
+        <input
+          type="text"
+          id="username-input"
+          placeholder="Digite seu nome de usuário"
+        />
+        <button id="join-arena-btn">Entrar na Arena</button>
+        <p id="login-message"></p>
+      </div>
+    </div>
+
+    <div id="main-content" class="main-content hidden">
+      <div id="disconnection-message" class="message hidden"></div>
+      <!-- New disconnection message element -->
+      <header>
+        <h1>Arena dos Campeões - UCLA RPG</h1>
+
+        <div class="turn-controls">
+          <button id="undo-actions-btn" disabled>Desfazer ações</button>
+          <button id="skip-slot-btn" disabled>
+            <i class="bx bx-skip-next"></i> Pular slot
+          </button>
+
+          <div class="turn-display">
+            <p>Turno 1</p>
+          </div>
+
+          <button id="surrender-btn" class="surrender-btn" title="Render-se">
+            Render-se
+          </button>
+          <button id="settings-btn" class="settings-btn" title="Configurações">
+            <i class="bx bx-cog"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Surrender Confirmation Overlay -->
+      <div id="surrender-overlay" class="surrender-overlay hidden">
+        <div class="surrender-dialog">
+          <p class="surrender-dialog-title">Tem certeza?</p>
+          <p class="surrender-dialog-subtitle">
+            Essa decisão é irreversível. Você concederá a vitória ao adversário.
+          </p>
+          <div class="surrender-dialog-actions">
+            <button id="surrender-cancel" class="surrender-cancel">
+              Cancelar
+            </button>
+            <button id="surrender-confirm" class="surrender-confirm">
+              Render-se
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <main class="arena">
+        <div class="player-name-display" data-team="1">
+          <span id="player1-name-display">Jogador 1</span>
+        </div>
+        <div class="team-container team-1" data-team="1"></div>
+        <div class="player-name-display" data-team="2">
+          <span id="player2-name-display">Jogador 2</span>
+        </div>
+        <div class="team-container team-2" data-team="2"></div>
+      </main>
+      <!--
+      <div
+        class="back-champion-display hidden"
+        id="backChampionDisplayTeam1"
+        data-team="1"
+      ></div>
+      <div
+        class="back-champion-display hidden"
+        id="backChampionDisplayTeam2"
+        data-team="2"
+      ></div>
+      -->
+      <div id="combat-log">
+        <h1 id="combat-log-header">Log de Combate</h1>
+      </div>
+    </div>
+
+    <!-- Champion Selection Screen -->
+    <div
+      id="champion-selection-screen"
+      class="champion-selection-screen hidden"
+    >
+      <div class="selection-container">
+        <h2>Selecione seus 3 Campeões e defina a ordem!</h2>
+        <p class="selection-message">
+          Arraste e solte para ordenar seus campeões.
+        </p>
+
+        <div class="available-champions-grid" id="availableChampionsGrid">
+          <!-- Champions will be loaded here by JavaScript -->
+        </div>
+
+        <div class="selected-champions-area">
+          <h3>Sua Equipe:</h3>
+          <div class="selected-champions-slots" id="selectedChampionsSlots">
+            <!-- Slots will be generated dynamically by JavaScript -->
+          </div>
+          <button id="confirmTeamBtn" disabled>Confirmar Equipe</button>
+        </div>
+        <p id="team-selection-message" class="selection-message"></p>
+      </div>
+    </div>
+
+    <div
+      id="webgl-container"
+      style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 9999;
+        mix-blend-mode: screen;
+      "
+    ></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="/js/main.js"></script>
+    <!--  <script type="module" src="../exportChampionsToJson.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>
+      eruda.init();
+    </script>
+    <!-- Game Over Overlay -->
+    <!-- Overlay de Vitória/Derrota (10 segundos) -->
+    <div id="gameOverOverlay" class="game-over-overlay hidden">
+      <div id="gameOverContent" class="game-over-content">
+        <h2 id="gameOverMessage"></h2>
+      </div>
+    </div>
+
+    <!-- Timer Overlay (120 segundos - aparece depois) -->
+    <div id="timerOverlay" class="timer-overlay hidden">
+      <aside id="matchStatsPanel" class="match-stats-panel hidden">
+        <div class="match-stats-header">Estatisticas da Partida</div>
+
+        <div
+          class="match-stats-tabs"
+          role="tablist"
+          aria-label="Abas de estatisticas"
+        >
+          <button
+            class="match-stats-tab active"
+            data-tab="damage"
+            role="tab"
+            type="button"
+          >
+            Dano Causado
+          </button>
+          <button
+            class="match-stats-tab"
+            data-tab="healingReceived"
+            role="tab"
+            type="button"
+          >
+            Vida Recuperada
+          </button>
+          <button
+            class="match-stats-tab"
+            data-tab="healingDone"
+            role="tab"
+            type="button"
+          >
+            Cura Realizada
+          </button>
+          <button
+            class="match-stats-tab"
+            data-tab="rawTaken"
+            role="tab"
+            type="button"
+          >
+            Dano Cru Recebido
+          </button>
+          <button
+            class="match-stats-tab"
+            data-tab="damageMitigated"
+            role="tab"
+            type="button"
+          >
+            Dano Mitigado
+          </button>
+        </div>
+
+        <div class="match-stats-panels">
+          <section
+            class="match-stats-tab-panel active"
+            data-tab-panel="damage"
+            role="tabpanel"
+          >
+            <table class="match-stats-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Personagem</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="matchStatsDamageBody"></tbody>
+            </table>
+          </section>
+
+          <section
+            class="match-stats-tab-panel"
+            data-tab-panel="healingReceived"
+            role="tabpanel"
+          >
+            <table class="match-stats-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Personagem</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="matchStatsHealingReceivedBody"></tbody>
+            </table>
+          </section>
+
+          <section
+            class="match-stats-tab-panel"
+            data-tab-panel="healingDone"
+            role="tabpanel"
+          >
+            <table class="match-stats-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Personagem</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="matchStatsHealingDoneBody"></tbody>
+            </table>
+          </section>
+
+          <section
+            class="match-stats-tab-panel"
+            data-tab-panel="rawTaken"
+            role="tabpanel"
+          >
+            <table class="match-stats-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Personagem</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="matchStatsRawTakenBody"></tbody>
+            </table>
+          </section>
+
+          <section
+            class="match-stats-tab-panel"
+            data-tab-panel="damageMitigated"
+            role="tabpanel"
+          >
+            <table class="match-stats-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Personagem</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="matchStatsDamageMitigatedBody"></tbody>
+            </table>
+          </section>
+        </div>
+      </aside>
+
+      <div class="timer-overlay-content">
+        <p id="returnToLoginCountdown"></p>
+        <button id="returnToLoginBtn">Voltar ao Login Agora</button>
+      </div>
+    </div>
+
+    <div id="combat-dialog" class="combat-dialog hidden" aria-live="polite">
+      <div class="combat-dialog-bubble">
+        <p id="combat-dialog-text"></p>
+      </div>
+    </div>
+
+    <!-- Settings Overlay -->
+    <div id="settings-overlay" class="settings-overlay hidden">
+      <div class="settings-dialog">
+        <div class="settings-header">
+          <h3>Configurações de Áudio</h3>
+          <button id="settings-close" class="settings-close-btn">
+            &times;
+          </button>
+        </div>
+        <div class="settings-content">
+          <div class="settings-group">
+            <div class="settings-label">
+              <span>Música de Fundo</span>
+              <label class="switch">
+                <input type="checkbox" id="music-toggle" checked />
+                <span class="slider round"></span>
+              </label>
+            </div>
+            <input
+              type="range"
+              id="music-volume"
+              min="0"
+              max="1"
+              step="0.05"
+              value="0.5"
+            />
+          </div>
+          <div class="settings-group">
+            <div class="settings-label">
+              <span>Efeitos Sonoros (SFX)</span>
+              <label class="switch">
+                <input type="checkbox" id="sfx-toggle" checked />
+                <span class="slider round"></span>
+              </label>
+            </div>
+            <input
+              type="range"
+              id="sfx-volume"
+              min="0"
+              max="1"
+              step="0.05"
+              value="0.5"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    <button id="undo-actions-btn" hidden>Desfazer ações</button>
+  </body>
+</html>

@@ -1,0 +1,423 @@
+/* ============================================
+   LAYOUT - MAIN STRUCTURE & CONTAINERS
+   ============================================ */
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(6px, 1.5vw, 16px);
+
+  padding: clamp(6px, 1.5vw, 12px) clamp(10px, 2vw, 20px);
+  margin: clamp(4px, 1vw, 10px) auto;
+
+  width: clamp(92%, 95vw, 1200px);
+  max-width: 1200px;
+
+  background: linear-gradient(180deg, #151515, #0b0b0b);
+  border: 2px solid #333;
+  border-radius: 14px;
+
+  box-shadow: 0 0 20px rgba(0, 255, 150, 0.1);
+}
+
+header h1 {
+  font-size: clamp(0.75rem, 2.2vw, 1.5rem);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #e6fff2;
+  margin: 0;
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+/* -------------------------------- */
+
+.turn-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(4px, 1vw, 12px);
+  flex-shrink: 0;
+}
+
+.turn-display {
+  background: #0f1f18;
+  border: 2px solid #00ff99;
+  border-radius: 999px;
+
+  padding: clamp(3px, 0.6vw, 6px) clamp(8px, 1.5vw, 16px);
+
+  box-shadow: 0 0 10px rgba(0, 255, 150, 0.4);
+  flex-shrink: 0;
+}
+
+.turn-display p {
+  margin: 0;
+  font-weight: bold;
+  color: #00ff99;
+  font-size: clamp(0.75rem, 1.8vw, 1rem);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+/* -------------------------------- */
+
+.arena {
+  display: flex;
+  flex-direction: column;
+  justify-self: center;
+  border: gray 5px double;
+  margin: clamp(8px, 2vw, 20px) auto;
+  width: clamp(92%, 90vw, 900px);
+  max-width: 900px;
+  min-height: 0; /* deixa o conteúdo definir a altura */
+  gap: clamp(8px, 2.5vw, 24px);
+  padding: clamp(8px, 1.5vw, 16px);
+}
+
+/* -------------------------------- */
+
+.team-container {
+  flex: 1;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border: 1px solid transparent;
+  padding: 10px;
+  padding-bottom: clamp(50px, 10vw, 90px);
+  position: relative;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+/* Team selection mode styles */
+body.team-selection-active .team-container {
+  cursor: pointer;
+  border-color: rgba(0, 255, 150, 0.6);
+  box-shadow: 0 0 20px rgba(0, 255, 150, 0.3);
+}
+
+body.team-selection-active .team-container:hover {
+  transform: scale(1.02);
+  border-color: #00ff99;
+  box-shadow: 0 0 30px rgba(0, 255, 150, 0.6);
+}
+
+.team-container::before {
+  content: "Time " attr(data-team);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(2rem, 6vw, 6rem);
+  color: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  z-index: 0;
+  white-space: nowrap;
+}
+
+.player-name-display {
+  font-size: clamp(0.85rem, 2vw, 1.2em);
+  font-weight: bold;
+  margin-bottom: 4px;
+  text-shadow: 0 0 8px rgba(0, 255, 150, 0.5);
+  text-align: center;
+  padding: clamp(1px, 0.5vw, 5px);
+  border-bottom: 1px solid rgba(0, 255, 150, 0.3);
+}
+
+.player-name-display[data-team="1"] {
+  color: #0096ff;
+}
+
+.player-name-display[data-team="2"] {
+  color: #ff0000;
+}
+
+.team-container .champion {
+  z-index: 1;
+}
+
+.team-1 {
+  border-color: rgba(0, 150, 255, 0.4);
+  box-shadow: 0 0 15px rgba(0, 150, 255, 0.1);
+  background: rgba(0, 150, 255, 0.05);
+}
+
+.team-1::before {
+  color: rgba(0, 150, 255, 0.1);
+}
+
+.team-2 {
+  border-color: rgba(255, 0, 0, 0.4);
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.1);
+  background: linear-gradient(transparent, rgba(255, 0, 0, 0.05));
+}
+
+.team-2::before {
+  color: rgba(255, 0, 0, 0.1);
+}
+
+/* ============================================
+   PERSPECTIVE MIRRORING
+   When the local player is team 2, visually
+   flip the arena so they always appear on top
+   in blue, and the opponent appears on bottom
+   in red — matching the standard game feel.
+   ============================================ */
+
+/* Reorder flex items: team-2 on top, team-1 on bottom */
+.arena--mirrored .player-name-display[data-team="2"] {
+  order: 1;
+}
+.arena--mirrored .team-container.team-2 {
+  order: 2;
+}
+.arena--mirrored .player-name-display[data-team="1"] {
+  order: 3;
+}
+.arena--mirrored .team-container.team-1 {
+  order: 4;
+}
+
+/* Swap arena container colors: local team (2) → blue, opponent (1) → red */
+.arena--mirrored .team-1 {
+  border-color: rgba(255, 0, 0, 0.4);
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.1);
+  background: linear-gradient(transparent, rgba(255, 0, 0, 0.05));
+}
+.arena--mirrored .team-1::before {
+  color: rgba(255, 0, 0, 0.1);
+}
+.arena--mirrored .team-2 {
+  border-color: rgba(0, 150, 255, 0.4);
+  box-shadow: 0 0 15px rgba(0, 150, 255, 0.1);
+  background: rgba(0, 150, 255, 0.05);
+}
+.arena--mirrored .team-2::before {
+  color: rgba(0, 150, 255, 0.1);
+}
+
+/* Swap player-name-display colors: local (2) → blue, opponent (1) → red */
+.arena--mirrored .player-name-display[data-team="1"] {
+  color: #ff0000;
+}
+.arena--mirrored .player-name-display[data-team="2"] {
+  color: #0096ff;
+}
+
+/* -------------------------------- */
+
+.main-content.hidden {
+  display: none;
+}
+
+.main-content.visible {
+  display: block;
+}
+
+/* ============================================
+   DISCONNECTION MESSAGE
+   ============================================ */
+
+#disconnection-message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #ffcc00;
+  padding: 20px 30px;
+  border-radius: 10px;
+  font-size: 1.2em;
+  z-index: 1000;
+  text-align: center;
+  box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
+  transition: opacity 0.3s ease;
+}
+
+#disconnection-message.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#disconnection-message.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ============================================
+   BACK CHAMPION DISPLAY (DESATIVADO)
+   ============================================ */
+
+/*
+.back-champion-display {
+  position: absolute;
+  bottom: clamp(4%, 8vw, 13%);
+  width: clamp(140px, 28vw, 252px);
+  min-height: auto;
+  padding: clamp(4px, 1vw, 8px);
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 16, 26, 0.92),
+    rgba(3, 9, 16, 0.9)
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: clamp(4px, 1vw, 8px);
+  box-sizing: border-box;
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(120, 185, 255, 0.12);
+  z-index: 500;
+}
+
+.back-champion-display[data-side="ally"] {
+  left: clamp(4px, 1.5vw, 20px);
+  border: 2px solid rgba(0, 150, 255, 0.4);
+}
+
+.back-champion-display[data-side="enemy"] {
+  right: clamp(4px, 1.5vw, 20px);
+  border: 2px solid rgba(255, 0, 0, 0.4);
+}
+
+.back-champion-display.hidden {
+  display: none;
+}
+
+.reserve-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 24px;
+  padding: 0 2px;
+}
+
+.reserve-label {
+  font-size: 0.67rem;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9ec3ff;
+  opacity: 0.88;
+  font-weight: 700;
+}
+
+.back-champion-display[data-side="enemy"] .reserve-label {
+  color: #ffb3b3;
+}
+
+.switch-counter {
+  min-width: 24px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(84, 176, 255, 0.2);
+  border: 1px solid rgba(120, 200, 255, 0.35);
+  color: #d8efff;
+  font-size: 0.72rem;
+  line-height: 1;
+  font-weight: 700;
+  padding: 0 7px;
+}
+
+.back-champion-display[data-side="enemy"] .switch-counter {
+  background: rgba(255, 92, 92, 0.18);
+  border-color: rgba(255, 134, 134, 0.36);
+  color: #ffdede;
+}
+
+.reserve-cards {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+}
+
+.reserve-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: clamp(52px, 8vw, 72px);
+  min-height: auto;
+  cursor: default;
+  border-radius: 8px;
+  border: 1px solid rgba(140, 202, 255, 0.16);
+  background: rgba(12, 28, 42, 0.55);
+  padding: 4px 3px;
+  box-sizing: border-box;
+  transition:
+    background 0.15s,
+    transform 0.1s,
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.reserve-card.clickable {
+  cursor: pointer;
+}
+
+.back-champion-display[data-side="enemy"] .reserve-card {
+  border-color: rgba(255, 138, 138, 0.28);
+  background: rgba(42, 14, 18, 0.52);
+}
+
+.reserve-card.clickable:hover {
+  background: rgba(54, 170, 255, 0.16);
+  border-color: rgba(130, 220, 255, 0.55);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.28);
+  transform: translateY(-1px);
+}
+
+.reserve-card img {
+  width: clamp(28px, 5vw, 42px);
+  height: clamp(28px, 5vw, 42px);
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid rgba(83, 197, 255, 0.75);
+}
+
+.back-champion-display[data-side="enemy"] .reserve-card img {
+  border-color: rgba(255, 120, 120, 0.8);
+}
+
+.reserve-card.clickable img {
+  border-color: rgba(130, 236, 255, 0.95);
+  box-shadow: 0 0 8px rgba(90, 210, 255, 0.48);
+}
+
+.reserve-name {
+  width: 100%;
+  display: block;
+  margin: 0;
+  font-size: 0.68rem;
+  line-height: 1.1;
+  font-weight: 600;
+  color: #def2ff;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.back-champion-display[data-side="enemy"] .reserve-name {
+  color: #ffdede;
+}
+
+@media (max-width: 600px) {
+  .back-champion-display {
+    bottom: 2%;
+  }
+}
+*/

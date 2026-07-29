@@ -1,0 +1,101 @@
+// shared/champions/barao_estrondoso/passive.js
+
+import { formatChampionName } from "../../../ui/formatters.js";
+
+//Com Blindagem Reforçada, armazena ${this.storageShieldPercent}% em vez disso.
+
+export default {
+  key: "reator_cataclismico",
+  name: "Reator Cataclísmico",
+  storageBasePercent: 75,
+  storageShieldPercent: 110,
+  damageTakenBonusPercent: 10,
+  damageTakenBonusFlatMin: 10,
+  storageCap: 250,
+  description(champion) {
+    const stored = champion.runtime?.storedDamage || 0;
+
+    return `
+    O Barão converte dano recebido em energia destrutiva.
+
+    Recebe +${this.damageTakenBonusPercent}% de dano adicional (não vale para dano absoluto e DoT).
+
+    Armazena ${this.storageBasePercent}% do dano sofrido (máx. ${this.storageCap}).
+
+   Dano armazenado: <b>${stored > 0 ? stored : 0}</b>
+
+    Sobrecarga do Reator:
+    Após usar uma habilidade (exceto Ataque Básico), fica Atordoado no próximo turno.
+
+    Explosão Final:
+    Ao usar a Ultimate, causa dano adicional igual ao total armazenado e zera o acúmulo.`;
+  },
+
+  hookScope: {
+    onBeforeDmgTaking: "defender",
+    onAfterDmgTaking: "defender",
+    onAfterDmgDealing: "attacker",
+  },
+
+  // 🔴 Recebe 10% de dano adicional (mínimo +10)
+  onBeforeDmgTaking({ attacker, defender, owner, damage, context }) {
+    if (!damage || damage <= 0) return;
+
+    const bonus = Math.max(
+      this.damageTakenBonusFlatMin,
+      damage * (this.damageTakenBonusPercent / 100),
+    );
+    const modifiedDamage = damage + bonus;
+
+    return {
+      damage: modifiedDamage,
+    };
+  },
+
+  // 🔴 Armazena dano recebido (30% ou 40% se blindado)
+  onAfterDmgTaking({ attacker, defender, owner, damage, context }) {
+    if (!damage || damage <= 0) return;
+
+    /* console.log(
+      `[${owner.name} - Reator Cataclísmico] Dano recebido: ${damage}`,
+    );
+    */
+    const storageRate =
+      /* owner.hasStatusEffect?.("blindagem_reforcada")
+      ? this.storageShieldPercent / 100
+      : */ this.storageBasePercent / 100;
+
+    const stored = damage * storageRate;
+
+    /* console.log(
+      `[${owner.name} - Reator Cataclísmico] Dano armazenado: ${stored} (Taxa: ${storageRate * 100}%)`,
+    );
+    */
+    owner.runtime = owner.runtime || {};
+    owner.runtime.storedDamage = Math.min(
+      this.storageCap,
+      (owner.runtime.storedDamage || 0) + stored,
+    );
+    /* console.log(
+      `[${owner.name} - Reator Cataclísmico] Dano armazenado total: ${owner.runtime.storedDamage}`,
+    );
+    */
+  },
+
+  // 🔴 Após usar qualquer habilidade (exceto ataque básico), fica Atordoado
+  onAfterDmgDealing({ attacker, defender, owner, damage, context, skill }) {
+    if (!skill?.key) return;
+
+    // Golpe básico não causa stun
+    if (skill.key === "golpe_basico") return;
+
+    // Evita loop se alguma skill futura aplicar stun interno
+    if (owner.hasStatusEffect?.("stunned")) return;
+
+    owner.applyStatusEffect?.("stunned", 2, context);
+
+    return {
+      log: `${formatChampionName(owner)} sofreu <b>Sobrecarga do Núcleo</b> e ficará <b>Atordoado</b>!`,
+    };
+  },
+};
