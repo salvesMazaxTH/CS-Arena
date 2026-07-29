@@ -4,6 +4,7 @@ class LobbyState {
     this.socketToSlot = new Map();
     this.selectionTimers = [null, null];
     this.disconnectionTimers = new Map();
+    this.firstChoiceTimeouts = new Map();
   }
 
   assignSocketToSlot(socketId, slot) {
@@ -85,7 +86,6 @@ class LobbyState {
     this.clearAllSelectionTimers();
     this.clearAllDisconnectionTimers();
     this.clearAllFirstChoiceTimers();
-    this.firstChoiceTimeouts = new Map(); // Adicionado para inicialização
   }
 }
 
