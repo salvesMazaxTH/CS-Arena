@@ -962,6 +962,7 @@ socket.on("allTeamsSelected", () => {
   selectedChampions = Array(TEAM_SIZE).fill(null);
   playerTeamConfirmed = false;
   confirmTeamBtn.disabled = true;
+  resetLineupMaterializationState();
   if (championSelectionTimer) {
     clearInterval(championSelectionTimer);
     championSelectionTimer = null;
@@ -1083,8 +1084,8 @@ function getChampionFrontBadges(champion) {
   return badges;
 }
 
-function renderChampionCardContent(champion) {
-  const badges = getChampionFrontBadges(champion)
+function renderChampionIdentityBadgesMarkup(champion) {
+  return getChampionFrontBadges(champion)
     .map(
       ({ type, iconText, iconUrl, label }) => `
         <span class="champion-identity-badge champion-identity-badge-${type}" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">
@@ -1097,6 +1098,10 @@ function renderChampionCardContent(champion) {
       `,
     )
     .join("");
+}
+
+function renderChampionCardContent(champion) {
+  const badges = renderChampionIdentityBadgesMarkup(champion);
 
   const speciesList = getChampionSpecies(champion);
   const speciesMarkup = speciesList.length
@@ -1126,6 +1131,21 @@ function renderChampionCardContent(champion) {
         </div>
       </div>
     </div>
+  `;
+}
+
+function renderLineupChipContent(champion, slotIndex) {
+  if (!champion) {
+    return `<span class="lineup-chip-slot-number">${slotIndex + 1}</span>`;
+  }
+
+  return `
+    <span class="lineup-chip-inner">
+      <img class="lineup-chip-portrait" src="${escapeHtml(champion.portrait || "/assets/portraits/placeholder.webp")}" alt="${escapeHtml(champion.name || "Campeão")}">
+      <span class="lineup-chip-identity-row">
+        ${renderChampionIdentityBadgesMarkup(champion)}
+      </span>
+    </span>
   `;
 }
 
@@ -1319,6 +1339,7 @@ let playerRoster = Array(TEAM_SIZE).fill(null); // copy of the player's confirme
 let firstChoicePending = false;
 let firstChoiceSelected = null;
 let firstChoiceResolved = false; // true once the first champion has been decided; chips stop being clickable
+const materializedLineupChampions = new Set();
 
 const lineupBanner = document.getElementById("lineupBanner");
 const lineupChips = document.getElementById("lineupChips");
@@ -1342,16 +1363,18 @@ function renderLineupBanner() {
       "selected",
       !!champKey && champKey === firstChoiceSelected,
     );
+    chip.classList.toggle(
+      "materialized",
+      !!champKey &&
+        playerTeam !== null &&
+        materializedLineupChampions.has(`${playerTeam}:${champKey}`),
+    );
 
     if (champKey && championDB[champKey]) {
-      const img = document.createElement("img");
-      img.src =
-        championDB[champKey].portrait || "/assets/portraits/placeholder.webp";
-      img.alt = championDB[champKey].name || champKey;
-      chip.appendChild(img);
+      chip.innerHTML = renderLineupChipContent(championDB[champKey], idx);
       hasAny = true;
     } else {
-      chip.textContent = idx + 1;
+      chip.innerHTML = renderLineupChipContent(null, idx);
     }
 
     // Once the first choice is resolved, the banner becomes read-only (no listener attached).
@@ -1391,15 +1414,10 @@ function openFirstChoiceOverlay() {
       ? championDB[champKey]?.name || champKey
       : `Slot ${idx + 1}`;
 
-    if (champKey && championDB[champKey]) {
-      const img = document.createElement("img");
-      img.src =
-        championDB[champKey].portrait || "/assets/portraits/placeholder.webp";
-      img.alt = championDB[champKey].name || champKey;
-      chip.appendChild(img);
-    } else {
-      chip.textContent = idx + 1;
-    }
+    chip.innerHTML = renderLineupChipContent(
+      champKey && championDB[champKey] ? championDB[champKey] : null,
+      idx,
+    );
 
     chip.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -1431,6 +1449,32 @@ function chooseFirstChampion(championKey) {
   });
 }
 
+function syncMaterializedLineupChampions(gameStateChampions = []) {
+  gameStateChampions.forEach((champion) => {
+    if (!champion?.championKey || champion.team == null) return;
+    materializedLineupChampions.add(`${champion.team}:${champion.championKey}`);
+  });
+
+  if (!lineupChips || playerTeam === null) return;
+
+  Array.from(lineupChips.children).forEach((chip) => {
+    const championKey = chip.dataset.championKey;
+    if (!championKey) return;
+    chip.classList.toggle(
+      "materialized",
+      materializedLineupChampions.has(`${playerTeam}:${championKey}`),
+    );
+  });
+}
+
+function resetLineupMaterializationState() {
+  materializedLineupChampions.clear();
+  if (!lineupChips) return;
+  Array.from(lineupChips.children).forEach((chip) => {
+    chip.classList.remove("materialized");
+  });
+}
+
 firstChoiceCancel?.addEventListener("click", () => {
   closeFirstChoiceOverlay();
 });
@@ -1439,6 +1483,7 @@ firstChoiceCancel?.addEventListener("click", () => {
 socket.on("requestFirstChampionSelection", ({ roster, team }) => {
   // roster: array of championKeys
   if (Array.isArray(roster)) playerRoster = roster.slice(0, TEAM_SIZE);
+  resetLineupMaterializationState();
   firstChoicePending = true;
   firstChoiceSelected = null;
   firstChoiceResolved = false;
@@ -2100,6 +2145,7 @@ function closeTargetOverlay(overlay) {
 // ============================================================
 
 socket.on("gameStateUpdate", (gameState) => {
+  syncMaterializedLineupChampions(gameState?.champions || []);
   combatAnimations.handleGameStateUpdate(gameState);
 });
 
