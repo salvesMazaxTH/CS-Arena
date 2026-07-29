@@ -674,6 +674,11 @@ export class GameMatch {
     return { choices };
   }
 
+  reset() {
+    this.lobby.reset();
+    this.combat.reset();
+  }
+
   clearPlayers() {
     this.players = [null, null];
     this.lobby.reset();
