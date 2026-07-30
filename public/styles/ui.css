@@ -93,7 +93,7 @@
 
 .action-bar-skill-btn {
   flex: 1;
-  max-width: 24%;
+  max-width: 17%;
   padding: clamp(4px, 0.8vw, 8px) clamp(3px, 1vw, 10px);
 
   background: linear-gradient(180deg, #1a3a5c, #0f2540);
@@ -692,8 +692,8 @@
 }
 
 .delete-btn {
-  width: 42px;
-  height: 42px;
+  width: 25px;
+  height: 25px;
 
   display: flex;
   align-items: center;
@@ -1154,7 +1154,7 @@
 }
 
 .champion {
-  width: 28%;
+  width: 19%;
   height: auto;
   user-select: none;
   -webkit-user-drag: none;
@@ -1417,8 +1417,6 @@
 /* Lineup banner (compact roster) */
 .lineup-banner {
   position: absolute;
-  top: 14px;
-  right: 14px;
   z-index: 1500;
   background: rgba(10, 10, 10, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -1430,6 +1428,17 @@
   align-items: center;
   backdrop-filter: blur(6px);
 }
+
+.lineup-banner[data-team-id="player"] {
+  top: 14px;
+  left: 14px;
+}
+
+.lineup-banner[data-team-id="opponent"] {
+  top: 14px;
+  right: 14px;
+}
+
 .lineup-banner.hidden {
   display: none;
 }
@@ -1515,8 +1524,8 @@
   background: linear-gradient(180deg, rgba(8, 8, 8, 0.08), rgba(8, 8, 8, 0.7));
 }
 .lineup-chip-identity-row .champion-identity-badge {
-  width: 25px;
-  height: 25px;
+  width: 19px;
+  height: 19px;
   font-size: 0.78rem;
   border-width: 2px;
 }
@@ -1827,6 +1836,80 @@
 #combat-log .team-2 {
   color: #ff4444;
   font-weight: bold;
+}
+
+@media (max-width: 768px), (max-height: 760px) {
+  .action-bar {
+    gap: 2px;
+    padding: 4px 5px 5px;
+  }
+
+  .action-bar-header {
+    font-size: clamp(0.5rem, 1.4vw, 0.64rem);
+  }
+
+  .action-bar-skills {
+    gap: 2px;
+  }
+
+  .action-bar-skill-btn {
+    padding: 3px 4px;
+    font-size: clamp(0.46rem, 1.25vw, 0.6rem);
+  }
+
+  .portrait-wrapper {
+    padding: 2px;
+  }
+
+  .portrait-wrapper::before {
+    border-width: 2px;
+  }
+
+  .champion p {
+    margin: 0.18em 0.22em;
+  }
+
+  .hp-bar {
+    height: clamp(4px, 1vw, 7px);
+    margin-bottom: 4px;
+  }
+
+  .ult-bar {
+    height: clamp(4px, 0.9vw, 6px);
+    margin-bottom: 6px;
+  }
+
+  .skill-btn {
+    width: clamp(34px, 5vw, 44px);
+    height: clamp(34px, 5vw, 44px);
+    padding: 3px 4px;
+    margin-bottom: 4px;
+  }
+
+  .skill-label {
+    font-size: 0.62rem;
+  }
+
+  .hp-controls {
+    column-gap: 0.65rem;
+  }
+
+  .hp-btn {
+    font-size: 15px;
+    padding: 4px 0.5em;
+  }
+
+  #combat-log-header {
+    font-size: 1.05em;
+    margin: 0.7rem 0 0.35rem;
+  }
+
+  #combat-log {
+    margin: 0.45rem 0.5rem 0.7rem;
+    padding: 8px 10px;
+    max-height: 18vh;
+    border-radius: 12px;
+  }
 }
 
 /* ============================================

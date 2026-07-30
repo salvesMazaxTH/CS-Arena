@@ -85,7 +85,7 @@ header h1 {
   align-items: center;
   border: 1px solid transparent;
   padding: 10px;
-  padding-bottom: clamp(50px, 10vw, 90px);
+  padding-bottom: clamp(50px, 10vw, 65px);
   position: relative;
   transition:
     border-color 0.3s ease,

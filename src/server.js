@@ -106,9 +106,17 @@ function getGameState(extraChampions = []) {
     }
   }
 
+  // Roster completo (8 campeões) de cada time, para exibição das lineup banners no cliente
+  const lineups = {};
+  for (const player of match.players) {
+    if (!player) continue;
+    lineups[player.team] = player.selectedChampionKeys || [];
+  }
+
   return {
     champions,
     currentTurn: match.combat.currentTurn,
+    lineups,
   };
 }
 

@@ -1341,8 +1341,12 @@ let firstChoiceSelected = null;
 let firstChoiceResolved = false; // true once the first champion has been decided; chips stop being clickable
 const materializedLineupChampions = new Set();
 
-const lineupBanner = document.getElementById("lineupBanner");
-const lineupChips = document.getElementById("lineupChips");
+const lineupBanner =
+  document.getElementById("playerLineupBanner") ||
+  document.getElementById("lineupBanner");
+const lineupChips =
+  document.getElementById("playerLineupChips") ||
+  document.getElementById("lineupChips");
 const firstChoiceOverlay = document.getElementById("firstChoiceOverlay");
 const firstChoiceChips = document.getElementById("firstChoiceChips");
 const firstChoiceCancel = document.getElementById("firstChoiceCancel");
@@ -2141,11 +2145,43 @@ function closeTargetOverlay(overlay) {
 }
 
 // ============================================================
+//  LINEUP BANNERS
+// ============================================================
+// Player's own banner stays owned by renderLineupBanner() (playerRoster-driven).
+// This one only fills the opponent's read-only banner from server-authoritative rosters.
+
+function renderLineupBanners(lineupsByTeam = {}) {
+  const opponentBanner = document.getElementById("opponentLineupBanner");
+  const opponentChipsContainer = document.getElementById("opponentLineupChips");
+  if (!opponentBanner || !opponentChipsContainer || playerTeam === null) return;
+
+  const enemyTeam = playerTeam === 1 ? 2 : 1;
+  const enemyLineup = lineupsByTeam?.[enemyTeam] || [];
+
+  if (enemyLineup.length === 0) {
+    opponentBanner.classList.add("hidden");
+    opponentBanner.setAttribute("aria-hidden", "true");
+    return;
+  }
+
+  opponentBanner.classList.remove("hidden");
+  opponentBanner.setAttribute("aria-hidden", "false");
+  opponentChipsContainer.innerHTML = enemyLineup
+    .map((champKey, idx) => {
+      const champion = champKey ? championDB[champKey] : null;
+      const title = champKey ? champion?.name || champKey : `Slot ${idx + 1}`;
+      return `<div class="lineup-chip" title="${title}">${renderLineupChipContent(champion, idx)}</div>`;
+    })
+    .join("");
+}
+
+// ============================================================
 //  GERENCIAMENTO DE TURNOS
 // ============================================================
 
 socket.on("gameStateUpdate", (gameState) => {
   syncMaterializedLineupChampions(gameState?.champions || []);
+  renderLineupBanners(gameState?.lineups);
   combatAnimations.handleGameStateUpdate(gameState);
 });
 

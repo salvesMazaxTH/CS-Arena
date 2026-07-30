@@ -64,10 +64,24 @@
         </div>
       </header>
 
-      <!-- Lineup banner: shows your roster compactly and allows picking first champion -->
-      <div id="lineupBanner" class="lineup-banner hidden" aria-hidden="true">
+      <!-- Lineup banners: player on the left, opponent on the right -->
+      <div
+        id="playerLineupBanner"
+        class="lineup-banner hidden"
+        aria-hidden="true"
+        data-team-id="player"
+      >
         <div class="lineup-title">Sua Line-up</div>
-        <div id="lineupChips" class="lineup-chips" role="list"></div>
+        <div id="playerLineupChips" class="lineup-chips" role="list"></div>
+      </div>
+      <div
+        id="opponentLineupBanner"
+        class="lineup-banner hidden"
+        aria-hidden="true"
+        data-team-id="opponent"
+      >
+        <div class="lineup-title">Line-up Oponente</div>
+        <div id="opponentLineupChips" class="lineup-chips" role="list"></div>
       </div>
 
       <!-- First-choice overlay (initial 1v1 prompt) - placed before script load so it's available to main.js -->
