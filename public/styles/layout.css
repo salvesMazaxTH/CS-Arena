@@ -69,9 +69,10 @@ header h1 {
   justify-self: center;
   border: gray 5px double;
   margin: clamp(8px, 2vw, 20px) auto;
-  width: clamp(92%, 90vw, 900px);
-  max-width: 900px;
+  width: clamp(92%, 90vw, 550px);
+  max-width: 600px;
   min-height: 0; /* deixa o conteúdo definir a altura */
+  max-height: 700px;
   gap: clamp(8px, 2.5vw, 24px);
   padding: clamp(8px, 1.5vw, 16px);
 }
@@ -85,7 +86,7 @@ header h1 {
   align-items: center;
   border: 1px solid transparent;
   padding: 10px;
-  padding-bottom: clamp(50px, 10vw, 65px);
+  padding-bottom: clamp(20px, 10vw, 30px);
   position: relative;
   transition:
     border-color 0.3s ease,

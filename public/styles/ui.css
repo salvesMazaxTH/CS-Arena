@@ -1439,6 +1439,53 @@
   right: 14px;
 }
 
+@media (max-width: 768px), (max-height: 760px) {
+  .lineup-banner {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    width: calc(100vw - 8px);
+    max-width: calc(100vw - 8px);
+    margin: 4px auto 0;
+    padding: 3px 6px;
+    gap: 4px;
+    flex-direction: row;
+    justify-content: space-between;
+    border-radius: 8px;
+  }
+
+  .lineup-banner .lineup-title {
+    font-size: 0.58rem;
+    letter-spacing: 0.35px;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .lineup-chips {
+    gap: 2px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    justify-content: flex-end;
+    flex: 1 1 auto;
+  }
+
+  .lineup-chip {
+    width: 22px;
+    height: 30px;
+    padding: 1px;
+    border-radius: 5px;
+  }
+
+  .lineup-chip-identity-row {
+    display: none;
+  }
+
+  .lineup-chip-portrait {
+    border-radius: 4px;
+  }
+}
+
 .lineup-banner.hidden {
   display: none;
 }
