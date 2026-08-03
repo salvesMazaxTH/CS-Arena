@@ -1338,8 +1338,13 @@ function updateSelectedChampionsUI() {
 let playerRoster = Array(TEAM_SIZE).fill(null); // copy of the player's confirmed roster
 let firstChoicePending = false;
 let firstChoiceSelected = null;
-let firstChoiceResolved = false; // true once the first champion has been decided; chips stop being clickable
+let firstChoiceResolved = false; // true once the first champion has been decided; chips stop opening the 1v1 overlay
 const materializedLineupChampions = new Set();
+
+// --- Manual mid-match summon from lineup ---
+// Eligibility (slot free, once per turn) is server-authoritative; this only
+// tracks a request in flight so we don't double-submit while awaiting a reply.
+let pendingSummonChampionKey = null;
 
 const lineupBanner =
   document.getElementById("playerLineupBanner") ||
@@ -1373,6 +1378,13 @@ function renderLineupBanner() {
         playerTeam !== null &&
         materializedLineupChampions.has(`${playerTeam}:${champKey}`),
     );
+    chip.classList.toggle(
+      "summon-locked",
+      firstChoiceResolved &&
+        !!champKey &&
+        !chip.classList.contains("materialized") &&
+        pendingSummonChampionKey === champKey,
+    );
 
     if (champKey && championDB[champKey]) {
       chip.innerHTML = renderLineupChipContent(championDB[champKey], idx);
@@ -1381,9 +1393,10 @@ function renderLineupBanner() {
       chip.innerHTML = renderLineupChipContent(null, idx);
     }
 
-    // Once the first choice is resolved, the banner becomes read-only (no listener attached).
+    // Before the first choice is resolved: chip opens the 1v1 overlay/selection.
+    // After it's resolved: chip lets the player manually summon that champion (once per turn).
+    chip.setAttribute("role", "button");
     if (!firstChoiceResolved) {
-      chip.setAttribute("role", "button");
       chip.addEventListener("click", (e) => {
         e.stopPropagation();
         if (!firstChoicePending) {
@@ -1395,12 +1408,33 @@ function renderLineupBanner() {
         if (!key) return;
         chooseFirstChampion(key);
       });
+    } else {
+      chip.addEventListener("click", (e) => {
+        e.stopPropagation();
+        requestSummonFromLineup(chip);
+      });
     }
 
     lineupChips.appendChild(chip);
   });
 
   lineupBanner.classList.toggle("hidden", !hasAny);
+}
+
+/** Handles a click on a lineup chip after the 1v1 first-choice phase, to manually summon that champion. */
+/** Eligibility is decided by the server; this only guards against double-submitting the same request. */
+function requestSummonFromLineup(chip) {
+  const championKey = chip.dataset.championKey;
+  if (!championKey) return;
+
+  if (chip.classList.contains("materialized")) {
+    logCombat("Esse campeão já foi invocado nesta partida.");
+    return;
+  }
+  if (pendingSummonChampionKey) return;
+
+  pendingSummonChampionKey = championKey;
+  socket.emit("summonFromLineup", { championKey });
 }
 
 function openFirstChoiceOverlay() {
@@ -2183,6 +2217,21 @@ socket.on("gameStateUpdate", (gameState) => {
   syncMaterializedLineupChampions(gameState?.champions || []);
   renderLineupBanners(gameState?.lineups);
   combatAnimations.handleGameStateUpdate(gameState);
+
+  if (
+    pendingSummonChampionKey &&
+    playerTeam !== null &&
+    materializedLineupChampions.has(`${playerTeam}:${pendingSummonChampionKey}`)
+  ) {
+    pendingSummonChampionKey = null;
+    renderLineupBanner();
+  }
+});
+
+socket.on("actionFailed", (message) => {
+  console.warn("[ActionFailed]", message);
+  pendingSummonChampionKey = null;
+  combatAnimations.handleActionFailed(message);
 });
 
 socket.on("turnLocked", () => {
@@ -2226,6 +2275,8 @@ function applyTurnUpdate(turn) {
   currentTurn = turn;
   updateTurnDisplay(currentTurn);
   hasConfirmedEndTurn = false;
+  pendingSummonChampionKey = null;
+  renderLineupBanner();
 
   activeChampions.forEach((champion) => champion.resetActionStatus());
 

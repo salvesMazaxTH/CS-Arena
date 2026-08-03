@@ -808,6 +808,7 @@ function handleEndTurn() {
   match.clearActions();
   match.clearTurnReadiness();
   match.clearFinishedAnimationSockets();
+  match.clearTurnSummons();
   match.nextTurn();
 
   // 6. Sinaliza clientes que todos os eventos de combate foram emitidos
@@ -1501,6 +1502,59 @@ io.on("connection", (socket) => {
   // =============================
   socket.on("chooseFirstChampion", ({ championKey } = {}) => {
     handleFirstChampionChoice(socket.id, championKey);
+  });
+
+  // =============================
+  //  summonFromLineup (invoca um campeão da line-up para o campo)
+  // =============================
+  socket.on("summonFromLineup", ({ championKey } = {}) => {
+    const playerSlot = match.getSlotBySocket(socket.id);
+    const player = match.getPlayer(playerSlot);
+    if (!player) return;
+
+    const team = player.team;
+
+    if (match.hasSummonedThisTurn(team)) {
+      return socket.emit(
+        "actionFailed",
+        "Você já invocou um campeão da line-up neste turno.",
+      );
+    }
+
+    const reserve = match.combat.reserveQueues.get(team) || [];
+    if (!championKey || !reserve.includes(championKey)) {
+      return socket.emit(
+        "actionFailed",
+        "Esse campeão não está disponível para ser invocado.",
+      );
+    }
+
+    if (!match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM)) {
+      return socket.emit(
+        "actionFailed",
+        "Não há espaço livre no campo para invocar mais campeões.",
+      );
+    }
+
+    const spawned = spawnChampion({ championKey, team, trackSnapshot: true });
+    if (!spawned) {
+      return socket.emit(
+        "actionFailed",
+        "Não foi possível invocar este campeão.",
+      );
+    }
+
+    match.combat.reserveQueues.set(
+      team,
+      reserve.filter((key) => key !== championKey),
+    );
+    match.markSummonedThisTurn(team);
+
+    logTurnEvent("championSummoned", {
+      championId: spawned.id,
+      championKey,
+      team,
+    });
   });
 
   socket.on("requestSkillUse", ({ userId, skillKey, targetId }) => {

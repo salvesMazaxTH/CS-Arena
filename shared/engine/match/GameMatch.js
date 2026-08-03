@@ -111,6 +111,7 @@ class CombatState {
     this.scheduledEffects = [];
     this.reserveQueues = new Map(); // Fila de reserva por time
     this.firstChampionChoices = new Map(); // Escolha inicial para o 1v1
+    this.summonedThisTurn = new Set(); // Times que já invocaram um campeão da line-up neste turno
   }
 
   resetProgress() {
@@ -124,6 +125,7 @@ class CombatState {
     this.gameEnded = false;
     this.reserveQueues.clear();
     this.firstChampionChoices.clear();
+    this.summonedThisTurn.clear();
   }
 
   start() {
@@ -384,6 +386,18 @@ class CombatState {
     this.playersReadyToEndTurn.clear();
   }
 
+  hasSummonedThisTurn(team) {
+    return this.summonedThisTurn.has(team);
+  }
+
+  markSummonedThisTurn(team) {
+    this.summonedThisTurn.add(team);
+  }
+
+  clearTurnSummons() {
+    this.summonedThisTurn.clear();
+  }
+
   addPointForSlot(slot, maxScore = 6) {
     if (!Array.isArray(this.playerScores)) this.playerScores = [0, 0];
     this.playerScores[slot] = (this.playerScores[slot] || 0) + 1;
@@ -624,6 +638,18 @@ export class GameMatch {
 
   clearTurnReadiness() {
     this.combat.clearTurnReadiness();
+  }
+
+  hasSummonedThisTurn(team) {
+    return this.combat.hasSummonedThisTurn(team);
+  }
+
+  markSummonedThisTurn(team) {
+    this.combat.markSummonedThisTurn(team);
+  }
+
+  clearTurnSummons() {
+    this.combat.clearTurnSummons();
   }
 
   addReadyPlayer(slot) {

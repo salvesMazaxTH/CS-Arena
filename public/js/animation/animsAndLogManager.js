@@ -375,6 +375,10 @@ export function createCombatAnimationManager(deps) {
         await processCombatLog(item.data);
         break;
 
+      case "actionDialog":
+        await showDialog(item.data);
+        break;
+
       case "combatPhaseComplete":
         currentPhase = "combat";
         break;
@@ -1754,6 +1758,9 @@ export function createCombatAnimationManager(deps) {
     },
     handleCombatLog(text) {
       enqueue("combatLog", text);
+    },
+    handleActionFailed(message) {
+      enqueue("actionDialog", message);
     },
     handleGameStateUpdate(gameState) {
       enqueue("gameStateUpdate", gameState);

@@ -1418,71 +1418,143 @@
 .lineup-banner {
   position: absolute;
   z-index: 1500;
-  background: rgba(10, 10, 10, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 8px 10px;
-  border-radius: 10px;
+  width: fit-content;
+  --lineup-accent: rgba(255, 255, 255, 0.22);
+  --lineup-accent-soft: rgba(255, 255, 255, 0.1);
+  --lineup-accent-strong: rgba(255, 255, 255, 0.28);
+  background: rgba(12, 16, 22, 0.75);
+  border: 1px solid var(--lineup-accent-soft);
+  padding: 9px 11px;
+  border-radius: 14px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   align-items: center;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+  isolation: isolate;
+}
+
+.lineup-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.02) 28%,
+    rgba(255, 255, 255, 0) 55%
+  );
 }
 
 .lineup-banner[data-team-id="player"] {
-  top: 14px;
+  --lineup-accent: rgba(0, 150, 255, 0.72);
+  --lineup-accent-soft: rgba(0, 150, 255, 0.24);
+  --lineup-accent-strong: rgba(122, 201, 255, 0.34);
+  top: 25%;
   left: 14px;
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(0, 150, 255, 0.16),
+    0 0 18px rgba(0, 150, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .lineup-banner[data-team-id="opponent"] {
-  top: 14px;
+  --lineup-accent: rgba(255, 64, 64, 0.72);
+  --lineup-accent-soft: rgba(255, 64, 64, 0.24);
+  --lineup-accent-strong: rgba(255, 156, 156, 0.34);
+  top: 25%;
   right: 14px;
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(255, 64, 64, 0.16),
+    0 0 18px rgba(255, 64, 64, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-@media (max-width: 768px), (max-height: 760px) {
+@media (max-width: 250px), (max-height: 500px) and (pointer: coarse) {
   .lineup-banner {
-    position: relative;
-    top: auto;
+    position: absolute;
+    top: 72px;
+
+    width: auto;
+
+    margin: 0;
+
+    padding: 4px 5px;
+    gap: 4px;
+
     left: auto;
     right: auto;
-    width: calc(100vw - 8px);
-    max-width: calc(100vw - 8px);
     margin: 4px auto 0;
     padding: 3px 6px;
     gap: 4px;
     flex-direction: row;
-    justify-content: space-between;
-    border-radius: 8px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    background: rgba(10, 14, 18, 0.88);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    box-shadow:
+      0 6px 16px rgba(0, 0, 0, 0.38),
+      0 0 0 1px var(--lineup-accent-soft);
+  }
+
+  /* SUA LINE-UP: canto superior esquerdo */
+  .lineup-banner[data-team-id="player"] {
+    top: 72px;
+    left: 8px;
+    right: auto;
+  }
+
+  /* OPONENTE: canto superior direito */
+  .lineup-banner[data-team-id="opponent"] {
+    top: 72px;
+    right: 8px;
+    left: auto;
   }
 
   .lineup-banner .lineup-title {
-    font-size: 0.58rem;
-    letter-spacing: 0.35px;
-    flex: 0 0 auto;
+    font-size: 0.48rem;
+    line-height: 1;
+    letter-spacing: 0.3px;
     white-space: nowrap;
   }
 
   .lineup-chips {
+    display: grid;
+    grid-template-columns: repeat(4, 24px);
+    grid-template-rows: repeat(2, 32px);
+
     gap: 2px;
-    flex-wrap: nowrap;
-    overflow: hidden;
-    justify-content: flex-end;
-    flex: 1 1 auto;
+    justify-content: center;
+    justify-items: center;
   }
 
   .lineup-chip {
-    width: 22px;
-    height: 30px;
-    padding: 1px;
-    border-radius: 5px;
-  }
+    width: 24px;
+    height: 32px;
 
-  .lineup-chip-identity-row {
-    display: none;
+    padding: 1px;
+    border-radius: 4px;
   }
 
   .lineup-chip-portrait {
-    border-radius: 4px;
+    border-radius: 3px;
+  }
+
+  /* badges ficam informação demais nessa escala */
+  .lineup-chip-identity-row {
+    display: none;
   }
 }
 
@@ -1490,35 +1562,47 @@
   display: none;
 }
 .lineup-banner .lineup-title {
-  color: #bfffdc;
+  color: #dff9ff;
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
+  text-shadow: 0 0 12px var(--lineup-accent-soft);
 }
+
 .lineup-chips {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  justify-items: center;
 }
+
 .lineup-chip {
-  width: 64px;
-  height: 56px;
-  padding: 3px 3px 3px;
-  border-radius: 10px;
+  width: 66px;
+  height: 58px;
+  padding: 2px;
+  border-radius: 12px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.02)
+  );
+  border: 1px solid var(--lineup-accent-soft);
   display: flex;
   align-items: stretch;
   justify-content: center;
   position: relative;
   cursor: pointer;
   transition:
-    transform 0.12s,
-    box-shadow 0.12s;
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease,
+    opacity 0.16s ease,
+    filter 0.16s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 4px 10px rgba(0, 0, 0, 0.22);
 }
 .lineup-chip-inner {
   width: 100%;
@@ -1545,8 +1629,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   flex: 0 0 auto;
 }
 .lineup-chip-identity-row {
@@ -1568,7 +1652,7 @@
   flex: 0 0 auto;
   padding: 0 1px;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(8, 8, 8, 0.08), rgba(8, 8, 8, 0.7));
+  background: linear-gradient(180deg, rgba(8, 8, 8, 0.12), rgba(8, 8, 8, 0.72));
 }
 .lineup-chip-identity-row .champion-identity-badge {
   width: 19px;
@@ -1640,15 +1724,35 @@
   object-fit: cover;
 }
 .lineup-chip:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+  transform: translateY(-2px);
+  border-color: var(--lineup-accent-strong);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.34),
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 14px var(--lineup-accent-soft);
 }
 .lineup-chip.selected {
-  outline: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+  outline: 1px solid rgba(255, 255, 255, 0.18);
+  border-color: var(--lineup-accent-strong);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.24),
+    0 0 16px var(--lineup-accent-soft);
 }
 .lineup-chip.materialized {
-  filter: grayscale(1) brightness(0.92) saturate(0.8);
+  opacity: 0.7;
+  filter: grayscale(1) brightness(0.88) saturate(0.75);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 3px 8px rgba(0, 0, 0, 0.18);
+}
+.lineup-chip.summon-locked {
+  opacity: 0.5;
+  filter: grayscale(0.9) brightness(0.84) saturate(0.72);
+  cursor: not-allowed;
+}
+.lineup-chip.summon-locked:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 /* First-choice overlay */
