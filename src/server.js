@@ -22,6 +22,10 @@ import {
 import { emitCombatEvent } from "../shared/engine/combat/combatEvents.js";
 import { Action } from "../shared/engine/combat/Action.js";
 import { TurnResolver } from "../shared/engine/combat/TurnResolver.js";
+import {
+  CLAIM_ACTION_KEY,
+  CLAIM_ULT_COST,
+} from "../shared/engine/combat/claim.js";
 import { DamageEvent } from "../shared/engine/combat/DamageEvent.js";
 import { snapshotChampions } from "../shared/engine/combat/snapshotChampions.js";
 import { decayShields } from "../shared/core/championCombat.js";
@@ -50,7 +54,7 @@ const editMode = {
 
 const TEAM_SIZE = 8;
 const ACTIVE_PER_TEAM = 3; // máximo de campeões simultâneos em campo por time (roster=8, active=3)
-const MAX_SCORE = 6; // pontos necessários para vitória
+const MAX_SCORE = 30; // pontos necessários para vitória
 const CHAMPION_SELECTION_TIME = 120; // Segundos para seleção de campeões
 const FIRST_CHOICE_TIMEOUT = 99999 * 1000; //30 * 1000; // 30s para escolha do 1v1 (99.999s para testes)
 const DISCONNECT_TIMEOUT = 30 * 1000; // 30 s para reconexão
@@ -741,6 +745,10 @@ function handleEndTurn() {
       });
       emitCombatLogsFromResults(result.results);
 
+      if (result.scorePayload) {
+        io.emit("scoreUpdate", result.scorePayload);
+      }
+
       // Coletar championMutationRequests mas NÃO processar ainda
       // (será feito após deathResults para evitar que a nova criatura seja marcada como morta)
       const championMutationRequests =
@@ -779,15 +787,7 @@ function handleEndTurn() {
   }
 
   if (match.isGameEnded()) {
-    // Prefer score-based determination if available
-    let winnerSlot = null;
-    if (Array.isArray(match.combat.playerScores)) {
-      if ((match.combat.playerScores[0] || 0) >= MAX_SCORE) winnerSlot = 0;
-      else if ((match.combat.playerScores[1] || 0) >= MAX_SCORE) winnerSlot = 1;
-    }
-    if (winnerSlot === null) {
-      winnerSlot = match.combat.computeWinnerSlot(MAX_SCORE);
-    }
+    const winnerSlot = match.combat.computeWinnerSlot(MAX_SCORE);
     const winnerTeam = winnerSlot != null ? winnerSlot + 1 : null;
     const winnerName =
       winnerSlot != null ? match.players[winnerSlot]?.username : null;
@@ -1012,9 +1012,10 @@ function handleStartTurn() {
   // Start-of-turn hooks (e.g. Jeff's Inevitabilidade da Morte) can kill the
   // last real champion outside the regular end-turn action flow.
   if (match.isGameEnded()) {
-    const winnerSlot = match.combat.computeWinnerSlot();
-    const winnerTeam = winnerSlot + 1;
-    const winnerName = match.players[winnerSlot]?.username;
+    const winnerSlot = match.combat.computeWinnerSlot(MAX_SCORE);
+    const winnerTeam = winnerSlot != null ? winnerSlot + 1 : null;
+    const winnerName =
+      winnerSlot != null ? match.players[winnerSlot]?.username : null;
     io.emit("gameOver", { winnerTeam, winnerName });
   }
 
@@ -1561,6 +1562,19 @@ io.on("connection", (socket) => {
     const user = match.combat.activeChampions.get(userId);
     if (!user) return socket.emit("skillDenied", "Sem permissão.");
 
+    if (skillKey === CLAIM_ACTION_KEY) {
+      if (!validateActionIntent(user, null, socket)) return;
+
+      if (
+        !editMode.freeCostSkills &&
+        (Number(user.ultMeter) || 0) < CLAIM_ULT_COST
+      ) {
+        return socket.emit("skillDenied", `ultômetro insuficiente.`);
+      }
+
+      return socket.emit("skillApproved", { userId, skillKey });
+    }
+
     const skill = user.skills.find((s) => s.key === skillKey);
     if (!skill) return socket.emit("skillDenied", "Skill inválida.");
 
@@ -1637,6 +1651,37 @@ io.on("connection", (socket) => {
     const playerSlot = match.getSlotBySocket(socket.id);
     const player = match.players[playerSlot];
     const user = match.combat.activeChampions.get(userId);
+
+    if (skillKey === CLAIM_ACTION_KEY) {
+      if (!player || !user || user.team !== player.team) {
+        return socket.emit(
+          "actionFailed",
+          "Você não tem permissão para usar CLAIM com este campeão.",
+        );
+      }
+
+      if (
+        !editMode.freeCostSkills &&
+        (Number(user.ultMeter) || 0) < CLAIM_ULT_COST
+      ) {
+        return socket.emit("actionFailed", "Ultômetro insuficiente.");
+      }
+
+      const action = new Action({ userId, skillKey, targetIds: {} });
+      action.priority = 0;
+      action.speed = user.Speed;
+      action.turn = match.getCurrentTurn();
+      action.ultCost = CLAIM_ULT_COST;
+      action.type = "claim";
+
+      match.enqueueAction(action);
+
+      io.to(socket.id).emit(
+        "combatLog",
+        `${formatChampionName(user)} preparou CLAIM. Ação pendente.`,
+      );
+      return;
+    }
 
     if (!player || !user || user.team !== player.team) {
       return socket.emit(

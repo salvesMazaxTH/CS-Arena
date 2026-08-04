@@ -3,6 +3,10 @@
 // ============================================================
 
 import { elementEmoji } from "../../shared/ui/elementEmoji.js";
+import {
+  CLAIM_ACTION_KEY,
+  CLAIM_ULT_COST,
+} from "../../shared/engine/combat/claim.js";
 
 let skillOverlay = null;
 
@@ -1940,6 +1944,22 @@ socket.on("skillApproved", async ({ userId, skillKey }) => {
   const user = activeChampions.get(userId);
   if (!user) return;
 
+  if (skillKey === CLAIM_ACTION_KEY) {
+    if (!editMode.actMultipleTimesPerTurn) {
+      user.markActionTaken();
+      user.updateUI(currentTurn);
+    }
+
+    socket.emit("useSkill", { userId, skillKey, targetIds: {} });
+    document.getElementById("undo-actions-btn").disabled = false;
+
+    if (!editMode.actMultipleTimesPerTurn) {
+      advanceActionBarSlot(userId);
+    }
+
+    return;
+  }
+
   const skill = user.skills.find((s) => s.key === skillKey);
   if (!skill) return;
 
@@ -2454,6 +2474,16 @@ function showActionBarSlot() {
   const skillsBar = document.createElement("div");
   skillsBar.className = "action-bar-skills";
 
+  const claimBtn = document.createElement("button");
+  claimBtn.className = "action-bar-skill-btn claim";
+  claimBtn.textContent = "CLAIM";
+  claimBtn.title = "Gasta 9 de ultômetro e marca pontos conforme o HP perdido.";
+  claimBtn.addEventListener("click", () => handleClaimUsage(champion));
+  if (!editMode.freeCostSkills && champion.ultMeter < CLAIM_ULT_COST) {
+    claimBtn.disabled = true;
+  }
+  skillsBar.appendChild(claimBtn);
+
   champion.skills.forEach((skill) => {
     const isUlt = skill.isUltimate === true;
     const label = isUlt ? `ULT — ${skill.name}` : skill.name;
@@ -2506,6 +2536,36 @@ function advanceActionBarSlot(champId) {
     document.getElementById("undo-actions-btn").disabled = false;
     // rebuildReserveDisplay(playerTeam);
   }
+}
+
+async function handleClaimUsage(champion) {
+  if (window.gameEnded) {
+    alert("O jogo já terminou. Nenhuma ação pode ser realizada.");
+    return;
+  }
+
+  if (!champion) return;
+
+  if (champion.team !== playerTeam) {
+    alert("Você só pode agir com campeões do seu time.");
+    return;
+  }
+
+  if (!editMode.actMultipleTimesPerTurn && champion.hasActedThisTurn) {
+    alert(`${champion.name} já agiu neste turno.`);
+    return;
+  }
+
+  if (!editMode.freeCostSkills && CLAIM_ULT_COST > champion.ultMeter) {
+    alert("Valor de ultômetro insuficiente para CLAIM.");
+    champion.updateUI(currentTurn);
+    return;
+  }
+
+  socket.emit("requestSkillUse", {
+    userId: champion.id,
+    skillKey: CLAIM_ACTION_KEY,
+  });
 }
 
 function skipCurrentSlot() {

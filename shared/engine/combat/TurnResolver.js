@@ -1,5 +1,10 @@
 import { formatChampionName } from "../../ui/formatters.js";
 import { emitCombatEvent } from "./combatEvents.js";
+import {
+  CLAIM_ACTION_KEY,
+  CLAIM_ULT_COST,
+  getClaimPointsFromMissingHP,
+} from "./claim.js";
 import { snapshotChampions } from "./snapshotChampions.js";
 
 const RESOURCE_DEBUG_TRUE_VALUES = new Set(["1", "true", "yes", "on"]);
@@ -106,7 +111,7 @@ export class TurnResolver {
     }
 
     const deathContext = this.createBaseContext({ sourceId: null });
-    const deathResults = this.processChampionDeaths(6, deathContext);
+    const deathResults = this.processChampionDeaths(30, deathContext);
 
     return { actionResults, deathResults, switchResults };
   }
@@ -179,7 +184,7 @@ export class TurnResolver {
   //  PROCESSAMENTO DE MORTES
   // ============================================================
 
-  processChampionDeaths(maxScore = 6, context = null) {
+  processChampionDeaths(maxScore = 30, context = null) {
     const results = [];
     for (const champ of this.combat.activeChampions.values()) {
       if (!champ.alive) {
@@ -236,6 +241,10 @@ export class TurnResolver {
         user,
         action,
       };
+    }
+
+    if (action?.skillKey === CLAIM_ACTION_KEY) {
+      return this.executeClaimAction(user, action, turnExecutionMap, context);
     }
 
     // 3. valida skill
@@ -331,6 +340,116 @@ export class TurnResolver {
     };
   }
 
+  executeClaimAction(user, action, turnExecutionMap, context) {
+    if (
+      !this.editMode.freeCostSkills &&
+      (Number(user.ultMeter) || 0) < CLAIM_ULT_COST
+    ) {
+      return {
+        executed: false,
+        reason: "denied",
+        denial: {
+          denied: true,
+          message: `${formatChampionName(user)} não tem ultômetro suficiente para CLAIM.`,
+        },
+        user,
+        action,
+      };
+    }
+
+    const claimSkill = {
+      key: CLAIM_ACTION_KEY,
+      name: "CLAIM",
+      isUltimate: true,
+      priority: 0,
+      targetSpec: [],
+    };
+
+    context.currentSkill = claimSkill;
+    context.actionSource = user;
+
+    this.combat.activeChampions.forEach((champion) => {
+      champion.runtime = champion.runtime || {};
+      champion.runtime.currentContext = context;
+    });
+
+    try {
+      if (action.ultCost > 0 && !this.editMode.freeCostSkills) {
+        this.applyResourceChange({
+          target: user,
+          amount: -action.ultCost,
+          context,
+          sourceId: user.id,
+        });
+      }
+
+      this.registerSkillUsageInTurn(user, claimSkill, {});
+
+      const missingHP = Math.max(
+        0,
+        (Number(user.maxHP) || 0) - (Number(user.HP) || 0),
+      );
+      const claimPoints = getClaimPointsFromMissingHP(missingHP);
+      const scoringSlot = user.team - 1;
+
+      for (let i = 0; i < claimPoints; i++) {
+        this.match.addPointForSlot(scoringSlot, 30);
+      }
+
+      const actionResolvedResults = emitCombatEvent(
+        "onActionResolved",
+        {
+          actionSource: user,
+          targets: [],
+          skill: claimSkill,
+          action,
+          context,
+        },
+        this.combat.activeChampions,
+      );
+
+      const normalizedActionResolvedResults = Array.isArray(
+        actionResolvedResults,
+      )
+        ? actionResolvedResults
+        : actionResolvedResults
+          ? [actionResolvedResults]
+          : [];
+
+      this.processImmediateChampionMutations(context);
+
+      context._intermediateSnapshot = snapshotChampions(
+        this.combat.activeChampions,
+      );
+
+      const registeredResults = context.consumeRegisteredResults();
+
+      return {
+        executed: true,
+        user,
+        skill: claimSkill,
+        context,
+        action,
+        results: [
+          {
+            log: `${formatChampionName(user)} usou <b>CLAIM</b> e marcou ${claimPoints} ponto(s).`,
+          },
+          ...normalizedActionResolvedResults,
+          ...registeredResults,
+        ],
+        claimPoints,
+        scorePayload: this.match.getScorePayload(),
+        scoringSlot,
+        scoringTeam: user.team,
+      };
+    } finally {
+      this.combat.activeChampions.forEach((champion) => {
+        if (champion.runtime) delete champion.runtime.currentContext;
+      });
+      delete context.actionSource;
+    }
+  }
+
   // ============================================================
   //  MUTAÇÕES IMEDIATAS DE CAMPEÃO
   // ============================================================
@@ -417,6 +536,22 @@ export class TurnResolver {
             res.log ||
             `${formatChampionName(user)} não pode agir.`,
         };
+      }
+    }
+
+    if (action?.skillKey === CLAIM_ACTION_KEY) {
+      const activeTaunt = user.tauntEffects?.find(
+        (effect) => effect.expiresAtTurn > this.combat.currentTurn,
+      );
+
+      if (activeTaunt) {
+        const taunter = this.combat.activeChampions.get(activeTaunt.taunterId);
+        if (taunter?.alive) {
+          return {
+            denied: true,
+            message: `${formatChampionName(user)} está provocado e deve atacar seu provocador.`,
+          };
+        }
       }
     }
 

@@ -206,6 +206,15 @@ class CombatState {
     ].filter((champion) => champion.team === team);
   }
 
+  getLivingChampionsForTeam(team) {
+    return [
+      ...this.activeChampions.values(),
+      ...this.inactiveChampions.values(),
+    ]
+      .filter((champion) => champion.team === team)
+      .filter((champion) => champion.alive);
+  }
+
   getAliveChampionsForTeam(team) {
     return this.getAliveChampions().filter(
       (champion) => champion.team === team,
@@ -311,10 +320,11 @@ class CombatState {
   }
 
   /**
-   * Remove um campeão morto do jogo: registra no histórico, atualiza placar, move para deadChampions.
+   * Remove um campeão morto do jogo: registra no histórico, move para deadChampions.
+   * Se a eliminação deixar o time sem campeões vivos na lineup, o jogo termina.
    * Retorna um objeto com os dados necessários para o server emitir sockets, ou null se não encontrado.
    */
-  removeChampionFromGame(championId, maxScore = 6) {
+  removeChampionFromGame(championId, maxScore = 30) {
     const champion = this.activeChampions.get(championId);
     if (!champion) return null;
 
@@ -326,36 +336,15 @@ class CombatState {
     });
     this.ensureTurnEntry().championsDeadThisTurn.push(championId);
 
-    // Score: increment opponent's point unless the dead entity is a minion
-    const isMinion = champion.entityType === "minion";
     let scoringTeam = null;
     let scoringPlayerSlot = null;
     let scored = false;
-    if (!isMinion) {
-      scoringTeam = champion.team === 1 ? 2 : 1;
-      scoringPlayerSlot = scoringTeam - 1;
-      if (!this.gameEnded) {
-        this.addPointForSlot(scoringPlayerSlot, maxScore);
-        scored = true;
-      }
-    }
 
     // Mover para deadChampions
     this.removeChampion(championId);
 
-    // Nova condição de vitória: um jogador perde quando não restar nenhum campeão
-    // "real" (entityType ausente ou === "champion") em seu time.
-    // Minions e demais entityTypes não contam para manter o jogador em campo.
-    const isRealChampion = (c) => !c.entityType || c.entityType === "champion";
-    if (
-      !this.gameEnded &&
-      !this.getAliveChampionsForTeam(champion.team).some(isRealChampion)
-    ) {
-      // Fallback: if a team has no real champions, end the game (presence-based)
+    if (!this.hasLivingChampionsForTeam(champion.team)) {
       this.gameEnded = true;
-      console.log(
-        `[removeChampionFromGame] Time ${champion.team} não tem mais campeões reais — jogo encerrado.`,
-      );
     }
 
     return {
@@ -398,7 +387,11 @@ class CombatState {
     this.summonedThisTurn.clear();
   }
 
-  addPointForSlot(slot, maxScore = 6) {
+  hasLivingChampionsForTeam(team) {
+    return this.getLivingChampionsForTeam(team).length > 0;
+  }
+
+  addPointForSlot(slot, maxScore = 30) {
     if (!Array.isArray(this.playerScores)) this.playerScores = [0, 0];
     this.playerScores[slot] = (this.playerScores[slot] || 0) + 1;
     if (this.playerScores[slot] >= maxScore) {
@@ -406,7 +399,7 @@ class CombatState {
     }
   }
 
-  setWinnerScore(slot, maxScore = 6) {
+  setWinnerScore(slot, maxScore = 30) {
     if (!Array.isArray(this.playerScores)) this.playerScores = [0, 0];
     this.playerScores[slot] = maxScore;
     this.gameEnded = true;
@@ -420,25 +413,20 @@ class CombatState {
   }
 
   /**
-   * Returns the slot (0 or 1) of the team that still has real champions
-   * (entityType absent or === "champion"). Minions/other entity types don't count.
-   * Used after gameEnded = true to identify the winner.
-   * Returns null if neither team qualifies (shouldn't happen in normal play).
+   * Returns the slot (0 or 1) of the winning team.
+   * Prefer score-based victory first; otherwise fall back to the team that still
+   * has at least one living champion in the lineup.
+   * Returns null if neither team qualifies.
    */
-  computeWinnerSlot(maxScore = 6) {
-    // Prefer score-based victory if scores exist
+  computeWinnerSlot(maxScore = 30) {
     if (Array.isArray(this.playerScores)) {
       if ((this.playerScores[0] || 0) >= maxScore) return 0;
       if ((this.playerScores[1] || 0) >= maxScore) return 1;
     }
 
-    // Fallback: team that still has a "real" champion on the field
-    const isRealChampion = (c) => !c.entityType || c.entityType === "champion";
-    for (let team = 1; team <= 2; team++) {
-      if (this.getAliveChampionsForTeam(team).some(isRealChampion)) {
-        return team - 1;
-      }
-    }
+    if (this.hasLivingChampionsForTeam(1)) return 0;
+    if (this.hasLivingChampionsForTeam(2)) return 1;
+
     return null;
   }
 }
@@ -576,7 +564,7 @@ export class GameMatch {
     return this.combat.removeChampion(championId);
   }
 
-  removeChampionFromGame(championId, maxScore = 6) {
+  removeChampionFromGame(championId, maxScore = 30) {
     return this.combat.removeChampionFromGame(championId, maxScore);
   }
 
@@ -612,11 +600,11 @@ export class GameMatch {
     return this.combat.gameEnded;
   }
 
-  addPointForSlot(slot, maxScore = 6) {
+  addPointForSlot(slot, maxScore = 30) {
     this.combat.addPointForSlot(slot, maxScore);
   }
 
-  setWinnerScore(slot, maxScore = 6) {
+  setWinnerScore(slot, maxScore = 30) {
     this.combat.setWinnerScore(slot, maxScore);
   }
 
