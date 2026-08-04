@@ -132,6 +132,10 @@ body.team-selection-active .team-container:hover {
 }
 
 .player-name-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45em;
   font-size: clamp(0.85rem, 2vw, 1.2em);
   font-weight: bold;
   margin-bottom: 4px;
@@ -146,6 +150,19 @@ body.team-selection-active .team-container:hover {
 }
 
 .player-name-display[data-team="2"] {
+  color: #ff0000;
+}
+
+.player-name-score-separator {
+  color: inherit;
+}
+
+.player-name-score {
+  min-width: 1ch;
+  color: #0096ff;
+}
+
+.player-name-display[data-team="2"] .player-name-score {
   color: #ff0000;
 }
 

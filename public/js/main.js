@@ -582,6 +582,8 @@ const selectedChampionsSlots = document.getElementById(
 );
 const confirmTeamBtn = document.getElementById("confirmTeamBtn");
 const teamSelectionMessage = document.getElementById("team-selection-message");
+const player1ScoreDisplay = document.getElementById("player1-score-display");
+const player2ScoreDisplay = document.getElementById("player2-score-display");
 
 // --- Fim de jogo ---
 const gameOverOverlay = document.getElementById("gameOverOverlay");
@@ -2248,6 +2250,10 @@ socket.on("gameStateUpdate", (gameState) => {
   }
 });
 
+socket.on("scoreUpdate", (score) => {
+  updateScoreDisplay(score);
+});
+
 socket.on("actionFailed", (message) => {
   console.warn("[ActionFailed]", message);
   pendingSummonChampionKey = null;
@@ -2321,6 +2327,16 @@ function updateTurnDisplay(turn) {
   const turnDisplay = document.querySelector(".turn-display");
   const turnText = turnDisplay?.querySelector("p");
   if (turnText) turnText.innerHTML = `Turno ${turn}`;
+}
+
+function updateScoreDisplay(score) {
+  if (player1ScoreDisplay) {
+    player1ScoreDisplay.textContent = String(score?.player1 ?? 0);
+  }
+
+  if (player2ScoreDisplay) {
+    player2ScoreDisplay.textContent = String(score?.player2 ?? 0);
+  }
 }
 
 function endTurn() {

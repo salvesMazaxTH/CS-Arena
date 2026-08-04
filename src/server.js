@@ -54,7 +54,7 @@ const editMode = {
 
 const TEAM_SIZE = 8;
 const ACTIVE_PER_TEAM = 3; // máximo de campeões simultâneos em campo por time (roster=8, active=3)
-const MAX_SCORE = 30; // pontos necessários para vitória
+const MAX_SCORE = 25; // pontos necessários para vitória
 const CHAMPION_SELECTION_TIME = 120; // Segundos para seleção de campeões
 const FIRST_CHOICE_TIMEOUT = 99999 * 1000; //30 * 1000; // 30s para escolha do 1v1 (99.999s para testes)
 const DISCONNECT_TIMEOUT = 30 * 1000; // 30 s para reconexão
@@ -261,6 +261,7 @@ function spawnChampion({
   team,
   combatSlot = null,
   trackSnapshot = true,
+  emitState = true,
 } = {}) {
   const baseData = championDB[championKey];
   if (!baseData) return null;
@@ -329,7 +330,9 @@ function spawnChampion({
     });
   }
 
-  io.emit("gameStateUpdate", getGameState());
+  if (emitState) {
+    io.emit("gameStateUpdate", getGameState());
+  }
 
   return newChampion;
 }
@@ -720,6 +723,10 @@ function emitCombatLogsFromResults(results = []) {
 
 function handleEndTurn() {
   io.emit("turnLocked");
+
+  // Revela imediatamente os campeões da line-up materializados antes da
+  // resolução das ações deste turno.
+  io.emit("gameStateUpdate", getGameState());
 
   // 1. Resolver todas as ações via TurnResolver (switches têm prioridade 6 — saem primeiro)
   const resolver = new TurnResolver(match, editMode, {
@@ -1537,13 +1544,20 @@ io.on("connection", (socket) => {
       );
     }
 
-    const spawned = spawnChampion({ championKey, team, trackSnapshot: true });
+    const spawned = spawnChampion({
+      championKey,
+      team,
+      trackSnapshot: true,
+      emitState: false,
+    });
     if (!spawned) {
       return socket.emit(
         "actionFailed",
         "Não foi possível invocar este campeão.",
       );
     }
+
+    socket.emit("gameStateUpdate", getGameState());
 
     match.combat.reserveQueues.set(
       team,
