@@ -54,7 +54,7 @@ const editMode = {
 
 const TEAM_SIZE = 8;
 const ACTIVE_PER_TEAM = 3; // máximo de campeões simultâneos em campo por time (roster=8, active=3)
-const MAX_SCORE = 25; // pontos necessários para vitória
+const MAX_SCORE = 24; // pontos necessários para vitória
 const CHAMPION_SELECTION_TIME = 120; // Segundos para seleção de campeões
 const FIRST_CHOICE_TIMEOUT = 99999 * 1000; //30 * 1000; // 30s para escolha do 1v1 (99.999s para testes)
 const DISCONNECT_TIMEOUT = 30 * 1000; // 30 s para reconexão
@@ -319,6 +319,20 @@ function spawnChampion({
   ); */
 
   match.combat.registerChampion(newChampion, { trackSnapshot });
+
+  emitCombatEvent(
+    "onChampionAdded",
+    {
+      owner: newChampion,
+      context: {
+        currentTurn: match.combat.currentTurn,
+        allChampions: match.combat.activeChampions,
+        spawnProtection: true,
+      },
+      spawnProtection: true,
+    },
+    [newChampion],
+  );
 
   if (!trackSnapshot) {
     // Montagem inicial — snapshot manual

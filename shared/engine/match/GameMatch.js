@@ -391,7 +391,7 @@ class CombatState {
     return this.getLivingChampionsForTeam(team).length > 0;
   }
 
-  addPointForSlot(slot, maxScore = 25) {
+  addPointForSlot(slot, maxScore = 24) {
     if (!Array.isArray(this.playerScores)) this.playerScores = [0, 0];
     this.playerScores[slot] = (this.playerScores[slot] || 0) + 1;
     if (this.playerScores[slot] >= maxScore) {
@@ -399,7 +399,7 @@ class CombatState {
     }
   }
 
-  setWinnerScore(slot, maxScore = 25) {
+  setWinnerScore(slot, maxScore = 24) {
     if (!Array.isArray(this.playerScores)) this.playerScores = [0, 0];
     this.playerScores[slot] = maxScore;
     this.gameEnded = true;
@@ -418,7 +418,7 @@ class CombatState {
    * has at least one living champion in the lineup.
    * Returns null if neither team qualifies.
    */
-  computeWinnerSlot(maxScore = 25) {
+  computeWinnerSlot(maxScore = 24) {
     if (Array.isArray(this.playerScores)) {
       if ((this.playerScores[0] || 0) >= maxScore) return 0;
       if ((this.playerScores[1] || 0) >= maxScore) return 1;
@@ -612,8 +612,8 @@ export class GameMatch {
     return this.combat.getScorePayload();
   }
 
-  computeWinnerSlot() {
-    return this.combat.computeWinnerSlot();
+  computeWinnerSlot(maxScore = 24) {
+    return this.combat.computeWinnerSlot(maxScore);
   }
 
   clearActions() {
