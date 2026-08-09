@@ -2,8 +2,6 @@ import { formatChampionName } from "../../ui/formatters.js";
 import { emitCombatEvent } from "./combatEvents.js";
 import {
   CLAIM_ACTION_KEY,
-  CLAIM_ULT_COST,
-  getClaimPointsFromMissingHP,
 } from "./claim.js";
 import { snapshotChampions } from "./snapshotChampions.js";
 
