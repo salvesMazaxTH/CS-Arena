@@ -2354,55 +2354,6 @@ function updateTurnDisplay(turn) {
   if (turnText) turnText.innerHTML = `Turno ${turn}`;
 }
 
-function updateScoreDisplay(score) {
-  updateScoreValue(player1ScoreDisplay, score?.player1 ?? 0);
-  updateScoreValue(player2ScoreDisplay, score?.player2 ?? 0);
-}
-
-function updateScoreValue(element, newValue) {
-  if (!element) return;
-
-  const oldValue = Number(element.textContent) || 0;
-  const nextValue = Number(newValue) || 0;
-
-  if (oldValue === nextValue) return;
-
-  const increasing = nextValue > oldValue;
-  const delta = Math.abs(nextValue - oldValue);
-
-  // Reinicia a animação caso o placar seja alterado novamente rapidamente.
-  element.classList.remove(
-    "score-changing",
-    "score-increased",
-    "score-decreased",
-  );
-
-  element.dataset.scoreDelta = `${increasing ? "+" : "-"}${delta}`;
-
-  // Força o browser a reconhecer a remoção antes de adicionar novamente.
-  void element.offsetWidth;
-
-  element.textContent = String(nextValue);
-
-  element.classList.add(
-    "score-changing",
-    increasing ? "score-increased" : "score-decreased",
-  );
-
-  element.addEventListener(
-    "animationend",
-    () => {
-      delete element.dataset.scoreDelta;
-      element.classList.remove(
-        "score-changing",
-        "score-increased",
-        "score-decreased",
-      );
-    },
-    { once: true },
-  );
-}
-
 function endTurn() {
   if (hasConfirmedEndTurn) {
     alert("Você já confirmou o fim do turno. Aguardando o outro jogador.");

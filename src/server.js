@@ -533,7 +533,13 @@ function buildEmitTargetInfo(realTargetIds) {
   };
 }
 
-function emitCombatEnvelopesFromContext({ user, skill, context }) {
+function emitCombatEnvelopesFromContext({
+  user,
+  skill,
+  context,
+  scorePayload = null,
+  claimPoints = null,
+}) {
   const mainEnvelope = buildMainEnvelopeFromContext({
     user,
     skill,
@@ -582,7 +588,11 @@ function emitCombatEnvelopesFromContext({ user, skill, context }) {
       /* console.log("[DEBUG] [JEFF REVIVAL DIALOG] === ENVELOPE SEND ===", {
         globalDialogs: context.visual.globalDialogs,
       }); */
-      emitCombatAction(mainEnvelope);
+      emitCombatAction({
+        ...mainEnvelope,
+        scorePayload,
+        claimPoints,
+      });
     }
   }
 
@@ -753,12 +763,9 @@ function handleEndTurn() {
         user: result.user,
         skill: result.skill,
         context: result.context,
+        scorePayload: result.scorePayload ?? null,
+        claimPoints: result.claimPoints ?? null,
       });
-      emitCombatLogsFromResults(result.results);
-
-      if (result.scorePayload) {
-        io.emit("scoreUpdate", result.scorePayload);
-      }
 
       // Coletar championMutationRequests mas NÃO processar ainda
       // (será feito após deathResults para evitar que a nova criatura seja marcada como morta)
@@ -1765,7 +1772,6 @@ io.on("connection", (socket) => {
 
     match.setWinnerScore(winnerSlot, MAX_SCORE);
     match.combat.gameEnded = true; // mark game as ended on surrender
-    io.emit("scoreUpdate", match.getScorePayload());
 
     io.emit("gameOver", {
       winnerTeam,

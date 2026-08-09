@@ -5,6 +5,7 @@ import { playFinishingEffect } from "../../../shared/vfx/finishing.js";
 import { playLifestealTransferVFX } from "../../../shared/vfx/lifestealTransferCanvas.js";
 import { StatusIndicator } from "../../../shared/ui/statusIndicator.js";
 import { playDeathClaimEffect } from "../../../shared/vfx/deathClaim.js";
+import { CLAIM_ACTION_KEY } from "../../../shared/engine/combat/claim.js";
 import { audioManager } from "../utils/AudioManager.js";
 import { animateSkill } from "./skillAnimations.js";
 
@@ -343,6 +344,73 @@ export function createCombatAnimationManager(deps) {
     }
   }
 
+  function updateScoreDisplay(score) {
+    updateScoreValue(player1ScoreDisplay, score?.player1 ?? 0);
+    updateScoreValue(player2ScoreDisplay, score?.player2 ?? 0);
+  }
+
+  function processScoreUpdate(score) {
+    if (!score) return;
+
+    updateScoreDisplay(score);
+  }
+
+  async function animateClaimScore(score, claimPoints = null) {
+    if (!score) return;
+
+    // Pequena folga para o balão de CLAIM aparecer antes do placar reagir.
+    await wait(220);
+
+    processScoreUpdate(score);
+
+    // Mantém o bloco do CLAIM ativo até a animação visual do placar ficar legível.
+    await wait(900);
+  }
+
+  function updateScoreValue(element, newValue) {
+    if (!element) return;
+
+    const oldValue = Number(element.textContent) || 0;
+    const nextValue = Number(newValue) || 0;
+
+    if (oldValue === nextValue) return;
+
+    const increasing = nextValue > oldValue;
+    const delta = Math.abs(nextValue - oldValue);
+
+    // Reinicia a animação caso o placar seja alterado novamente rapidamente.
+    element.classList.remove(
+      "score-changing",
+      "score-increased",
+      "score-decreased",
+    );
+
+    element.dataset.scoreDelta = `${increasing ? "+" : "-"}${delta}`;
+
+    // Força o browser a reconhecer a remoção antes de adicionar novamente.
+    void element.offsetWidth;
+
+    element.textContent = String(nextValue);
+
+    element.classList.add(
+      "score-changing",
+      increasing ? "score-increased" : "score-decreased",
+    );
+
+    element.addEventListener(
+      "animationend",
+      () => {
+        delete element.dataset.scoreDelta;
+        element.classList.remove(
+          "score-changing",
+          "score-increased",
+          "score-decreased",
+        );
+      },
+      { once: true },
+    );
+  }
+
   async function dispatchQueueItem(item) {
     console.log("📦 DISPATCH:", item.type);
 
@@ -352,6 +420,10 @@ export function createCombatAnimationManager(deps) {
         await processCombatAction(item.data);
         console.log("✅ END combatAction");
         await wait(TIMING.BETWEEN_ACTIONS);
+        break;
+
+      case "scoreUpdate":
+        processScoreUpdate(item.data);
         break;
 
       case "gameStateUpdate":
@@ -503,11 +575,15 @@ export function createCombatAnimationManager(deps) {
   async function processCombatAction(envelope) {
     const dispatcher = createEventDispatcher();
     const { action, log, state } = envelope;
+    const isClaim = envelope?.action?.skillKey === CLAIM_ACTION_KEY;
 
-    // action dialog
     if (action && typeof handleActionDialog === "function") {
       currentPhase = "combat";
       await handleActionDialog(action);
+    }
+
+    if (isClaim && envelope.scorePayload) {
+      await animateClaimScore(envelope.scorePayload, envelope.claimPoints);
     }
 
     // (Skill animation now handled per DamageEvent in animateDamage)
@@ -518,7 +594,9 @@ export function createCombatAnimationManager(deps) {
     if (envelope.globalDialogs?.length) {
       await runDialogs(envelope.globalDialogs);
     }
-    const hasAnyEvent = dispatcher.keys.some((key) => envelope[key]?.length);
+    const hasAnyEvent =
+      dispatcher.keys.some((key) => envelope[key]?.length) ||
+      Boolean(isClaim && envelope.scorePayload);
 
     if (!hasAnyEvent) {
       if (state) applyStateSnapshots(state);
