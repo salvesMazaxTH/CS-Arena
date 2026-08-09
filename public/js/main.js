@@ -89,6 +89,12 @@ function toParagraphs(text) {
   return String(text ?? "").replace(/\n/g, "<br>");
 }
 
+function getClaimPointsPreview(champion) {
+  const ultMeter = Math.max(0, Number(champion?.ultMeter) || 0);
+
+  return Math.min(4, Math.floor(ultMeter / 4));
+}
+
 // =========================
 // Skill Overlay
 // =========================
@@ -112,6 +118,10 @@ function showSkillOverlay(button, skill, champion) {
   const parsedDesc = renderGlossaryStatusEffects(rawDesc);
   const glossaryKeys = extractGlossaryKeys(rawDesc);
 
+  const isClaim = skill?.key === CLAIM_ACTION_KEY;
+
+  const claimPoints = isClaim ? getClaimPointsPreview(champion) : null;
+
   const ultCostBars =
     skill.isUltimate && Number.isInteger(skill.ultCost) ? skill.ultCost : null;
 
@@ -120,89 +130,104 @@ function showSkillOverlay(button, skill, champion) {
   // =========================
 
   overlay.innerHTML = `
-  <div class="skill-overlay-content">
 
-    <div class="skill-overlay-title">
-      ${escapeHtml(skill.name || "Habilidade")}
-    </div>
-
-    <div class="skill-overlay-meta-primary">
-
-      ${
-        ultCostBars
-          ? `
-        <div class="skill-meta-item">
-          <span class="meta-label">Custo:</span>
-          <span class="meta-value">
-            ${ultCostBars} ${ultCostBars === 1 ? "barra" : "barras"}
-          </span>
-        </div>
-      `
-          : ""
-      }
-
-      ${
-        skill.damageMode != null
-          ? `
-        <div class="skill-meta-item">
-          <span class="meta-label">Tipo de Dano:</span>
-          <span class="meta-value">
-            ${getDamageModeLabel(skill.damageMode)}
-          </span>
-        </div>
-      `
-          : ""
-      }
-
-      ${
-        skill.bf
-          ? `
-        <div class="skill-meta-item">
-          <span class="meta-label">BF:</span>
-          <span class="meta-value">${skill.bf}%</span>
-        </div>
-      `
-          : ""
-      }
-
-    </div>
-
-    ${
-      skill.element
-        ? `
-      <div class="skill-overlay-element-row">
-        <span class="meta-label">Elemento:</span>
-        <span class="meta-value">
-          ${elementEmoji[skill.element] || skill.element}
-        </span>
-      </div>
-    `
-        : ""
-    }
-
-    <div class="skill-overlay-contact-row">
-      <span class="meta-label">Contato:</span>
-      <span class="meta-value">${skill.contact ? "✅" : "❌"}</span>
-    </div>
-
-    <div class="skill-overlay-content-priority-row">
-      <span class="meta-label">Prioridade:</span>
-      <span class="meta-value">
-        ${
-          skill.priority != null
-            ? skill.priority > 0
-              ? `+${skill.priority}`
-              : skill.priority
-            : "-"
-        }
-      </span>
-    </div>
-
-    <div class="skill-overlay-desc">
-      ${toParagraphs(parsedDesc)}
-    </div>
-
+  <div class="skill-overlay-title">
+    ${escapeHtml(skill.name || "Habilidade")}
   </div>
+
+  ${
+    isClaim
+      ? `
+        <div class="skill-overlay-claim-value">
+          <span class="meta-label">Claim Value:</span>
+          <span class="meta-value">${claimPoints} points</span>
+        </div>
+      `
+      : `
+        <div class="skill-overlay-meta-primary">
+
+          ${
+            ultCostBars
+              ? `
+            <div class="skill-meta-item">
+              <span class="meta-label">Custo:</span>
+              <span class="meta-value">
+                ${ultCostBars} ${ultCostBars === 1 ? "barra" : "barras"}
+              </span>
+            </div>
+          `
+              : ""
+          }
+
+          ${
+            skill.damageMode != null
+              ? `
+            <div class="skill-meta-item">
+              <span class="meta-label">Tipo de Dano:</span>
+              <span class="meta-value">
+                ${getDamageModeLabel(skill.damageMode)}
+              </span>
+            </div>
+          `
+              : ""
+          }
+
+          ${
+            skill.bf
+              ? `
+            <div class="skill-meta-item">
+              <span class="meta-label">BF:</span>
+              <span class="meta-value">${skill.bf}%</span>
+            </div>
+          `
+              : ""
+          }
+
+        </div>
+
+        ${
+          skill.element
+            ? `
+          <div class="skill-overlay-element-row">
+            <span class="meta-label">Elemento:</span>
+            <span class="meta-value">
+              ${elementEmoji[skill.element] || skill.element}
+            </span>
+          </div>
+        `
+            : ""
+        }
+
+        <div class="skill-overlay-contact-row">
+          <span class="meta-label">Contato:</span>
+          <span class="meta-value">${skill.contact ? "✅" : "❌"}</span>
+        </div>
+
+        <div class="skill-overlay-content-priority-row">
+          <span class="meta-label">Prioridade:</span>
+          <span class="meta-value">
+            ${
+              skill.priority != null
+                ? skill.priority > 0
+                  ? `+${skill.priority}`
+                  : skill.priority
+                : "-"
+            }
+          </span>
+        </div>
+      `
+  }
+
+  ${
+    !isClaim
+      ? `
+        <div class="skill-overlay-desc">
+          ${toParagraphs(parsedDesc)}
+        </div>
+      `
+      : ""
+  }
+
 `;
 
   document.body.appendChild(overlay);
@@ -2490,11 +2515,24 @@ function showActionBarSlot() {
   const skillsBar = document.createElement("div");
   skillsBar.className = "action-bar-skills";
 
+  const claimSkill = {
+    key: CLAIM_ACTION_KEY,
+    name: "CLAIM",
+  };
+
   const claimBtn = document.createElement("button");
   claimBtn.className = "action-bar-skill-btn claim";
   claimBtn.textContent = "CLAIM";
   claimBtn.title = "Gasta 9 de ultômetro e marca pontos conforme o HP perdido.";
+
+  claimBtn.addEventListener("mouseenter", () =>
+    showSkillOverlay(claimBtn, claimSkill, champion),
+  );
+
+  claimBtn.addEventListener("mouseleave", () => removeSkillOverlay());
+
   claimBtn.addEventListener("click", () => handleClaimUsage(champion));
+
   if (!editMode.freeCostSkills && champion.ultMeter < CLAIM_ULT_COST) {
     claimBtn.disabled = true;
   }

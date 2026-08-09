@@ -374,6 +374,10 @@ export class TurnResolver {
     });
 
     try {
+      const ultMeterBeforeClaim = Math.max(0, Number(user.ultMeter) || 0);
+
+      const claimPoints = getClaimPointsFromUltMeter(ultMeterBeforeClaim);
+
       if (action.ultCost > 0 && !this.editMode.freeCostSkills) {
         this.applyResourceChange({
           target: user,
@@ -385,11 +389,6 @@ export class TurnResolver {
 
       this.registerSkillUsageInTurn(user, claimSkill, {});
 
-      const missingHP = Math.max(
-        0,
-        (Number(user.maxHP) || 0) - (Number(user.HP) || 0),
-      );
-      const claimPoints = getClaimPointsFromMissingHP(missingHP);
       const scoringSlot = user.team - 1;
 
       for (let i = 0; i < claimPoints; i++) {

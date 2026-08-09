@@ -131,6 +131,42 @@
   color: #ffe9a6;
 }
 
+.action-bar-skill-btn.claim {
+  background: linear-gradient(180deg, #4b2678 0%, #24123f 100%);
+  border: 1.65px solid rgba(190, 130, 255, 0.75);
+  border-radius: 0;
+  clip-path: polygon(8% 0%, 92% 0%, 100% 50%, 92% 100%, 8% 100%, 0% 50%);
+  box-shadow:
+    0 0 8px rgba(170, 90, 255, 0.55),
+    0 0 20px rgba(130, 50, 255, 0.3),
+    0 2px 6px rgba(0, 0, 0, 0.75);
+
+  color: #e8cfff;
+  letter-spacing: 0.6px;
+}
+
+.action-bar-skill-btn.claim:hover {
+  background: linear-gradient(180deg, #6535a0 0%, #321957 100%);
+
+  box-shadow:
+    0 0 10px rgba(190, 120, 255, 0.8),
+    0 0 26px rgba(140, 60, 255, 0.5),
+    0 2px 7px rgba(0, 0, 0, 0.8);
+
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+.action-bar-skill-btn.claim:disabled {
+  background: linear-gradient(180deg, #292929 0%, #171717 100%);
+
+  border-color: rgba(150, 150, 150, 0.25);
+  box-shadow: none;
+  color: #777;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .action-bar-skill-btn:not(.ultimate):hover:not(:disabled) {
   transform: scale(1.04);
   box-shadow: 0 0 8px rgba(80, 160, 255, 0.4);
