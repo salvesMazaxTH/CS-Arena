@@ -1,8 +1,6 @@
 import { formatChampionName } from "../../ui/formatters.js";
 import { emitCombatEvent } from "./combatEvents.js";
-import {
-  CLAIM_ACTION_KEY,
-} from "./claim.js";
+import { CLAIM_ACTION_KEY, CLAIM_MIN_ULT_METER } from "./claim.js";
 import { snapshotChampions } from "./snapshotChampions.js";
 
 const RESOURCE_DEBUG_TRUE_VALUES = new Set(["1", "true", "yes", "on"]);
@@ -341,7 +339,7 @@ export class TurnResolver {
   executeClaimAction(user, action, turnExecutionMap, context) {
     if (
       !this.editMode.freeCostSkills &&
-      (Number(user.ultMeter) || 0) < CLAIM_ULT_COST
+      (Number(user.ultMeter) || 0) < CLAIM_MIN_ULT_METER
     ) {
       return {
         executed: false,
@@ -375,15 +373,6 @@ export class TurnResolver {
       const ultMeterBeforeClaim = Math.max(0, Number(user.ultMeter) || 0);
 
       const claimPoints = getClaimPointsFromUltMeter(ultMeterBeforeClaim);
-
-      if (action.ultCost > 0 && !this.editMode.freeCostSkills) {
-        this.applyResourceChange({
-          target: user,
-          amount: -action.ultCost,
-          context,
-          sourceId: user.id,
-        });
-      }
 
       this.registerSkillUsageInTurn(user, claimSkill, {});
 

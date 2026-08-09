@@ -5,7 +5,7 @@
 import { elementEmoji } from "../../shared/ui/elementEmoji.js";
 import {
   CLAIM_ACTION_KEY,
-  CLAIM_ULT_COST,
+  CLAIM_MIN_ULT_METER,
 } from "../../shared/engine/combat/claim.js";
 
 let skillOverlay = null;
@@ -2523,7 +2523,7 @@ function showActionBarSlot() {
   const claimBtn = document.createElement("button");
   claimBtn.className = "action-bar-skill-btn claim";
   claimBtn.textContent = "CLAIM";
-  claimBtn.title = "Gasta 9 de ultômetro e marca pontos conforme o HP perdido.";
+  claimBtn.title = "Marca pontos com base no seu ultômetro atual.";
 
   claimBtn.addEventListener("mouseenter", () =>
     showSkillOverlay(claimBtn, claimSkill, champion),
@@ -2533,7 +2533,7 @@ function showActionBarSlot() {
 
   claimBtn.addEventListener("click", () => handleClaimUsage(champion));
 
-  if (!editMode.freeCostSkills && champion.ultMeter < CLAIM_ULT_COST) {
+  if (!editMode.freeCostSkills && champion.ultMeter < CLAIM_MIN_ULT_METER) {
     claimBtn.disabled = true;
   }
   skillsBar.appendChild(claimBtn);
@@ -2610,7 +2610,7 @@ async function handleClaimUsage(champion) {
     return;
   }
 
-  if (!editMode.freeCostSkills && CLAIM_ULT_COST > champion.ultMeter) {
+  if (!editMode.freeCostSkills && CLAIM_MIN_ULT_METER > champion.ultMeter) {
     alert("Valor de ultômetro insuficiente para CLAIM.");
     champion.updateUI(currentTurn);
     return;

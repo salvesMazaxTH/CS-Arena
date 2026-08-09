@@ -24,7 +24,7 @@ import { Action } from "../shared/engine/combat/Action.js";
 import { TurnResolver } from "../shared/engine/combat/TurnResolver.js";
 import {
   CLAIM_ACTION_KEY,
-  CLAIM_ULT_COST,
+  CLAIM_MIN_ULT_METER,
 } from "../shared/engine/combat/claim.js";
 import { DamageEvent } from "../shared/engine/combat/DamageEvent.js";
 import { snapshotChampions } from "../shared/engine/combat/snapshotChampions.js";
@@ -1595,7 +1595,7 @@ io.on("connection", (socket) => {
 
       if (
         !editMode.freeCostSkills &&
-        (Number(user.ultMeter) || 0) < CLAIM_ULT_COST
+        (Number(user.ultMeter) || 0) < CLAIM_MIN_ULT_METER
       ) {
         return socket.emit("skillDenied", `ultômetro insuficiente.`);
       }
@@ -1690,7 +1690,7 @@ io.on("connection", (socket) => {
 
       if (
         !editMode.freeCostSkills &&
-        (Number(user.ultMeter) || 0) < CLAIM_ULT_COST
+        (Number(user.ultMeter) || 0) < CLAIM_MIN_ULT_METER
       ) {
         return socket.emit("actionFailed", "Ultômetro insuficiente.");
       }
@@ -1699,7 +1699,7 @@ io.on("connection", (socket) => {
       action.priority = 0;
       action.speed = user.Speed;
       action.turn = match.getCurrentTurn();
-      action.ultCost = CLAIM_ULT_COST;
+      action.ultCost = 0;
       action.type = "claim";
 
       match.enqueueAction(action);
