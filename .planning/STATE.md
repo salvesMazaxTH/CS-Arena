@@ -1,6 +1,6 @@
 # Project State
 
-Last activity: 2026-08-03 - Completed quick task 260803-claim: CLAIM universal action, 30-point goal, and lineup-based defeat.
+Last activity: 2026-08-09 - Completed quick task 260809-spawn-protection-initial-1v1: initial 1v1 spawns enter without spawn protection; later spawns keep it.
 
 ## Current Focus
 
@@ -14,6 +14,7 @@ Last activity: 2026-08-03 - Completed quick task 260803-claim: CLAIM universal a
 
 | #             | Description                                                                      | Date       | Commit  | Directory                                                                                                           |
 | ------------- | -------------------------------------------------------------------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------------------------- |
+| 260809-spawn  | Initial 1v1 spawns enter without spawn protection; later spawns keep it          | 2026-08-09 | pending | [260809-spawn-protection-initial-1v1](./quick/260809-spawn-protection-initial-1v1/)                                 |
 | 260804-lineup | Lineup summons stay local until turn resolution reveals them to opponents        | 2026-08-04 | pending | [260804-lineup-reveal-on-turn-resolution](./quick/260804-lineup-reveal-on-turn-resolution/)                         |
 | 260803-claim  | CLAIM universal action with 9 ult cost, score by missing HP, and lineup defeat   | 2026-08-03 | pending | [260803-claim-universal-action](./quick/260803-claim-universal-action/)                                             |
 | 260505-nth    | Naelthos agora purifica debuffs ao curar via getStatusEffects                    | 2026-05-05 | pending | [260505-naelthos-purifica-debuffs](./quick/260505-naelthos-purifica-debuffs/)                                       |

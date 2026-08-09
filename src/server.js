@@ -262,6 +262,7 @@ function spawnChampion({
   combatSlot = null,
   trackSnapshot = true,
   emitState = true,
+  spawnProtection = true,
 } = {}) {
   const baseData = championDB[championKey];
   if (!baseData) return null;
@@ -327,9 +328,9 @@ function spawnChampion({
       context: {
         currentTurn: match.combat.currentTurn,
         allChampions: match.combat.activeChampions,
-        spawnProtection: true,
+        spawnProtection,
       },
-      spawnProtection: true,
+      spawnProtection,
     },
     [newChampion],
   );

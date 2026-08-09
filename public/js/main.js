@@ -2355,13 +2355,48 @@ function updateTurnDisplay(turn) {
 }
 
 function updateScoreDisplay(score) {
-  if (player1ScoreDisplay) {
-    player1ScoreDisplay.textContent = String(score?.player1 ?? 0);
-  }
+  updateScoreValue(player1ScoreDisplay, score?.player1 ?? 0);
+  updateScoreValue(player2ScoreDisplay, score?.player2 ?? 0);
+}
 
-  if (player2ScoreDisplay) {
-    player2ScoreDisplay.textContent = String(score?.player2 ?? 0);
-  }
+function updateScoreValue(element, newValue) {
+  if (!element) return;
+
+  const oldValue = Number(element.textContent) || 0;
+  const nextValue = Number(newValue) || 0;
+
+  if (oldValue === nextValue) return;
+
+  const increasing = nextValue > oldValue;
+
+  // Reinicia a animação caso o placar seja alterado novamente rapidamente.
+  element.classList.remove(
+    "score-changing",
+    "score-increased",
+    "score-decreased",
+  );
+
+  // Força o browser a reconhecer a remoção antes de adicionar novamente.
+  void element.offsetWidth;
+
+  element.textContent = String(nextValue);
+
+  element.classList.add(
+    "score-changing",
+    increasing ? "score-increased" : "score-decreased",
+  );
+
+  element.addEventListener(
+    "animationend",
+    () => {
+      element.classList.remove(
+        "score-changing",
+        "score-increased",
+        "score-decreased",
+      );
+    },
+    { once: true },
+  );
 }
 
 function endTurn() {

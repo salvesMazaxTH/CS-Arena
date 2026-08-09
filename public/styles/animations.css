@@ -252,6 +252,47 @@
 }
 
 /* ============================================
+   SCORE UPDATE ANIMATION
+   ============================================ */
+
+.score-changing {
+  animation: scoreImpact 0.55s cubic-bezier(0.2, 0.8, 0.25, 1);
+  transform-origin: center;
+}
+
+.score-increased {
+  text-shadow:
+    0 0 6px rgba(190, 130, 255, 0.8),
+    0 0 16px rgba(150, 80, 255, 0.55);
+}
+
+.score-decreased {
+  opacity: 0.85;
+}
+
+@keyframes scoreImpact {
+  0% {
+    transform: scale(1);
+  }
+
+  18% {
+    transform: scale(1.22);
+  }
+
+  42% {
+    transform: scale(0.94);
+  }
+
+  68% {
+    transform: scale(1.07);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ============================================
    RESOURCE REGEN FLOAT
    ============================================ */
 

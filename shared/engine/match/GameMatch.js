@@ -705,6 +705,7 @@ export class GameMatch {
         team,
         combatSlot: 0, // Ambos começam no slot 0
         trackSnapshot: true,
+        spawnProtection: false,
       });
 
       // Remove o campeão da fila de reserva

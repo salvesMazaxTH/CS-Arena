@@ -1,6 +1,6 @@
 import { formatChampionName } from "../../ui/formatters.js";
 import { emitCombatEvent } from "./combatEvents.js";
-import { CLAIM_ACTION_KEY, CLAIM_MIN_ULT_METER } from "./claim.js";
+import { CLAIM_ACTION_KEY, CLAIM_MIN_ULT_METER, getClaimPointsFromUltMeter } from "./claim.js";
 import { snapshotChampions } from "./snapshotChampions.js";
 
 const RESOURCE_DEBUG_TRUE_VALUES = new Set(["1", "true", "yes", "on"]);
@@ -356,7 +356,6 @@ export class TurnResolver {
     const claimSkill = {
       key: CLAIM_ACTION_KEY,
       name: "CLAIM",
-      isUltimate: true,
       priority: 0,
       targetSpec: [],
     };
