@@ -2368,6 +2368,7 @@ function updateScoreValue(element, newValue) {
   if (oldValue === nextValue) return;
 
   const increasing = nextValue > oldValue;
+  const delta = Math.abs(nextValue - oldValue);
 
   // Reinicia a animação caso o placar seja alterado novamente rapidamente.
   element.classList.remove(
@@ -2375,6 +2376,8 @@ function updateScoreValue(element, newValue) {
     "score-increased",
     "score-decreased",
   );
+
+  element.dataset.scoreDelta = `${increasing ? "+" : "-"}${delta}`;
 
   // Força o browser a reconhecer a remoção antes de adicionar novamente.
   void element.offsetWidth;
@@ -2389,6 +2392,7 @@ function updateScoreValue(element, newValue) {
   element.addEventListener(
     "animationend",
     () => {
+      delete element.dataset.scoreDelta;
       element.classList.remove(
         "score-changing",
         "score-increased",

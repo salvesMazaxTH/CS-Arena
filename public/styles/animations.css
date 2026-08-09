@@ -256,39 +256,148 @@
    ============================================ */
 
 .score-changing {
-  animation: scoreImpact 0.55s cubic-bezier(0.2, 0.8, 0.25, 1);
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+  animation: scoreImpact 0.88s cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: center;
+  will-change: transform, filter, text-shadow;
+  z-index: 0;
 }
 
 .score-increased {
+  color: #f8f1ff;
   text-shadow:
-    0 0 6px rgba(190, 130, 255, 0.8),
-    0 0 16px rgba(150, 80, 255, 0.55);
+    0 0 6px rgba(255, 255, 255, 0.95),
+    0 0 14px rgba(139, 92, 246, 0.85),
+    0 0 28px rgba(90, 54, 196, 0.55);
 }
 
 .score-decreased {
-  opacity: 0.85;
+  color: #fff2f2;
+  text-shadow:
+    0 0 6px rgba(255, 255, 255, 0.75),
+    0 0 12px rgba(255, 99, 132, 0.65);
+}
+
+.score-changing::after {
+  content: attr(data-score-delta);
+  position: absolute;
+  top: -1.05em;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.12em 0.52em;
+  border-radius: 999px;
+  font-size: 0.52em;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  font-weight: 800;
+  white-space: nowrap;
+  color: #ffffff;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 24, 40, 0.94),
+    rgba(8, 10, 20, 0.82)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.18),
+    0 8px 20px rgba(0, 0, 0, 0.28),
+    0 0 16px rgba(140, 90, 255, 0.42);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+  opacity: 0;
+  pointer-events: none;
+  animation: scoreDeltaPop 0.88s cubic-bezier(0.2, 0.9, 0.18, 1) forwards;
+}
+
+.score-increased::after {
+  background: linear-gradient(
+    180deg,
+    rgba(22, 52, 32, 0.96),
+    rgba(8, 24, 14, 0.9)
+  );
+  border-color: rgba(120, 255, 181, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.18),
+    0 10px 24px rgba(0, 0, 0, 0.3),
+    0 0 18px rgba(80, 255, 150, 0.5);
+}
+
+.score-decreased::after {
+  background: linear-gradient(
+    180deg,
+    rgba(58, 18, 26, 0.96),
+    rgba(24, 8, 14, 0.9)
+  );
+  border-color: rgba(255, 123, 150, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.18),
+    0 10px 24px rgba(0, 0, 0, 0.3),
+    0 0 18px rgba(255, 107, 139, 0.48);
 }
 
 @keyframes scoreImpact {
   0% {
     transform: scale(1);
+    filter: brightness(1);
   }
 
-  18% {
-    transform: scale(1.22);
+  14% {
+    transform: scale(1.16);
+    filter: brightness(1.08);
   }
 
-  42% {
-    transform: scale(0.94);
+  28% {
+    transform: scale(1.3);
+    filter: brightness(1.22);
   }
 
-  68% {
-    transform: scale(1.07);
+  46% {
+    transform: scale(0.96);
+    filter: brightness(1.03);
+  }
+
+  62% {
+    transform: scale(1.08);
+    filter: brightness(1.12);
+  }
+
+  80% {
+    transform: scale(1.01);
+    filter: brightness(1.02);
   }
 
   100% {
     transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes scoreDeltaPop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 28%) scale(0.72);
+    filter: blur(1px);
+  }
+
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -18%) scale(1.08);
+    filter: blur(0);
+  }
+
+  34% {
+    transform: translate(-50%, -38%) scale(1);
+  }
+
+  68% {
+    opacity: 1;
+    transform: translate(-50%, -62%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -88%) scale(0.96);
   }
 }
 

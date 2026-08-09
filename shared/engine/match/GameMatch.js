@@ -336,10 +336,6 @@ class CombatState {
     });
     this.ensureTurnEntry().championsDeadThisTurn.push(championId);
 
-    let scoringTeam = null;
-    let scoringPlayerSlot = null;
-    let scored = false;
-
     // Mover para deadChampions
     this.removeChampion(championId);
 
@@ -351,9 +347,6 @@ class CombatState {
       championId,
       championName: champion.name,
       team: champion.team,
-      scoringTeam,
-      scoringPlayerSlot,
-      scored,
       gameEnded: this.gameEnded,
     };
   }
