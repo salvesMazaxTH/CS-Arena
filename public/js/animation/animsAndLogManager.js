@@ -345,6 +345,13 @@ export function createCombatAnimationManager(deps) {
   }
 
   function updateScoreDisplay(score) {
+    const player1ScoreDisplay = document.getElementById(
+      "player1-score-display",
+    );
+    const player2ScoreDisplay = document.getElementById(
+      "player2-score-display",
+    );
+
     updateScoreValue(player1ScoreDisplay, score?.player1 ?? 0);
     updateScoreValue(player2ScoreDisplay, score?.player2 ?? 0);
   }

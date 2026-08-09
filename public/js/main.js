@@ -607,8 +607,6 @@ const selectedChampionsSlots = document.getElementById(
 );
 const confirmTeamBtn = document.getElementById("confirmTeamBtn");
 const teamSelectionMessage = document.getElementById("team-selection-message");
-const player1ScoreDisplay = document.getElementById("player1-score-display");
-const player2ScoreDisplay = document.getElementById("player2-score-display");
 
 // --- Fim de jogo ---
 const gameOverOverlay = document.getElementById("gameOverOverlay");
