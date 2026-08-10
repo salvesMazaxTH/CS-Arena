@@ -28,6 +28,7 @@ import {
 } from "../shared/engine/combat/claim.js";
 import { DamageEvent } from "../shared/engine/combat/DamageEvent.js";
 import { snapshotChampions } from "../shared/engine/combat/snapshotChampions.js";
+import { getHardCCActionDenial } from "../shared/core/championStatus.js";
 import { decayShields } from "../shared/core/championCombat.js";
 import {
   applyChampionTransformation,
@@ -456,6 +457,12 @@ function validateActionIntent(user, skill, socket) {
   // console.log("[VALIDATE ACTION CALLED]", user?.name);
   if (!user.alive) {
     socket.emit("skillDenied", "Campeão morto.");
+    return false;
+  }
+
+  const hardCCDenial = getHardCCActionDenial(user);
+  if (hardCCDenial) {
+    socket.emit("skillDenied", hardCCDenial.message);
     return false;
   }
 
@@ -1715,6 +1722,8 @@ io.on("connection", (socket) => {
         );
       }
 
+      if (!validateActionIntent(user, null, socket)) return;
+
       if (
         !editMode.freeCostSkills &&
         (Number(user.momentum) || 0) < CLAIM_MIN_MOMENTUM
@@ -1749,6 +1758,8 @@ io.on("connection", (socket) => {
     if (!skill) {
       return socket.emit("actionFailed", "Habilidade não encontrada.");
     }
+
+    if (!validateActionIntent(user, skill, socket)) return;
 
     // 🔥 Apenas ultimates têm custo
     let cost = 0;

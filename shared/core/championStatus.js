@@ -433,6 +433,29 @@ export function getStatusEffects(champion, options = {}) {
   });
 }
 
+export function getActionBlockingHardCCEffects(champion) {
+  return getStatusEffects(champion, { subtype: "hardCC" });
+}
+
+export function getHardCCActionDenial(champion) {
+  const blockingEffects = getActionBlockingHardCCEffects(champion);
+  if (blockingEffects.length === 0) return null;
+
+  const primaryEffect = blockingEffects[0];
+  const effectName = primaryEffect?.name || "sob Controle Pesado";
+
+  return {
+    denied: true,
+    reason: "hardCC",
+    statusEffectKey: primaryEffect?.key ?? null,
+    message: `${formatChampionName(champion)} está ${effectName} e não pode agir!`,
+  };
+}
+
+export function isActionBlockedByHardCC(champion) {
+  return getHardCCActionDenial(champion)?.denied === true;
+}
+
 /**
  * Remove a statusEffect immediately
  * @param {object} champion - The champion instance

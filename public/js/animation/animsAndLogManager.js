@@ -1574,6 +1574,10 @@ export function createCombatAnimationManager(deps) {
       champion.runtime.hookEffectKeys = snap.runtimeHookEffectKeys;
     }
 
+    if (snap.actionBlockedByHardCC !== undefined) {
+      champion.actionBlockedByHardCC = snap.actionBlockedByHardCC === true;
+    }
+
     // StatusEffects
     if (Array.isArray(snap.statusEffects)) {
       champion.statusEffects = new Map(snap.statusEffects);

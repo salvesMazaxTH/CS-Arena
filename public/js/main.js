@@ -2485,6 +2485,12 @@ function getActionBarChampion() {
   return activeChampions.get(actionBarSlotOrder[currentActionBarSlot]) ?? null;
 }
 
+function isChampionAutoSkippedInActionBar(champion) {
+  if (!champion || !champion.alive) return true;
+  if (champion.actionBlockedByHardCC === true) return true;
+  return champion.isActionBlockedByHardCC?.() === true;
+}
+
 function initActionBar() {
   removeActionBar();
   if (!playerTeam || window.gameEnded) return;
@@ -2507,6 +2513,12 @@ function showActionBarSlot() {
 
   const champion = getActionBarChampion();
   if (!champion) return;
+
+  if (isChampionAutoSkippedInActionBar(champion)) {
+    currentActionBarSlot++;
+    showActionBarSlot();
+    return;
+  }
 
   const teamContainer = document.querySelector(`.team-${playerTeam}`);
   if (!teamContainer) return;

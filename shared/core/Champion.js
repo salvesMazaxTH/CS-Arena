@@ -1,10 +1,13 @@
 // Import status effect methods
 import {
   applyStatusEffect,
+  getActionBlockingHardCCEffects,
+  getHardCCActionDenial,
   hasStatusEffect,
   getStatusEffect,
   getStatusEffectData,
   getStatusEffects,
+  isActionBlockedByHardCC,
   removeStatusEffect,
   purgeExpiredStatusEffects,
 } from "./championStatus.js";
@@ -272,6 +275,8 @@ export class Champion {
           .filter(Boolean);
       })(),
 
+      actionBlockedByHardCC: this.isActionBlockedByHardCC(),
+
       statusEffects: Array.from(this.statusEffects.entries()).map(
         ([key, value]) => {
           const safeValue = { ...value };
@@ -495,6 +500,18 @@ export class Champion {
 
   getStatusEffects(options = {}) {
     return getStatusEffects(this, options);
+  }
+
+  getActionBlockingHardCCEffects() {
+    return getActionBlockingHardCCEffects(this);
+  }
+
+  getHardCCActionDenial() {
+    return getHardCCActionDenial(this);
+  }
+
+  isActionBlockedByHardCC() {
+    return isActionBlockedByHardCC(this);
   }
 
   removeStatusEffect(statusEffectKey) {

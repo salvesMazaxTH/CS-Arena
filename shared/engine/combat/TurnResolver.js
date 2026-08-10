@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../ui/formatters.js";
+import { getHardCCActionDenial } from "../../core/championStatus.js";
 import { emitCombatEvent } from "./combatEvents.js";
 import {
   CLAIM_ACTION_KEY,
@@ -499,6 +500,11 @@ export class TurnResolver {
 
   canExecuteAction(user, action) {
     if (!user || !user.alive) return { denied: true };
+
+    const hardCCDenial = getHardCCActionDenial(user);
+    if (hardCCDenial) {
+      return hardCCDenial;
+    }
 
     for (const champ of this.combat.activeChampions.values()) {
       console.log(
