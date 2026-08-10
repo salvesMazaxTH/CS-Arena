@@ -1086,7 +1086,17 @@ function getChampionSpecies(champion) {
 }
 
 function getChampionFrontBadges(champion) {
-  const affinityKey = champion.elementalAffinities?.[0] || null;
+  const affinityKeys = Array.isArray(champion.elementalAffinities)
+    ? champion.elementalAffinities
+        .map((item) =>
+          String(item || "")
+            .trim()
+            .toLowerCase(),
+        )
+        .filter(Boolean)
+    : typeof champion.elementalAffinities === "string"
+      ? [champion.elementalAffinities.trim().toLowerCase()].filter(Boolean)
+      : [];
   const classKey = normalizeChampionClassKey(champion);
   const classInfo = classKey ? championClassConfig[classKey] : null;
 
@@ -1101,14 +1111,14 @@ function getChampionFrontBadges(champion) {
     });
   }
 
-  if (affinityKey) {
+  affinityKeys.forEach((affinityKey) => {
     badges.push({
       type: "affinity",
       label: `Affinity: ${toReadableLabel(affinityKey)}`,
       iconText: affinityBadgeByKey[affinityKey] ?? "✨",
       iconUrl: null,
     });
-  }
+  });
 
   return badges;
 }

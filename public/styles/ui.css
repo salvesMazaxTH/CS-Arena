@@ -1377,7 +1377,7 @@
 .selected-champions-area {
   flex-shrink: 1;
   margin-top: 0;
-  padding: 10px;
+  padding: 6px 8px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.3);
@@ -1385,7 +1385,7 @@
 
 .selected-champions-area h3 {
   color: #00ff99;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-size: 1em;
 }
 
@@ -1393,14 +1393,14 @@
   grid-template-columns: repeat(4, 1fr);
   display: grid;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   min-height: 0;
   flex-wrap: wrap;
 }
 
 .champion-slot {
-  width: 108px;
-  height: 138px;
+  width: 104px;
+  height: 118px;
   border: 2px dashed rgba(0, 255, 150, 0.5);
   border-radius: 10px;
   display: flex;
@@ -1433,22 +1433,22 @@
   min-height: unset;
   border: none;
   background: transparent;
-  padding: 8px 4px 6px;
+  padding: 6px 4px 4px;
   box-shadow: none;
   cursor: grab;
   perspective: 700px;
 }
 
 .champion-slot .champion-card .champion-card-flip-btn {
-  width: 17px;
-  height: 17px;
-  font-size: 0.58rem;
+  width: 16px;
+  height: 16px;
+  font-size: 0.55rem;
 }
 
 .champion-slot .champion-card .champion-card-portrait {
-  width: 60px;
-  height: 60px;
-  margin-bottom: 4px;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 3px;
 }
 
 /* Lineup banner (compact roster) */
