@@ -324,7 +324,7 @@ class CombatState {
    * Se a eliminação deixar o time sem campeões vivos na lineup, o jogo termina.
    * Retorna um objeto com os dados necessários para o server emitir sockets, ou null se não encontrado.
    */
-  removeChampionFromGame(championId, maxScore = 24) {
+  removeChampionFromGame(championId, maxScore = 30) {
     const champion = this.activeChampions.get(championId);
     if (!champion) return null;
 
@@ -384,7 +384,7 @@ class CombatState {
     return this.getLivingChampionsForTeam(team).length > 0;
   }
 
-  addPointForSlot(slot, maxScore = 24) {
+  addPointForSlot(slot, maxScore = 30) {
     if (!Array.isArray(this.playerScores)) this.playerScores = [0, 0];
     this.playerScores[slot] = (this.playerScores[slot] || 0) + 1;
     if (this.playerScores[slot] >= maxScore) {
@@ -392,7 +392,7 @@ class CombatState {
     }
   }
 
-  setWinnerScore(slot, maxScore = 24) {
+  setWinnerScore(slot, maxScore = 30) {
     if (!Array.isArray(this.playerScores)) this.playerScores = [0, 0];
     this.playerScores[slot] = maxScore;
     this.gameEnded = true;
@@ -411,7 +411,7 @@ class CombatState {
    * has at least one living champion in the lineup.
    * Returns null if neither team qualifies.
    */
-  computeWinnerSlot(maxScore = 24) {
+  computeWinnerSlot(maxScore = 30) {
     if (Array.isArray(this.playerScores)) {
       if ((this.playerScores[0] || 0) >= maxScore) return 0;
       if ((this.playerScores[1] || 0) >= maxScore) return 1;
@@ -557,7 +557,7 @@ export class GameMatch {
     return this.combat.removeChampion(championId);
   }
 
-  removeChampionFromGame(championId, maxScore = 24) {
+  removeChampionFromGame(championId, maxScore = 30) {
     return this.combat.removeChampionFromGame(championId, maxScore);
   }
 
@@ -593,11 +593,11 @@ export class GameMatch {
     return this.combat.gameEnded;
   }
 
-  addPointForSlot(slot, maxScore = 24) {
+  addPointForSlot(slot, maxScore = 30) {
     this.combat.addPointForSlot(slot, maxScore);
   }
 
-  setWinnerScore(slot, maxScore = 24) {
+  setWinnerScore(slot, maxScore = 30) {
     this.combat.setWinnerScore(slot, maxScore);
   }
 
@@ -605,7 +605,7 @@ export class GameMatch {
     return this.combat.getScorePayload();
   }
 
-  computeWinnerSlot(maxScore = 24) {
+  computeWinnerSlot(maxScore = 30) {
     return this.combat.computeWinnerSlot(maxScore);
   }
 

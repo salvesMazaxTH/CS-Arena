@@ -39,9 +39,9 @@ import {
 // ============================================================
 
 const editMode = {
-  enabled: true,
-  autoLogin: true,
-  autoSelection: true, // Seleção automática de campeões (sem tela de seleção)
+  enabled: false,
+  autoLogin: false,
+  autoSelection: false, // Seleção automática de campeões (sem tela de seleção)
   actMultipleTimesPerTurn: false,
   unavailableChampions: false,
   damageOutput: null, // Valor fixo de dano para testes (ex: 999). null = desativado. (SERVER-ONLY)
@@ -49,12 +49,12 @@ const editMode = {
   alwaysEvade: false, // Força evasão em todo ataque. (SERVER-ONLY)
   executionOverride: null, // null = normal
   // number = força threshold (ex: 1 = 100%, 0.5 = 50%)
-  freeCostSkills: true, // Habilidades não consomem recurso. (SERVER-ONLY)
+  freeCostSkills: false, // Habilidades não consomem recurso. (SERVER-ONLY)
 };
 
 const TEAM_SIZE = 8;
 const ACTIVE_PER_TEAM = 3; // máximo de campeões simultâneos em campo por time (roster=8, active=3)
-const MAX_SCORE = 24; // pontos necessários para vitória
+const MAX_SCORE = 30; // pontos necessários para vitória
 const CHAMPION_SELECTION_TIME = 120; // Segundos para seleção de campeões
 const FIRST_CHOICE_TIMEOUT = 99999 * 1000; //30 * 1000; // 30s para escolha do 1v1 (99.999s para testes)
 const DISCONNECT_TIMEOUT = 30 * 1000; // 30 s para reconexão

@@ -180,7 +180,7 @@ export class TurnResolver {
   //  PROCESSAMENTO DE MORTES
   // ============================================================
 
-  processChampionDeaths(maxScore = 24, context = null) {
+  processChampionDeaths(maxScore = 30, context = null) {
     const results = [];
     for (const champ of this.combat.activeChampions.values()) {
       if (!champ.alive) {
@@ -378,7 +378,7 @@ export class TurnResolver {
       const scoringSlot = user.team - 1;
 
       for (let i = 0; i < claimPoints; i++) {
-        this.match.addPointForSlot(scoringSlot, 24);
+        this.match.addPointForSlot(scoringSlot, 30);
       }
 
       const actionResolvedResults = emitCombatEvent(
