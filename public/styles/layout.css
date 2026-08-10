@@ -117,63 +117,91 @@ header h1 {
 
 /* -------------------------------- */
 
+.battle-stage {
+  position: relative;
+  width: min(100%, 1200px);
+  margin: 0 auto;
+  padding-inline: clamp(76px, 7vw, 108px);
+  overflow: visible;
+}
+
 .arena {
+  width: min(100%, 820px);
+  margin: clamp(8px, 1.4vw, 16px) auto;
+  padding: clamp(10px, 2vw, 18px);
   display: flex;
   flex-direction: column;
-  justify-self: center;
-  border: gray 5px double;
-  margin: clamp(8px, 2vw, 20px) auto;
-  width: clamp(92%, 90vw, 550px);
-  max-width: 600px;
-  min-height: 0; /* deixa o conteúdo definir a altura */
-  max-height: 700px;
-  gap: clamp(8px, 2.5vw, 24px);
-  padding: clamp(8px, 1.5vw, 16px);
+  gap: clamp(8px, 1.2vw, 14px);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(10, 13, 18, 0.92), rgba(6, 8, 11, 0.96)),
+    radial-gradient(circle at top, rgba(0, 150, 255, 0.08), transparent 48%),
+    radial-gradient(circle at bottom, rgba(255, 0, 0, 0.06), transparent 52%);
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  position: relative;
 }
 
 /* -------------------------------- */
 
 .team-container {
-  flex: 1;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  border: 1px solid transparent;
-  padding: 10px;
-  padding-bottom: clamp(20px, 10vw, 30px);
   position: relative;
-  transition:
-    border-color 0.3s ease,
-    box-shadow 0.3s ease,
-    transform 0.2s ease;
+  isolation: isolate;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: clamp(6px, 1vw, 12px);
+
+  min-height: clamp(108px, 24vh, 210px);
+  padding: clamp(22px, 3vw, 32px) clamp(10px, 1.8vw, 16px)
+    clamp(10px, 1.8vw, 16px);
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.025),
+      rgba(255, 255, 255, 0.01)
+    ),
+    rgba(8, 10, 14, 0.8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 10px 22px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
 }
 
 /* Team selection mode styles */
 body.team-selection-active .team-container {
   cursor: pointer;
-  border-color: rgba(0, 255, 150, 0.6);
-  box-shadow: 0 0 20px rgba(0, 255, 150, 0.3);
+  transform: translateY(-1px);
 }
 
 body.team-selection-active .team-container:hover {
-  transform: scale(1.02);
-  border-color: #00ff99;
-  box-shadow: 0 0 30px rgba(0, 255, 150, 0.6);
+  transform: translateY(-2px);
 }
 
 .team-container::before {
-  content: "Time " attr(data-team);
+  content: "TIME " attr(data-team);
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: clamp(2rem, 6vw, 6rem);
-  color: rgba(255, 255, 255, 0.08);
-  pointer-events: none;
-  font-weight: bold;
-  text-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  top: 10px;
+  left: 12px;
   z-index: 0;
-  white-space: nowrap;
+
+  color: rgba(255, 255, 255, 0.1);
+  font-size: 0.65rem;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  pointer-events: none;
 }
 
 .player-name-display {
@@ -181,13 +209,20 @@ body.team-selection-active .team-container:hover {
   align-items: center;
   justify-content: center;
   gap: 0.45em;
-  font-size: clamp(0.85rem, 2vw, 1.2em);
+  font-size: clamp(0.82rem, 1.9vw, 1.08rem);
   font-weight: bold;
-  margin-bottom: 4px;
-  text-shadow: 0 0 8px rgba(0, 255, 150, 0.5);
+  margin: 0;
+  padding: clamp(5px, 0.8vw, 8px) clamp(10px, 1.5vw, 14px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  background: rgba(8, 10, 14, 0.7);
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.28);
   text-align: center;
-  padding: clamp(1px, 0.5vw, 5px);
-  border-bottom: 1px solid rgba(0, 255, 150, 0.3);
+  position: relative;
+  z-index: 1;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 18px rgba(0, 0, 0, 0.12);
 }
 
 .player-name-display[data-team="1"] {
@@ -217,22 +252,68 @@ body.team-selection-active .team-container:hover {
 
 .team-1 {
   border-color: rgba(0, 150, 255, 0.4);
-  box-shadow: 0 0 15px rgba(0, 150, 255, 0.1);
-  background: rgba(0, 150, 255, 0.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 10px 22px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(0, 150, 255, 0.08);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 150, 255, 0.08),
+    rgba(8, 10, 14, 0.82)
+  );
 }
 
 .team-1::before {
-  color: rgba(0, 150, 255, 0.1);
+  color: rgba(0, 150, 255, 0.16);
 }
 
 .team-2 {
   border-color: rgba(255, 0, 0, 0.4);
-  box-shadow: 0 0 15px rgba(255, 0, 0, 0.1);
-  background: linear-gradient(transparent, rgba(255, 0, 0, 0.05));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 10px 22px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(255, 0, 0, 0.08);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 0, 0, 0.08),
+    rgba(8, 10, 14, 0.82)
+  );
 }
 
 .team-2::before {
-  color: rgba(255, 0, 0, 0.1);
+  color: rgba(255, 0, 0, 0.16);
+}
+
+@media (max-width: 540px), (max-height: 760px) and (pointer: coarse) {
+  .battle-stage {
+    padding-inline: clamp(8px, 2.5vw, 14px);
+  }
+
+  .arena {
+    width: 100%;
+    padding: 8px;
+    gap: 8px;
+    border-radius: 18px;
+  }
+
+  .team-container {
+    min-height: clamp(94px, 22vh, 170px);
+    padding: 22px 8px 8px;
+    gap: 6px;
+    border-radius: 16px;
+  }
+
+  .team-container::before {
+    top: 8px;
+    left: 10px;
+    font-size: 0.58rem;
+  }
+
+  .player-name-display {
+    padding: 4px 10px;
+    font-size: clamp(0.76rem, 3.8vw, 0.96rem);
+    border-radius: 12px;
+  }
 }
 
 /* ============================================
