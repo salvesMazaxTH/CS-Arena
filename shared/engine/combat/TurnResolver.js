@@ -26,6 +26,27 @@ function logResourceDebug(payload) {
   console.log("[RESOURCE_DEBUG]", payload);
 }
 
+// Faixas de 25 de dano = +1 Momentum a partir de 55; abaixo disso é a faixa inicial (exceção).
+function getMomentumFromDamageDealt(totalDamage) {
+  const d = Math.max(0, Math.floor(Number(totalDamage) || 0));
+  if (d <= 19) return 1;
+  if (d <= 54) return 2;
+  if (d >= 350) return 15;
+  return 3 + Math.floor((d - 55) / 25);
+}
+
+// Faixas de 30 (até 204) e depois 25 de dano = +1 Momentum; 255-279 é um salto proposital
+// (recompensa menor nas faixas baixas de dano sofrido, que vai se equilibrando nas altas).
+function getMomentumFromDamageTaken(totalDamage) {
+  const d = Math.max(0, Math.floor(Number(totalDamage) || 0));
+  if (d <= 54) return 1;
+  if (d <= 204) return 2 + Math.floor((d - 55) / 30);
+  if (d <= 254) return 7 + Math.floor((d - 205) / 25);
+  if (d <= 279) return 11;
+  if (d >= 350) return 15;
+  return 12 + Math.floor((d - 280) / 25);
+}
+
 export class TurnResolver {
   constructor(match, editMode, options = {}) {
     this.match = match;
@@ -681,34 +702,56 @@ export class TurnResolver {
   applyMomentumFromContext({ user, context }) {
     const damageEvents = context.visual.damageEvents || [];
 
-    // 🔹 GANHO DO USUÁRIO
-    if (damageEvents.length) {
-      const regenAmount = context.currentSkill?.isUltimate ? 1 : 3;
+    const damageDealtToEnemies = damageEvents.reduce((total, event) => {
+      const target = event?.targetId
+        ? this.combat.activeChampions.get(event.targetId)
+        : null;
+
+      if (!target || target.team === user.team) return total;
+
+      return total + Math.max(0, Number(event.amount) || 0);
+    }, 0);
+
+    const userMomentumGain = getMomentumFromDamageDealt(damageDealtToEnemies);
+
+    if (userMomentumGain > 0) {
       this.applyResourceChange({
         target: user,
-        amount: regenAmount,
+        amount: userMomentumGain,
         context,
         sourceId: user.id,
+        debugLabel: "damageDealt",
       });
     }
 
-    // 🔹 GANHO DE QUEM SOFREU DANO
-    const damagedTargets = new Set();
+    const damagedTargets = new Map();
 
     for (const event of damageEvents) {
-      if (!event.targetId || event.amount <= 0) continue;
-      damagedTargets.add(event.targetId);
+      if (!event?.targetId) continue;
+
+      const amount = Math.max(0, Number(event.amount) || 0);
+      if (amount <= 0) continue;
+
+      damagedTargets.set(
+        event.targetId,
+        (damagedTargets.get(event.targetId) || 0) + amount,
+      );
     }
 
-    for (const targetId of damagedTargets) {
+    for (const [targetId, totalDamageTaken] of damagedTargets.entries()) {
       const target = this.combat.activeChampions.get(targetId);
       if (!target || !target.alive) continue;
 
+      const momentumGain = getMomentumFromDamageTaken(totalDamageTaken);
+
+      if (momentumGain <= 0) continue;
+
       this.applyResourceChange({
         target,
-        amount: 1,
+        amount: momentumGain,
         context,
         sourceId: user?.id,
+        debugLabel: "damageTaken",
       });
     }
   }

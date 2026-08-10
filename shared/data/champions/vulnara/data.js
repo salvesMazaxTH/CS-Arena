@@ -10,5 +10,5 @@ export default {
 
   elementalAffinities: ["fire"],
   classKey: "marksman",
-  species: ["human", "mageborn", "pyrokinectic"],
+  species: ["human"],
 };

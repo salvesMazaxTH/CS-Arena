@@ -9,5 +9,5 @@ export default {
   Critical: 10,
 
   classKey: "tank",
-  species: ["human"],
+  species: ["human", "giant"],
 };

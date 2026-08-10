@@ -154,7 +154,7 @@ header h1 {
   isolation: isolate;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: space-around;
   align-items: flex-start;
   align-content: flex-start;
   gap: clamp(6px, 1vw, 12px);

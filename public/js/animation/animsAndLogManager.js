@@ -1017,18 +1017,17 @@ export function createCombatAnimationManager(deps) {
       direction ?? (effect?.type === "resourceSpend" ? -1 : 1);
 
     const sign = eventDirection >= 0 ? "+" : "-";
-    // Sempre passa valor positivo para o float, só o sinal visual muda
-    const bars = getUltBarDelta(normalizedAmount);
+    const momentumDelta = normalizedAmount.toFixed(0);
 
     if (portraitWrapper) {
       const floatClass =
         eventDirection >= 0
-          ? "resource-float-ult-gain"
-          : "resource-float-ult-spend";
+          ? "resource-float-momentum-gain"
+          : "resource-float-momentum-spend";
 
       createFloatElement(
         portraitWrapper,
-        `${sign}${bars}`,
+        `${sign}${momentumDelta} Momentum`,
         "resource-float",
         floatClass,
       );
@@ -1037,13 +1036,8 @@ export function createCombatAnimationManager(deps) {
     updateVisualResource(
       targetId,
       eventDirection >= 0 ? normalizedAmount : -normalizedAmount,
-      "ult",
+      "momentum",
     );
-  }
-
-  function getUltBarDelta(deltaUnits) {
-    const UNITS_PER_BAR = 4; // Deve ser consistente com Champion.js
-    return (deltaUnits / UNITS_PER_BAR).toFixed(2);
   }
 
   // ============================================================

@@ -41,7 +41,7 @@ import {
 const editMode = {
   enabled: true,
   autoLogin: true,
-  autoSelection: false, // Seleção automática de campeões (sem tela de seleção)
+  autoSelection: true, // Seleção automática de campeões (sem tela de seleção)
   actMultipleTimesPerTurn: false,
   unavailableChampions: false,
   damageOutput: null, // Valor fixo de dano para testes (ex: 999). null = desativado. (SERVER-ONLY)
@@ -539,6 +539,7 @@ function emitCombatEnvelopesFromContext({
   context,
   scorePayload = null,
   claimPoints = null,
+  log = null,
 }) {
   const mainEnvelope = buildMainEnvelopeFromContext({
     user,
@@ -590,6 +591,7 @@ function emitCombatEnvelopesFromContext({
       }); */
       emitCombatAction({
         ...mainEnvelope,
+        ...(log ? { log } : null),
         scorePayload,
         claimPoints,
       });
@@ -699,11 +701,10 @@ function emitCombatAction(envelope) {
 function collectCombatLogs(value, logs = [], visited = new Set()) {
   if (value == null) return logs;
 
-  if (typeof value === "string") return logs;
-  if (typeof value !== "object") return logs;
-  if (visited.has(value)) return logs;
-
-  visited.add(value);
+  if (typeof value === "string") {
+    if (value.trim()) logs.push(value);
+    return logs;
+  }
 
   if (Array.isArray(value)) {
     for (const entry of value) {
@@ -712,12 +713,34 @@ function collectCombatLogs(value, logs = [], visited = new Set()) {
     return logs;
   }
 
+  if (typeof value !== "object") return logs;
+  if (visited.has(value)) return logs;
+
+  visited.add(value);
+
   if (typeof value.log === "string" && value.log.trim()) {
     logs.push(value.log);
   }
 
-  for (const nestedValue of Object.values(value)) {
-    collectCombatLogs(nestedValue, logs, visited);
+  if (typeof value.logMessage === "string" && value.logMessage.trim()) {
+    logs.push(value.logMessage);
+  }
+
+  const nestedLogCollections = [
+    "results",
+    "beforeLogs",
+    "afterLogs",
+    "passiveLogs",
+    "extraResults",
+    "globalDialogs",
+    "dialogs",
+  ];
+
+  for (const key of nestedLogCollections) {
+    const nestedValue = value[key];
+    if (Array.isArray(nestedValue)) {
+      collectCombatLogs(nestedValue, logs, visited);
+    }
   }
 
   return logs;
@@ -759,12 +782,15 @@ function handleEndTurn() {
   // 4. Emitir envelopes para cada resultado
   for (const result of actionResults) {
     if (result.executed) {
+      const actionLog = collectCombatLogs(result.results).join("\n");
+
       emitCombatEnvelopesFromContext({
         user: result.user,
         skill: result.skill,
         context: result.context,
         scorePayload: result.scorePayload ?? null,
         claimPoints: result.claimPoints ?? null,
+        log: actionLog || null,
       });
 
       // Coletar championMutationRequests mas NÃO processar ainda

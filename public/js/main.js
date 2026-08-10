@@ -2265,7 +2265,11 @@ function renderLineupBanners(lineupsByTeam = {}) {
     .map((champKey, idx) => {
       const champion = champKey ? championDB[champKey] : null;
       const title = champKey ? champion?.name || champKey : `Slot ${idx + 1}`;
-      return `<div class="lineup-chip" title="${title}">${renderLineupChipContent(champion, idx)}</div>`;
+      const isMaterialized =
+        !!champKey &&
+        materializedLineupChampions.has(`${enemyTeam}:${champKey}`);
+      const chipClass = `lineup-chip${isMaterialized ? " materialized" : ""}`;
+      return `<div class="${chipClass}" title="${title}">${renderLineupChipContent(champion, idx)}</div>`;
     })
     .join("");
 }
