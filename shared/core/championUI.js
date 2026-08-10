@@ -1,5 +1,4 @@
 import { StatusIndicator } from "../ui/statusIndicator.js";
-import { StatusEffectsRegistry } from "../data/statusEffects/effectsRegistry.js";
 
 /**
  * Create the champion DOM element
@@ -39,18 +38,22 @@ function buildChampionHTML(champion, { editMode } = {}) {
     
   </div> 
 
-    <p>HP: <span class="hp">${champion.HP}/${champion.maxHP}</span></p>
+          <div class="stat-block hp-stat">
+            <p>HP: <span class="hp">${champion.HP}/${champion.maxHP}</span></p>
 
-    <p>Momentum: <span class="momentum">${champion.momentum || 0}/100</span></p>
+            <div class="hp-bar">
+                <div class="hp-fill"></div>
+                <div class="hp-segments"></div>
+            </div>
+        </div>
 
-    <div class="hp-bar">
-      <div class="hp-fill"></div>
-      <div class="hp-segments"></div>
-    </div>
+        <div class="stat-block momentum-stat">
+            <p>Momentum: <span class="momentum">${champion.momentum || 0}/100</span></p>
 
-      <div class="momentum-bar">
-        <div class="momentum-fill"></div>
-      </div>
+            <div class="momentum-bar">
+                <div class="momentum-fill"></div>
+            </div>
+        </div>
 
     ${
       isEditModeEnabled

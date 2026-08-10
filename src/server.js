@@ -1046,7 +1046,11 @@ function handleStartTurn() {
 
   // 5. Regen global
   match.combat.activeChampions.forEach((champion) => {
-    const applied = applyGlobalTurnRegen(champion, turnStartContext, resolver);
+    const applied = applyGlobalMomentumRegen(
+      champion,
+      turnStartContext,
+      resolver,
+    );
 
     /* console.log(
       "[ULT REGEN]",
