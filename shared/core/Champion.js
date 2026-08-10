@@ -61,6 +61,10 @@ export class Champion {
     this.combatSlot = Number.isInteger(identity.combatSlot)
       ? identity.combatSlot
       : null;
+    this.classKey = identity.classKey ?? null;
+    this.species = Array.isArray(identity.species)
+      ? Array.from(identity.species)
+      : [];
     this.elementalAffinities = Array.from(identity.elementalAffinities) || [];
     this.entityType = identity.entityType ?? "champion";
 
@@ -117,6 +121,8 @@ export class Champion {
         team,
         combatSlot,
         entityType: baseData.entityType,
+        classKey: baseData.classKey,
+        species: baseData.species || [],
         elementalAffinities: baseData.elementalAffinities || [],
       },
 
@@ -203,6 +209,8 @@ export class Champion {
       name: this.name,
       portrait: this.portrait,
       entityType: this.entityType,
+      classKey: this.classKey,
+      species: Array.isArray(this.species) ? [...this.species] : [],
 
       passive: {
         name: this.passive?.name ?? null,
