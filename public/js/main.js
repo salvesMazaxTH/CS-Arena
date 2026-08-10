@@ -693,8 +693,12 @@ function openSettings() {
   setTimeout(() => settingsOverlay.classList.add("active"), 10);
 }
 
-function closeSettings() {
+function closeSettings(immediate = false) {
   settingsOverlay.classList.remove("active");
+  if (immediate) {
+    settingsOverlay.classList.add("hidden");
+    return;
+  }
   setTimeout(() => settingsOverlay.classList.add("hidden"), 300);
 }
 
@@ -2649,6 +2653,10 @@ function removeActionBar() {
 
 function openSurrenderDialog() {
   if (gameEnded || !playerTeam) return;
+  if (settingsOverlay && settingsOverlay.classList.contains("active")) {
+    settingsOverlay.classList.remove("active");
+    settingsOverlay.classList.add("hidden");
+  }
   surrenderOverlay.classList.remove("hidden");
   surrenderOverlay.classList.add("active");
 }
