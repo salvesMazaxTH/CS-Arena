@@ -24,7 +24,7 @@ import { Action } from "../shared/engine/combat/Action.js";
 import { TurnResolver } from "../shared/engine/combat/TurnResolver.js";
 import {
   CLAIM_ACTION_KEY,
-  CLAIM_MIN_ULT_METER,
+  CLAIM_MIN_MOMENTUM,
 } from "../shared/engine/combat/claim.js";
 import { DamageEvent } from "../shared/engine/combat/DamageEvent.js";
 import { snapshotChampions } from "../shared/engine/combat/snapshotChampions.js";
@@ -373,7 +373,7 @@ function initReserveQueue(_player) {
 }
 
 /**
- * Limpa ultMeter e todos os efeitos temporários de um campeão ao sair de campo por troca.
+ * Limpa momentum e todos os efeitos temporários de um campeão ao sair de campo por troca.
  * Modifiers com isPermanent=true (statModifiers) ou permanent=true (damageModifiers) são mantidos.
  */
 function clearTemporaryEffectsOnSwitch(_champion) {
@@ -468,30 +468,30 @@ function validateActionIntent(user, skill, socket) {
 }
 
 // ============================================================
-//  HELPERS DE MANIPULAÇÃO DE ULTÔMETRO
+//  HELPERS DE MANIPULAÇÃO DE MOMENTUM
 // ============================================================
 /**
- * Aplica regeneração global de ultMeter (+3 unidades por turno)
+ * Aplica regeneração global de momentum (+12 unidades por turno)
  */
-function applyGlobalTurnRegen(champion, context, resolver) {
+function applyGlobalMomentumRegen(champion, context, resolver) {
   if (!champion || !champion.alive) return 0;
 
-  const GLOBAL_ULT_REGEN = 3; // +3 unidades por turno (conforme spec)
+  const GLOBAL_MOMENTUM_REGEN = 12; // +12 momentum por turno (equivalente a 3 unidades antigas)
 
   const applied = resolver
     ? resolver.applyResourceChange({
         target: champion,
-        amount: GLOBAL_ULT_REGEN,
+        amount: GLOBAL_MOMENTUM_REGEN,
         context,
         sourceId: champion.id,
         visualPhase: "global_turn_regen",
         visualAfterHooks: true,
         debugLabel: "global_turn_regen",
       })
-    : champion.addUlt(GLOBAL_ULT_REGEN);
+    : champion.addMomentum(GLOBAL_MOMENTUM_REGEN);
 
   /*   console.log(
-    ` ${champion.name} regenerou ${applied} de ult no início do turno. Ult atual: ${champion.ultMeter}/${champion.ultCap}`,
+    ` ${champion.name} regenerou ${applied} de Momentum no início do turno. Momentum atual: ${champion.momentum}/${champion.momentumMax}`,
   ); */
 
   // não retorna nada
@@ -557,7 +557,7 @@ function emitCombatEnvelopesFromContext({
       "SERVER SNAPSHOT ULT:",
       [...match.combat.activeChampions.values()].map((c) => ({
         name: c.name,
-        ult: c.ultMeter,
+        momentum: c.momentum,
       })),
     );
     */
@@ -1054,7 +1054,7 @@ function handleStartTurn() {
       "aplicado:",
       applied,
       "depois:",
-      champion.ultMeter,
+      champion.momentum,
     );
     */
   });
@@ -1592,9 +1592,9 @@ io.on("connection", (socket) => {
 
       if (
         !editMode.freeCostSkills &&
-        (Number(user.ultMeter) || 0) < CLAIM_MIN_ULT_METER
+        (Number(user.momentum) || 0) < CLAIM_MIN_MOMENTUM
       ) {
-        return socket.emit("skillDenied", `ultômetro insuficiente.`);
+        return socket.emit("skillDenied", `Momentum insuficiente.`);
       }
 
       return socket.emit("skillApproved", { userId, skillKey });
@@ -1611,8 +1611,8 @@ io.on("connection", (socket) => {
 
     const cost = user.getSkillCost(skill);
 
-    if (!editMode.freeCostSkills && cost > user.ultMeter) {
-      return socket.emit("skillDenied", `ultômetro insuficiente.`);
+    if (!editMode.freeCostSkills && cost > user.momentum) {
+      return socket.emit("skillDenied", `Momentum insuficiente.`);
     }
 
     socket.emit("skillApproved", { userId, skillKey });
@@ -1646,8 +1646,8 @@ io.on("connection", (socket) => {
       // reverter estado
       champ.hasActedThisTurn = false;
 
-      if (action.ultCost > 0) {
-        champ.addUlt({ amount: action.ultCost });
+      if (action.momentumCost > 0) {
+        champ.addMomentum({ amount: action.momentumCost });
       }
 
       match.combat.pendingActions.splice(i, 1);
@@ -1687,16 +1687,16 @@ io.on("connection", (socket) => {
 
       if (
         !editMode.freeCostSkills &&
-        (Number(user.ultMeter) || 0) < CLAIM_MIN_ULT_METER
+        (Number(user.momentum) || 0) < CLAIM_MIN_MOMENTUM
       ) {
-        return socket.emit("actionFailed", "Ultômetro insuficiente.");
+        return socket.emit("actionFailed", "Momentum insuficiente.");
       }
 
       const action = new Action({ userId, skillKey, targetIds: {} });
       action.priority = 0;
       action.speed = user.Speed;
       action.turn = match.getCurrentTurn();
-      action.ultCost = 0;
+      action.momentumCost = 0;
       action.type = "claim";
 
       match.enqueueAction(action);
@@ -1726,13 +1726,13 @@ io.on("connection", (socket) => {
     if (skill.isUltimate === true) {
       cost = user.getSkillCost(skill);
 
-      if (!editMode.freeCostSkills && user.ultMeter < cost) {
-        return socket.emit("actionFailed", "Ultômetro insuficiente.");
+      if (!editMode.freeCostSkills && user.momentum < cost) {
+        return socket.emit("actionFailed", "Momentum insuficiente.");
       }
 
       //if (!editMode.freeCostSkills) {
-      // user.spendUlt(cost);
-      // a lógica de consumo/gasto de recurso (ultômetro) foi movida para responsabilidade da TurnResolver na execução da ação da skill respectiva.
+      // user.spendMomentum(cost);
+      // a lógica de consumo/gasto de recurso (Momentum) foi movida para responsabilidade da TurnResolver na execução da ação da skill respectiva.
       //}
     }
 
@@ -1740,7 +1740,7 @@ io.on("connection", (socket) => {
     action.priority = skill.priority || 0;
     action.speed = user.Speed;
     action.turn = match.getCurrentTurn();
-    action.ultCost = cost;
+    action.momentumCost = cost;
 
     match.enqueueAction(action);
 

@@ -74,7 +74,7 @@ const sengokuSkills = [
     duration: 3,
     transformInto: "sengoku_primordial",
     isUltimate: true,
-    ultCost: 3,
+    momentumCost: 50,
     priority: 0,
     description() {
       return `Sengoku assume sua forma primordial dracônica por ${this.duration} turnos, alterando suas skills, passiva e atributos.`;

@@ -125,7 +125,7 @@ const isarelisSkills = [
     damageMode: "standard",
     contact: true,
     isUltimate: true,
-    ultCost: 3,
+    momentumCost: 50,
     priority: 0,
 
     executeThreshold: 0.25, // ≤ 25% do HP máximo

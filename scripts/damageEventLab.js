@@ -306,7 +306,7 @@ function createLabResolver({ activeChampions }) {
       if (!target || amount === 0) return 0;
 
       const applied =
-        amount > 0 ? target.addUlt(amount) : target.spendUlt(amount);
+        amount > 0 ? target.addMomentum(amount) : target.spendMomentum(amount);
 
       if (applied === 0) return 0;
 
@@ -327,7 +327,7 @@ function createLabResolver({ activeChampions }) {
           amount: Math.abs(applied),
           context,
           type: payloadType,
-          resourceType: "ult",
+          resourceType: "momentum",
           source: activeChampions.get(sourceId) || null,
           resolver: this,
         },

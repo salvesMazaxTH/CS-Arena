@@ -5,7 +5,7 @@
 import { elementEmoji } from "../../shared/ui/elementEmoji.js";
 import {
   CLAIM_ACTION_KEY,
-  CLAIM_MIN_ULT_METER,
+  CLAIM_MIN_MOMENTUM,
 } from "../../shared/engine/combat/claim.js";
 
 let skillOverlay = null;
@@ -90,9 +90,9 @@ function toParagraphs(text) {
 }
 
 function getClaimPointsPreview(champion) {
-  const ultMeter = Math.max(0, Number(champion?.ultMeter) || 0);
+  const momentum = Math.max(0, Number(champion?.momentum) || 0);
 
-  return Math.min(4, Math.floor(ultMeter / 4));
+  return Math.min(4, Math.floor(momentum / 16));
 }
 
 // =========================
@@ -122,8 +122,10 @@ function showSkillOverlay(button, skill, champion) {
 
   const claimPoints = isClaim ? getClaimPointsPreview(champion) : null;
 
-  const ultCostBars =
-    skill.isUltimate && Number.isInteger(skill.ultCost) ? skill.ultCost : null;
+  const momentumCost =
+    skill.isUltimate && Number.isInteger(skill.momentumCost)
+      ? skill.momentumCost
+      : null;
 
   // =========================
   // HTML
@@ -147,12 +149,12 @@ function showSkillOverlay(button, skill, champion) {
         <div class="skill-overlay-meta-primary">
 
           ${
-            ultCostBars
+            momentumCost
               ? `
             <div class="skill-meta-item">
               <span class="meta-label">Custo:</span>
               <span class="meta-value">
-                ${ultCostBars} ${ultCostBars === 1 ? "barra" : "barras"}
+                ${momentumCost} Momentum
               </span>
             </div>
           `
@@ -1958,11 +1960,11 @@ async function handleSkillUsage(button) {
     user.name,
     "tentando usar",
     skill.name,
-    `(Custo: ${cost}, Ultômetro: ${user.ultMeter})`,
+    `(Custo: ${cost}, Momentum: ${user.momentum})`,
   );
 
-  if (!editMode.freeCostSkills && cost > user.ultMeter) {
-    alert(`Valor de ultômetro insuficiente.`);
+  if (!editMode.freeCostSkills && cost > user.momentum) {
+    alert(`Momentum insuficiente.`);
     user.updateUI(currentTurn);
     return;
   }
@@ -2525,7 +2527,7 @@ function showActionBarSlot() {
   const claimBtn = document.createElement("button");
   claimBtn.className = "action-bar-skill-btn claim";
   claimBtn.textContent = "CLAIM";
-  claimBtn.title = "Marca pontos com base no seu ultômetro atual.";
+  claimBtn.title = "Marca pontos com base no seu Momentum atual.";
 
   claimBtn.addEventListener("mouseenter", () =>
     showSkillOverlay(claimBtn, claimSkill, champion),
@@ -2535,7 +2537,7 @@ function showActionBarSlot() {
 
   claimBtn.addEventListener("click", () => handleClaimUsage(champion));
 
-  if (!editMode.freeCostSkills && champion.ultMeter < CLAIM_MIN_ULT_METER) {
+  if (!editMode.freeCostSkills && champion.momentum < CLAIM_MIN_MOMENTUM) {
     claimBtn.disabled = true;
   }
   skillsBar.appendChild(claimBtn);
@@ -2568,7 +2570,7 @@ function showActionBarSlot() {
 
     if (isUlt) {
       const cost = champion.getSkillCost(skill);
-      const hasResource = editMode.freeCostSkills || champion.ultMeter >= cost;
+      const hasResource = editMode.freeCostSkills || champion.momentum >= cost;
       if (!hasResource) btn.disabled = true;
     }
 
@@ -2612,8 +2614,8 @@ async function handleClaimUsage(champion) {
     return;
   }
 
-  if (!editMode.freeCostSkills && CLAIM_MIN_ULT_METER > champion.ultMeter) {
-    alert("Valor de ultômetro insuficiente para CLAIM.");
+  if (!editMode.freeCostSkills && CLAIM_MIN_MOMENTUM > champion.momentum) {
+    alert("Momentum insuficiente para CLAIM.");
     champion.updateUI(currentTurn);
     return;
   }

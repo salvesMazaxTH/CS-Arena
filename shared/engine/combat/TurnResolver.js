@@ -1,6 +1,6 @@
 import { formatChampionName } from "../../ui/formatters.js";
 import { emitCombatEvent } from "./combatEvents.js";
-import { CLAIM_ACTION_KEY, CLAIM_MIN_ULT_METER, getClaimPointsFromUltMeter } from "./claim.js";
+import { CLAIM_ACTION_KEY, CLAIM_MIN_MOMENTUM, getClaimPointsFromMomentum } from "./claim.js";
 import { snapshotChampions } from "./snapshotChampions.js";
 
 const RESOURCE_DEBUG_TRUE_VALUES = new Set(["1", "true", "yes", "on"]);
@@ -152,7 +152,7 @@ export class TurnResolver {
         ? repeat.speed
         : (baseAction.speed ?? 0),
       turn: baseAction.turn,
-      ultCost: 0,
+      momentumCost: 0,
       type: "followUp",
     };
 
@@ -263,10 +263,10 @@ export class TurnResolver {
     // Caso contrário, manter aqui para consumir mesmo sem alvo.
 
     // 5. AGORA SIM: consumir recurso
-    if (action.ultCost > 0 && !this.editMode.freeCostSkills) {
+    if (action.momentumCost > 0 && !this.editMode.freeCostSkills) {
       this.applyResourceChange({
         target: user,
-        amount: -action.ultCost,
+        amount: -action.momentumCost,
         context,
         sourceId: user.id,
       });
@@ -339,14 +339,14 @@ export class TurnResolver {
   executeClaimAction(user, action, turnExecutionMap, context) {
     if (
       !this.editMode.freeCostSkills &&
-      (Number(user.ultMeter) || 0) < CLAIM_MIN_ULT_METER
+      (Number(user.momentum) || 0) < CLAIM_MIN_MOMENTUM
     ) {
       return {
         executed: false,
         reason: "denied",
         denial: {
           denied: true,
-          message: `${formatChampionName(user)} não tem ultômetro suficiente para CLAIM.`,
+          message: `${formatChampionName(user)} não tem Momentum suficiente para CLAIM.`,
         },
         user,
         action,
@@ -369,9 +369,9 @@ export class TurnResolver {
     });
 
     try {
-      const ultMeterBeforeClaim = Math.max(0, Number(user.ultMeter) || 0);
+      const momentumBeforeClaim = Math.max(0, Number(user.momentum) || 0);
 
-      const claimPoints = getClaimPointsFromUltMeter(ultMeterBeforeClaim);
+      const claimPoints = getClaimPointsFromMomentum(momentumBeforeClaim);
 
       this.registerSkillUsageInTurn(user, claimSkill, {});
 
@@ -549,9 +549,9 @@ export class TurnResolver {
 
   refundActionResource(user, action) {
     if (!user || !action) return;
-    const amount = Number(action.ultCost) || 0;
+    const amount = Number(action.momentumCost) || 0;
     if (amount > 0) {
-      user.addUlt({ amount });
+      user.addMomentum({ amount });
     }
   }
 
@@ -613,7 +613,7 @@ export class TurnResolver {
     // 🔹 6. Normalizar resultado
     const results = Array.isArray(result) ? result : result ? [result] : [];
 
-    this.applyUltMeterFromContext({ user, context });
+    this.applyMomentumFromContext({ user, context });
 
     // 🔹 7. Hook onActionResolved
     const actionResolvedResults = emitCombatEvent(
@@ -671,10 +671,10 @@ export class TurnResolver {
   }
 
   // ============================================================
-  //  APLICAÇÃO DE ULTÔMETRO PÓS-AÇÃO
+  //  APLICAÇÃO DE MOMENTUM PÓS-AÇÃO
   // ============================================================
 
-  applyUltMeterFromContext({ user, context }) {
+  applyMomentumFromContext({ user, context }) {
     const damageEvents = context.visual.damageEvents || [];
 
     // 🔹 GANHO DO USUÁRIO
@@ -728,7 +728,7 @@ export class TurnResolver {
       return { applied: 0, hookResults: [] };
     }
 
-    const beforeUlt = Number(target.ultMeter) || 0;
+    const beforeMomentum = Number(target.momentum) || 0;
     const sourceChampion = sourceId
       ? this.combat.activeChampions.get(sourceId) || null
       : null;
@@ -736,10 +736,10 @@ export class TurnResolver {
     // 1. Backend State Change (Champion)
     const applied =
       requestedAmount > 0
-        ? target.addUlt(requestedAmount)
-        : target.spendUlt(Math.abs(requestedAmount));
+        ? target.addMomentum(requestedAmount)
+        : target.spendMomentum(Math.abs(requestedAmount));
 
-    const afterUlt = Number(target.ultMeter) || 0;
+      const afterMomentum = Number(target.momentum) || 0;
 
     if (applied === 0) {
       logResourceDebug({
@@ -749,8 +749,8 @@ export class TurnResolver {
         targetId: target.id,
         targetName: target.name,
         requestedAmount,
-        beforeUlt,
-        afterUlt,
+        beforeMomentum,
+        afterMomentum,
         debugLabel,
       });
       return { applied: 0, hookResults: [] };
@@ -803,7 +803,7 @@ export class TurnResolver {
         amount: Math.abs(applied),
         context,
         type: payloadType,
-        resourceType: "ult",
+        resourceType: "momentum",
         source: this.combat.activeChampions.get(sourceId) || null,
         resolver: this, // Desacoplado do contexto, passado como bridge
       },
@@ -812,7 +812,7 @@ export class TurnResolver {
 
     const result = {
       type: payloadType,
-      resourceType: "ult",
+      resourceType: "momentum",
       applied,
       targetId: target.id,
       sourceId: sourceId || null,
@@ -1279,7 +1279,7 @@ export class TurnResolver {
           targetId: target.id,
           sourceId: sourceId || this.healSourceId || target.id,
           amount: Math.abs(value),
-          resourceType: "ult",
+          resourceType: "momentum",
           phase,
           preDialogs: [],
           postDialogs: [],

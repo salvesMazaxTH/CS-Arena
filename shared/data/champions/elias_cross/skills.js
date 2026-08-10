@@ -115,7 +115,7 @@ const eliasCrossSkills = [
     damageMode: "standard",
 
     isUltimate: true,
-    ultCost: 4,
+    momentumCost: 66,
 
     recoilDamage: 25,
     reductedDamagePercent: 20,

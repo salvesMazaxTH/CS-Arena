@@ -174,7 +174,7 @@ const kaiSkills = [
     priority: 0,
     element: "fire",
     isUltimate: true,
-    ultCost: 2,
+    momentumCost: 33,
     description() {
       return `Kai desfere uma série de socos flamejantes distribuídos aleatoriamente entre todos os inimigos, cada um causando ${this.damagePerHit} de dano. Alvos já queimando recebem dano adicional de ${this.burningBonus}.`;
     },

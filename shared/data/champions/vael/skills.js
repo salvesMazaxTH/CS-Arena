@@ -111,7 +111,7 @@ const vaelSkills = [
     contact: true,
     damageMode: "standard",
     isUltimate: true,
-    ultCost: 3,
+    momentumCost: 50,
     priority: 0,
     description() {
       return `Causa dano devastador ao inimigo.`;

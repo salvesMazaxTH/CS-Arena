@@ -41,15 +41,16 @@ function buildChampionHTML(champion, { editMode } = {}) {
 
     <p>HP: <span class="hp">${champion.HP}/${champion.maxHP}</span></p>
 
+    <p>Momentum: <span class="momentum">${champion.momentum || 0}/100</span></p>
+
     <div class="hp-bar">
       <div class="hp-fill"></div>
       <div class="hp-segments"></div>
     </div>
 
-      <div class="ult-bar">
-        <div class="ult-fill"></div>
-        <div class="ult-segments"></div>
-    </div>
+      <div class="momentum-bar">
+        <div class="momentum-fill"></div>
+      </div>
 
     ${
       isEditModeEnabled
@@ -171,37 +172,22 @@ export function updateChampionUI(champion, context) {
     fill.style.background = "#00ff66";
   }
   // =========================
-  // ULTÔMETRO
+  // MOMENTUM
   // =========================
 
-  const ultValueEl = champion.el.querySelector(".ult");
-  const ultFillEl = champion.el.querySelector(".ult-fill");
-  const ultSegments = champion.el.querySelector(".ult-segments");
+  const momentumValueEl = champion.el.querySelector(".momentum");
+  const momentumFillEl = champion.el.querySelector(".momentum-fill");
 
-  const currentUnits = champion.ultMeter || 0;
-  const totalUnits = 24;
-  const unitsPerSegment = 4;
-  const segmentCount = totalUnits / unitsPerSegment;
+  const currentUnits = champion.momentum || 0;
+  const totalUnits = 100;
 
-  if (ultValueEl) {
-    ultValueEl.textContent = `${currentUnits}/${totalUnits}`;
+  if (momentumValueEl) {
+    momentumValueEl.textContent = `${currentUnits}/${totalUnits}`;
   }
 
-  if (ultFillEl) {
+  if (momentumFillEl) {
     const percent = (currentUnits / totalUnits) * 100;
-    ultFillEl.style.width = `${percent}%`;
-  }
-
-  if (ultSegments) {
-    const currentCount = Number(ultSegments.dataset.segmentCount) || 0;
-
-    if (currentCount !== segmentCount) {
-      ultSegments.innerHTML = "";
-      for (let i = 0; i < segmentCount; i++) {
-        ultSegments.appendChild(document.createElement("div"));
-      }
-      ultSegments.dataset.segmentCount = segmentCount;
-    }
+    momentumFillEl.style.width = `${percent}%`;
   }
 
   // =========================

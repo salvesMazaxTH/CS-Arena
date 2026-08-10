@@ -5,11 +5,7 @@ import { pathToFileURL } from "url";
 const championsDir = "./shared/champions";
 const outputFile = "./champions_db.json";
 
-const ignoredChampions = [
-    "laisaelis",
-    "laiserisa",
-    "laisaelis_laiserisa",
-];
+const ignoredChampions = ["laisaelis", "laiserisa", "laisaelis_laiserisa"];
 
 function getDescription(desc) {
   if (typeof desc === "string") return desc;
@@ -49,7 +45,7 @@ async function loadChampion(champPath) {
       slot,
       name: skill.name || "Unknown",
       description: getDescription(skill.description),
-      cost: skill.ultCost || 0,
+      momentumCost: skill.momentumCost || 0,
       bf: skill.bf || skill.bfPrimary || 0,
       priority: skill.priority || 0,
       contact: skill.contact || false,
@@ -63,7 +59,7 @@ async function loadChampion(champPath) {
     image: champ.portrait,
     stats: {
       hp: champ.HP,
-      resourceType: "Energia",
+      resourceType: "Momentum",
       resource: 0,
       attack: champ.Attack,
       defense: champ.Defense,

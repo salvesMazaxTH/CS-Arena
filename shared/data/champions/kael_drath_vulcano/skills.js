@@ -147,7 +147,7 @@ const kaeldrathVulcanoSkills = [
     damageMode: "standard",
 
     isUltimate: true,
-    ultCost: 3,
+    momentumCost: 50,
 
     contact: false,
     priority: 0,

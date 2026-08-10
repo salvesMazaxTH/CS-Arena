@@ -134,10 +134,10 @@ function transferCombatState({ sourceChampion, nextChampion }) {
   );
   nextChampion.alive = sourceChampion?.alive !== false;
   nextChampion.hasActedThisTurn = !!sourceChampion?.hasActedThisTurn;
-  nextChampion.ultMeter = clamp(
-    roundStat(asNumber(sourceChampion?.ultMeter, 0)),
+  nextChampion.momentum = clamp(
+    roundStat(asNumber(sourceChampion?.momentum, 0)),
     0,
-    Math.max(1, roundStat(asNumber(nextChampion?.ultCap, 24))),
+    Math.max(1, roundStat(asNumber(nextChampion?.momentumMax, 100))),
   );
 
   nextChampion.matchStats = nextChampion.buildMatchStats(

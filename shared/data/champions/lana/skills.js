@@ -104,7 +104,7 @@ const lanaSkills = [
     damageMode: "standard",
     contact: false,
     isUltimate: true,
-    ultCost: 3,
+    momentumCost: 50,
 
     priority: 0,
     description() {

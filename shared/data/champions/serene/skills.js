@@ -158,7 +158,7 @@ const sereneSkills = [
     contact: false,
 
     isUltimate: true,
-    ultCost: 4,
+    momentumCost: 66,
 
     priority: 4,
 

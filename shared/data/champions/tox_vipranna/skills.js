@@ -149,7 +149,7 @@ const toxViprannaSkills = [
 
     contact: false,
     isUltimate: true,
-    ultCost: 3,
+    momentumCost: 50,
     damageRatioPerStack: 0.125,
     priority: 1,
 

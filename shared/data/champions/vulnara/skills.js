@@ -126,7 +126,7 @@ const vulnaraSkills = [
     damageMode: "standard",
 
     isUltimate: true,
-    ultCost: 3,
+    momentumCost: 50,
     priority: 0,
 
     description() {

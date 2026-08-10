@@ -15,9 +15,9 @@ function _processEntropy(owner, context, resolver, stacksCap = 7) {
       if (!enemy.alive) continue;
 
       // 🔹 checar se tinha ult suficiente pra ultar (ANTES de drenar)
-      const canUlt =
+      const canUseMomentumSkill =
         enemy.skills?.some((s) => s.isUltimate) &&
-        enemy.ultMeter >=
+        enemy.momentum >=
           enemy.getSkillCost?.(enemy.skills.find((s) => s.isUltimate));
 
       // 🔹 drenar 1 unidade
@@ -36,21 +36,21 @@ function _processEntropy(owner, context, resolver, stacksCap = 7) {
 
         drained = Math.abs(resourceChange?.applied || 0);
       } else {
-        const applied = enemy.spendUlt(1);
+        const applied = enemy.spendMomentum(1);
         drained = Math.abs(applied || 0);
       }
 
       // Dialog animado ao consumir stacks (imitando Blyskartri, com prefixo padrão)
       if (drained > 0 && context?.registerDialog) {
         context.registerDialog({
-          message: `<b>[Passiva — Entropia]</b> ${formatChampionName(owner)} drenou o ultômetro de ${formatChampionName(enemy)}!`,
+          message: `<b>[Passiva — Entropia]</b> ${formatChampionName(owner)} drenou o Momentum de ${formatChampionName(enemy)}!`,
           sourceId: owner.id,
           targetId: enemy.id,
         });
       }
 
       // 🔥 punição
-      if (canUlt) {
+      if (canUseMomentumSkill) {
         const dmg = Math.floor(enemy.maxHP * 0.15);
 
         const damageResult = new DamageEvent({
@@ -89,11 +89,11 @@ export default {
   description(champion) {
     const stacks = champion.runtime.entropyStacks || 0;
 
-    return `Sempre que um inimigo ganha ou consome ultômetro, Noyre acumula 1 Entropia.
+    return `Sempre que um inimigo ganha ou consome Momentum, Noyre acumula 1 Entropia.
 
     <b>Acúmulos atuais: ${stacks}</b>
 
-    A cada ${this.stacksCap} acúmulos, remove 1 unidade de ultômetro de todos os inimigos. Inimigos que tinham ult suficiente para usar sua ultimate sofrem 15% do HP máximo como Dano Perfurante.`;
+    A cada ${this.stacksCap} acúmulos, remove 1 unidade de Momentum de todos os inimigos. Inimigos que tinham Momentum suficiente para usar sua ultimate sofrem 15% do HP máximo como Dano Perfurante.`;
   },
 
   hookScope: {

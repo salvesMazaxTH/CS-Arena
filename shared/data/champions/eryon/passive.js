@@ -1,12 +1,12 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
-function _processResonance(owner, threshold, ultGain, context, resolver) {
+function _processResonance(owner, threshold, momentumGain, context, resolver) {
   let procs = 0;
 
   while ((owner.runtime.ressonanceStacks || 0) >= threshold) {
     const ally = context.aliveChampions
       .filter((c) => c.team === owner.team && c.id !== owner.id)
-      .sort((a, b) => a.ultMeter - b.ultMeter)[0];
+      .sort((a, b) => a.momentum - b.momentum)[0];
 
     if (!ally) break;
 
@@ -15,13 +15,13 @@ function _processResonance(owner, threshold, ultGain, context, resolver) {
     if (resolver?.applyResourceChange) {
       resolver.applyResourceChange({
         target: ally,
-        amount: ultGain,
+        amount: momentumGain,
         context,
         sourceId: owner.id,
         debugLabel: "eryon_resonance_grant",
       });
     } else {
-      ally.addUlt(ultGain);
+      ally.addMomentum(momentumGain);
     }
     procs++;
   }
@@ -32,17 +32,17 @@ function _processResonance(owner, threshold, ultGain, context, resolver) {
 export default {
   key: "ressonancia_eryonica",
   name: "Ressonância Eryônica",
-  stacksCap: 5,
-  ultGain: 1,
+  stacksCap: 20,
+  momentumGain: 4,
 
   description(champion) {
     const stacks = champion.runtime.ressonanceStacks || 0;
 
-    return `Sempre que um aliado ganha ou consome ultômetro, Eryon acumula Ressonância.
+    return `Sempre que um aliado ganha ou consome Momentum, Eryon acumula Ressonância.
 
     <b>Acúmulos atuais: ${stacks}</b>
 
-    A cada ${this.stacksCap} unidades acumuladas, concede um quarto de barra de ultômetro ao aliado com menor ultômetro.`;
+    A cada ${this.stacksCap} unidades acumuladas, concede ${this.momentumGain} Momentum ao aliado com menor Momentum.`;
   },
 
   hookScope: {
@@ -61,7 +61,7 @@ export default {
     const procs = _processResonance(
       owner,
       this.stacksCap,
-      this.ultGain,
+      this.momentumGain,
       context,
       resolver,
     );
@@ -96,7 +96,7 @@ export default {
     const procs = _processResonance(
       owner,
       this.stacksCap,
-      this.ultGain,
+      this.momentumGain,
       context,
       resolver,
     );

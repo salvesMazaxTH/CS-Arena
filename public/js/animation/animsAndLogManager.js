@@ -1318,21 +1318,20 @@ export function createCombatAnimationManager(deps) {
     const el = getChampionElement(championId);
     if (!el) return;
 
-    const fill = el.querySelector(".ult-fill");
+    const fill = el.querySelector(".momentum-fill");
     if (!fill) return;
 
     // 🔹 Cap fixo do sistema
-    const MAX_UNITS = 24;
-    const UNITS_PER_BAR = 4;
+    const MAX_UNITS = 100;
 
     // 🔹 Pega valor atual do dataset (fonte confiável da UI)
-    let currentUnits = Number(el.dataset.ultUnits || 0);
+    let currentUnits = Number(el.dataset.momentumUnits || 0);
 
     // 🔹 Aplica delta
     currentUnits = Math.max(0, Math.min(MAX_UNITS, currentUnits + deltaUnits));
 
     // 🔹 Salva novamente
-    el.dataset.ultUnits = currentUnits;
+    el.dataset.momentumUnits = currentUnits;
 
     // 🔹 Atualiza barra visual contínua
     const percent = (currentUnits / MAX_UNITS) * 100;
@@ -1565,8 +1564,8 @@ export function createCombatAnimationManager(deps) {
     if (snap.Critical !== undefined) champion.Critical = snap.Critical;
     if (snap.LifeSteal !== undefined) champion.LifeSteal = snap.LifeSteal;
 
-    // Resource (ultMeter)
-    if (snap.ultMeter !== undefined) champion.ultMeter = snap.ultMeter;
+    // Resource (momentum)
+    if (snap.momentum !== undefined) champion.momentum = snap.momentum;
 
     // Runtime shields
     if (snap.runtime) {

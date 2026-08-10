@@ -87,10 +87,8 @@ export class Champion {
     this.baseCritical = stats.Critical ?? 0;
     this.baseLifeSteal = stats.LifeSteal ?? 0;
 
-    this.ultCap = Number.isFinite(stats.ultCap)
-      ? Math.max(1, Math.round(stats.ultCap))
-      : 24; // Padrão de 6 barras (24 unidades internas)
-    this.ultMeter = 0;
+    this.momentumMax = 100;
+    this.momentum = 0;
 
     this.initializeResources(stats);
 
@@ -134,8 +132,8 @@ export class Champion {
         Evasion: baseData.Evasion,
         Critical: baseData.Critical,
         LifeSteal: baseData.LifeSteal,
-        ultMeter: baseData.ultMeter,
-        ultCap: baseData.ultCap,
+        momentum: baseData.momentum,
+        momentumMax: baseData.momentumMax,
       },
 
       combat: {
@@ -231,8 +229,8 @@ export class Champion {
       Evasion: this.Evasion,
       Critical: this.Critical,
       LifeSteal: this.LifeSteal,
-      ultMeter: this.ultMeter,
-      ultCap: this.ultCap,
+      momentum: this.momentum,
+      momentumMax: this.momentumMax,
       matchStats: this.getMatchStatsSnapshot(),
 
       runtime: (() => {
@@ -318,52 +316,52 @@ export class Champion {
   }
 
   // ===============================
-  // ======== ULT METER CORE =======
+  // ======== MOMENTUM CORE ========
   // ===============================
 
   getResourceState() {
     return {
-      type: "ult",
-      currentKey: "ultMeter",
-      current: this.ultMeter,
-      max: this.ultCap,
+      type: "momentum",
+      currentKey: "momentum",
+      current: this.momentum,
+      max: this.momentumMax,
     };
   }
 
   initializeResources(stats = {}) {
-    const { ultMeter = 0, ultCap } = stats;
+    const { momentum = 0 } = stats;
 
-    if (Number.isInteger(ultCap) && ultCap > 0) {
-      this.ultCap = ultCap;
-    }
-
-    this.ultMeter = 0; // sempre começa validado
+    this.momentum = Math.max(
+      0,
+      Math.min(this.momentumMax, Math.round(momentum)),
+    );
   }
 
   // Operações públicas
   getSkillCost(skill) {
     if (!skill) return 0;
     if (skill.isUltimate !== true) return 0;
-    if (!Number.isInteger(skill.ultCost) || skill.ultCost <= 0) return 0;
-    return skill.ultCost * 4; // Converte barras para unidades internas
+    if (!Number.isInteger(skill.momentumCost) || skill.momentumCost <= 0)
+      return 0;
+    return skill.momentumCost;
   }
 
-  addUlt(input) {
+  addMomentum(input) {
     const amount = typeof input === "object" ? input.amount : Number(input);
     if (!Number.isInteger(amount) || amount <= 0) return 0;
 
-    return this._applyUltDelta(amount);
+    return this._applyMomentumDelta(amount);
   }
 
-  spendUlt(cost) {
+  spendMomentum(cost) {
     const amount = Math.abs(Number(cost) || 0);
-    if (this.ultMeter < amount) return 0;
+    if (this.momentum < amount) return 0;
 
-    return this._applyUltDelta(-amount);
+    return this._applyMomentumDelta(-amount);
   }
 
   // Núcleo interno
-  _applyUltDelta(delta) {
+  _applyMomentumDelta(delta) {
     /* console.log(
       "APPLY DELTA",
       this.name,
@@ -372,25 +370,25 @@ export class Champion {
       "delta:",
       delta,
       "antes:",
-      this.ultMeter,
+      this.momentum,
     );
     */
     if (!Number.isInteger(delta) || delta === 0) return 0;
 
-    const next = Math.max(0, Math.min(this.ultCap, this.ultMeter + delta));
-    const applied = next - this.ultMeter;
+    const next = Math.max(0, Math.min(this.momentumMax, this.momentum + delta));
+    const applied = next - this.momentum;
 
-    this.ultMeter = next;
+    this.momentum = next;
     return applied;
   }
 
   // Compatibilidade (LEGACY API)
   addResource(input) {
-    return this.addUlt(input);
+    return this.addMomentum(input);
   }
 
   spendResource(cost) {
-    return this.spendUlt(cost);
+    return this.spendMomentum(cost);
   }
 
   applyResourceChange({ amount } = {}) {

@@ -18,14 +18,14 @@ const noyreSkills = [
     priority: 1,
     dmgBonus: 40,
     description() {
-      return `Reduz o ultômetro do alvo em 2 unidades. Se o alvo tiver 3 barras ou mais de ult, causa ${this.dmgBonus}% a mais de dano.`;
+      return `Reduz o Momentum do alvo em 8 unidades. Se o alvo tiver 50 Momentum ou mais, causa ${this.dmgBonus}% a mais de dano.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context, resolver }) {
       const [target] = targets;
-      // 🔹 checar condição (3 barras = 12 unidades)
-      const hasHighUlt = target.ultMeter >= 12;
-      const damage = hasHighUlt
+      // 🔹 checar condição (50 Momentum)
+      const hasHighMomentum = target.momentum >= 50;
+      const damage = hasHighMomentum
         ? Math.floor(
             ((user.Attack * this.bf) / 100) * (1 + this.dmgBonus / 100),
           )
@@ -39,16 +39,16 @@ const noyreSkills = [
         context,
         allChampions: context.allChampions,
       }).execute();
-      // 🔹 reduzir ult
+      // 🔹 reduzir Momentum
       resolver.applyResourceChange({
         target,
-        amount: -2,
+        amount: -8,
         context,
         sourceId: user.id,
         emitHooks: false,
       });
       return {
-        log: hasHighUlt
+        log: hasHighMomentum
           ? `${user.name} distorceu a energia de ${target.name} (dano amplificado).`
           : `${user.name} distorceu a energia de ${target.name}.`,
       };
@@ -61,7 +61,7 @@ const noyreSkills = [
     duration: 2,
     allyShieldPercent: 10,
     description() {
-      return `Todos os outros campeões não podem ganhar ultômetro por ${this.duration} turnos. Aliados afetados recebem escudo de ${this.allyShieldPercent}% do HP máximo quando tiverem ganho de ultômetro anulado.`;
+      return `Todos os outros campeões não podem ganhar Momentum por ${this.duration} turnos. Aliados afetados recebem escudo de ${this.allyShieldPercent}% do HP máximo quando tiverem ganho de Momentum anulado.`;
     },
     targetSpec: ["all"],
     resolve({ user, targets, context, resolver }) {
@@ -105,19 +105,19 @@ const noyreSkills = [
               owner.addShield(shieldAmount, 0, context);
 
               return {
-                log: `${formatChampionName(owner)} teve seu ganho de ultômetro anulado e recebeu ${shieldAmount} de escudo!`,
+                log: `${formatChampionName(owner)} teve seu ganho de Momentum anulado e recebeu ${shieldAmount} de escudo!`,
               };
             }
 
             return {
-              log: `${formatChampionName(owner)} teve seu ganho de ultômetro anulado!`,
+              log: `${formatChampionName(owner)} teve seu ganho de Momentum anulado!`,
             };
           },
         });
       }
 
       return {
-        log: `${user.name} anulou o ganho de ultômetro de todos os outros campeões por ${this.duration} turnos!`,
+        log: `${user.name} anulou o ganho de Momentum de todos os outros campeões por ${this.duration} turnos!`,
       };
     },
   },
@@ -125,14 +125,14 @@ const noyreSkills = [
     key: "colapso_entropico",
     name: "Colapso Entrópico",
     isUltimate: true,
-    ultCost: 4,
-    damageRatioPerUlt: 0.04,
+    momentumCost: 66,
+    damageRatioPerMomentum: 0.01,
     piercingPercentage: 60,
 
     priority: 0,
 
     description() {
-      return `Colapsa a energia dos inimigos, causando Dano Perfurante (${this.piercingPercentage}% de perfuração) equivalente a ${this.damageRatioPerUlt * 100}% do HP máximo para cada unidade de ultômetro atual do alvo (Máx.: 65% do HP). Em seguida, drena 2/3 do ultômetro do alvo (Mín.: 3 unidades, ou todo o ultômetro restante se o alvo tiver menos).`;
+      return `Colapsa a energia dos inimigos, causando Dano Perfurante (${this.piercingPercentage}% de perfuração) equivalente a ${this.damageRatioPerMomentum * 100}% do HP máximo para cada unidade de Momentum atual do alvo (Máx.: 65% do HP). Em seguida, drena 2/3 do Momentum do alvo (Mín.: 12 unidades, ou todo o Momentum restante se o alvo tiver menos).`;
     },
 
     targetSpec: ["all:enemy"],
@@ -144,10 +144,10 @@ const noyreSkills = [
       const results = [];
 
       for (const enemy of enemies) {
-        const ult = enemy.ultMeter || 0;
-        if (ult <= 0) continue;
+        const momentum = enemy.momentum || 0;
+        if (momentum <= 0) continue;
 
-        const rawDamage = enemy.maxHP * this.damageRatioPerUlt * ult;
+        const rawDamage = enemy.maxHP * this.damageRatioPerMomentum * momentum;
         const cappedDamage = Math.min(rawDamage, enemy.maxHP * 0.65);
 
         const damage = Math.floor(cappedDamage);
@@ -170,15 +170,15 @@ const noyreSkills = [
 
         results.push(...damageResults);
 
-        // Drenar 2/3 do ultômetro, mínimo 3, máximo o que o alvo tem, nunca negativo
-        let ultToDrain = Math.floor((ult * 2) / 3);
+        // Drenar 2/3 do Momentum, mínimo 12, máximo o que o alvo tem, nunca negativo
+        let momentumToDrain = Math.floor((momentum * 2) / 3);
 
-        ultToDrain = Math.max(ultToDrain, Math.min(3, ult));
+        momentumToDrain = Math.max(momentumToDrain, Math.min(12, momentum));
 
-        if (ultToDrain > 0) {
+        if (momentumToDrain > 0) {
           resolver.applyResourceChange({
             target: enemy,
-            amount: -ultToDrain,
+            amount: -momentumToDrain,
             context,
             sourceId: user.id,
             emitHooks: false,

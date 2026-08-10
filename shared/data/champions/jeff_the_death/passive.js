@@ -13,7 +13,7 @@ function restoreRevivedState(champion, reviveFrom) {
   champion.Evasion = reviveFrom.Evasion;
   champion.Critical = reviveFrom.Critical;
   champion.LifeSteal = reviveFrom.LifeSteal;
-  champion.ultMeter = reviveFrom.ultMeter;
+  champion.momentum = reviveFrom.momentum;
 
   champion.statModifiers = Array.isArray(reviveFrom.statModifiers)
     ? reviveFrom.statModifiers.map((modifier) => ({ ...modifier }))

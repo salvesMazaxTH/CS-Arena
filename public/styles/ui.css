@@ -398,8 +398,8 @@
 }
 
 /* ============================================
-   HP & ULT BARS
-   ============================================ */
+  HP & MOMENTUM BARS
+  ============================================ */
 
 .hp-bar {
   display: flex;
@@ -412,7 +412,7 @@
   position: relative;
 }
 
-.ult-bar {
+.momentum-bar {
   display: flex;
   width: 100%;
   height: clamp(5px, 1vw, 8px);
@@ -423,8 +423,7 @@
   position: relative;
 }
 
-.hp-segments,
-.ult-segments {
+.hp-segments {
   position: absolute;
   inset: 0;
   display: flex;
@@ -439,11 +438,6 @@
   box-shadow: 1px 0 0 rgba(0, 0, 0, 0.7);
 }
 
-.ult-segments > div {
-  flex: 1 1 0;
-  border-right: 2px solid rgba(0, 0, 0, 0.6);
-}
-
 .hp-fill {
   height: 100%;
   width: 100%;
@@ -453,7 +447,7 @@
     background 0.3s ease;
 }
 
-.ult-fill {
+.momentum-fill {
   height: 100%;
   position: relative;
   z-index: 1;
@@ -2053,7 +2047,7 @@
     margin-bottom: 4px;
   }
 
-  .ult-bar {
+  .momentum-bar {
     height: clamp(4px, 0.9vw, 6px);
     margin-bottom: 6px;
   }

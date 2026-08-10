@@ -183,7 +183,7 @@ const reyskaroneSkills = [
     pactDuration: 3,
     contact: false,
     isUltimate: true,
-    ultCost: 3,
+    momentumCost: 50,
 
     priority: 5,
     description() {

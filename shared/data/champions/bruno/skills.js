@@ -98,7 +98,7 @@ const brunoSkills = [
     damageMode: "standard",
     priority: 0,
     isUltimate: true,
-    ultCost: 3,
+    momentumCost: 50,
     element: "ice",
 
     description() {

@@ -228,7 +228,7 @@ const naelysSkills = [
     element: "water",
 
     isUltimate: true,
-    ultCost: 3,
+    momentumCost: 50,
 
     description() {
       return `Por ${this.duration} turnos, Naelys causa dano adicional baseado no HP perdido (até +${this.maxBonus}).`;

@@ -132,7 +132,7 @@ const morakhanSkills = [
     contact: false,
 
     isUltimate: true,
-    ultCost: 2,
+    momentumCost: 33,
 
     description() {
       return `Desencadeia a Postura da Montanha, durante este turno:
