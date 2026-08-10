@@ -6,4 +6,7 @@ export default {
   Attack: 95,
   Defense: 130,
   Speed: 75,
+
+  classKey: "enchanter",
+  species: ["human"],
 };

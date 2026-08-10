@@ -6,4 +6,8 @@ export default {
   Attack: 320,
   Defense: 55,
   Speed: 85,
+
+  elementalAffinities: ["ice"],
+  classKey: "mage",
+  species: ["human"],
 };

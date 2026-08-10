@@ -6,4 +6,7 @@ export default {
   Attack: 170,
   Defense: 110,
   Speed: 75,
+
+  classKey: "brawler",
+  species: ["fey", "floraborn"],
 };

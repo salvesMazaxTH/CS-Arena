@@ -6,4 +6,7 @@ export default {
   Attack: 200,
   Defense: 90,
   Speed: 50,
+
+  classKey: "brawler",
+  species: ["divinity"],
 };

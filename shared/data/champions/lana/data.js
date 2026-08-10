@@ -5,4 +5,7 @@ export default {
   Attack: 220,
   Defense: 95,
   Speed: 55,
+
+  classKey: "mage",
+  species: ["human", "mutant"],
 };

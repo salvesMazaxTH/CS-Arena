@@ -7,4 +7,8 @@ export default {
   Defense: 65,
   Speed: 75,
   Critical: 35,
+
+  elementalAffinities: ["fire"],
+  classKey: "marksman",
+  species: ["human", "mageborn", "pyrokinectic"],
 };

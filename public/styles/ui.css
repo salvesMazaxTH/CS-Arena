@@ -1390,7 +1390,8 @@
 }
 
 .selected-champions-slots {
-  display: flex;
+  grid-template-columns: repeat(4, 1fr);
+  display: grid;
   justify-content: center;
   gap: 12px;
   min-height: 0;

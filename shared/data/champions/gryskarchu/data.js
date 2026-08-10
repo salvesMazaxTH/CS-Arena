@@ -5,4 +5,8 @@ export default {
   Attack: 95,
   Defense: 180,
   Speed: 25,
+
+    elementalAffinities: ["earth"],
+  classKey: "tank",
+  species: ["spirit", "avatar"],
 };

@@ -6,4 +6,8 @@ export default {
   Attack: 185,
   Defense: 110,
   Speed: 55,
+
+  elementalAffinities: ["fire"],
+  classKey: "brawler",
+  species: ["human", "mutant"],
 };

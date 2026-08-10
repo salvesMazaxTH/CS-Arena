@@ -6,6 +6,9 @@ export default {
   Defense: 95,
   Speed: 45,
 
+  classKey: "tank",
+  species: ["animal", "plush", "spirit"],
+
   // Minion: entra no jogo via efeito, não por seleção.
   entityType: "minion",
 };

@@ -7,4 +7,7 @@ export default {
   Defense: 195,
   Speed: 45,
   Critical: 10,
+
+  classKey: "tank",
+  species: ["human"],
 };

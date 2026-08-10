@@ -8,4 +8,8 @@ export default {
   Speed: 75,
   Critical: 100,
   LifeSteal: 5,
+
+
+  classKey: "assassin",
+  species: ["human", "demonic"],
 };

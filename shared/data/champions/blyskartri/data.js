@@ -7,4 +7,7 @@ export default {
   Defense: 135,
   Speed: 65,
   Evasion: 10,
+
+  classKey: "enchanter",
+  species: ["spirit", "avatar"],
 };

@@ -8,4 +8,7 @@ export default {
   Defense: 130,
   Speed: 65,
   LifeSteal: 15,
+
+  classKey: "mage",
+  species: ["vampire"],
 };

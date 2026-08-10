@@ -8,4 +8,7 @@ export default {
   Speed: 30,
 
   LifeSteal: 20,
+
+  classKey: "enchanter",
+  species: ["spirit", "avatar"],
 };

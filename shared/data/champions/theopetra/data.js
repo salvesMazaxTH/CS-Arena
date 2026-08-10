@@ -8,4 +8,6 @@ export default {
   Speed: 30,
 
   elementalAffinities: ["earth"],
+  classKey: "brawler",
+  species: ["divinity", "celestial"],
 };

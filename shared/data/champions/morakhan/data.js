@@ -7,4 +7,6 @@ export default {
   Speed: 80,
 
   elementalAffinities: ["steel"],
+  classKey: "tank",
+  species: ["divine-forged", "transfigured"],
 };

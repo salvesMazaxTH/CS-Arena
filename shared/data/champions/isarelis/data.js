@@ -7,4 +7,7 @@ export default {
   Defense: 60,
   Speed: 80,
   Critical: 20,
+
+  classKey: "assassin",
+  species: ["human", "enhanced"],
 };

@@ -7,6 +7,6 @@ export default {
   Speed: 105,
 
   elementalAffinities: ["lightning"],
-  classKey: "marksman",
+  classKey: "mage",
   species: ["elemental", "divinity"],
 };

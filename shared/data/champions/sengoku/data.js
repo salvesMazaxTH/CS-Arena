@@ -6,4 +6,7 @@ export default {
   Attack: 410,
   Defense: 200,
   Speed: 70,
+
+  classKey: "brawler",
+  species: ["Primordial Dragon", "dragon"],
 };

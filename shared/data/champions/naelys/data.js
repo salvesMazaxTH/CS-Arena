@@ -7,4 +7,6 @@ export default {
   Speed: 40,
 
   elementalAffinities: ["water"],
+  classKey: "enchanter",
+  species: ["merfolk"],
 };

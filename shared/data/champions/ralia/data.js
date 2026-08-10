@@ -8,4 +8,7 @@ export default {
   Speed: 40,
 
   LifeSteal: 10,
+
+  classKey: "brawler",
+  species: ["human"],
 };

@@ -8,4 +8,6 @@ export default {
   Speed: 90,
   
   elementalAffinities: ["lightning"],
+  classKey: "mage",
+  species: ["spirit", "undead"],
 };

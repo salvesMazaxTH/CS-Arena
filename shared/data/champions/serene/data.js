@@ -5,4 +5,7 @@ export default {
   Attack: 130,
   Defense: 85,
   Speed: 40,
+
+  classKey: "enchanter",
+  species: ["God-Touched", "epiphanic", "human"],
 };

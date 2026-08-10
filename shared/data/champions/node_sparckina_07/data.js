@@ -9,4 +9,6 @@ export default {
   Evasion: 5,
 
   elementalAffinities: ["lightning", "steel"],
+  classKey: "brawler",
+  species: ["robot", "android"],
 };

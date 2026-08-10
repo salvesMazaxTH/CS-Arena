@@ -8,4 +8,6 @@ export default {
   Speed: 30,
 
   elementalAffinities: ["fire"],
+  classKey: "tank",
+  species: ["titan"],
 };
