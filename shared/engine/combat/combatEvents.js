@@ -3,6 +3,10 @@ const debugMode = false; // Set to true to enable detailed logging of combat eve
 export function emitCombatEvent(eventName, payload, champions, options = {}) {
   const results = [];
 
+  const players = options.players ?? payload?.context?.players ?? [];
+
+  console.log(`[emitCombatEvent] Event: ${eventName}, Players:`, players);
+
   /*   const ignoredEventsForDebug = new Set([
     "onActionResolved",
     "onTurnEnd",
@@ -91,6 +95,38 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
       } catch (err) {
         console.error(
           `[HOOK ERROR] ${champ.name} → ${source.key || "passive"}.${eventName}`,
+          err,
+        );
+      }
+    }
+  }
+
+  for (const player of players) {
+    const emblemSources = Array.isArray(player?.emblems) ? player.emblems : [];
+
+    for (const source of emblemSources) {
+      const hook = source[eventName];
+      if (typeof hook !== "function") continue;
+
+      console.log(
+        `[EMBLEM HOOK] ${eventName} → Player ${player.team} → ${source.key}`,
+      );
+
+      try {
+        const res = hook.call(source, {
+          ...payload,
+          owner: player,
+          emitter: emitCombatEvent,
+        });
+
+        if (res) {
+          results.push(res);
+        }
+      } catch (err) {
+        console.error(
+          `[HOOK ERROR] Player ${player?.team ?? "?"} → ${
+            source.key || "emblem"
+          }.${eventName}`,
           err,
         );
       }

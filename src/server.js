@@ -334,6 +334,9 @@ function spawnChampion({
       spawnProtection,
     },
     [newChampion],
+    {
+      players: match.players,
+    },
   );
 
   if (!trackSnapshot) {

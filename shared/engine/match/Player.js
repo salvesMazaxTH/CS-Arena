@@ -5,7 +5,7 @@ export class Player {
     this.team = team;
     this.socketId = null;
     this.selectedChampionKeys = [];
-    //this.remainingSwitches = 0;
+    this.emblems = [];
   }
 
   setSocket(socketId) {

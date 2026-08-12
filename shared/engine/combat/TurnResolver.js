@@ -541,6 +541,9 @@ export class TurnResolver {
         target: mainTarget,
       },
       this.combat.activeChampions,
+      {
+        players: this.match.players,
+      },
     );
 
     for (const res of results) {
@@ -1026,6 +1029,7 @@ export class TurnResolver {
       allChampions: combat.activeChampions,
       aliveChampions: aliveChampionsArray,
       // eventIndex: 0, // para controle interno de ordem de eventos dentro da resolução de uma ação
+      players: this.match.players,
 
       // ========================
       // EVENT BUFFERS

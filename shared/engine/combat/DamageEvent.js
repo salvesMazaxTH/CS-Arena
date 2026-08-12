@@ -48,6 +48,9 @@ export class DamageEvent {
       );
     }
 
+    this.players = params.players ?? context?.players ?? [];
+    console.log("[DamageEvent_constructor] Players in DamageEvent:", this.players);
+
     this.mode = params.mode ?? DamageEvent.Modes.STANDARD;
 
     this.baseDamage = Number(baseDamage ?? 0);
