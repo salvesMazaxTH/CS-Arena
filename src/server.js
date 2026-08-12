@@ -56,6 +56,7 @@ const editMode = {
 const TEAM_SIZE = 8;
 const ACTIVE_PER_TEAM = 3; // máximo de campeões simultâneos em campo por time (roster=8, active=3)
 const MAX_SCORE = 30; // pontos necessários para vitória
+const MAX_MATCH_TURNS = 15; // fim do jogo no final do turno 15
 const CHAMPION_SELECTION_TIME = 120; // Segundos para seleção de campeões
 const FIRST_CHOICE_TIMEOUT = 99999 * 1000; //30 * 1000; // 30s para escolha do 1v1 (99.999s para testes)
 const DISCONNECT_TIMEOUT = 30 * 1000; // 30 s para reconexão
@@ -768,6 +769,23 @@ function emitCombatLogsFromResults(results = []) {
 //  RESOLUÇÃO DE TURNOS
 // ============================================================
 
+function emitGameOverIfNeeded({ checkTurnLimit = false } = {}) {
+  const gameEnd = match.checkGameEnd({
+    maxTurns: MAX_MATCH_TURNS,
+    maxScore: MAX_SCORE,
+    checkTurnLimit,
+  });
+
+  if (!gameEnd.ended) return;
+
+  const winnerSlot = gameEnd.winnerSlot;
+  const winnerTeam = winnerSlot != null ? winnerSlot + 1 : null;
+  const winnerName =
+    winnerSlot != null ? match.players[winnerSlot]?.username : null;
+
+  io.emit("gameOver", { winnerTeam, winnerName });
+}
+
 function handleEndTurn() {
   io.emit("turnLocked");
 
@@ -840,13 +858,7 @@ function handleEndTurn() {
     io.emit("gameStateUpdate", getGameState());
   }
 
-  if (match.isGameEnded()) {
-    const winnerSlot = match.combat.computeWinnerSlot(MAX_SCORE);
-    const winnerTeam = winnerSlot != null ? winnerSlot + 1 : null;
-    const winnerName =
-      winnerSlot != null ? match.players[winnerSlot]?.username : null;
-    io.emit("gameOver", { winnerTeam, winnerName });
-  }
+  emitGameOverIfNeeded({ checkTurnLimit: true });
 
   // 4. Hooks onTurnEnd
   const context = {
@@ -863,7 +875,10 @@ function handleEndTurn() {
   match.clearTurnReadiness();
   match.clearFinishedAnimationSockets();
   match.clearTurnSummons();
-  match.nextTurn();
+
+  if (!match.isGameEnded()) {
+    match.nextTurn();
+  }
 
   // 6. Sinaliza clientes que todos os eventos de combate foram emitidos
   waitingForAnimations = true;
@@ -988,12 +1003,6 @@ function handleStartTurn() {
     });
   }
 
-  console.log("[DEBUG] [JEFF REVIVAL DIALOG] CTX ID:");
-  console.dir(turnStartContext, { depth: 2 });
-
-  console.log("[DEBUG] [JEFF REVIVAL DIALOG] CTX.VISUAL INICIAL: ");
-  console.dir(turnStartContext.visual, { depth: null });
-
   // 1. Injetar contexto
   match.combat.activeChampions.forEach((champ) => {
     if (!champ.alive) return;
@@ -1022,31 +1031,7 @@ function handleStartTurn() {
     if (effect.turnToHappen === currentTurn) {
       handleScheduledEffect(effect, turnStartContext);
       if (effect.dialog) {
-        console.log("[DEBUG] [JEFF REVIVAL DIALOG] → REGISTRANDO DIALOG");
-
-        console.log(
-          "[DEBUG] [JEFF REVIVAL DIALOG] → DIALOG RAW:",
-          effect.dialog,
-        );
-
-        console.log(
-          "[DEBUG] [JEFF REVIVAL DIALOG] → MESSAGE:",
-          effect.dialog?.message,
-        );
-
-        console.log(
-          "[DEBUG] [JEFF REVIVAL DIALOG] → TYPE:",
-          typeof effect.dialog?.message,
-        );
-
         turnStartContext.registerDialog(effect.dialog);
-
-        console.log(
-          "[DEBUG] [JEFF REVIVAL DIALOG] → globalDialogs (safe):",
-          Array.isArray(turnStartContext.visual.globalDialogs)
-            ? turnStartContext.visual.globalDialogs.map((d) => d && d.message)
-            : turnStartContext.visual.globalDialogs,
-        );
       }
     } else {
       remaining.push(effect);
@@ -1065,13 +1050,7 @@ function handleStartTurn() {
 
   // Start-of-turn hooks (e.g. Jeff's Inevitabilidade da Morte) can kill the
   // last real champion outside the regular end-turn action flow.
-  if (match.isGameEnded()) {
-    const winnerSlot = match.combat.computeWinnerSlot(MAX_SCORE);
-    const winnerTeam = winnerSlot != null ? winnerSlot + 1 : null;
-    const winnerName =
-      winnerSlot != null ? match.players[winnerSlot]?.username : null;
-    io.emit("gameOver", { winnerTeam, winnerName });
-  }
+  emitGameOverIfNeeded();
 
   // 3. Limpar expirados
   match.combat.activeChampions.forEach((champion) => {
@@ -1087,35 +1066,12 @@ function handleStartTurn() {
       turnStartContext,
       resolver,
     );
-
-    /* console.log(
-      "[ULT REGEN]",
-      champion.name,
-      "aplicado:",
-      applied,
-      "depois:",
-      champion.momentum,
-    );
-    */
   });
 
   // 6. Limpar runtime context
   match.combat.activeChampions.forEach((champ) => {
     if (champ.runtime) delete champ.runtime.currentContext;
   });
-
-  /*   console.log("[DEBUG] [JEFF REVIVAL DIALOG] === ANTES DO EMIT ===", {
-    globalDialogs: turnStartContext.visual.globalDialogs,
-    damageEvents: turnStartContext.visual.damageEvents,
-    healEvents: turnStartContext.visual.healEvents,
-    buffEvents: turnStartContext.visual.buffEvents,
-  });
-
-  console.log("[DEBUG] [JEFF REVIVAL DIALOG] CTX FINAL: ");
-  console.dir(turnStartContext, { depth: 2 });
-
-  console.log("[DEBUG] [JEFF REVIVAL DIALOG] CTX.VISUAL FINAL: ");
-  console.dir(turnStartContext.visual, { depth: null }); */
 
   // 🔹 7. Emit envelope (novo modelo)
   emitCombatEnvelopesFromContext({

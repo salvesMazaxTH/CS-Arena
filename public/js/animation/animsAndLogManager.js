@@ -1172,6 +1172,7 @@ export function createCombatAnimationManager(deps) {
   async function handleGameOver(effect) {
     console.log("Game over effect received:", effect);
     const { winnerTeam } = effect;
+    const isDraw = winnerTeam === null || winnerTeam === undefined;
 
     window.gameEnded = true;
 
@@ -1184,25 +1185,37 @@ export function createCombatAnimationManager(deps) {
     if (!gameOverOverlay || !gameOverContent || !gameOverMessage) return;
 
     const playerTeam = window.playerTeam;
-    const isWinner = playerTeam === winnerTeam;
+    const isWinner = !isDraw && playerTeam === winnerTeam;
 
-    gameOverMessage.textContent = isWinner ? `Vitória!!` : `Derrota`;
+    let message = "Derrota";
+    let outcomeClass = "lose";
+    let overlayClass = "lose-background";
 
-    gameOverContent.classList.remove("hidden", "win", "lose");
-    gameOverContent.classList.add(isWinner ? "win" : "lose");
+    if (isDraw) {
+      message = "Empate";
+      outcomeClass = "draw";
+      overlayClass = "draw-background";
+    } else if (isWinner) {
+      message = "Vitória!!";
+      outcomeClass = "win";
+      overlayClass = "win-background";
+    }
+
+    gameOverMessage.textContent = message;
+
+    gameOverContent.classList.remove("hidden", "win", "lose", "draw");
+    gameOverContent.classList.add(outcomeClass);
 
     gameOverOverlay.classList.remove(
       "hidden",
       "win-background",
       "lose-background",
+      "draw-background",
     );
-    gameOverOverlay.classList.add(
-      "active",
-      isWinner ? "win-background" : "lose-background",
-    );
+    gameOverOverlay.classList.add("active", overlayClass);
 
     // Play appropriate sound
-    audioManager.play(isWinner ? "victory" : "defeat");
+    audioManager.play(isDraw ? "defeat" : isWinner ? "victory" : "defeat");
 
     // Timer for return to login
     const timerOverlay = document.getElementById("timerOverlay");

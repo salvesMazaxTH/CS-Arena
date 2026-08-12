@@ -2131,11 +2131,15 @@
 }
 
 .game-over-overlay.win-background {
-  background: rgba(0, 150, 255, 0.6);
+  background: linear-gradient(180deg, rgba(8, 72, 120, 0.82), rgba(0, 176, 255, 0.28));
 }
 
 .game-over-overlay.lose-background {
-  background: rgba(255, 0, 0, 0.6);
+  background: linear-gradient(180deg, rgba(90, 10, 10, 0.82), rgba(255, 60, 60, 0.28));
+}
+
+.game-over-overlay.draw-background {
+  background: linear-gradient(180deg, rgba(55, 55, 68, 0.82), rgba(140, 120, 255, 0.26));
 }
 
 .game-over-content {
@@ -2163,6 +2167,11 @@
   box-shadow: 0 0 40px rgba(255, 0, 0, 0.8);
 }
 
+.game-over-content.draw {
+  border-color: #9d8cff;
+  box-shadow: 0 0 40px rgba(157, 140, 255, 0.8);
+}
+
 #gameOverMessage {
   font-size: 3em;
   font-weight: bold;
@@ -2177,6 +2186,11 @@
 .game-over-content.lose #gameOverMessage {
   color: #ff6b6b;
   text-shadow: 0 0 15px rgba(255, 0, 0, 0.9);
+}
+
+.game-over-content.draw #gameOverMessage {
+  color: #d7d1ff;
+  text-shadow: 0 0 15px rgba(157, 140, 255, 0.9);
 }
 
 /* ============================================

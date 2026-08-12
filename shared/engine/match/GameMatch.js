@@ -96,7 +96,7 @@ class CombatState {
   }
 
   reset() {
-    this.currentTurn = 1;
+    this.currentTurn = 15;
     this.pendingActions = [];
     this.activeChampions = new Map();
     this.deadChampions = new Map();
@@ -193,9 +193,18 @@ class CombatState {
     return champion;
   }
 
-  getAliveChampions() {
-    return [...this.activeChampions.values()].filter(
-      (champion) => champion.alive,
+  getTeamChampions(
+    team,
+    { alive = false, includeInactive = false, includeDead = false } = {},
+  ) {
+    const champions = [
+      ...this.activeChampions.values(),
+      ...(includeInactive ? this.inactiveChampions.values() : []),
+      ...(includeDead ? this.deadChampions.values() : []),
+    ];
+
+    return champions.filter(
+      (champion) => champion.team === team && (!alive || champion.alive),
     );
   }
 
@@ -204,21 +213,6 @@ class CombatState {
       ...this.activeChampions.values(),
       ...this.deadChampions.values(),
     ].filter((champion) => champion.team === team);
-  }
-
-  getLivingChampionsForTeam(team) {
-    return [
-      ...this.activeChampions.values(),
-      ...this.inactiveChampions.values(),
-    ]
-      .filter((champion) => champion.team === team)
-      .filter((champion) => champion.alive);
-  }
-
-  getAliveChampionsForTeam(team) {
-    return this.getAliveChampions().filter(
-      (champion) => champion.team === team,
-    );
   }
 
   getChampionAtSlot(team, slot) {
@@ -254,17 +248,10 @@ class CombatState {
   }
 
   /**
-   * Retorna o número de campeões vivos num time.
-   */
-  getAliveCountForTeam(team) {
-    return this.getAliveChampionsForTeam(team).length;
-  }
-
-  /**
    * Verifica se o time tem espaço para mais um campeão vivo.
    */
   canSpawnOnTeam(team, maxPerTeam = 3) {
-    return this.getAliveCountForTeam(team) < maxPerTeam;
+    return this.getTeamChampions(team, { alive: true }).length < maxPerTeam;
   }
 
   /**
@@ -292,7 +279,7 @@ class CombatState {
 
     if (trackSnapshot) {
       this.combatSnapshot.push({
-        championKey: champion.key,
+        championKey: champion.championKey ?? champion.key ?? champion.id,
         id: champion.id,
         team: champion.team,
         combatSlot: champion.combatSlot,
@@ -324,7 +311,7 @@ class CombatState {
    * Se a eliminação deixar o time sem campeões vivos na lineup, o jogo termina.
    * Retorna um objeto com os dados necessários para o server emitir sockets, ou null se não encontrado.
    */
-  removeChampionFromGame(championId, maxScore = 30) {
+  removeChampionFromGame(championId, maxScore = 99) {
     const champion = this.activeChampions.get(championId);
     if (!champion) return null;
 
@@ -339,7 +326,12 @@ class CombatState {
     // Mover para deadChampions
     this.removeChampion(championId);
 
-    if (!this.hasLivingChampionsForTeam(champion.team)) {
+    if (
+      !this.getTeamChampions(champion.team, {
+        alive: true,
+        includeInactive: true,
+      }).length
+    ) {
       this.gameEnded = true;
     }
 
@@ -364,6 +356,109 @@ class CombatState {
     this.currentTurn += 1;
   }
 
+  resolveWinnerSlot(maxScore = 99) {
+    const player1Score = this.playerScores[0] || 0;
+    const player2Score = this.playerScores[1] || 0;
+
+    const countLivingLineupMembers = (team) => {
+      const player = this.match.players?.[team - 1];
+      const lineupKeys = Array.isArray(player?.selectedChampionKeys)
+        ? player.selectedChampionKeys
+        : [];
+
+      const aliveFieldKeys = new Set(
+        this.getTeamChampions(team, {
+          alive: true,
+          includeInactive: true,
+        }).map((champion) => champion.championKey || champion.id),
+      );
+
+      const deadKeys = new Set(
+        [...this.deadChampions.values()]
+          .filter((champion) => champion.team === team)
+          .map((champion) => champion.championKey || champion.id),
+      );
+
+      return lineupKeys.filter((championKey) => {
+        if (!championKey) return false;
+        if (deadKeys.has(championKey)) return false;
+        if (aliveFieldKeys.has(championKey)) return false;
+        return true;
+      }).length;
+    };
+
+    if (player1Score !== player2Score) {
+      return player1Score > player2Score ? 0 : 1;
+    }
+
+    const team1Living =
+      this.getTeamChampions(1, {
+        alive: true,
+        includeInactive: true,
+      }).length + countLivingLineupMembers(1);
+    const team2Living =
+      this.getTeamChampions(2, {
+        alive: true,
+        includeInactive: true,
+      }).length + countLivingLineupMembers(2);
+
+    if (team1Living !== team2Living) {
+      return team1Living > team2Living ? 0 : 1;
+    }
+
+    const fieldCount1 = this.getTeamChampions(1, { alive: true }).length;
+    const fieldCount2 = this.getTeamChampions(2, { alive: true }).length;
+
+    if (fieldCount1 !== fieldCount2) {
+      return fieldCount1 > fieldCount2 ? 0 : 1;
+    }
+
+    if (
+      (this.playerScores[0] || 0) >= maxScore &&
+      (this.playerScores[1] || 0) < maxScore
+    )
+      return 0;
+    if (
+      (this.playerScores[1] || 0) >= maxScore &&
+      (this.playerScores[0] || 0) < maxScore
+    )
+      return 1;
+
+    const team1Alive =
+      this.getTeamChampions(1, {
+        alive: true,
+        includeInactive: true,
+      }).length > 0;
+    const team2Alive =
+      this.getTeamChampions(2, {
+        alive: true,
+        includeInactive: true,
+      }).length > 0;
+
+    if (team1Alive && !team2Alive) return 0;
+    if (team2Alive && !team1Alive) return 1;
+
+    return null;
+  }
+
+  checkGameEnd({ maxTurns = 15, maxScore = 99, checkTurnLimit = false } = {}) {
+    if (!this.gameEnded && checkTurnLimit && this.currentTurn >= maxTurns) {
+      this.gameEnded = true;
+    }
+
+    if (!this.gameEnded) {
+      return {
+        ended: false,
+        winnerSlot: null,
+      };
+    }
+
+    return {
+      ended: true,
+      winnerSlot: this.resolveWinnerSlot(maxScore),
+    };
+  }
+
   clearTurnReadiness() {
     this.playersReadyToEndTurn.clear();
   }
@@ -380,11 +475,7 @@ class CombatState {
     this.summonedThisTurn.clear();
   }
 
-  hasLivingChampionsForTeam(team) {
-    return this.getLivingChampionsForTeam(team).length > 0;
-  }
-
-  addPointForSlot(slot, maxScore = 30) {
+  addPointForSlot(slot, maxScore = 99) {
     if (!Array.isArray(this.playerScores)) this.playerScores = [0, 0];
     this.playerScores[slot] = (this.playerScores[slot] || 0) + 1;
     if (this.playerScores[slot] >= maxScore) {
@@ -392,7 +483,7 @@ class CombatState {
     }
   }
 
-  setWinnerScore(slot, maxScore = 30) {
+  setWinnerScore(slot, maxScore = 99) {
     if (!Array.isArray(this.playerScores)) this.playerScores = [0, 0];
     this.playerScores[slot] = maxScore;
     this.gameEnded = true;
@@ -403,24 +494,6 @@ class CombatState {
       player1: this.playerScores[0] || 0,
       player2: this.playerScores[1] || 0,
     };
-  }
-
-  /**
-   * Returns the slot (0 or 1) of the winning team.
-   * Prefer score-based victory first; otherwise fall back to the team that still
-   * has at least one living champion in the lineup.
-   * Returns null if neither team qualifies.
-   */
-  computeWinnerSlot(maxScore = 30) {
-    if (Array.isArray(this.playerScores)) {
-      if ((this.playerScores[0] || 0) >= maxScore) return 0;
-      if ((this.playerScores[1] || 0) >= maxScore) return 1;
-    }
-
-    if (this.hasLivingChampionsForTeam(1)) return 0;
-    if (this.hasLivingChampionsForTeam(2)) return 1;
-
-    return null;
   }
 }
 
@@ -557,16 +630,12 @@ export class GameMatch {
     return this.combat.removeChampion(championId);
   }
 
-  removeChampionFromGame(championId, maxScore = 30) {
+  removeChampionFromGame(championId, maxScore = 99) {
     return this.combat.removeChampionFromGame(championId, maxScore);
   }
 
   getChampion(championId) {
     return this.combat.getChampion(championId);
-  }
-
-  getAliveChampions() {
-    return this.combat.getAliveChampions();
   }
 
   getCurrentTurn() {
@@ -593,11 +662,11 @@ export class GameMatch {
     return this.combat.gameEnded;
   }
 
-  addPointForSlot(slot, maxScore = 30) {
+  addPointForSlot(slot, maxScore = 99) {
     this.combat.addPointForSlot(slot, maxScore);
   }
 
-  setWinnerScore(slot, maxScore = 30) {
+  setWinnerScore(slot, maxScore = 99) {
     this.combat.setWinnerScore(slot, maxScore);
   }
 
@@ -605,8 +674,12 @@ export class GameMatch {
     return this.combat.getScorePayload();
   }
 
-  computeWinnerSlot(maxScore = 30) {
-    return this.combat.computeWinnerSlot(maxScore);
+  resolveWinnerSlot(maxScore = 99) {
+    return this.combat.resolveWinnerSlot(maxScore);
+  }
+
+  checkGameEnd({ maxTurns = 15, maxScore = 99, checkTurnLimit = false } = {}) {
+    return this.combat.checkGameEnd({ maxTurns, maxScore, checkTurnLimit });
   }
 
   clearActions() {
