@@ -275,6 +275,10 @@ class CombatState {
 
   registerChampion(champion, { trackSnapshot = true } = {}) {
     this.deadChampions.delete(champion.id);
+
+    champion.runtime ??= {};
+    champion.runtime.fieldEntryTurn ??= this.match.combat.currentTurn;
+
     this.activeChampions.set(champion.id, champion);
 
     if (trackSnapshot) {
@@ -292,6 +296,10 @@ class CombatState {
 
     this.deadChampions.delete(champion.id);
     this.inactiveChampions.delete(champion.id);
+
+    champion.runtime ??= {};
+    champion.runtime.fieldEntryTurn ??= this.match.combat.currentTurn;
+
     this.activeChampions.set(champion.id, champion);
 
     return champion;

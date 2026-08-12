@@ -4,7 +4,7 @@ import { emitCombatEvent } from "./combatEvents.js";
 import {
   CLAIM_ACTION_KEY,
   CLAIM_MIN_MOMENTUM,
-  getClaimPointsFromMomentum,
+  getClaimPoints,
 } from "./claim.js";
 import { snapshotChampions } from "./snapshotChampions.js";
 
@@ -395,9 +395,7 @@ export class TurnResolver {
     });
 
     try {
-      const momentumBeforeClaim = Math.max(0, Number(user.momentum) || 0);
-
-      const claimPoints = getClaimPointsFromMomentum(momentumBeforeClaim);
+      const claimPoints = getClaimPoints(user, this.combat.currentTurn);
 
       this.registerSkillUsageInTurn(user, claimSkill, {});
 

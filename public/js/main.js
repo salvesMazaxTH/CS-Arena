@@ -90,9 +90,29 @@ function toParagraphs(text) {
 }
 
 function getClaimPointsPreview(champion) {
-  const momentum = Math.max(0, Number(champion?.momentum) || 0);
+  if (!champion) return 0;
 
-  return Math.min(4, Math.floor(momentum / 16));
+  const momentum = Math.max(0, Number(champion?.momentum) || 0);
+  if (momentum < CLAIM_MIN_MOMENTUM) {
+    return 0;
+  }
+
+  const momentumPoints =
+    momentum >= 80
+      ? 4
+      : momentum >= 60
+        ? 3
+        : momentum >= 40
+          ? 2
+          : momentum >= 20
+            ? 1
+            : 0;
+  const fieldEntryTurn = Number.isFinite(champion?.runtime?.fieldEntryTurn)
+    ? Number(champion.runtime.fieldEntryTurn)
+    : currentTurn;
+  const turnsInField = Math.max(0, currentTurn - fieldEntryTurn);
+
+  return Math.min(7, momentumPoints + turnsInField);
 }
 
 // =========================

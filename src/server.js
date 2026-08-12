@@ -242,7 +242,7 @@ function processChampionMutationRequest(
   // Indica qual campeão este substituiu — lido pela passiva do substituto ao morrer
   newChampion.runtime.swappedFrom = targetId;
 
-  match.combat.activeChampions.set(newId, newChampion);
+  match.combat.registerChampion(newChampion, { trackSnapshot: true });
 
   return { champion: newChampion };
 }
