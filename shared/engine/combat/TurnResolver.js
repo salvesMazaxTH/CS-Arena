@@ -206,11 +206,11 @@ export class TurnResolver {
   //  PROCESSAMENTO DE MORTES
   // ============================================================
 
-  processChampionDeaths(maxScore = 99, context = null) {
+  processChampionDeaths(context = null) {
     const results = [];
     for (const champ of this.combat.activeChampions.values()) {
       if (!champ.alive) {
-        const result = this.match.removeChampionFromGame(champ.id, maxScore);
+        const result = this.match.removeChampionFromGame(champ.id);
         if (result) results.push(result);
 
         if (context) {

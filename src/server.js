@@ -55,7 +55,6 @@ const editMode = {
 
 const TEAM_SIZE = 8;
 const ACTIVE_PER_TEAM = 3; // máximo de campeões simultâneos em campo por time (roster=8, active=3)
-const MAX_SCORE = 30; // pontos necessários para vitória
 const MAX_MATCH_TURNS = 15; // fim do jogo no final do turno 15
 const CHAMPION_SELECTION_TIME = 120; // Segundos para seleção de campeões
 const FIRST_CHOICE_TIMEOUT = 99999 * 1000; //30 * 1000; // 30s para escolha do 1v1 (99.999s para testes)
@@ -776,7 +775,6 @@ function emitCombatLogsFromResults(results = []) {
 function emitGameOverIfNeeded({ checkTurnLimit = false } = {}) {
   const gameEnd = match.checkGameEnd({
     maxTurns: MAX_MATCH_TURNS,
-    maxScore: MAX_SCORE,
     checkTurnLimit,
   });
 
@@ -1043,10 +1041,7 @@ function handleStartTurn() {
   }
   match.combat.scheduledEffects = remaining;
 
-  const deathResults = resolver.processChampionDeaths(
-    MAX_SCORE,
-    turnStartContext,
-  );
+  const deathResults = resolver.processChampionDeaths(turnStartContext);
 
   for (const death of deathResults) {
     emitChampionDeath(death);
@@ -1774,7 +1769,10 @@ io.on("connection", (socket) => {
     const winnerSlot = winnerTeam - 1;
     const winnerName = match.players[winnerSlot]?.username;
 
-    match.setWinnerScore(winnerSlot, MAX_SCORE);
+    match.setWinnerScore(
+      winnerSlot,
+      match.combat.playerScores[winnerSlot] || 0,
+    );
     match.combat.gameEnded = true; // mark game as ended on surrender
 
     io.emit("gameOver", {
