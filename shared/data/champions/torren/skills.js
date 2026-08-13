@@ -85,7 +85,7 @@ const torrenSkills = [
       return `Causa dano perfurante (${this.piercingPercentage}% de perfuração) ao inimigo mais frágil.
       Se sua fragilidade for significativamente maior que a de Torren, ele é provocado por ${this.tauntDuration} turno(s) e causa menos dano a outros alvos.`;
     },
-    
+
     targetSpec: ["all:enemy"],
 
     resolve({ user, targets, context = {} }) {
@@ -153,7 +153,7 @@ const torrenSkills = [
     damageMode: "standard",
 
     isUltimate: true,
-    momentumCost: 50,
+    momentumCost: 55,
 
     stunDuration: 2,
 

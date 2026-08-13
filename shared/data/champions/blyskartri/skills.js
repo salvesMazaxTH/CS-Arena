@@ -205,7 +205,7 @@ const blyskartriSkills = [
     contact: false,
 
     isUltimate: true,
-    momentumCost: 50,
+    momentumCost: 55,
 
     description() {
       return `Escolhe um aliado. Por ${this.effectDuration} turno(s), ele recebe +${this.dmgBonus}% de dano bruto para cada ${this.speedPerStack} de Velocidade total.  

@@ -81,7 +81,7 @@ const myrraSkills = [
     contact: true,
     damageMode: "standard",
     isUltimate: true,
-    momentumCost: 50,
+    momentumCost: 55,
     priority: 0,
 
     description() {

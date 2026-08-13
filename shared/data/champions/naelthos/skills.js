@@ -183,7 +183,7 @@ const naelthosSkills = [
     damageMode: "standard",
     contact: false,
     isUltimate: true,
-    momentumCost: 50,
+    momentumCost: 55,
 
     element: "water",
 

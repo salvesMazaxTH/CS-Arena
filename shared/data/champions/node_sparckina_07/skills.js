@@ -84,7 +84,7 @@ const nodeSparckina07Skills = [
     element: "lightning",
 
     isUltimate: true,
-    momentumCost: 50,
+    momentumCost: 55,
 
     description() {
       return `Causa alto dano ao inimigo e aplica paralisia por ${this.paralyzeDuration} turnos.`;

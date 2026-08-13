@@ -134,7 +134,7 @@ const raliaSkills = [
 
     contact: false,
     isUltimate: true,
-    momentumCost: 50,
+    momentumCost: 55,
 
     priority: 0,
     description() {

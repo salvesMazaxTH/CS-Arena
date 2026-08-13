@@ -67,7 +67,7 @@ const theopetraSkills = [
     contact: false,
 
     isUltimate: true,
-    momentumCost: 50,
+    momentumCost: 55,
 
     priority: 0,
 

@@ -119,7 +119,7 @@ const nytheraSkills = [
     priority: 1,
 
     isUltimate: true,
-    momentumCost: 50,
+    momentumCost: 55,
 
     element: "ice",
     description() {

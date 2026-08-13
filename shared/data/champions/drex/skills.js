@@ -130,7 +130,7 @@ const drexSkills = [
     name: "Eclipse Hemorrágico",
     contact: false,
     isUltimate: true,
-    momentumCost: 50,
+    momentumCost: 55,
     priority: 1,
     targetSpec: ["all:enemy"],
 

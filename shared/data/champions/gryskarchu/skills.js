@@ -97,7 +97,7 @@ const gryskarchuSkills = [
     defDamageBonus: 35,
     contact: false,
     isUltimate: true,
-    momentumCost: 50,
+    momentumCost: 55,
 
     priority: 5,
     description() {

@@ -152,7 +152,7 @@ const voltexzSkills = [
     contact: false,
     damageMode: "standard",
     isUltimate: true,
-    momentumCost: 50,
+    momentumCost: 55,
     priority: 0,
     element: "lightning",
     description() {

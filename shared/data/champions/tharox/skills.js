@@ -131,7 +131,7 @@ const tharoxSkills = [
     modifierDuration: 3,
     defDamagePercent: 38,
     contact: false,
-    momentumCost: 50,
+    momentumCost: 55,
     isUltimate: true,
     priority: 2,
     description() {
@@ -169,7 +169,8 @@ const tharoxSkills = [
           const bonusDef = Math.max(0, attacker.Defense - baseDef);
 
           const linear = bonusDef * 0.7;
-          const scaling = Math.pow(bonusDef, 1.4) * this.defDamagePercent / 100;
+          const scaling =
+            (Math.pow(bonusDef, 1.4) * this.defDamagePercent) / 100;
 
           let bonus = linear + scaling;
 
