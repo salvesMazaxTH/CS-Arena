@@ -445,6 +445,10 @@ function emitChampionDeath(deathResult) {
     deathClaimTriggered: deadChampInState?.runtime?.deathClaimTriggered,
   });
 
+  if (deathResult.scoreAwarded && deathResult.scorePayload) {
+    io.emit("scoreUpdate", deathResult.scorePayload);
+  }
+
   io.emit("gameStateUpdate", state);
   io.emit("championRemoved", deathResult.championId);
 }

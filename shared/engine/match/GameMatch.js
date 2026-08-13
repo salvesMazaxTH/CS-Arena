@@ -96,11 +96,12 @@ class CombatState {
   }
 
   reset() {
-    this.currentTurn = 15;
+    this.currentTurn = 1;
     this.pendingActions = [];
     this.activeChampions = new Map();
     this.deadChampions = new Map();
     this.inactiveChampions = new Map(); // Champions swapped out but can return (e.g., Lana when Tutu enters field)
+    this.reserveQueues = new Map(); // Fila de reserva por time (unmaterialized roster/lineup)
     this.playerScores = [0, 0]; // score system enabled — reaching maxScore ends game
     this.gameEnded = false;
     this.started = false;
@@ -109,7 +110,7 @@ class CombatState {
     this.combatSnapshot = [];
     this.turnHistory = new Map();
     this.scheduledEffects = [];
-    this.reserveQueues = new Map(); // Fila de reserva por time
+
     this.firstChampionChoices = new Map(); // Escolha inicial para o 1v1
     this.summonedThisTurn = new Set(); // Times que já invocaram um campeão da line-up neste turno
   }
@@ -206,6 +207,26 @@ class CombatState {
     return champions.filter(
       (champion) => champion.team === team && (!alive || champion.alive),
     );
+  }
+
+  getLivingRosterCount(team) {
+    const active = [...this.activeChampions.values()].filter(
+      (champion) => champion.team === team && champion.alive,
+    ).length;
+
+    const inactive = [...this.inactiveChampions.values()].filter(
+      (champion) => champion.team === team && champion.alive,
+    ).length;
+
+    const reserve = Array.isArray(this.reserveQueues.get(team))
+      ? this.reserveQueues.get(team).length
+      : 0;
+
+    return active + inactive + reserve;
+  }
+
+  hasLivingChampionsInRoster(team) {
+    return this.getLivingRosterCount(team) > 0;
   }
 
   getPlayerChampions(team) {
@@ -323,23 +344,36 @@ class CombatState {
     const champion = this.activeChampions.get(championId);
     if (!champion) return null;
 
-    // Registrar morte no histórico
+    const scoringTeam = champion.team === 1 ? 2 : 1;
+    const scoringSlot = scoringTeam - 1;
+    const claimValueAtDeath = Math.max(
+      0,
+      Number(champion.runtime?.claimValueBeforeDeath ?? 0) || 0,
+    );
+    const killPoints = Math.max(1, claimValueAtDeath);
+
+    let scoreAwarded = false;
+
+    if (killPoints > 0) {
+      for (let i = 0; i < killPoints; i++) {
+        this.addPointForSlot(scoringSlot, maxScore);
+      }
+      scoreAwarded = true;
+    }
+
     this.logTurnEvent("championDied", {
       championId,
       championName: champion.name,
       team: champion.team,
+      scoringTeam,
+      claimValueAtDeath,
+      killPoints,
     });
     this.ensureTurnEntry().championsDeadThisTurn.push(championId);
 
-    // Mover para deadChampions
     this.removeChampion(championId);
 
-    if (
-      !this.getTeamChampions(champion.team, {
-        alive: true,
-        includeInactive: true,
-      }).length
-    ) {
+    if (!this.hasLivingChampionsInRoster(champion.team)) {
       this.gameEnded = true;
     }
 
@@ -347,6 +381,12 @@ class CombatState {
       championId,
       championName: champion.name,
       team: champion.team,
+      scoringTeam,
+      scoringSlot,
+      claimValueAtDeath,
+      killPoints,
+      scoreAwarded,
+      scorePayload: scoreAwarded ? this.getScorePayload() : null,
       gameEnded: this.gameEnded,
     };
   }
@@ -372,14 +412,8 @@ class CombatState {
       return player1Score > player2Score ? 0 : 1;
     }
 
-    const team1Living = this.getTeamChampions(1, {
-      alive: true,
-      includeInactive: true,
-    }).length;
-    const team2Living = this.getTeamChampions(2, {
-      alive: true,
-      includeInactive: true,
-    }).length;
+    const team1Living = this.getLivingRosterCount(1);
+    const team2Living = this.getLivingRosterCount(2);
 
     if (team1Living !== team2Living) {
       return team1Living > team2Living ? 0 : 1;
@@ -403,16 +437,8 @@ class CombatState {
     )
       return 1;
 
-    const team1Alive =
-      this.getTeamChampions(1, {
-        alive: true,
-        includeInactive: true,
-      }).length > 0;
-    const team2Alive =
-      this.getTeamChampions(2, {
-        alive: true,
-        includeInactive: true,
-      }).length > 0;
+    const team1Alive = this.hasLivingChampionsInRoster(1);
+    const team2Alive = this.hasLivingChampionsInRoster(2);
 
     if (team1Alive && !team2Alive) return 0;
     if (team2Alive && !team1Alive) return 1;

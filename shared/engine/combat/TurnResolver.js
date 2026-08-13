@@ -1132,6 +1132,10 @@ export class TurnResolver {
         target?.addRawDamageTaken?.(raw);
         target?.addDamageMitigated?.(Math.max(0, raw - dealt));
 
+        if (target?.id && target.runtime) {
+          target.runtime.lastDamageSourceId = sourceId ?? null;
+        }
+
         this._lastEventRef = null;
 
         const finishingType =

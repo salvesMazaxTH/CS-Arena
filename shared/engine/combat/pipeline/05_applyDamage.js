@@ -1,3 +1,5 @@
+import { getClaimPoints } from "../claim.js";
+
 export function applyDamage(event) {
   if (event.constructor.debugMode) console.group(`❤️ [APLICANDO DANO]`);
   if (event.constructor.debugMode) {
@@ -5,6 +7,13 @@ export function applyDamage(event) {
     console.log(`📍 HP Antes: ${event.defender.HP}/${event.defender.maxHP}`);
     console.log(`💥 Dano: ${event.damage}`);
   }
+
+  const currentTurn = event.context?.currentTurn ?? 0;
+  event.defender.runtime ??= {};
+  event.defender.runtime.claimValueBeforeDeath = getClaimPoints(
+    event.defender,
+    currentTurn,
+  );
 
   const hpBefore = event.defender.HP;
   const shieldBefore = Array.isArray(event.defender.runtime?.shields)
