@@ -605,7 +605,10 @@ function emitCombatEnvelopesFromContext({
       redirectionEvents.length ||
       globalDialogs.length;
 
-    const shouldEmit = mainEnvelope.action || hasVisualChanges;
+    const shouldEmit =
+      mainEnvelope.action ||
+      hasVisualChanges ||
+      !!scorePayload;
 
     if (shouldEmit) {
       /* console.log("[DEBUG] [JEFF REVIVAL DIALOG] === ENVELOPE SEND ===", {

@@ -463,9 +463,17 @@ class CombatState {
     this.summonedThisTurn.clear();
   }
 
-  addPointForSlot(slot) {
+  addPointForSlot(slot, amount = 1) {
     if (!Array.isArray(this.playerScores)) this.playerScores = [0, 0];
-    this.playerScores[slot] = (this.playerScores[slot] || 0) + 1;
+    const normalizedSlot = Number(slot);
+    const normalizedAmount = Number(amount) || 0;
+    if (!Number.isInteger(normalizedSlot) || normalizedSlot < 0) return;
+    this.playerScores[normalizedSlot] =
+      (this.playerScores[normalizedSlot] || 0) + normalizedAmount;
+  }
+
+  addPointsForSlot(slot, amount = 1) {
+    this.addPointForSlot(slot, amount);
   }
 
   setWinnerScore(slot, score = 0) {
@@ -647,8 +655,12 @@ export class GameMatch {
     return this.combat.gameEnded;
   }
 
-  addPointForSlot(slot) {
-    this.combat.addPointForSlot(slot);
+  addPointForSlot(slot, amount = 1) {
+    this.combat.addPointForSlot(slot, amount);
+  }
+
+  addPointsForSlot(slot, amount = 1) {
+    this.addPointForSlot(slot, amount);
   }
 
   setWinnerScore(slot, score = 0) {

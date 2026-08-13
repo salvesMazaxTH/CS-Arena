@@ -113,15 +113,16 @@ const vaelSkills = [
     isUltimate: true,
     momentumCost: 55,
     priority: 0,
+    scoreOnKill: 20,
     description() {
-      return `Causa dano devastador ao inimigo.`;
+      return `Causa dano devastador ao alvo inimigo escolhido. Se esse ataque matar o alvo, você ganha ${this.scoreOnKill} pontos.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
 
-      return new DamageEvent({
+      const result = new DamageEvent({
         baseDamage,
         attacker: user,
         defender: enemy,
@@ -130,6 +131,21 @@ const vaelSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
+
+      const didKill = Array.isArray(result)
+        ? result.some((entry) => entry?.killed)
+        : result?.killed;
+
+      if (didKill) {
+        context.registerScore({
+          amount: this.scoreOnKill,
+          scoringSlot: user.team - 1,
+          reason: "veredito_do_fio_silencioso",
+          sourceId: user.id,
+        });
+      }
+
+      return result;
     },
   },
 ];

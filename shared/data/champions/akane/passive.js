@@ -4,7 +4,7 @@ export default {
 
   critBonus: 25,
   piercingRatio: 0.75,
-  minDefense: 110,
+  minDefense: 120,
   lowDefenseDamageRatio: 2 / 3,
 
   description() {

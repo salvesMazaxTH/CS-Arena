@@ -120,6 +120,22 @@ export class TurnResolver {
       context.turnExecutionMap = turnExecutionMap;
 
       const result = this.executeSkillAction(action, turnExecutionMap, context);
+
+      const scoreResults = (result?.results || []).filter(
+        (entry) => entry?.type === "score",
+      );
+
+      if (scoreResults.length > 0) {
+        for (const scoreResult of scoreResults) {
+          this.match.addPointForSlot(
+            scoreResult.scoringSlot,
+            scoreResult.amount,
+          );
+        }
+
+        result.scorePayload = this.match.getScorePayload();
+      }
+
       actionResults.push(result);
 
       const repeat = result?.repeatActionRequest;
@@ -1075,6 +1091,28 @@ export class TurnResolver {
 
         this.registeredResults.push(result);
         return result;
+      },
+
+      registerScore({
+        amount = 0,
+        scoringSlot = null,
+        reason = null,
+        sourceId = null,
+      } = {}) {
+        const value = Number(amount) || 0;
+        if (value <= 0) return null;
+
+        if (scoringSlot !== 0 && scoringSlot !== 1) {
+          throw new Error(`[SCORE ERROR] scoringSlot inválido: ${scoringSlot}`);
+        }
+
+        return this.registerResult({
+          type: "score",
+          amount: value,
+          scoringSlot,
+          reason,
+          sourceId,
+        });
       },
 
       consumeRegisteredResults() {
