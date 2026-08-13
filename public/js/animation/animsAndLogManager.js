@@ -589,8 +589,12 @@ export function createCombatAnimationManager(deps) {
       await handleActionDialog(action);
     }
 
-    if (isClaim && envelope.scorePayload) {
-      await animateClaimScore(envelope.scorePayload, envelope.claimPoints);
+    if (envelope.scorePayload) {
+      if (isClaim) {
+        await animateClaimScore(envelope.scorePayload, envelope.claimPoints);
+      } else {
+        processScoreUpdate(envelope.scorePayload);
+      }
     }
 
     // (Skill animation now handled per DamageEvent in animateDamage)
@@ -603,7 +607,7 @@ export function createCombatAnimationManager(deps) {
     }
     const hasAnyEvent =
       dispatcher.keys.some((key) => envelope[key]?.length) ||
-      Boolean(isClaim && envelope.scorePayload);
+      Boolean(envelope.scorePayload);
 
     if (!hasAnyEvent) {
       if (state) applyStateSnapshots(state);

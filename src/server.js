@@ -446,6 +446,14 @@ function emitChampionDeath(deathResult) {
 
   if (deathResult.scoreAwarded && deathResult.scorePayload) {
     io.emit("scoreUpdate", deathResult.scorePayload);
+    io.emit("combatAction", {
+      action: null,
+      scorePayload: deathResult.scorePayload,
+      claimPoints: null,
+      globalDialogs: [],
+      state,
+      log: `${deathResult.championName ?? "Campeão"} foi eliminado. Pontuação atualizada.`,
+    });
   }
 
   io.emit("gameStateUpdate", state);
