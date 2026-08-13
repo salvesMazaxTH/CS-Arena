@@ -368,47 +368,18 @@ class CombatState {
     const player1Score = this.playerScores[0] || 0;
     const player2Score = this.playerScores[1] || 0;
 
-    const countLivingLineupMembers = (team) => {
-      const player = this.match.players?.[team - 1];
-      const lineupKeys = Array.isArray(player?.selectedChampionKeys)
-        ? player.selectedChampionKeys
-        : [];
-
-      const aliveFieldKeys = new Set(
-        this.getTeamChampions(team, {
-          alive: true,
-          includeInactive: true,
-        }).map((champion) => champion.championKey || champion.id),
-      );
-
-      const deadKeys = new Set(
-        [...this.deadChampions.values()]
-          .filter((champion) => champion.team === team)
-          .map((champion) => champion.championKey || champion.id),
-      );
-
-      return lineupKeys.filter((championKey) => {
-        if (!championKey) return false;
-        if (deadKeys.has(championKey)) return false;
-        if (aliveFieldKeys.has(championKey)) return false;
-        return true;
-      }).length;
-    };
-
     if (player1Score !== player2Score) {
       return player1Score > player2Score ? 0 : 1;
     }
 
-    const team1Living =
-      this.getTeamChampions(1, {
-        alive: true,
-        includeInactive: true,
-      }).length + countLivingLineupMembers(1);
-    const team2Living =
-      this.getTeamChampions(2, {
-        alive: true,
-        includeInactive: true,
-      }).length + countLivingLineupMembers(2);
+    const team1Living = this.getTeamChampions(1, {
+      alive: true,
+      includeInactive: true,
+    }).length;
+    const team2Living = this.getTeamChampions(2, {
+      alive: true,
+      includeInactive: true,
+    }).length;
 
     if (team1Living !== team2Living) {
       return team1Living > team2Living ? 0 : 1;

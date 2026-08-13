@@ -1171,8 +1171,9 @@ export function createCombatAnimationManager(deps) {
 
   async function handleGameOver(effect) {
     console.log("Game over effect received:", effect);
-    const { winnerTeam } = effect;
-    const isDraw = winnerTeam === null || winnerTeam === undefined;
+    const winnerTeam = Number(effect?.winnerTeam);
+    const hasWinner = winnerTeam === 1 || winnerTeam === 2;
+    const isDraw = !hasWinner;
 
     window.gameEnded = true;
 
@@ -1184,8 +1185,8 @@ export function createCombatAnimationManager(deps) {
 
     if (!gameOverOverlay || !gameOverContent || !gameOverMessage) return;
 
-    const playerTeam = window.playerTeam;
-    const isWinner = !isDraw && playerTeam === winnerTeam;
+    const playerTeam = Number(window.playerTeam);
+    const isWinner = hasWinner && playerTeam === winnerTeam;
 
     let message = "Derrota";
     let outcomeClass = "lose";
