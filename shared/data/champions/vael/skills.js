@@ -1,6 +1,7 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import totalBlock from "../totalBlock.js";
+import { getClaimPoints } from "../../../engine/combat/claim.js";
 
 const vaelSkills = [
   // ========================
@@ -113,9 +114,8 @@ const vaelSkills = [
     isUltimate: true,
     momentumCost: 55,
     priority: 0,
-    scoreOnKill: 20,
     description() {
-      return `Causa dano devastador ao alvo inimigo escolhido. Se esse ataque matar o alvo, você ganha ${this.scoreOnKill} pontos.`;
+      return `Causa dano devastador ao alvo inimigo escolhido. Se esse ataque matar o alvo, você ganha  pontos equivalentes ao meu valor atual de Claim.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -137,12 +137,16 @@ const vaelSkills = [
         : result?.killed;
 
       if (didKill) {
-        context.registerScore({
-          amount: this.scoreOnKill,
-          scoringSlot: user.team - 1,
-          reason: "veredito_do_fio_silencioso",
-          sourceId: user.id,
-        });
+        const claimPoints = getClaimPoints(user, context?.currentTurn);
+
+        if (claimPoints > 0) {
+          context.registerScore({
+            amount: claimValue,
+            scoringSlot: user.team - 1,
+            reason: "veredito_do_fio_silencioso",
+            sourceId: user.id,
+          });
+        }
       }
 
       return result;

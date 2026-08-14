@@ -2,7 +2,6 @@ export default {
   name: "Noyre",
   portrait: "/assets/portraits/noyre.webp",
 
-  unreleased: true,
 
   HP: 330,
   Attack: 130,

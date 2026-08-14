@@ -432,11 +432,48 @@
   display: flex;
   width: 100%;
   height: clamp(5px, 1vw, 8px);
-  background: #2a1f0a;
+  background: rgba(42, 31, 10, 0.96);
+  border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 5px;
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: 10px;
   position: relative;
+}
+
+.momentum-markers {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.momentum-threshold {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 12px;
+  font-size: 0.55rem;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(240, 225, 182, 0.8);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.75);
+  opacity: 0.9;
+}
+
+.momentum-threshold::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 2px);
+  width: 1px;
+  height: 10px;
+  background: rgba(212, 175, 55, 0.65);
+  transform: translateX(-50%);
 }
 
 .hp-segments {
@@ -2131,15 +2168,27 @@
 }
 
 .game-over-overlay.win-background {
-  background: linear-gradient(180deg, rgba(8, 72, 120, 0.82), rgba(0, 176, 255, 0.28));
+  background: linear-gradient(
+    180deg,
+    rgba(8, 72, 120, 0.82),
+    rgba(0, 176, 255, 0.28)
+  );
 }
 
 .game-over-overlay.lose-background {
-  background: linear-gradient(180deg, rgba(90, 10, 10, 0.82), rgba(255, 60, 60, 0.28));
+  background: linear-gradient(
+    180deg,
+    rgba(90, 10, 10, 0.82),
+    rgba(255, 60, 60, 0.28)
+  );
 }
 
 .game-over-overlay.draw-background {
-  background: linear-gradient(180deg, rgba(55, 55, 68, 0.82), rgba(140, 120, 255, 0.26));
+  background: linear-gradient(
+    180deg,
+    rgba(55, 55, 68, 0.82),
+    rgba(140, 120, 255, 0.26)
+  );
 }
 
 .game-over-content {

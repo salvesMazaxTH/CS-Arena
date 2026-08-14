@@ -7,7 +7,6 @@ export default {
   Speed: 80,
   Critical: 25,
 
-  elementalAffinities: ["lightning"],
-  classKey: "marksman",
+  classKey: "assassin",
   species: ["human", "mutant", "Instability-infused", "Unstable", "Resonant", "enhanced"],
 };

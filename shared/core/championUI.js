@@ -50,8 +50,14 @@ function buildChampionHTML(champion, { editMode } = {}) {
         <div class="stat-block momentum-stat">
             <p>Momentum: <span class="momentum">${champion.momentum || 0}/100</span></p>
 
-            <div class="momentum-bar">
+            <div class="momentum-bar" aria-label="Momentum bar">
                 <div class="momentum-fill"></div>
+                <div class="momentum-markers" aria-hidden="true">
+                    <span class="momentum-threshold" style="left: 20%;">1</span>
+                    <span class="momentum-threshold" style="left: 40%;">2</span>
+                    <span class="momentum-threshold" style="left: 60%;">3</span>
+                    <span class="momentum-threshold" style="left: 80%;">4</span>
+                </div>
             </div>
         </div>
 

@@ -418,7 +418,7 @@ export class TurnResolver {
       const scoringSlot = user.team - 1;
 
       for (let i = 0; i < claimPoints; i++) {
-        this.match.addPointForSlot(scoringSlot, 30);
+        this.match.addPointForSlot(scoringSlot, claimPoints);
       }
 
       const actionResolvedResults = emitCombatEvent(
