@@ -1756,6 +1756,7 @@ function handleChampionCardClick(championKey) {
     }
   }
   updateSelectedChampionsUI();
+  renderEmblemSelectionUI();
 }
 
 // --- Atualização visual dos slots selecionados ---
@@ -1803,6 +1804,9 @@ function updateSelectedChampionsUI() {
     !selectedChampions.includes(null) ||
     getDraftSelectableChampionKeys(selectedChampions).length === 0;
   confirmTeamBtn.disabled = !allSlotsFilled || playerTeamConfirmed;
+
+  renderEmblemSelectionUI();
+  renderPlayerEmblemStrip();
 }
 
 autofillTeamBtn.addEventListener("click", autofillSelectedChampions);
