@@ -7,6 +7,8 @@ export default {
   Speed: 55,
   Evasion: 10,
 
+  unreleased: true,
+
   classKey: "bralwer",
   elementalAffinities: ["water"],
   species: ["transfigured", "Divine-forged"],

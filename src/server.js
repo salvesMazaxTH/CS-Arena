@@ -19,13 +19,16 @@ import {
   formatChampionName,
   formatPlayerName,
 } from "../shared/ui/formatters.js";
+
 import { emitCombatEvent } from "../shared/engine/combat/combatEvents.js";
 import { Action } from "../shared/engine/combat/Action.js";
 import { TurnResolver } from "../shared/engine/combat/TurnResolver.js";
+
 import {
   CLAIM_ACTION_KEY,
   CLAIM_MIN_MOMENTUM,
 } from "../shared/engine/combat/claim.js";
+
 import { DamageEvent } from "../shared/engine/combat/DamageEvent.js";
 import { snapshotChampions } from "../shared/engine/combat/snapshotChampions.js";
 import { getHardCCActionDenial } from "../shared/core/championStatus.js";
@@ -34,6 +37,8 @@ import {
   applyChampionTransformation,
   revertChampionTransformation,
 } from "../shared/engine/match/championTransformation.js";
+
+import { EMBLEMS } from "../shared/data/emblems/index.js";
 
 // ============================================================
 //  CONFIGURAÇÃO
@@ -85,6 +90,136 @@ app.get("/", (_req, res) => {
 const match = new GameMatch();
 let waitingForAnimations = false;
 
+function getChampionSpecies(champion) {
+  if (!champion) return [];
+
+  if (Array.isArray(champion.species)) {
+    return champion.species
+      .map((item) =>
+        String(item || "")
+          .trim()
+          .toLowerCase(),
+      )
+      .filter(Boolean);
+  }
+
+  if (typeof champion.speciesTag === "string") {
+    return champion.speciesTag
+      .replace(/^species\s*:\s*/i, "")
+      .split(",")
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function normalizeChampionClassKey(champion) {
+  if (!champion) return null;
+
+  const candidates = [
+    champion.classKey,
+    champion.classTag,
+    champion.role,
+    champion.archetype,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate !== "string") continue;
+    const normalized = candidate
+      .replace(/^class\s*:\s*/i, "")
+      .trim()
+      .toLowerCase();
+    if (normalized) return normalized;
+  }
+
+  return null;
+}
+
+function evaluateEmblemEligibilityForRoster(emblem, rosterKeys = []) {
+  if (!emblem || !emblem.requirements) return true;
+
+  const requirements = emblem.requirements;
+  const roster = rosterKeys.map((key) => championDB[key]).filter(Boolean);
+
+  const checks = [];
+
+  if (requirements.elementalAffinity) {
+    const targetElement = String(requirements.elementalAffinity.element || "")
+      .trim()
+      .toLowerCase();
+    const requiredCount = Number(requirements.elementalAffinity.count || 0);
+    const actualCount = roster.filter((champion) => {
+      const affinities = Array.isArray(champion.elementalAffinities)
+        ? champion.elementalAffinities
+        : typeof champion.elementalAffinities === "string"
+          ? [champion.elementalAffinities]
+          : [];
+      return affinities.some(
+        (affinity) => String(affinity).trim().toLowerCase() === targetElement,
+      );
+    }).length;
+    checks.push(actualCount >= requiredCount);
+  }
+
+  if (requirements.species) {
+    const targetSpecies = String(
+      requirements.species.value ??
+        requirements.species.species ??
+        requirements.species.key ??
+        "",
+    )
+      .trim()
+      .toLowerCase();
+    const requiredCount = Number(requirements.species.count || 0);
+    const actualCount = roster.filter((champion) =>
+      getChampionSpecies(champion).includes(targetSpecies),
+    ).length;
+    checks.push(actualCount >= requiredCount);
+  }
+
+  if (requirements.classKey) {
+    const targetClass = String(
+      requirements.classKey.value ??
+        requirements.classKey.class ??
+        requirements.classKey.key ??
+        "",
+    )
+      .trim()
+      .toLowerCase();
+    const requiredCount = Number(requirements.classKey.count || 0);
+    const actualCount = roster.filter(
+      (champion) => normalizeChampionClassKey(champion) === targetClass,
+    ).length;
+    checks.push(actualCount >= requiredCount);
+  }
+
+  if (requirements.baseStat) {
+    const statKey = String(
+      requirements.baseStat.stat ??
+        requirements.baseStat.key ??
+        requirements.baseStat.name ??
+        "",
+    ).trim();
+    const requiredCount = Number(requirements.baseStat.count || 0);
+    const threshold =
+      requirements.baseStat.min ??
+      requirements.baseStat.value ??
+      requirements.baseStat.threshold;
+
+    const actualCount = roster.filter((champion) => {
+      const value = Number(champion[statKey]);
+      if (!Number.isFinite(value)) return false;
+      if (threshold == null) return true;
+      return value >= Number(threshold);
+    }).length;
+
+    checks.push(actualCount >= requiredCount);
+  }
+
+  return checks.length === 0 || checks.every(Boolean);
+}
+
 /** Garante que a entrada do turno atual existe no histórico. */
 function ensureTurnEntry() {
   return match.ensureTurnEntry();
@@ -113,15 +248,22 @@ function getGameState(extraChampions = []) {
 
   // Roster completo (8 campeões) de cada time, para exibição das lineup banners no cliente
   const lineups = {};
+  const playerEmblems = {};
   for (const player of match.players) {
     if (!player) continue;
     lineups[player.team] = player.selectedChampionKeys || [];
+    playerEmblems[player.team] = Array.isArray(player.emblems)
+      ? player.emblems
+          .map((emblem) => (typeof emblem === "string" ? emblem : emblem?.key))
+          .filter(Boolean)
+      : [];
   }
 
   return {
     champions,
     currentTurn: match.combat.currentTurn,
     lineups,
+    playerEmblems,
   };
 }
 
@@ -1214,6 +1356,9 @@ io.on("connection", (socket) => {
       team,
       username: finalUsername,
     });
+
+    player.emblems = [];
+
     player.setSocket(socket.id);
     player.clearChampionSelection();
 
@@ -1225,6 +1370,9 @@ io.on("connection", (socket) => {
       playerId,
       team,
       username: finalUsername,
+      emblems: player.emblems.map((emblem) =>
+        typeof emblem === "string" ? emblem : emblem.key,
+      ),
     });
     io.emit("playerCountUpdate", match.getConnectedCount());
     io.emit("playerNamesUpdate", match.getPlayerNamesEntries());
@@ -1488,6 +1636,58 @@ io.on("connection", (socket) => {
   });
 
   // =============================
+  //  sync emblem selection
+  // =============================
+
+  socket.on("updatePlayerEmblems", ({ emblems } = {}) => {
+    const playerSlot = match.getSlotBySocket(socket.id);
+    const player = match.players[playerSlot];
+
+    if (!player) {
+      return socket.emit("actionFailed", "Você não está em uma partida ativa.");
+    }
+
+    const selectedKeys = Array.isArray(emblems) ? emblems : [];
+    const validKeys = selectedKeys.filter((key) =>
+      EMBLEMS.some((emblem) => emblem.key === key),
+    );
+
+    if (validKeys.length > 2) {
+      return socket.emit(
+        "actionFailed",
+        "Você pode selecionar no máximo 2 Emblems ativos.",
+      );
+    }
+
+    const rosterKeys = Array.isArray(player.selectedChampionKeys)
+      ? player.selectedChampionKeys
+      : [];
+
+    const nextEmblems = validKeys
+      .slice(0, 2)
+      .map((key) => EMBLEMS.find((item) => item.key === key))
+      .filter(Boolean);
+
+    const invalidForRoster = nextEmblems.find(
+      (emblem) => !evaluateEmblemEligibilityForRoster(emblem, rosterKeys),
+    );
+
+    if (invalidForRoster) {
+      return socket.emit(
+        "actionFailed",
+        `Este Emblem não é elegível para a sua lineup atual: ${invalidForRoster.name}.`,
+      );
+    }
+
+    player.emblems = nextEmblems;
+
+    socket.emit("playerEmblemsUpdated", {
+      emblems: player.emblems.map((emblem) => emblem.key),
+    });
+    io.emit("gameStateUpdate", getGameState());
+  });
+
+  // =============================
   //  selectTeam
   // =============================
 
@@ -1525,6 +1725,19 @@ io.on("connection", (socket) => {
       }
 
       player.setSelectedChampionKeys(selectedChampionKeys);
+
+      const invalidEmblem = player.emblems.find(
+        (emblem) =>
+          !evaluateEmblemEligibilityForRoster(emblem, selectedChampionKeys),
+      );
+
+      if (invalidEmblem) {
+        socket.emit(
+          "actionFailed",
+          `Sua seleção de Emblems não é válida para a lineup final: ${invalidEmblem.name}.`,
+        );
+        return;
+      }
 
       startGameIfReady();
     },

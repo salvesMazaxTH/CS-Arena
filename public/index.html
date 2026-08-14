@@ -85,6 +85,14 @@
           data-team-id="player"
         >
           <div class="lineup-title">Sua Line-up</div>
+          <div class="lineup-meta-row">
+            <span class="lineup-meta-label">Passivas globais</span>
+            <div
+              id="playerLineupEmblems"
+              class="lineup-emblems"
+              aria-label="Emblems ativos do jogador"
+            ></div>
+          </div>
           <div id="playerLineupChips" class="lineup-chips" role="list"></div>
         </div>
 
@@ -183,6 +191,19 @@
         <p class="selection-message">
           Arraste e solte para ordenar seus campeões.
         </p>
+
+        <div class="emblem-selection-panel" aria-live="polite">
+          <div class="emblem-selection-header">
+            <div>
+              <span class="eyebrow">Player Passives</span>
+              <h3>Emblems</h3>
+            </div>
+            <span class="emblem-selection-counter">
+              <span id="selectedEmblemsCount">0</span>/2
+            </span>
+          </div>
+          <div id="emblemSelectionList" class="emblem-selection-list"></div>
+        </div>
 
         <div class="available-champions-grid" id="availableChampionsGrid">
           <!-- Champions will be loaded here by JavaScript -->

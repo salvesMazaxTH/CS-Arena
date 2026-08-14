@@ -7,16 +7,19 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
 
   console.log(`[emitCombatEvent] Event: ${eventName}, Players:`, players);
 
-  /*   const ignoredEventsForDebug = new Set([
-    "onActionResolved",
-    "onTurnEnd",
-    "onTurnStart",
-  ]);
- */
+  console.log(`[emitCombatEvent] ${eventName}`, {
+    champions: Array.isArray(champions)
+      ? champions.length
+      : (champions?.size ?? 0),
 
-  if (/* !ignoredEventsForDebug.has(eventName) */ debugMode) {
-    // console.log(`[EVENT EMIT] 🔥 Champions in emitCombatEvent:`, champions);
-  }
+    players: Array.isArray(players)
+      ? players.map((p) => ({
+          id: p?.id,
+          team: p?.team,
+          emblems: p?.emblems?.map((e) => e?.key) ?? [],
+        }))
+      : players,
+  });
 
   if (debugMode) {
     console.group(`📡 EVENT: ${eventName}`);
@@ -36,14 +39,6 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
   const champArray = Array.isArray(champions)
     ? champions
     : Array.from(champions.values());
-
-  if (debugMode /* && !ignoredEventsForDebug.has(eventName) */) {
-    /* console.log(
-      `[EVENT EMIT] 🎯 Champions recebidos:`,
-      champArray,
-      champArray.map((c) => c.name).join(", "),
-    ); */
-  }
 
   for (const champ of champArray) {
     const hookSources = [];
@@ -109,7 +104,7 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
       if (typeof hook !== "function") continue;
 
       console.log(
-        `[EMBLEM HOOK] ${eventName} → Player ${player.team} → ${source.key}`,
+        `[EMBLEM HOOK] ${eventName} → ${source.key} → Player ${player.team}`,
       );
 
       try {
@@ -119,12 +114,14 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
           emitter: emitCombatEvent,
         });
 
+        console.log(`[EMBLEM HOOK RESULT] ${eventName} → ${source.key}:`, res);
+
         if (res) {
           results.push(res);
         }
       } catch (err) {
         console.error(
-          `[HOOK ERROR] Player ${player?.team ?? "?"} → ${
+          `[EMBLEM HOOK ERROR] Player ${player?.team ?? "?"} → ${
             source.key || "emblem"
           }.${eventName}`,
           err,

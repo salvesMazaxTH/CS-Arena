@@ -512,6 +512,7 @@ import { createCombatAnimationManager } from "./animation/animsAndLogManager.js"
 import { GAME_GLOSSARY } from "./gameGlossary.js";
 import { syncChampionVFX } from "../../shared/vfx/vfxManager.js";
 import { audioManager } from "./utils/AudioManager.js";
+import { EMBLEMS } from "/shared/data/emblems/index.js";
 
 // ============================================================
 //  SOCKET
@@ -599,6 +600,10 @@ let countdownInterval = null;
 
 // --- Overlays ---
 let portraitOverlay = null;
+const EMBLEM_MAX_SELECTION = 2;
+let playerEmblems = [];
+let selectedEmblemKeys = [];
+let emblemTooltip = null;
 
 // ============================================================
 //  REFERÊNCIAS DO DOM
@@ -630,6 +635,8 @@ const selectedChampionsSlots = document.getElementById(
 const autofillTeamBtn = document.getElementById("autofillTeamBtn");
 const confirmTeamBtn = document.getElementById("confirmTeamBtn");
 const teamSelectionMessage = document.getElementById("team-selection-message");
+const emblemSelectionList = document.getElementById("emblemSelectionList");
+const selectedEmblemsCount = document.getElementById("selectedEmblemsCount");
 
 // --- Fim de jogo ---
 const gameOverOverlay = document.getElementById("gameOverOverlay");
@@ -787,6 +794,12 @@ socket.on("playerAssigned", (data) => {
   username = data.username;
   window.playerTeam = playerTeam;
 
+  const initialEmblems = Array.isArray(data.emblems) ? data.emblems : [];
+  playerEmblems = initialEmblems.slice();
+  selectedEmblemKeys = [...playerEmblems];
+  renderEmblemSelectionUI();
+  renderPlayerEmblemStrip();
+
   // Mirror the arena so the local player always appears on top in blue
   const arena = document.querySelector(".arena");
   if (playerTeam === 2) {
@@ -799,6 +812,14 @@ socket.on("playerAssigned", (data) => {
 
   // rebuildReserveDisplay(1);
   // rebuildReserveDisplay(2);
+});
+
+socket.on("playerEmblemsUpdated", ({ emblems } = {}) => {
+  const next = Array.isArray(emblems) ? emblems : [];
+  playerEmblems = next.slice();
+  selectedEmblemKeys = [...next];
+  renderEmblemSelectionUI();
+  renderPlayerEmblemStrip();
 });
 
 socket.on("waitingForOpponent", (message) => {
@@ -1198,6 +1219,336 @@ function renderChampionCardContent(champion) {
       </div>
     </div>
   `;
+}
+
+function getPlayerRosterForEmblemEligibility() {
+  if (selectedChampions.some(Boolean)) {
+    return selectedChampions.filter(Boolean);
+  }
+
+  return (playerRoster || []).filter(Boolean);
+}
+
+function getEmblemShortCode(emblem) {
+  if (!emblem?.name) return "EM";
+  const words = emblem.name.split(/\s+/).filter(Boolean).slice(0, 2);
+  return words.map((word) => word[0]?.toUpperCase() || "").join("") || "EM";
+}
+
+function getEmblemRequirementLabel(requirement) {
+  if (!requirement || typeof requirement !== "object") return "Disponível";
+
+  if (requirement.elementalAffinity) {
+    const { element, count } = requirement.elementalAffinity;
+    return `${toReadableLabel(element)} x${count}`;
+  }
+
+  if (requirement.species) {
+    const speciesValue =
+      requirement.species.value ??
+      requirement.species.species ??
+      requirement.species.key ??
+      "";
+    return `${toReadableLabel(speciesValue)} x${requirement.species.count ?? 1}`;
+  }
+
+  if (requirement.classKey) {
+    const classValue =
+      requirement.classKey.value ??
+      requirement.classKey.class ??
+      requirement.classKey.key ??
+      "";
+    return `${toReadableLabel(classValue)} x${requirement.classKey.count ?? 1}`;
+  }
+
+  if (requirement.baseStat) {
+    const statKey =
+      requirement.baseStat.stat ??
+      requirement.baseStat.key ??
+      requirement.baseStat.name ??
+      "Status";
+    const targetValue =
+      requirement.baseStat.min ??
+      requirement.baseStat.value ??
+      requirement.baseStat.threshold ??
+      "";
+    return `${toReadableLabel(statKey)} ${targetValue ? `≥ ${targetValue}` : ""} x${requirement.baseStat.count ?? 1}`.trim();
+  }
+
+  return "Disponível";
+}
+
+function evaluateEmblemRequirements(emblem, rosterKeys = []) {
+  const requirements = emblem?.requirements ?? {};
+
+  const requirementChecks = [];
+  const roster = rosterKeys.map((key) => championDB[key]).filter(Boolean);
+
+  const addCheck = ({ label, actual, required }) => {
+    requirementChecks.push({
+      label,
+      actual,
+      required,
+      pass: actual >= required,
+    });
+  };
+
+  if (requirements.elementalAffinity) {
+    const targetElement = String(requirements.elementalAffinity.element || "")
+      .trim()
+      .toLowerCase();
+    const requiredCount = Number(requirements.elementalAffinity.count || 0);
+    const actualCount = roster.filter((champion) => {
+      const affinities = Array.isArray(champion.elementalAffinities)
+        ? champion.elementalAffinities
+        : typeof champion.elementalAffinities === "string"
+          ? [champion.elementalAffinities]
+          : [];
+      return affinities.some(
+        (affinity) => String(affinity).trim().toLowerCase() === targetElement,
+      );
+    }).length;
+    addCheck({
+      label: `${toReadableLabel(targetElement)} affinity`,
+      actual: actualCount,
+      required: requiredCount,
+    });
+  }
+
+  if (requirements.species) {
+    const targetSpecies = String(
+      requirements.species.value ??
+        requirements.species.species ??
+        requirements.species.key ??
+        "",
+    )
+      .trim()
+      .toLowerCase();
+    const requiredCount = Number(requirements.species.count || 0);
+    const actualCount = roster.filter((champion) => {
+      const species = getChampionSpecies(champion).map((entry) =>
+        String(entry).trim().toLowerCase(),
+      );
+      return species.includes(targetSpecies);
+    }).length;
+    addCheck({
+      label: `${toReadableLabel(targetSpecies)} species`,
+      actual: actualCount,
+      required: requiredCount,
+    });
+  }
+
+  if (requirements.classKey) {
+    const targetClass = String(
+      requirements.classKey.value ??
+        requirements.classKey.class ??
+        requirements.classKey.key ??
+        "",
+    )
+      .trim()
+      .toLowerCase();
+    const requiredCount = Number(requirements.classKey.count || 0);
+    const actualCount = roster.filter((champion) => {
+      const classKey = normalizeChampionClassKey(champion);
+      return classKey === targetClass;
+    }).length;
+    addCheck({
+      label: `${toReadableLabel(targetClass)} class`,
+      actual: actualCount,
+      required: requiredCount,
+    });
+  }
+
+  if (requirements.baseStat) {
+    const statKey = String(
+      requirements.baseStat.stat ??
+        requirements.baseStat.key ??
+        requirements.baseStat.name ??
+        "",
+    ).trim();
+    const requiredCount = Number(requirements.baseStat.count || 0);
+    const threshold =
+      requirements.baseStat.min ??
+      requirements.baseStat.value ??
+      requirements.baseStat.threshold;
+    const actualCount = roster.filter((champion) => {
+      const value = Number(champion[statKey]);
+      if (!Number.isFinite(value)) return false;
+      if (threshold == null) return true;
+      return value >= Number(threshold);
+    }).length;
+    addCheck({
+      label: `${toReadableLabel(statKey)} ≥ ${threshold ?? ""}`.trim(),
+      actual: actualCount,
+      required: requiredCount,
+    });
+  }
+
+  const allMet =
+    requirementChecks.length === 0 ||
+    requirementChecks.every((check) => check.pass);
+
+  return {
+    allMet,
+    checks: requirementChecks,
+    summary: requirementChecks.length
+      ? requirementChecks
+          .map((check) => `${check.label}: ${check.actual}/${check.required}`)
+          .join(" • ")
+      : "Sem requisitos",
+  };
+}
+
+function renderEmblemSelectionUI() {
+  if (!emblemSelectionList) return;
+
+  const rosterKeys = getPlayerRosterForEmblemEligibility();
+  const eligibleKeys = new Set();
+
+  emblemSelectionList.innerHTML = "";
+
+  EMBLEMS.forEach((emblem) => {
+    const isSelected = selectedEmblemKeys.includes(emblem.key);
+    const requirementStatus = evaluateEmblemRequirements(emblem, rosterKeys);
+    const isLocked =
+      !isSelected && selectedEmblemKeys.length >= EMBLEM_MAX_SELECTION;
+    const isBlocked = !requirementStatus.allMet && !isSelected;
+    if (requirementStatus.allMet) eligibleKeys.add(emblem.key);
+
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = `emblem-option ${isSelected ? "selected" : ""} ${requirementStatus.allMet ? "eligible" : "blocked"}`;
+    item.disabled = isLocked || isBlocked;
+    item.dataset.emblemKey = emblem.key;
+    item.innerHTML = `
+      <span class="emblem-option-badge">${escapeHtml(getEmblemShortCode(emblem))}</span>
+      <span class="emblem-option-copy">
+        <strong>${escapeHtml(emblem.name || emblem.key)}</strong>
+        <small>${escapeHtml(getEmblemRequirementLabel(emblem.requirements))}</small>
+      </span>
+      <span class="emblem-option-state">${isSelected ? "ON" : requirementStatus.allMet ? "OK" : "REQ"}</span>
+    `;
+
+    item.addEventListener("click", () => {
+      const current = [...selectedEmblemKeys];
+      const existingIndex = current.indexOf(emblem.key);
+
+      if (existingIndex >= 0) {
+        current.splice(existingIndex, 1);
+      } else if (current.length < EMBLEM_MAX_SELECTION) {
+        current.push(emblem.key);
+      } else {
+        return;
+      }
+
+      selectedEmblemKeys = current;
+      playerEmblems = [...selectedEmblemKeys];
+      socket.emit("updatePlayerEmblems", { emblems: selectedEmblemKeys });
+      renderEmblemSelectionUI();
+      renderPlayerEmblemStrip();
+    });
+
+    item.addEventListener("mouseenter", () => {
+      showEmblemTooltip(item, emblem, requirementStatus);
+    });
+    item.addEventListener("mouseleave", hideEmblemTooltip);
+    item.addEventListener("focus", () => {
+      showEmblemTooltip(item, emblem, requirementStatus);
+    });
+    item.addEventListener("blur", hideEmblemTooltip);
+
+    emblemSelectionList.appendChild(item);
+  });
+
+  if (selectedEmblemsCount) {
+    selectedEmblemsCount.textContent = String(selectedEmblemKeys.length);
+  }
+}
+
+function showEmblemTooltip(
+  target,
+  emblem,
+  requirementStatus = { summary: "Disponível" },
+) {
+  hideEmblemTooltip();
+
+  const tooltip = document.createElement("div");
+  tooltip.className = "emblem-tooltip";
+  tooltip.innerHTML = `
+    <div class="emblem-tooltip-title">${escapeHtml(emblem.name || emblem.key)}</div>
+    <div class="emblem-tooltip-copy">${escapeHtml(typeof emblem.description === "function" ? emblem.description() : emblem.description || "")}</div>
+    <div class="emblem-tooltip-meta">
+      <span class="emblem-tooltip-meta-label">Requisitos</span>
+      <strong>${escapeHtml(requirementStatus.summary || "Sem requisitos")}</strong>
+    </div>
+  `;
+  document.body.appendChild(tooltip);
+  emblemTooltip = tooltip;
+
+  const rect = target.getBoundingClientRect();
+  const tooltipRect = tooltip.getBoundingClientRect();
+  const left = Math.max(
+    12,
+    Math.min(
+      rect.left + rect.width / 2 - tooltipRect.width / 2,
+      window.innerWidth - tooltipRect.width - 12,
+    ),
+  );
+  const top = Math.max(12, rect.top - tooltipRect.height - 12);
+  tooltip.style.left = `${left}px`;
+  tooltip.style.top = `${top}px`;
+}
+
+function hideEmblemTooltip() {
+  if (emblemTooltip) {
+    emblemTooltip.remove();
+    emblemTooltip = null;
+  }
+}
+
+function renderPlayerEmblemStrip() {
+  const strip = document.getElementById("playerLineupEmblems");
+  if (!strip) return;
+
+  const emblems = Array.isArray(playerEmblems) ? playerEmblems : [];
+  if (!emblems.length) {
+    strip.classList.add("hidden");
+    strip.innerHTML = "";
+    return;
+  }
+
+  strip.classList.remove("hidden");
+  strip.innerHTML = emblems
+    .map((emblemKey) => {
+      const emblem = EMBLEMS.find((entry) => entry.key === emblemKey) || null;
+      if (!emblem) return "";
+
+      return `
+        <button type="button" class="lineup-emblem-chip" data-emblem-key="${escapeHtml(emblem.key)}" title="${escapeHtml(emblem.name || emblem.key)}">
+          <span class="lineup-emblem-chip-code">${escapeHtml(getEmblemShortCode(emblem))}</span>
+        </button>
+      `;
+    })
+    .join("");
+
+  strip.querySelectorAll(".lineup-emblem-chip").forEach((button) => {
+    const emblemKey = button.dataset.emblemKey;
+    const emblem = EMBLEMS.find((entry) => entry.key === emblemKey);
+    if (!emblem) return;
+
+    const requirementStatus = evaluateEmblemRequirements(
+      emblem,
+      getPlayerRosterForEmblemEligibility(),
+    );
+    button.addEventListener("mouseenter", () =>
+      showEmblemTooltip(button, emblem, requirementStatus),
+    );
+    button.addEventListener("mouseleave", hideEmblemTooltip);
+    button.addEventListener("focus", () =>
+      showEmblemTooltip(button, emblem, requirementStatus),
+    );
+    button.addEventListener("blur", hideEmblemTooltip);
+  });
 }
 
 function renderLineupChipContent(champion, slotIndex) {
@@ -2358,8 +2709,20 @@ function renderLineupBanners(lineupsByTeam = {}) {
 // ============================================================
 
 socket.on("gameStateUpdate", (gameState) => {
+  const serverEmblems = gameState?.playerEmblems?.[playerTeam] ?? [];
+  if (
+    playerTeam !== null &&
+    Array.isArray(serverEmblems) &&
+    serverEmblems.length
+  ) {
+    playerEmblems = serverEmblems.slice();
+    selectedEmblemKeys = [...playerEmblems];
+  }
+
   syncMaterializedLineupChampions(gameState?.champions || []);
   renderLineupBanners(gameState?.lineups);
+  renderPlayerEmblemStrip();
+  renderEmblemSelectionUI();
   combatAnimations.handleGameStateUpdate(gameState);
 
   if (
