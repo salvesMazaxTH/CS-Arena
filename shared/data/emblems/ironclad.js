@@ -5,7 +5,7 @@ export const ironclad = {
   requirements: {
     elementalAffinity: {
       element: "steel",
-      count: 5,
+      count: 2,
     },
   },
 

@@ -1639,7 +1639,7 @@ io.on("connection", (socket) => {
   //  sync emblem selection
   // =============================
 
-  socket.on("updatePlayerEmblems", ({ emblems } = {}) => {
+  socket.on("updatePlayerEmblems", ({ emblems, draftRoster } = {}) => {
     const playerSlot = match.getSlotBySocket(socket.id);
     const player = match.players[playerSlot];
 
@@ -1659,9 +1659,17 @@ io.on("connection", (socket) => {
       );
     }
 
-    const rosterKeys = Array.isArray(player.selectedChampionKeys)
+    // Antes da equipe ser confirmada, selectedChampionKeys ainda está vazio no
+    // servidor. Usamos o roster provisório enviado pelo cliente (draft em
+    // andamento) para essa checagem; a validação final e definitiva acontece
+    // de novo no handler de "selectTeam" contra a lineup realmente confirmada.
+    const rosterKeys = player.isTeamSelected()
       ? player.selectedChampionKeys
-      : [];
+      : Array.isArray(draftRoster)
+        ? draftRoster.filter(
+            (key) => typeof key === "string" && championDB[key],
+          )
+        : [];
 
     const nextEmblems = validKeys
       .slice(0, 2)

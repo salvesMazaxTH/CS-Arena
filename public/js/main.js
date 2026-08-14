@@ -1443,7 +1443,10 @@ function renderEmblemSelectionUI() {
 
       selectedEmblemKeys = current;
       playerEmblems = [...selectedEmblemKeys];
-      socket.emit("updatePlayerEmblems", { emblems: selectedEmblemKeys });
+      socket.emit("updatePlayerEmblems", {
+        emblems: selectedEmblemKeys,
+        draftRoster: getPlayerRosterForEmblemEligibility(),
+      });
       renderEmblemSelectionUI();
       renderPlayerEmblemStrip();
     });

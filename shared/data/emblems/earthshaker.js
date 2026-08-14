@@ -5,7 +5,7 @@ export const earthshaker = {
   requirements: {
     elementalAffinity: {
       element: "earth",
-      count: 5,
+      count: 2,
     },
   },
 
