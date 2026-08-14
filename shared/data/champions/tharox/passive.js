@@ -4,9 +4,11 @@ export default {
   name: "Massa Inamolgável",
   stacksNeeded: 2,
   defBonus: 20,
-  hpBonus: 10,
+  healingPerMaxHP: 0.025,
+  defensePerHealingStep: 75,
+  shieldPercentage: 0.075,
   description() {
-    return `Sempre que Tharox tomar dano, ele ganha 1 acúmulo de Inércia. Ao chegar a ${this.stacksNeeded}, consome ambos e ganha +${this.defBonus} Defesa e +${this.hpBonus} HP (aumenta a vida).`;
+    return `Sempre que Tharox tomar dano, ele ganha 1 acúmulo de Inércia. Ao chegar a ${this.stacksNeeded}, consome ambos e ganha +${this.defBonus} de Defesa permanente. Além disso, cura em ${this.healingPerMaxHP * 100}% do HP máximo para cada ${this.defensePerHealingStep} de Defesa que possui e recebe um escudo equivalente a ${this.shieldPercentage * 100}% do HP máximo.`;
   },
 
   hookScope: {
@@ -34,9 +36,30 @@ export default {
       isPermanent: true,
     });
 
-    owner.modifyHP(this.hpBonus, { context, affectMax: true, isPermanent: true });
+    // Cura 3% do HP máximo para cada 50 de Defesa.
+    const defenseMultipliers = Math.floor(owner.Defense / this.defensePerHealingStep);
+    const healingAmount =
+      owner.maxHP * this.healingPerMaxHP * defenseMultipliers;
 
-    let log = `<b>[Passiva - Massa Inamolgável]</b> ${formatChampionName(owner)} consumiu ${this.stacksNeeded} Inércia e ganhou +${this.defBonus} Defesa e +${this.hpBonus} HP! (Defesa: ${owner.Defense}, HP: ${owner.HP}/${owner.maxHP})`;
+    if (healingAmount > 0) {
+      owner.heal(healingAmount, context, owner);
+    }
+
+    // Escudo equivalente a 7,5% do HP máximo.
+    const shieldAmount = owner.maxHP * this.shieldPercentage;
+
+    owner.addShield(shieldAmount, 0, context, "regular");
+
+    let log =
+      `<b>[Passiva - Massa Inamolgável]</b> ${formatChampionName(owner)} ` +
+      `consumiu ${this.stacksNeeded} Inércia e ganhou +${this.defBonus} Defesa permanente! ` +
+      `(Defesa: ${owner.Defense}).`;
+
+    if (healingAmount > 0) {
+      log += `\nCurou ${Math.floor(healingAmount)} HP (${defenseMultipliers} × ${this.healingPerMaxHP * 100}% do HP máximo).`;
+    }
+
+    log += `\nRecebeu um escudo de ${Math.floor(shieldAmount)} HP.`;
 
     if (statResult?.log) {
       log += `\n${statResult.log}`;

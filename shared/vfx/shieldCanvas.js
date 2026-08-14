@@ -20,6 +20,13 @@ const SHIELD_PALETTES = {
     ring: "rgba(255, 60, 60, 0.92)",
     arc: "rgba(180, 20, 20, 0.96)",
   },
+  supreme: {
+    grid: "rgba(255, 220, 100, 0.26)",
+    glowInner: "rgba(255, 215, 80, 0.16)",
+    glowOuter: "rgba(180, 105, 0, 0.68)",
+    ring: "rgba(255, 220, 90, 0.95)",
+    arc: "rgba(255, 190, 40, 0.98)",
+  },
 };
 
 export function startShield(canvas, data = {}) {

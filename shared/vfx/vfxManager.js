@@ -75,16 +75,21 @@ function getShieldVFXData(champion) {
     };
   }
 
-  const customShield = [...shields].reverse().find((s) => s?.visualVariant);
+  // Shield com visual explícito tem prioridade.
+  const customShield = [...shields]
+    .reverse()
+    .find((shield) => shield?.visualVariant);
 
   let variant;
 
   if (customShield?.visualVariant) {
     variant = customShield.visualVariant;
+  } else if (shields.some((shield) => shield?.type === "supreme")) {
+    variant = "supreme";
+  } else if (shields.some((shield) => shield?.type === "spell")) {
+    variant = "spell";
   } else {
-    variant = shields.some((shield) => shield?.type === "spell")
-      ? "spell"
-      : "regular";
+    variant = "regular";
   }
 
   return {

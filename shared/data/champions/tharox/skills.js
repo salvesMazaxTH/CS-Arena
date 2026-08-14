@@ -125,62 +125,208 @@ const tharoxSkills = [
   {
     key: "apoteose_do_monolito",
     name: "Apoteose do Monólito",
-    hpGain: 50,
-    defGain: 10,
-    damageMode: "standard",
-    modifierDuration: 3,
+
+    effectDuration: 2,
+    defBonusWhileShielded: 20,
     defDamagePercent: 38,
+
+    damageMode: "standard",
     contact: false,
     momentumCost: 55,
     isUltimate: true,
     priority: 2,
+
     description() {
-      return `Ganha +${this.hpGain} HP, +${this.defGain} DEF, cura proporcional à DEF acima da base e seus ataques passam a causar dano adicional com base na Defesa excedente, escalando de forma crescente e tornando-se devastadores em níveis altos, por ${this.modifierDuration} turnos.`;
+      return `Libera a Apoteose do Monólito, curando proporcionalmente à sua Defesa bônus e assumindo sua forma inamovível por ${this.effectDuration} turnos. Ganha SupremeShield pela duração do efeito.
+
+      Enquanto o escudo estiver ativo, Tharox recebe +${this.defBonusWhileShielded} de Defesa. Ao perder o escudo, cura em 25% da sua Defesa bônus. Além disso, seus ataques passam a causar dano adicional com base na Defesa excedente, escalando de forma crescente e tornando-se devastadores em níveis altos.`;
     },
+
     targetSpec: ["self"],
     resolve({ user, context = {} }) {
-      user.modifyHP(this.hpGain, {
-        context,
-        maxHPOnly: true,
-        isPermanent: true,
-      });
+      const userName = formatChampionName(user);
+      const expiresAtTurn = context.currentTurn + this.effectDuration;
 
-      user.modifyStat({
-        statName: "Defense",
-        amount: this.defGain,
-        context,
-        isPermanent: true,
-      }); // Aumenta DEF permanentemente
-
-      const proportionalHeal = user.Defense - user.baseDefense;
-      user.heal(proportionalHeal, context);
-
-      // Remove qualquer modificador anterior da ultimate antes de adicionar um novo
+      // Remove eventual efeito anterior da Apoteose.
       user.damageModifiers = user
         .getDamageModifiers()
         .filter((mod) => mod.id !== "apoteose-do-monolito");
 
+      // Remove eventual SupremeShield anterior da Apoteose.
+      if (Array.isArray(user.runtime?.shields)) {
+        user.runtime.shields = user.runtime.shields.filter(
+          (shield) => shield?.sourceId !== "apoteose-do-monolito",
+        );
+      }
+
+      // Remove eventual hook anterior da Apoteose.
+      user.runtime.hookEffects ??= [];
+      user.runtime.hookEffects = user.runtime.hookEffects.filter(
+        (hook) => hook.key !== "apoteose-do-monolito",
+      );
+
+      // Registra o estado da Apoteose.
+      user.runtime.apoteoseDoMonolito = {
+        active: true,
+        expiresAtTurn,
+        defenseBonus: this.defBonusWhileShielded,
+      };
+
+      // +20 Defesa enquanto o efeito estiver ativo.
+      user.modifyStat({
+        statName: "Defense",
+        amount: this.defBonusWhileShielded,
+        duration: this.effectDuration,
+        context,
+        isPermanent: false,
+      });
+
+      // Cura proporcional à Defesa bônus atual.
+      const proportionalHeal = Math.max(0, user.Defense - user.baseDefense);
+
+      if (proportionalHeal > 0) {
+        user.heal(proportionalHeal, context, user);
+      }
+
+      // SupremeShield.
+      user.addShield(1, 0, context, "supreme", {
+        sourceId: "apoteose-do-monolito",
+        expiresAtTurn,
+      });
+
+      // Hook da Apoteose.
+      user.runtime.hookEffects.push({
+        key: "apoteose-do-monolito",
+        name: "Apoteose do Monólito",
+        expiresAtTurn,
+
+        // ============================================================
+        // ANTES DO DANO
+        // ============================================================
+        // Hook destinado às interações que precisam observar a Defesa
+        // bônus da Apoteose antes que o dano seja aplicado.
+        hookScope: {
+          onBeforeDmgTaking: "defender",
+          onAfterDmgTaking: "defender",
+        },
+
+        onBeforeDmgTaking({ defender, context }) {
+          if (defender !== user) return;
+
+          const supremeShield = defender.runtime?.shields?.some(
+            (shield) =>
+              shield?.type === "supreme" &&
+              shield?.sourceId === "apoteose-do-monolito",
+          );
+
+          if (!supremeShield) return;
+
+          const defenseBonus = this.defBonusWhileShielded;
+
+          return {
+            // Disponibiliza explicitamente o bônus para efeitos que
+            // precisem consultar a Defesa concedida pela Apoteose.
+            defenseBonus,
+            log: null,
+          };
+        },
+
+        // ============================================================
+        // DEPOIS DO DANO
+        // ============================================================
+        // Se o dano acabou de destruir o SupremeShield, a cura ocorre
+        // imediatamente após esse dano.
+        onAfterDmgTaking({ defender, damage, context }) {
+          if (defender !== user) return;
+          if (damage <= 0) return;
+
+          const supremeShield = defender.runtime?.shields?.some(
+            (shield) =>
+              shield?.type === "supreme" &&
+              shield?.sourceId === "apoteose-do-monolito",
+          );
+
+          if (supremeShield) return;
+
+          // O shield foi quebrado por dano.
+          const state = defender.runtime.apoteoseDoMonolito;
+          if (!state?.active) return;
+
+          state.brokenByDamage = true;
+          state.active = false;
+
+          const healingAmount = this.defBonusWhileShielded * 0.25;
+
+          if (healingAmount > 0) {
+            defender.heal(healingAmount, context, defender);
+          }
+
+          defender.runtime.hookEffects = defender.runtime.hookEffects.filter(
+            (hook) => hook.key !== "apoteose-do-monolito",
+          );
+
+          return {
+            log:
+              `<b>[Apoteose do Monólito]</b> ${formatChampionName(defender)} ` +
+              `perdeu o SupremeShield e curou ${Math.floor(healingAmount)} HP.`,
+          };
+        },
+
+        // ============================================================
+        // EXPIRAÇÃO NATURAL
+        // ============================================================
+        onTurnStart({ owner, context }) {
+          if (context.currentTurn < this.expiresAtTurn) return;
+
+          const state = owner.runtime.apoteoseDoMonolito;
+
+          // Se não foi quebrado por dano, a cura ocorre no início do turno, logo depois da expiração natural.
+          if (!state?.brokenByDamage) {
+            const healingAmount = this.defBonusWhileShielded * 0.25;
+
+            if (healingAmount > 0) {
+              owner.heal(healingAmount, context, owner);
+            }
+          }
+
+          if (state) {
+            state.active = false;
+          }
+
+          owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
+            (hook) => hook.key !== "apoteose-do-monolito",
+          );
+        },
+      });
+
+      // =================================
+      // BÔNUS DE DANO
+      //=================================
       user.addDamageModifier({
         id: "apoteose-do-monolito",
         name: "Bônus de Apoteose do Monólito",
-        expiresAtTurn: context.currentTurn + this.modifierDuration,
-        apply: ({ baseDamage, attacker }, context) => {
+        expiresAtTurn,
+
+        apply: ({ baseDamage, attacker }) => {
           const baseDef = attacker.baseDefense;
           const bonusDef = Math.max(0, attacker.Defense - baseDef);
 
           const linear = bonusDef * 0.7;
+
           const scaling =
             (Math.pow(bonusDef, 1.4) * this.defDamagePercent) / 100;
 
-          let bonus = linear + scaling;
-
-          return baseDamage + bonus;
+          return baseDamage + linear + scaling;
         },
       });
 
-      const userName = formatChampionName(user);
       return {
-        log: `${userName} executou <b>Apoteose do Monólito</b>, liberando sua forma de guerra. Ganhou +${this.defGain} Defesa e +${this.hpGain} HP Máximo. Além disso, curou ${proportionalHeal} HP! (Defense: ${user.Defense}, HP: ${user.HP}/${user.maxHP})`,
+        log:
+          `${userName} executou <b>Apoteose do Monólito</b>, ` +
+          `liberando sua forma de guerra. ` +
+          `Recebeu +${this.defBonusWhileShielded} Defesa enquanto o SupremeShield estiver ativo ` +
+          `e curou ${Math.floor(proportionalHeal)} HP. ` +
+          `(Defense: ${user.Defense}, HP: ${user.HP}/${user.maxHP})`,
       };
     },
   },
