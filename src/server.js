@@ -151,6 +151,26 @@ function getRandomChampionKey(excludeKeys = []) {
   return availableKeys[Math.floor(Math.random() * availableKeys.length)];
 }
 
+function fillRandomChampionSelection(currentSelection = [], fillAll = false) {
+  const nextSelection = Array.isArray(currentSelection)
+    ? currentSelection.slice()
+    : [];
+
+  while (nextSelection.length < TEAM_SIZE) {
+    nextSelection.push(null);
+  }
+
+  for (let index = 0; index < nextSelection.length; index += 1) {
+    if (!fillAll && nextSelection[index] !== null) continue;
+
+    const champ = getRandomChampionKey(nextSelection.filter(Boolean));
+    if (!champ) break;
+    nextSelection[index] = champ;
+  }
+
+  return nextSelection.slice(0, TEAM_SIZE);
+}
+
 function processChampionMutationRequest(
   {
     targetId,
@@ -606,9 +626,7 @@ function emitCombatEnvelopesFromContext({
       globalDialogs.length;
 
     const shouldEmit =
-      mainEnvelope.action ||
-      hasVisualChanges ||
-      !!scorePayload;
+      mainEnvelope.action || hasVisualChanges || !!scorePayload;
 
     if (shouldEmit) {
       /* console.log("[DEBUG] [JEFF REVIVAL DIALOG] === ENVELOPE SEND ===", {
@@ -1234,14 +1252,10 @@ io.on("connection", (socket) => {
         setTimeout(() => {
           if (match.isTeamSelected(i)) return;
 
-          let currentSelection = player.selectedChampionKeys.filter(
-            (c) => c !== null,
+          const currentSelection = fillRandomChampionSelection(
+            player.selectedChampionKeys,
+            false,
           );
-          while (currentSelection.length < TEAM_SIZE) {
-            const champ = getRandomChampionKey(currentSelection);
-            if (!champ) break;
-            currentSelection.push(champ);
-          }
 
           player.setSelectedChampionKeys(currentSelection);
           if (checkAllTeamsSelected()) {
@@ -1258,13 +1272,7 @@ io.on("connection", (socket) => {
       const player = match.players[i];
       if (!player || player.isTeamSelected()) continue;
 
-      let currentSelection = [];
-      while (currentSelection.length < TEAM_SIZE) {
-        const champ =
-          getRandomChampionKey(currentSelection) || Object.keys(championDB)[0];
-        currentSelection.push(champ);
-      }
-
+      const currentSelection = fillRandomChampionSelection([], true);
       player.setSelectedChampionKeys(currentSelection);
     }
 

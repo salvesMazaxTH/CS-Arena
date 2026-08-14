@@ -304,7 +304,11 @@ export class TurnResolver {
     // mover o consumo de recurso para depois da verificação de !roleTargets.
     // Caso contrário, manter aqui para consumir mesmo sem alvo.
 
-    // 5. AGORA SIM: consumir recurso
+    // 5. Captura o valor de Claim ANTES do gasto de Momentum.
+    // Algumas habilidades podem utilizar esse valor como referência.
+    context.preActionClaimPoints = getClaimPoints(user, context.currentTurn);
+
+    // 6. AGORA SIM: consumir recurso
     if (action.momentumCost > 0 && !this.editMode.freeCostSkills) {
       this.applyResourceChange({
         target: user,

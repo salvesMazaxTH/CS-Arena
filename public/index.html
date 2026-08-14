@@ -193,7 +193,17 @@
           <div class="selected-champions-slots" id="selectedChampionsSlots">
             <!-- Slots will be generated dynamically by JavaScript -->
           </div>
-          <button id="confirmTeamBtn" disabled>Confirmar Equipe</button>
+          <div class="selection-actions">
+            <button
+              id="autofillTeamBtn"
+              class="secondary-action-btn"
+              type="button"
+              title="Preenche os slots vazios com campeões aleatórios"
+            >
+              Autofill
+            </button>
+            <button id="confirmTeamBtn" disabled>Confirmar Equipe</button>
+          </div>
         </div>
         <p id="team-selection-message" class="selection-message"></p>
       </div>

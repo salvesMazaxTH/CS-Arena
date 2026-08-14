@@ -627,6 +627,7 @@ const availableChampionsGrid = document.getElementById(
 const selectedChampionsSlots = document.getElementById(
   "selectedChampionsSlots",
 );
+const autofillTeamBtn = document.getElementById("autofillTeamBtn");
 const confirmTeamBtn = document.getElementById("confirmTeamBtn");
 const teamSelectionMessage = document.getElementById("team-selection-message");
 
@@ -1335,6 +1336,58 @@ function renderAvailableChampions() {
 
 // --- Clique em card de campeão ---
 
+function getDraftSelectableChampionKeys(excludeKeys = []) {
+  return Object.keys(championDB).filter((key) => {
+    const champion = championDB[key];
+    if (!champion || (champion.entityType ?? "champion") !== "champion") {
+      return false;
+    }
+    if (champion.selectable === false) return false;
+    if (excludeKeys.includes(key)) return false;
+    if (
+      (champion.unreleased === true || champion.disabled === true) &&
+      !editMode.unavailableChampions
+    ) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function getRandomChampionKeyForDraft(excludeKeys = []) {
+  const availableKeys = getDraftSelectableChampionKeys(excludeKeys);
+  if (availableKeys.length === 0) return null;
+  return availableKeys[Math.floor(Math.random() * availableKeys.length)];
+}
+
+function autofillSelectedChampions() {
+  if (playerTeamConfirmed) return;
+
+  const nextSelection = selectedChampions.slice();
+  const hasAnySelection = nextSelection.some(Boolean);
+
+  if (!hasAnySelection) {
+    for (let index = 0; index < TEAM_SIZE; index += 1) {
+      const championKey = getRandomChampionKeyForDraft(nextSelection);
+      if (!championKey) break;
+      nextSelection[index] = championKey;
+    }
+  } else {
+    for (let index = 0; index < nextSelection.length; index += 1) {
+      if (nextSelection[index] !== null) continue;
+
+      const championKey = getRandomChampionKeyForDraft(nextSelection);
+      if (!championKey) break;
+      nextSelection[index] = championKey;
+    }
+  }
+
+  selectedChampions = nextSelection;
+  updateSelectedChampionsUI();
+  teamSelectionMessage.textContent =
+    "Slots vazios preenchidos automaticamente com campeões aleatórios.";
+}
+
 function handleChampionCardClick(championKey) {
   if (playerTeamConfirmed) return;
 
@@ -1394,8 +1447,14 @@ function updateSelectedChampionsUI() {
       card.classList.toggle("selected", selectedChampions.includes(key));
     });
 
+  autofillTeamBtn.disabled =
+    playerTeamConfirmed ||
+    !selectedChampions.includes(null) ||
+    getDraftSelectableChampionKeys(selectedChampions).length === 0;
   confirmTeamBtn.disabled = !allSlotsFilled || playerTeamConfirmed;
 }
+
+autofillTeamBtn.addEventListener("click", autofillSelectedChampions);
 
 // --- Drag & Drop ---
 

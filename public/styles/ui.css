@@ -1995,23 +1995,48 @@
   font-size: 0.6rem;
 }
 
+.selection-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+#autofillTeamBtn,
 #confirmTeamBtn {
-  background: linear-gradient(180deg, #00ff99, #00b36b);
-  border: none;
   border-radius: 10px;
-  color: white;
-  font-size: 1.1em;
-  font-weight: bolder;
-  padding: 10px 30px;
+  font-size: 1em;
+  font-weight: bold;
+  padding: 9px 18px;
   text-align: center;
   text-decoration: none;
   display: inline-block;
-  margin-top: 10px;
   cursor: pointer;
-  box-shadow: 0 0 15px rgba(0, 255, 150, 0.5);
   transition:
     transform 0.1s ease,
-    box-shadow 0.1s ease;
+    box-shadow 0.1s ease,
+    opacity 0.1s ease;
+}
+
+#autofillTeamBtn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #e8f7ff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+#autofillTeamBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+#confirmTeamBtn {
+  background: linear-gradient(180deg, #00ff99, #00b36b);
+  border: none;
+  color: white;
+  box-shadow: 0 0 15px rgba(0, 255, 150, 0.5);
 }
 
 #confirmTeamBtn:hover:not(:disabled) {
@@ -2019,6 +2044,7 @@
   background-color: #026e47;
 }
 
+#autofillTeamBtn:disabled,
 #confirmTeamBtn:disabled {
   background: linear-gradient(180deg, #555, #333);
   border-color: #666;
@@ -2026,6 +2052,7 @@
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
+  opacity: 0.8;
 }
 
 /* ============================================

@@ -137,11 +137,11 @@ const vaelSkills = [
         : result?.killed;
 
       if (didKill) {
-        const claimPoints = getClaimPoints(user, context?.currentTurn);
+        const claimPoints = context.preActionClaimPoints ?? getClaimPoints(user, context.currentTurn) ?? 0;
 
         if (claimPoints > 0) {
           context.registerScore({
-            amount: claimValue,
+            amount: claimPoints,
             scoringSlot: user.team - 1,
             reason: "veredito_do_fio_silencioso",
             sourceId: user.id,
