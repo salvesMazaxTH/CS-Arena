@@ -1,8 +1,8 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
-  key: "sede_de_sangue",
-  name: "Sede de Sangue",
+  key: "bloodthirst",
+  name: "Bloodthirst",
 
   lsPerProc: 3,
   awakenThreshold: 40,
@@ -12,14 +12,16 @@ export default {
   dmgReductPerTier: 3,
   lsHealAmpPerTier: 12,
 
-  permDmgModId: "drex_sede_de_sangue_scaling",
-  dmgReductionSrc: "drex_sede_de_sangue_scaling",
+  permDmgModId: "drex_bloodthirst_scaling",
+  dmgReductionSrc: "drex_bloodthirst_scaling",
   pseudoPermanentDurationTurns: 9999,
 
   description() {
-    return `Ganha +${this.lsPerProc}% de Roubo de Vida permanente sempre que um aliado aplica Sangramento ou sempre que um inimigo sofre dano de Sangramento. 
-    Ao atingir ${this.awakenThreshold}%+ de Roubo de Vida pela primeira vez, entra em Frenesi Carmesim permanente. 
-    Para cada ${this.lsTierSize}% de Roubo de Vida atual, recebe +${this.dmgAmpPerTier}% de dano aumentado, converte dano padrão em perfurante com ${this.piercingRatioPerTier}% de perfuração, ganha ${this.dmgReductPerTier}% de Redução de Dano e amplifica em em ${this.lsHealAmpPerTier}% as curas obtidas por Roubo de Vida.`;
+    return `Drex gains +${this.lsPerProc}% permanent LifeSteal whenever an ally applies Bleeding or whenever an enemy takes Bleeding damage.
+
+    The first time Drex reaches ${this.awakenThreshold}% LifeSteal, he enters permanent Crimson Frenzy.
+
+    For every ${this.lsTierSize}% LifeSteal, Drex gains +${this.dmgAmpPerTier}% bonus damage, converts Standard Damage into Piercing Damage with ${this.piercingRatioPerTier}% Defense piercing, gains ${this.dmgReductPerTier}% Damage Reduction, and restores ${this.lsHealAmpPerTier}% more HP from LifeSteal.`;
   },
 
   hookScope: {
@@ -51,7 +53,7 @@ export default {
     if (!result?.appliedAmount) return;
 
     const logs = [
-      `[PASSIVA — ${this.name}] ${formatChampionName(owner)} se alimenta do Sangramento de ${formatChampionName(source)} (+${result.appliedAmount}% Roubo de Vida permanente).`,
+      `[PASSIVE — ${this.name}] ${formatChampionName(owner)} feeds on ${formatChampionName(source)}'s Bleeding (+${result.appliedAmount}% permanent LifeSteal).`,
     ];
 
     const awakenResult = this._tryAwaken({ owner, context });
@@ -79,7 +81,7 @@ export default {
     if (!result?.appliedAmount) return;
 
     const logs = [
-      `[PASSIVA — ${this.name}] ${formatChampionName(owner)} absorve o Sangramento de ${formatChampionName(defender)} (+${result.appliedAmount}% Roubo de Vida permanente).`,
+      `[PASSIVE — ${this.name}] ${formatChampionName(owner)} feeds on ${formatChampionName(defender)}'s Bleeding (+${result.appliedAmount}% permanent LifeSteal).`,
     ];
 
     const awakenResult = this._tryAwaken({ owner, context });
@@ -119,11 +121,15 @@ export default {
       0,
       Math.floor(Number(owner?.LifeSteal || 0) / this.lsTierSize),
     );
+
     if (tiers <= 0) return;
 
     return {
       mode: "piercing",
-      piercingPercentage: Math.min(100, tiers * this.piercingRatioPerTier),
+      piercingPercentage: Math.min(
+        100,
+        tiers * this.piercingRatioPerTier,
+      ),
     };
   },
 
@@ -140,7 +146,9 @@ export default {
     if (tiers <= 0) return;
 
     return {
-      amount: amount * (1 + tiers * (this.lsHealAmpPerTier / 100)),
+      amount:
+        amount *
+        (1 + tiers * (this.lsHealAmpPerTier / 100)),
     };
   },
 
@@ -153,16 +161,21 @@ export default {
 
     owner.addDamageModifier({
       id: this.permDmgModId,
-      name: "Sede de Sangue (Escalonamento)",
+      name: "Bloodthirst (Scaling)",
       permanent: true,
+
       apply: ({ baseDamage, attacker }) => {
         const tiers = Math.max(
           0,
-          Math.floor(Number(attacker?.LifeSteal || 0) / this.lsTierSize),
+          Math.floor(
+            Number(attacker?.LifeSteal || 0) / this.lsTierSize,
+          ),
         );
+
         if (tiers <= 0) return baseDamage;
 
         const bonusPercent = tiers * this.dmgAmpPerTier;
+
         return baseDamage * (1 + bonusPercent / 100);
       },
     });
@@ -171,14 +184,16 @@ export default {
   _refreshDamageReduction({ owner, context }) {
     if (!owner || !context) return;
 
-    owner.damageReductionModifiers = owner.damageReductionModifiers.filter(
-      (modifier) => modifier?.source !== this.dmgReductionSrc,
-    );
+    owner.damageReductionModifiers =
+      owner.damageReductionModifiers.filter(
+        (modifier) => modifier?.source !== this.dmgReductionSrc,
+      );
 
     const tiers = Math.max(
       0,
       Math.floor(Number(owner?.LifeSteal || 0) / this.lsTierSize),
     );
+
     const amount = tiers * this.dmgReductPerTier;
 
     if (amount <= 0) return;
@@ -192,7 +207,7 @@ export default {
     });
 
     return {
-      log: `[PASSIVA — ${this.name}] ${formatChampionName(owner)} recalibra sua resistência (${amount}% de Redução de Dano).`,
+      log: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} recalibrates his defenses (${amount}% Damage Reduction).`,
     };
   },
 
@@ -200,6 +215,7 @@ export default {
     if (!owner) return;
 
     owner.runtime ??= {};
+
     if (owner.runtime.drexBloodAscension) return;
     if (Number(owner.LifeSteal || 0) < this.awakenThreshold) return;
 
@@ -209,7 +225,7 @@ export default {
     this._refreshDamageReduction({ owner, context });
 
     return {
-      log: `[PASSIVA — ${this.name}] ${formatChampionName(owner)} ultrapassa ${this.awakenThreshold}% de Roubo de Vida e entra em Frenesi Carmesim permanente!`,
+      log: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} surpasses ${this.awakenThreshold}% LifeSteal and enters permanent Crimson Frenzy!`,
     };
   },
 };

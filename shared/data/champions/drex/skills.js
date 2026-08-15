@@ -6,8 +6,8 @@ const drexSkills = [
   basicStrike,
 
   {
-    key: "incisao_carmesim",
-    name: "Incisão Carmesim",
+    key: "crimson_incision",
+    name: "Crimson Incision",
 
     bf: 35,
     contact: true,
@@ -19,7 +19,7 @@ const drexSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Causa dano leve-médio ao alvo e aplica ${this.bleedingStacks} stack(s) de Sangramento. Se o alvo já estiver sangrando, aplica +1 stack adicional.`;
+      return `Deals light to moderate damage to the chosen target and applies ${this.bleedingStacks} Bleeding stacks. If the target is already Bleeding, applies 1 additional stack.`;
     },
 
     resolve({ user, targets, context = {} }) {
@@ -47,6 +47,7 @@ const drexSkills = [
         const bleedStacks = enemy.hasStatusEffect("bleeding")
           ? this.bleedingStacks + 1
           : this.bleedingStacks;
+
         enemy.applyStatusEffect(
           "bleeding",
           undefined,
@@ -61,28 +62,122 @@ const drexSkills = [
   },
 
   {
-    key: "hemorragia_dirigida",
-    name: "Hemorragia Dirigida",
-    bf: 55,
-    damagePerBleedStack: 18,
-    shieldBleedThreshold: 4,
-    shieldFromTargetMaxHpRatio: 0.35,
-    shieldDecayTurns: 3,
+    key: "bloodletting",
+    name: "Bloodletting",
+
+    bf: 40,
+    bleedingStacksApplied: 2,
+    bonusBleedStacksIfBleeding: 1,
+
     contact: false,
     damageMode: "standard",
+    priority: 1,
+    targetSpec: ["all:enemy"],
+
+    description() {
+      return `Deals damage to all enemies and applies ${this.bleedingStacksApplied} Bleeding stacks to each. If an enemy is already Bleeding, applies ${this.bonusBleedStacksIfBleeding} additional stack. Each existing Bleeding stack also triggers an immediate instance of Bleeding damage without consuming the status.`;
+    },
+
+    resolve({ user, targets, context = {} }) {
+      const results = [];
+
+      for (const enemy of targets) {
+        if (!enemy?.alive) continue;
+
+        const existingStacks =
+          Number(enemy.getStatusEffect("bleeding")?.stacks) || 0;
+
+        const tickDamage = Math.floor(enemy.maxHP * 0.05);
+
+        // Existing Bleeding stacks trigger immediate damage.
+        for (let index = 0; index < existingStacks; index += 1) {
+          const tickResult = new DamageEvent({
+            baseDamage: tickDamage,
+            attacker: user,
+            defender: enemy,
+            skill: {
+              name: "Bleeding",
+              key: "bleeding_tick",
+            },
+            type: "physical",
+            mode: DamageEvent.Modes.ABSOLUTE,
+            context: {
+              ...context,
+              isDot: true,
+              allowsLifeSteal: true,
+            },
+            allChampions: context?.allChampions,
+          }).execute();
+
+          if (Array.isArray(tickResult)) {
+            results.push(...tickResult);
+          } else if (tickResult) {
+            results.push(tickResult);
+          }
+        }
+
+        const stacksToApply =
+          this.bleedingStacksApplied +
+          (existingStacks > 0 ? this.bonusBleedStacksIfBleeding : 0);
+
+        enemy.applyStatusEffect(
+          "bleeding",
+          undefined,
+          context,
+          { sourceId: user.id },
+          stacksToApply,
+        );
+      }
+
+      return results;
+    },
+  },
+
+  {
+    key: "hemorrhagic_eclipse",
+    name: "Hemorrhagic Eclipse",
+
+    bf: 75,
+    damagePerBleedStack: 18,
+
+    minimumBleedStacks: 4,
+    shieldFromTargetMaxHpRatio: 0.35,
+    shieldDecayTurns: 3,
+
+    contact: false,
+    damageMode: "standard",
+    isUltimate: true,
+    momentumCost: 55,
     priority: 0,
     targetSpec: ["enemy"],
 
     description() {
-      return `Causa dano moderado. O dano aumenta em +${this.damagePerBleedStack}% para cada stack de Sangramento no alvo. Não consome Sangramento. Se atingir um alvo com ${this.shieldBleedThreshold}+ stacks de Sangramento, Drex ganha um escudo de ${Math.round(this.shieldFromTargetMaxHpRatio * 100)}% do HP máximo do alvo por ${this.shieldDecayTurns} turnos.`;
+      return `Deals moderate-high damage to the chosen target. Deals +${this.damagePerBleedStack}% bonus damage for each Bleeding stack on the target. If the target has fewer than ${this.minimumBleedStacks} Bleeding stacks, applies enough stacks to reach ${this.minimumBleedStacks}. If this ability hits a target with ${this.minimumBleedStacks}+ Bleeding stacks, Drex gains a shield equal to 35% of the target's Max HP for ${this.shieldDecayTurns} turns.`;
     },
 
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
-      const bleedStacks =
-        Number(enemy.getStatusEffect("bleeding")?.stacks) || 0;
+
+      let bleedStacks = Number(enemy.getStatusEffect("bleeding")?.stacks) || 0;
+
+      // The Ultimate guarantees its own Bleeding threshold.
+      if (bleedStacks < this.minimumBleedStacks) {
+        const stacksToApply = this.minimumBleedStacks - bleedStacks;
+
+        enemy.applyStatusEffect(
+          "bleeding",
+          undefined,
+          context,
+          { sourceId: user.id },
+          stacksToApply,
+        );
+
+        bleedStacks = this.minimumBleedStacks;
+      }
+
       const damageMultiplier =
         1 + (bleedStacks * this.damagePerBleedStack) / 100;
+
       const baseDamage = ((user.Attack * this.bf) / 100) * damageMultiplier;
 
       const result = new DamageEvent({
@@ -99,10 +194,11 @@ const drexSkills = [
       const mainDamage = results[0];
 
       const dealtDamage = Number(mainDamage?.totalDamage ?? 0) > 0;
+
       const connected =
         !mainDamage?.evaded && !mainDamage?.immune && dealtDamage;
 
-      if (connected && bleedStacks >= this.shieldBleedThreshold) {
+      if (connected && bleedStacks >= this.minimumBleedStacks) {
         const shieldAmount = Math.floor(
           Number(enemy?.maxHP || 0) * this.shieldFromTargetMaxHpRatio,
         );
@@ -111,69 +207,12 @@ const drexSkills = [
           user.addShield(shieldAmount, 0, context, "regular", {
             expiresAtTurn: context.currentTurn + this.shieldDecayTurns,
             sourceKey: this.key,
-
             visualVariant: "drex_blood",
           });
 
           results.push({
-            log: `${formatChampionName(user)} converte a hemorragia em proteção e recebe um escudo de ${shieldAmount} HP.`,
+            log: `${formatChampionName(user)} converts the target's Bleeding into protection and gains a ${shieldAmount} HP shield.`,
           });
-        }
-      }
-
-      return results;
-    },
-  },
-
-  {
-    key: "eclipse_hemorragico",
-    name: "Eclipse Hemorrágico",
-    contact: false,
-    isUltimate: true,
-    momentumCost: 55,
-    priority: 1,
-    targetSpec: ["all:enemy"],
-
-    description() {
-      return `Atinge todos os inimigos que estiverem com Sangramento. Cada stack é convertida em um impacto imediato de Sangramento, sem consumir o status.`;
-    },
-
-    resolve({ user, targets, context = {} }) {
-      const bleedingTargets = targets.filter((enemy) =>
-        enemy?.hasStatusEffect("bleeding"),
-      );
-
-      if (bleedingTargets.length === 0) {
-        return {
-          log: `${formatChampionName(user)} invoca o Eclipse Hemorrágico, mas nenhum inimigo está sangrando.`,
-        };
-      }
-
-      const results = [];
-
-      for (const enemy of bleedingTargets) {
-        const bleedStacks =
-          Number(enemy.getStatusEffect("bleeding")?.stacks) || 0;
-        const tickDamage = Math.floor(enemy.maxHP * 0.05);
-
-        for (let index = 0; index < bleedStacks; index += 1) {
-          const tickResult = new DamageEvent({
-            baseDamage: tickDamage,
-            attacker: user,
-            defender: enemy,
-            skill: { name: "Sangramento", key: "bleeding_tick" },
-            type: "physical",
-            mode: DamageEvent.Modes.ABSOLUTE,
-            context: {
-              ...context,
-              isDot: true,
-              allowsLifeSteal: true,
-            },
-            allChampions: context?.allChampions,
-          }).execute();
-
-          if (Array.isArray(tickResult)) results.push(...tickResult);
-          else if (tickResult) results.push(tickResult);
         }
       }
 
