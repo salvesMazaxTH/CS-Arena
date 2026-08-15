@@ -1,5 +1,5 @@
 //============================================================
-//  OVERLAYS (DE SKILL, HOVER/TOUCH NOS BOTÕES DE SKILL, E DE CLIQUE NO PORTRAIT)
+//  SKILL OVERLAYS (HOVER/TOUCH ON SKILL BUTTONS, AND CLICK ON PORTRAIT)
 // ============================================================
 
 import { elementEmoji } from "../../shared/ui/elementEmoji.js";
@@ -73,7 +73,7 @@ function renderGlossaryPanel(keys) {
 }
 
 // =========================
-// Helpers (fora da função)
+// Helpers (outside the function)
 // =========================
 
 function escapeHtml(value) {
@@ -127,7 +127,7 @@ function showSkillOverlay(button, skill, champion) {
   overlay.className = "skill-hover-overlay";
 
   // =========================
-  // Dados da skill
+  // Skill data
   // =========================
 
   const rawDesc =
@@ -172,7 +172,7 @@ function showSkillOverlay(button, skill, champion) {
             momentumCost
               ? `
             <div class="skill-meta-item">
-              <span class="meta-label">Custo:</span>
+              <span class="meta-label">Cost:</span>
               <span class="meta-value">
                 ${momentumCost} Momentum
               </span>
@@ -185,7 +185,7 @@ function showSkillOverlay(button, skill, champion) {
             skill.damageMode != null
               ? `
             <div class="skill-meta-item">
-              <span class="meta-label">Tipo de Dano:</span>
+              <span class="meta-label">Damage Type:</span>
               <span class="meta-value">
                 ${getDamageModeLabel(skill.damageMode)}
               </span>
@@ -211,7 +211,7 @@ function showSkillOverlay(button, skill, champion) {
           skill.element
             ? `
           <div class="skill-overlay-element-row">
-            <span class="meta-label">Elemento:</span>
+            <span class="meta-label">Element:</span>
             <span class="meta-value">
               ${elementEmoji[skill.element] || skill.element}
             </span>
@@ -221,12 +221,12 @@ function showSkillOverlay(button, skill, champion) {
         }
 
         <div class="skill-overlay-contact-row">
-          <span class="meta-label">Contato:</span>
+          <span class="meta-label">Contact:</span>
           <span class="meta-value">${skill.contact ? "✅" : "❌"}</span>
         </div>
 
         <div class="skill-overlay-content-priority-row">
-          <span class="meta-label">Prioridade:</span>
+          <span class="meta-label">Priority:</span>
           <span class="meta-value">
             ${
               skill.priority != null
@@ -256,7 +256,7 @@ function showSkillOverlay(button, skill, champion) {
   skillOverlay = overlay;
 
   // =========================
-  // Glossário
+  // Glossary
   // =========================
 
   let glossaryPanel = null;
@@ -267,7 +267,7 @@ function showSkillOverlay(button, skill, champion) {
   }
 
   // =========================
-  // Posicionamento do overlay
+  // Overlay Positioning
   // =========================
 
   const buttonRect = button.getBoundingClientRect();
@@ -288,7 +288,7 @@ function showSkillOverlay(button, skill, champion) {
   overlay.style.zIndex = 15000;
 
   // =========================
-  // Posicionamento do glossário
+  // Glossary Panel Positioning
   // =========================
 
   if (glossaryPanel) {
@@ -329,11 +329,11 @@ function removeSkillOverlay() {
 function getDamageModeLabel(mode) {
   switch (mode) {
     case "standard":
-      return "Normal";
+      return "Standard";
     case "piercing":
-      return "Perfurante";
+      return "Piercing";
     case "absolute":
-      return "Absoluto";
+      return "Absolute";
   }
 }
 
@@ -375,7 +375,7 @@ function createChampionOverlay(champion) {
 
   // --- Passiva ---
   const passive = champion?.passive;
-  const passiveName = passive?.name ? `PASSIVA — ${passive.name}` : "PASSIVA";
+  const passiveName = passive?.name ? `PASSIVE — ${passive.name}` : "PASSIVE";
 
   const rawPassiveDesc =
     typeof passive?.description === "function"
@@ -406,7 +406,7 @@ function createChampionOverlay(champion) {
   details.classList.add("portrait-overlay-details");
   details.innerHTML = `
     <div class="portrait-overlay-details-content">
-      <h3 class="portrait-overlay-details-title">Passiva</h3>
+      <h3 class="portrait-overlay-details-title">Passive</h3>
       <div class="portrait-overlay-passive-list">
         ${passiveItemHtml}
       </div>
@@ -433,7 +433,7 @@ function createChampionOverlay(champion) {
     });
   }
 
-  // Habilidades do campeão inimigo (fake action bar)
+  // Enemy champion skills (fake action bar)
   if (
     playerTeam !== null &&
     champion.team !== playerTeam &&
@@ -445,7 +445,7 @@ function createChampionOverlay(champion) {
 
     const skillsTitle = document.createElement("h3");
     skillsTitle.classList.add("portrait-overlay-details-title");
-    skillsTitle.textContent = "Habilidades";
+    skillsTitle.textContent = "Skills";
     skillsSection.appendChild(skillsTitle);
 
     const skillsBar = document.createElement("div");
@@ -472,12 +472,12 @@ function createChampionOverlay(champion) {
     details.appendChild(skillsSection);
   }
 
-  // Fechar ao clicar no backdrop
+  // Close when clicking on the backdrop
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) closeChampionOverlay();
   });
 
-  // Fechar com Escape
+  // Close with Escape
   const handleEsc = (e) => {
     if (e.key === "Escape") closeChampionOverlay();
   };
@@ -540,18 +540,18 @@ function updatePlayerNamesUI() {
 
   if (player1NameDisplayEl) {
     player1NameDisplayEl.textContent =
-      playerTeam === 1 ? "Você" : `Oponente (${player1Name || "Desconhecido"})`;
+      playerTeam === 1 ? "You" : `Opponent (${player1Name || "Unknown"})`;
   }
   if (player2NameDisplayEl) {
     player2NameDisplayEl.textContent =
-      playerTeam === 2 ? "Você" : `Oponente (${player2Name || "Desconhecido"})`;
+      playerTeam === 2 ? "You" : `Opponent (${player2Name || "Unknown"})`;
   }
 }
 
 // ============================================================
-//  CONFIGURAÇÃO (sobrescrita pelo servidor via "editModeUpdate")
-//  Apenas propriedades de UI/UX — o server filtra campos sensíveis
-//  como damageOutput antes de enviar.
+//  SETTINGS (overridden by the server via "editModeUpdate")
+//  Only UI/UX properties — the server filters sensitive fields
+//  like damageOutput before sending.
 // ============================================================
 
 const editMode = {
@@ -560,7 +560,7 @@ const editMode = {
   autoSelection: false,
   actMultipleTimesPerTurn: false,
   unavailableChampions: false,
-  freeCostSkills: false, // Habilidades não consomem recurso. (CLIENT-ONLY)
+  freeCostSkills: false, // Skills do not consume resources. (CLIENT-ONLY)
 };
 
 // ============================================================
@@ -576,15 +576,15 @@ const playerNames = new Map(); // slot → nome de usuário
 // Reserva/switch desativados.
 // const teamReserveQueue = new Map(); // team → string[]
 
-// --- Turno & combate ---
+// --- Turn & Combat ---
 let currentTurn = 1;
 let hasConfirmedEndTurn = false;
 let gameEnded = false;
 
-// --- Campeões ativos em campo ---
+// --- Active champions in the field ---
 const activeChampions = new Map();
 
-// --- Seleção de campeões ---
+// --- Champion Selection ---
 const TEAM_SIZE = 8;
 let selectedChampions = Array(TEAM_SIZE).fill(null);
 let championSelectionTimer = null;
@@ -592,9 +592,9 @@ let championSelectionTimeLeft = 0;
 let playerTeamConfirmed = false;
 /* let allAvailableChampionKeys = []; */
 let draggedChampionKey = null;
-let draggedFromSlotIndex = -1; // -1 = grade disponível, >= 0 = slot selecionado
+let draggedFromSlotIndex = -1; // -1 = available grid, >= 0 = selected slot
 
-// --- Temporizadores ---
+// --- Timers ---
 let disconnectionCountdownInterval = null;
 let countdownInterval = null;
 
@@ -606,23 +606,23 @@ let selectedEmblemKeys = [];
 let emblemTooltip = null;
 
 // ============================================================
-//  REFERÊNCIAS DO DOM
+//  DOM REFERENCES
 // ============================================================
 
-// --- Tela de login ---
+// --- Login Screen ---
 const loginScreen = document.getElementById("login-screen");
 const usernameInput = document.getElementById("username-input");
 const joinArenaBtn = document.getElementById("join-arena-btn");
 const loginMessage = document.getElementById("login-message");
 const disconnectionMessage = document.getElementById("disconnection-message");
 
-// --- Conteúdo principal (arena) ---
+// --- Main content (arena) ---
 const mainContent = document.getElementById("main-content");
 const skipSlotBtn = document.querySelector("#skip-slot-btn");
 const combatDialog = document.getElementById("combat-dialog");
 const combatDialogText = document.getElementById("combat-dialog-text");
 
-// --- Seleção de campeões ---
+// --- Champion Selection ---
 const championSelectionScreen = document.getElementById(
   "champion-selection-screen",
 );
@@ -638,17 +638,17 @@ const teamSelectionMessage = document.getElementById("team-selection-message");
 const emblemSelectionList = document.getElementById("emblemSelectionList");
 const selectedEmblemsCount = document.getElementById("selectedEmblemsCount");
 
-// --- Fim de jogo ---
+// --- Game Over ---
 const gameOverOverlay = document.getElementById("gameOverOverlay");
 const returnToLoginBtn = document.getElementById("returnToLoginBtn");
 
-// --- Surrender ---
+// --- Surrender (Give Up) ---
 const surrenderBtn = document.getElementById("surrender-btn");
 const surrenderOverlay = document.getElementById("surrender-overlay");
 const surrenderCancel = document.getElementById("surrender-cancel");
 const surrenderConfirm = document.getElementById("surrender-confirm");
 
-// --- Configurações de Áudio ---
+// --- Audio Settings (UI) ---
 const settingsBtn = document.getElementById("settings-btn");
 const settingsOverlay = document.getElementById("settings-overlay");
 const settingsClose = document.getElementById("settings-close");
@@ -666,7 +666,7 @@ const sfxVolumeSlider = document.getElementById("sfx-volume");
 // );
 
 // ============================================================
-//  EXPORTS GLOBAIS (usados por AnimsAndLogManager e outros)
+//  GLOBAL EXPORTS (used by AnimsAndLogManager and others)
 // ============================================================
 
 window.StatusIndicator = StatusIndicator;
@@ -677,7 +677,7 @@ window.resetCombat = () => {
 };
 
 // ============================================================
-//  GERENCIADOR DE ANIMAÇÕES DE COMBATE
+//  COMBAT ANIMATIONS MANAGER
 // ============================================================
 
 const combatAnimations = createCombatAnimationManager({
@@ -714,7 +714,7 @@ const combatAnimations = createCombatAnimationManager({
 audioManager.preloadAll();
 
 // ============================================================
-//  CONFIGURAÇÕES DE ÁUDIO (UI)
+//  AUDIO SETTINGS (UI)
 // ============================================================
 
 function openSettings() {
@@ -739,7 +739,7 @@ settingsOverlay.addEventListener("click", (e) => {
   if (e.target === settingsOverlay) closeSettings();
 });
 
-// Sincronização com AudioManager
+// Synchronization with AudioManager
 musicToggle.addEventListener("change", (e) => {
   audioManager.toggleMusic(e.target.checked);
 });
@@ -757,14 +757,14 @@ sfxVolumeSlider.addEventListener("input", (e) => {
 });
 
 // ============================================================
-//  LOGIN & CONEXÃO
+//  LOGIN & CONNECTION
 // ============================================================
 
 socket.on("editModeUpdate", (serverEditMode = {}) => {
   Object.assign(editMode, serverEditMode);
   // Auto-login in edit mode: if server enabled autoLogin, fill username and join
   if (editMode.enabled && editMode.autoLogin) {
-    // 🔥 pede slot automaticamente
+    // 🔥 request slot automatically
     socket.emit("requestPlayerSlot");
   }
 });
@@ -774,11 +774,11 @@ joinArenaBtn.addEventListener("click", () => {
   if (enteredUsername) {
     username = enteredUsername;
     socket.emit("requestPlayerSlot", username);
-    loginMessage.textContent = "Conectando...";
+    loginMessage.textContent = "Connecting...";
     joinArenaBtn.disabled = true;
     usernameInput.disabled = true;
   } else {
-    loginMessage.textContent = "Por favor, digite um nome de usuário.";
+    loginMessage.textContent = "Please enter a username.";
   }
 });
 
@@ -834,18 +834,18 @@ socket.on("serverFull", (message) => {
 });
 
 socket.on("allPlayersConnected", () => {
-  // Transição: login → conteúdo principal
+  // Transição: login → main content
   loginScreen.classList.remove("active");
   loginScreen.classList.add("hidden");
   mainContent.classList.remove("hidden");
   mainContent.classList.add("visible");
 
-  // Anexa o listener de pular slot (usa a ref já existente)
+  // Attach listener for skipping slot (uses existing ref)
   if (skipSlotBtn) {
     skipSlotBtn.addEventListener("click", skipCurrentSlot);
   }
 
-  // Reseta estado de seleção para novo jogo
+  // Reset selection state for new game
   selectedChampions = Array(TEAM_SIZE).fill(null);
   playerTeamConfirmed = false;
   confirmTeamBtn.disabled = true;
@@ -854,15 +854,15 @@ socket.on("allPlayersConnected", () => {
     championSelectionTimer = null;
   }
 
-  // Reseta flags do jogo
+  // Reset game flags
   gameEnded = false;
   window.gameEnded = false;
 
-  // Reseta botão de surrender
+  // Reset surrender button
   if (surrenderBtn) surrenderBtn.disabled = false;
   closeSurrenderDialog();
 
-  // Oculta sobreposição de fim de jogo
+  // Hide game over overlay
   gameOverOverlay.classList.remove(
     "active",
     "win-background",
@@ -892,7 +892,7 @@ socket.on("forceLogout", (message) => {
   loginScreen.classList.remove("hidden");
   loginScreen.classList.add("active");
 
-  // Limpa todo o estado do jogo
+  // Clear all game state
   activeChampions.clear();
   currentTurn = 1;
   playerId = null;
@@ -904,13 +904,13 @@ socket.on("forceLogout", (message) => {
   document.querySelector(".arena")?.classList.remove("arena--mirrored");
   document.body.classList.remove("perspective-team2");
 
-  // Reseta elementos de login
+  // Reset login elements
   usernameInput.value = "";
   usernameInput.disabled = false;
   joinArenaBtn.disabled = false;
-  loginMessage.textContent = "Entre com seu nome de usuário para jogar.";
+  loginMessage.textContent = "Enter your username to play.";
 
-  // Limpa timers de desconexão
+  // Clear disconnection timers
   if (disconnectionCountdownInterval) {
     clearInterval(disconnectionCountdownInterval);
     disconnectionCountdownInterval = null;
@@ -923,12 +923,12 @@ socket.on("forceLogout", (message) => {
 });
 
 // ============================================================
-//  DESCONEXÃO / RECONEXÃO DO OPONENTE
+//  OPPONENT DISCONNECTION / RECONNECTION
 // ============================================================
 
 socket.on("opponentDisconnected", ({ timeout }) => {
   let timeLeft = timeout / 1000;
-  disconnectionMessage.textContent = `Oponente desconectado. Retornando ao login em ${timeLeft} segundos se não reconectar.`;
+  disconnectionMessage.textContent = `Opponent disconnected. Returning to login in ${timeLeft} seconds if not reconnected.`;
   disconnectionMessage.classList.remove("hidden");
   disconnectionMessage.classList.add("visible");
 
@@ -944,7 +944,7 @@ socket.on("opponentDisconnected", ({ timeout }) => {
       disconnectionMessage.classList.remove("visible");
       disconnectionMessage.classList.add("hidden");
     } else {
-      disconnectionMessage.textContent = `Oponente desconectado. Retornando ao login em ${timeLeft} segundos se não reconectar.`;
+      disconnectionMessage.textContent = `Opponent disconnected. Returning to login in ${timeLeft} seconds if not reconnected.`;
     }
   }, 1000);
 });
@@ -954,7 +954,7 @@ socket.on("opponentReconnected", () => {
     clearInterval(disconnectionCountdownInterval);
     disconnectionCountdownInterval = null;
   }
-  disconnectionMessage.textContent = "Oponente reconectado!";
+  disconnectionMessage.textContent = "Opponent reconnected!";
   setTimeout(() => {
     disconnectionMessage.classList.remove("visible");
     disconnectionMessage.classList.add("hidden");
@@ -963,11 +963,11 @@ socket.on("opponentReconnected", () => {
 });
 
 // ============================================================
-//  CONFIRMAÇÃO AO FECHAR/RECARREGAR A ABA
+//  CONFIRMATION ON TAB CLOSE/RELOAD
 // ============================================================
 
 window.addEventListener("beforeunload", function (e) {
-  // Só exibe o aviso se o usuário estiver logado e não estiver na tela de login
+  // Only show the warning if the user is logged in and not on the login screen
   if (
     playerId !== null &&
     playerTeam !== null &&
@@ -975,18 +975,18 @@ window.addEventListener("beforeunload", function (e) {
     !gameEnded
   ) {
     const confirmationMessage =
-      "Tem certeza que deseja sair? Você pode perder seu progresso na partida.";
+      "Are you sure you want to leave? You may lose your progress in the match.";
     (e || window.event).returnValue = confirmationMessage; // Para navegadores antigos
     return confirmationMessage; // Para navegadores modernos
   }
 });
 
 // ============================================================
-//  NOMES DOS JOGADORES & PLACAR
+//  PLAYERS NAMES & SCOREBOARD
 // ============================================================
 
 // ============================================================
-//  SELEÇÃO DE CAMPEÕES
+//  CHAMPION SELECTION
 // ============================================================
 
 socket.on("startChampionSelection", ({ timeLeft }) => {
@@ -1008,7 +1008,7 @@ socket.on("startChampionSelection", ({ timeLeft }) => {
     if (championSelectionTimeLeft <= 0) {
       clearInterval(championSelectionTimer);
       if (!playerTeamConfirmed) {
-        // Tempo esgotado — envia a seleção atual; servidor preenche ausentes
+        // Time's up — send the current selection; server fills in the missing ones
         // keep a local copy of the roster for lineup UI
         playerRoster = selectedChampions.slice();
         renderLineupBanner();
@@ -1017,7 +1017,7 @@ socket.on("startChampionSelection", ({ timeLeft }) => {
           champions: selectedChampions,
         });
         teamSelectionMessage.textContent =
-          "Tempo esgotado! Equipe enviada. Aguardando o outro jogador...";
+          "Time's up! Team sent. Waiting for the other player...";
         playerTeamConfirmed = true;
         confirmTeamBtn.disabled = true;
       }
@@ -1035,7 +1035,7 @@ socket.on("allTeamsSelected", () => {
   // Repeat main2 twice because it's shorter than main
   audioManager.playMusic(["main", "main2", "main2"]);
 
-  // Reseta estado de seleção
+  // Reset selection state
   selectedChampions = Array(TEAM_SIZE).fill(null);
   playerTeamConfirmed = false;
   confirmTeamBtn.disabled = true;
@@ -1049,7 +1049,7 @@ socket.on("allTeamsSelected", () => {
 confirmTeamBtn.addEventListener("click", () => {
   if (playerTeamConfirmed) return;
   if (selectedChampions.includes(null)) {
-    alert("Por favor, selecione seus campeões para a equipe.");
+    alert("Please select your champions for the team.");
     return;
   }
   playerTeamConfirmed = true;
@@ -1059,13 +1059,13 @@ confirmTeamBtn.addEventListener("click", () => {
   renderLineupBanner();
   socket.emit("selectTeam", { team: playerTeam, champions: selectedChampions });
   teamSelectionMessage.textContent =
-    "Equipe confirmada! Aguardando o outro jogador...";
+    "Team confirmed! Waiting for the other player...";
   clearInterval(championSelectionTimer);
 });
 
-// --- Renderização da grade de campeões ---
+// --- CHAMPION GRID RENDERING ---
 
-// Função para ordenar campeões por ordem alfabética
+// Function to sort champions alphabetically
 function sortChampionKeysAlphabetically(keys) {
   return keys.sort((a, b) => {
     const nameA = championDB[a]?.name?.toLowerCase() || "";
@@ -1661,7 +1661,7 @@ function attachChampionCardInteractions(card, championKey, fromSlotIndex = -1) {
 function renderAvailableChampions() {
   availableChampionsGrid.innerHTML = "";
 
-  // Filtra campeões válidos
+  // Filter valid champions
   let allAvailableChampionKeys = Object.keys(championDB).filter((key) => {
     const champion = championDB[key];
     const isChampion = (champion.entityType ?? "champion") === "champion";
@@ -1673,7 +1673,7 @@ function renderAvailableChampions() {
     return true;
   });
 
-  // Ordena por ordem alfabética
+  // Sort alphabetically
   allAvailableChampionKeys = sortChampionKeysAlphabetically(
     allAvailableChampionKeys,
   );
@@ -1694,7 +1694,7 @@ function renderAvailableChampions() {
   updateSelectedChampionsUI();
 }
 
-// --- Clique em card de campeão ---
+// --- Click on champion card ---
 
 function getDraftSelectableChampionKeys(excludeKeys = []) {
   return Object.keys(championDB).filter((key) => {
@@ -1745,7 +1745,7 @@ function autofillSelectedChampions() {
   selectedChampions = nextSelection;
   updateSelectedChampionsUI();
   teamSelectionMessage.textContent =
-    "Slots vazios preenchidos automaticamente com campeões aleatórios.";
+    "Empty slots automatically filled with random champions.";
 }
 
 function handleChampionCardClick(championKey) {
@@ -1760,7 +1760,7 @@ function handleChampionCardClick(championKey) {
       selectedChampions[emptySlotIndex] = championKey;
     } else {
       alert(
-        "Todos os slots estão preenchidos. Remova um para adicionar outro.",
+        "All slots are filled. Remove one to add another.",
       );
     }
   }
@@ -1768,7 +1768,7 @@ function handleChampionCardClick(championKey) {
   renderEmblemSelectionUI();
 }
 
-// --- Atualização visual dos slots selecionados ---
+// --- Update selected champions slots UI ---
 
 function updateSelectedChampionsUI() {
   selectedChampionsSlots.innerHTML = "";
@@ -1800,7 +1800,7 @@ function updateSelectedChampionsUI() {
     selectedChampionsSlots.appendChild(slot);
   });
 
-  // Marca os cards na grade disponível como selecionados
+  // Mark the cards in the available grid as selected
   document
     .querySelectorAll(".available-champions-grid .champion-card")
     .forEach((card) => {
@@ -1916,7 +1916,7 @@ function requestSummonFromLineup(chip) {
   if (!championKey) return;
 
   if (chip.classList.contains("materialized")) {
-    logCombat("Esse campeão já foi invocado nesta partida.");
+    logCombat("This champion has already been summoned this match.");
     return;
   }
   if (pendingSummonChampionKey) return;
@@ -1968,7 +1968,7 @@ function chooseFirstChampion(championKey) {
   firstChoiceSelected = championKey;
   firstChoicePending = false; // disable further picks locally until server ack
   // show waiting state
-  firstChoiceChips.innerHTML = `<div style="color:#e6fff2;">Aguardando oponente...</div>`;
+  firstChoiceChips.innerHTML = `<div style="color:#e6fff2;">Waiting for opponent...</div>`;
   // highlight chosen chip in banner
   Array.from(lineupChips.children).forEach((c) => {
     c.classList.toggle("selected", c.dataset.championKey === championKey);
@@ -2062,7 +2062,7 @@ function handleDrop(e) {
   if (isNaN(targetSlotIndex)) return;
 
   if (selectedChampions[targetSlotIndex] === null) {
-    // Soltando em slot vazio
+    // Dropping in empty slot
     if (draggedFromSlotIndex === -1) {
       selectedChampions[targetSlotIndex] = droppedChampionKey;
     } else {
@@ -2070,7 +2070,7 @@ function handleDrop(e) {
       selectedChampions[draggedFromSlotIndex] = null;
     }
   } else {
-    // Soltando em slot ocupado — troca
+    // Dropping in occupied slot — swap
     const temp = selectedChampions[targetSlotIndex];
     selectedChampions[targetSlotIndex] = droppedChampionKey;
     if (draggedFromSlotIndex !== -1) {
@@ -2091,14 +2091,14 @@ function handleDrop(e) {
   updateSelectedChampionsUI();
 }
 
-// --- Timer de seleção ---
+// --- Selection timer ---
 
 function updateChampionSelectionTimerUI() {
   const minutes = Math.floor(championSelectionTimeLeft / 60);
   const seconds = championSelectionTimeLeft % 60;
-  teamSelectionMessage.textContent = `Tempo restante para seleção: ${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  teamSelectionMessage.textContent = `Time remaining to select champions: ${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   if (playerTeamConfirmed) {
-    teamSelectionMessage.textContent += " (Equipe confirmada!)";
+    teamSelectionMessage.textContent += " (Team confirmed!)";
   }
 }
 
@@ -2112,10 +2112,10 @@ socket.on("championRemoved", (championId) => {
   sortTeamContainersByCombatSlot();
 });
 
-/** Cria e renderiza um novo campeão no campo de batalha. */
+/** Creates and renders a new champion on the battlefield. */
 function createNewChampion(championData) {
   const baseData = championDB[championData.championKey];
-  if (!baseData) throw new Error("Campeão inválido");
+  if (!baseData) throw new Error("Invalid champion");
 
   const champion = Champion.fromBaseData(
     baseData,
@@ -2137,16 +2137,16 @@ function createNewChampion(championData) {
     onSkillClick: handleSkillUsage,
     onDelete: deleteChampion,
     onPortraitClick: openChampionOverlay,
-    // Adiciona overlay de hover/touch no retrato
+    // Adds hover/touch overlay on the portrait
     onPortraitHover: (champ) => showQuickStatsOverlay(champ),
     onPortraitHoverOut: hideQuickStatsOverlay,
-    // Adiciona overlay de hover/touch nas skills
+    // Adds hover/touch overlay on the skills
     showSkillOverlay: showSkillOverlay,
     removeSkillOverlay: removeSkillOverlay,
     editMode: editMode,
   });
 
-  // Adiciona listeners para hover/touch no retrato
+  // Adds listeners for hover/touch on the portrait
   setTimeout(() => {
     const el = teamContainer.querySelector(
       `.champion[data-champion-id='${champion.id}'] .portrait`,
@@ -2215,7 +2215,7 @@ function sortTeamContainersByCombatSlot() {
   }
 }
 /*   */
-// Overlay de stats rápidos (hover/touch no retrato)
+// Quick stats overlay (hover/touch on the portrait)
 let quickStatsOverlay = null;
 
 function showQuickStatsOverlay(champion) {
@@ -2238,39 +2238,39 @@ function showQuickStatsOverlay(champion) {
 
   // Numéricos baseados em comparação
   statRows.push({
-    label: "Ataque",
+    label: "Attack",
     value: champion.Attack,
     base: champion.baseAttack,
   });
 
   statRows.push({
-    label: "Defesa",
+    label: "Defense",
     value: champion.Defense,
     base: champion.baseDefense,
   });
 
   statRows.push({
-    label: "Velocidade",
+    label: "Speed",
     value: champion.Speed,
     base: champion.baseSpeed,
   });
 
   statRows.push({
-    label: "Esquiva",
+    label: "Evasion",
     value: champion.Evasion ?? 0,
     base: champion.baseEvasion,
     percent: true,
   });
 
   statRows.push({
-    label: "Crítico",
+    label: "Critical",
     value: champion.Critical ?? 0,
     base: champion.baseCritical,
     percent: true,
   });
 
   statRows.push({
-    label: "Roubo de Vida",
+    label: "Life Steal",
     value: champion.LifeSteal ?? 0,
     base: champion.baseLifeSteal,
     percent: true,
@@ -2338,27 +2338,27 @@ function hideQuickStatsOverlay() {
   }
 }
 
-/** Remove um campeão do time local (edit mode / debug). */
+/** Remove a champion from the local team (edit mode / debug). */
 function deleteChampion(championId) {
   const champion = activeChampions.get(championId);
   if (!(champion instanceof Champion)) {
-    console.error("Campeão não encontrado.");
+    console.error("Champion not found.");
     return;
   }
   if (champion.team !== playerTeam) {
-    alert("Você só pode remover campeões do seu time.");
+    alert("You can only remove champions from your team.");
     return;
   }
-  if (confirm("Tem certeza que deseja remover este campeão?")) {
+  if (confirm("Are you sure you want to remove this champion?")) {
     socket.emit("removeChampion", { championId });
   }
 }
 
 // ============================================================
-//  USO DE HABILIDADES & SELEÇÃO DE ALVOS
+//  SKILL USAGE & TARGET SELECTION
 // ============================================================
 
-/** Extrai o contexto (campeão + skill) a partir de um botão de habilidade. */
+/** Extracts the context (champion + skill) from a skill button. */
 function getSkillContext(button) {
   const userId = button.dataset.championId;
   const skillKey = button.dataset.skillKey;
@@ -2372,10 +2372,10 @@ function getSkillContext(button) {
   return { user, skill, userId, skillKey };
 }
 
-/** Handler principal: valida e solicita uso de habilidade ao servidor. */
+/** Main handler: validates and requests skill usage from the server. */
 async function handleSkillUsage(button) {
   if (window.gameEnded) {
-    alert("O jogo já terminou. Nenhuma ação pode ser realizada.");
+    alert("The game has ended. No actions can be performed.");
     return;
   }
 
@@ -2387,12 +2387,12 @@ async function handleSkillUsage(button) {
   const { user, userId, skillKey, skill } = ctx;
 
   if (user.team !== playerTeam) {
-    alert("Você só pode usar habilidades de campeões do seu time.");
+    alert("You can only use skills of champions on your team.");
     return;
   }
 
   if (!editMode.actMultipleTimesPerTurn && user.hasActedThisTurn) {
-    alert(`${user.name} já agiu neste turno.`);
+    alert(`${user.name} has already acted this turn.`);
     return;
   }
 
@@ -2401,18 +2401,18 @@ async function handleSkillUsage(button) {
   console.log(
     "CLIENT CHECK: ",
     user.name,
-    "tentando usar",
+    "trying to use",
     skill.name,
-    `(Custo: ${cost}, Momentum: ${user.momentum})`,
+    `(Cost: ${cost}, Momentum: ${user.momentum})`,
   );
 
   if (!editMode.freeCostSkills && cost > user.momentum) {
-    alert(`Momentum insuficiente.`);
+    alert(`Not enough Momentum.`);
     user.updateUI(currentTurn);
     return;
   }
 
-  // Solicita autorização ao servidor antes de resolver alvos
+  // Requests authorization from the server before resolving targets
   socket.emit("requestSkillUse", { userId, skillKey });
 }
 
@@ -2423,7 +2423,7 @@ socket.on("skillDenied", (message) => {
 
 socket.on("skillApproved", async ({ userId, skillKey }) => {
   console.log(
-    `[SkillApproved] Resolvendo alvos para ${userId} usando ${skillKey}`,
+    `[SkillApproved] Resolving targets for ${userId} using ${skillKey}`,
   );
   const user = activeChampions.get(userId);
   if (!user) return;
@@ -2447,9 +2447,9 @@ socket.on("skillApproved", async ({ userId, skillKey }) => {
   const skill = user.skills.find((s) => s.key === skillKey);
   if (!skill) return;
 
-  // Coleta alvos no client
+  // Collects targets on the client
   const targets = await collectClientTargets(user, skill);
-  console.log("[SkillApproved] Alvos coletados:", targets);
+  console.log("[SkillApproved] Collected targets:", targets);
   if (!targets) return;
 
   const targetIds = {};
@@ -2457,21 +2457,21 @@ socket.on("skillApproved", async ({ userId, skillKey }) => {
     targetIds[role] = targets[role].id;
   }
 
-  // Marca a ação somente após resolução de alvos
+  // Marks the action only after resolving targets
   if (!editMode.actMultipleTimesPerTurn) {
     user.markActionTaken();
     user.updateUI(currentTurn);
   }
 
   socket.emit("useSkill", { userId, skillKey, targetIds });
-  // Habilita o undo imediatamente após enfileirar a ação
+  // Enables undo immediately after queuing the action
   document.getElementById("undo-actions-btn").disabled = false;
   if (!editMode.actMultipleTimesPerTurn) {
     advanceActionBarSlot(userId);
   }
 });
 
-// --- Coleta de alvos no client ---
+// --- Collects targets on the client ---
 
 async function collectClientTargets(user, skill) {
   if (!skill || !Array.isArray(skill.targetSpec)) return null;
@@ -2484,7 +2484,7 @@ async function collectClientTargets(user, skill) {
     (s) => s.type === "all" || s.type === "all:enemy" || s.type === "all:ally",
   );
 
-  // Se for habilidade global, não abrir UI de seleção
+  // If it's a global skill, don't open the selection UI
   if (hasGlobal) {
     return {};
   }
@@ -2519,7 +2519,7 @@ async function collectClientTargets(user, skill) {
   const hasTargets = Object.keys(targets).length > 0;
 
   if (!hasTargets) {
-    alert("Não existem alvos válidos para esta habilidade.");
+    alert("There are no valid targets for this skill.");
     return null;
   }
 
@@ -2534,21 +2534,21 @@ async function selectTargetForRole(
   chosenTargets,
   enforceUnique,
 ) {
-  // Helper: filtra alvos já escolhidos quando unicidade é exigida
+  // Helper: filters already chosen targets when uniqueness is enforced
   const filterUnique = (list) =>
     enforceUnique ? list.filter((c) => !chosenTargets.has(c.id)) : list;
 
   const role = spec.type;
 
-  console.log(`[selectTargetForRole] Selecionando alvo para role: ${role}`);
+  console.log(`[selectTargetForRole] Selecting target for role: ${role}`);
 
-  // SELF
+  // SELF (automatic)
   if (role === "self") {
     chosenTargets.add(user.id);
     return { self: user };
   }
 
-  // ALLY (automático — primeiro aliado disponível)
+  // ALLY (automatic — first available ally)
   if (role === "ally") {
     let allies = championsInField.filter(
       (c) => c.team === user.team && c.id !== user.id,
@@ -2559,7 +2559,7 @@ async function selectTargetForRole(
     return { ally: allies[0] };
   }
 
-  // SELECT ALLY (seleção manual)
+  // SELECT ALLY (manual selection)
   if (role === "select:ally") {
     let candidates = championsInField.filter((c) => c.team === user.team);
 
@@ -2571,7 +2571,7 @@ async function selectTargetForRole(
 
     const target = await createTargetSelectionOverlay(
       candidates,
-      "Escolha um Aliado",
+      "Choose an Ally",
     );
 
     if (target === null) return null;
@@ -2581,10 +2581,10 @@ async function selectTargetForRole(
     return { ally: target };
   }
 
-  // ALLY/ENEMY GLOBAL (sem seleção, afeta todos os campeões do tipo)
+  // ALLY/ENEMY GLOBAL (no selection, affects all champions of the type)
   if (role === "all:ally" || role === "all" || role === "all:enemy") return {};
 
-  // ENEMY (seleção manual)
+  // ENEMY (manual selection)
   if (role === "enemy") {
     enemyCounter.count++;
 
@@ -2595,7 +2595,7 @@ async function selectTargetForRole(
 
     const target = await createTargetSelectionOverlay(
       candidates,
-      index === 1 ? "Selecione o INIMIGO" : `Selecione o INIMIGO ${index}`,
+      index === 1 ? "Select the ENEMY" : `Select the ENEMY ${index}`,
     );
 
     console.log(
@@ -2624,13 +2624,13 @@ async function selectTargetForRole(
 // --- Overlay de seleção de alvo ---
 
 function createTargetSelectionOverlay(candidates, title) {
-  // Remove overlay de skill se estiver aberto (corrige bug mobile)
+  // Remove skill overlay if open (fixes mobile bug)
   removeSkillOverlay && removeSkillOverlay();
   return new Promise((resolve) => {
-    // se não houver candidatos, evitar abrir a UI de seleção vazia
+    // if there are no candidates, avoid opening the empty selection UI
     if (!Array.isArray(candidates) || candidates.length === 0) {
       console.log(
-        `[createTargetSelectionOverlay] Nenhum candidato disponível para "${title}". Pulando seleção. Resolvendo undefined.`,
+        `[createTargetSelectionOverlay] No candidates available for "${title}". Skipping selection. Resolving undefined.`,
       );
       resolve(undefined);
       return;
@@ -2664,7 +2664,7 @@ function createTargetSelectionOverlay(candidates, title) {
 
     overlay.appendChild(container);
 
-    // Clique fora cancela a seleção
+    // Click outside cancels the selection
     overlay.addEventListener("click", (e) => {
       if (e.target === overlay) {
         closeTargetOverlay(overlay);
@@ -2721,8 +2721,8 @@ function renderLineupBanners(lineupsByTeam = {}) {
         return `
           <div
             class="${chipClass}"
-            title="Campeão não revelado"
-            aria-label="Campeão não revelado"
+            title="Champion not revealed"
+            aria-label="Champion not revealed"
           >
             <span class="lineup-chip-unknown">?</span>
           </div>
@@ -2817,7 +2817,7 @@ socket.on("actionsCanceled", () => {
   if (playerTeam !== null) initActionBar();
 });
 
-/** Aplica a transição de turno no client: reseta ações e atualiza a UI. */
+/** Applies the turn transition on the client: resets actions and updates the UI. */
 function applyTurnUpdate(turn) {
   currentTurn = turn;
   updateTurnDisplay(currentTurn);
@@ -2838,28 +2838,99 @@ function applyTurnUpdate(turn) {
     });
   });
 
-  // Inicializa seleção de ações por slot
+  // Initializes action selection by slot
   if (playerTeam !== null) initActionBar();
 
-  logCombat(`Início do Turno ${currentTurn}`);
+  logCombat(`Start of Turn ${currentTurn}`);
 }
+
+let turnTransitionTimer = null;
+let turnTransitionSequence = 0;
+let isFirstTurnUpdate = true;
+
+function showTurnTransition(turn) {
+  const overlay = document.getElementById("turnTransitionOverlay");
+  const number = document.getElementById("turnTransitionNumber");
+
+  if (!overlay || !number) return;
+
+  const sequence = ++turnTransitionSequence;
+
+  clearTimeout(turnTransitionTimer);
+
+  // Garante que o overlay comece mostrando o novo turno
+  number.textContent = `TURN ${turn}`;
+
+  // Reset da animação do texto
+  number.classList.remove("is-changing");
+
+  // Força o browser a reconhecer o estado inicial
+  void number.offsetWidth;
+
+  // Entrada do overlay
+  overlay.classList.add("is-visible");
+
+  // Mantém o banner visível por um instante
+  turnTransitionTimer = setTimeout(() => {
+    if (sequence !== turnTransitionSequence) return;
+
+    // Fade/blur do turno atual
+    number.classList.add("is-changing");
+
+    setTimeout(() => {
+      if (sequence !== turnTransitionSequence) return;
+
+      number.textContent = `TURN ${turn}`;
+
+      // Força reflow para reiniciar a entrada
+      void number.offsetWidth;
+
+      number.classList.remove("is-changing");
+
+      // Depois de mostrar o novo turno, fecha o overlay
+      turnTransitionTimer = setTimeout(() => {
+        if (sequence !== turnTransitionSequence) return;
+
+        overlay.classList.remove("is-visible");
+      }, 700);
+
+    }, 230);
+
+  }, 700);
+}
+
+let lastDisplayedTurn = null;
 
 function updateTurnDisplay(turn) {
   const turnDisplay = document.querySelector(".turn-display");
   const turnText = turnDisplay?.querySelector("p");
-  if (turnText) turnText.innerHTML = `Turno ${turn}`;
+
+  if (turnText) {
+    turnText.textContent = `Turn ${turn}`;
+  }
+
+  if (isFirstTurnUpdate) {
+    isFirstTurnUpdate = false;
+    lastDisplayedTurn = turn;
+    return;
+  }
+
+  if (turn !== lastDisplayedTurn) {
+    lastDisplayedTurn = turn;
+    showTurnTransition(turn);
+  }
 }
 
 function endTurn() {
   if (hasConfirmedEndTurn) {
-    alert("Você já confirmou o fim do turno. Aguardando o outro jogador.");
+    alert("You have already confirmed the end of the turn. Waiting for the other player.");
     return;
   }
 
   socket.emit("endTurn");
   hasConfirmedEndTurn = true;
   removeActionBar();
-  logCombat("Você confirmou o fim do turno. Aguardando o outro jogador...");
+  logCombat("You have confirmed the end of the turn. Waiting for the other player...");
 
   document.getElementById("undo-actions-btn").disabled = false;
 }
@@ -2868,7 +2939,7 @@ socket.on("playerConfirmedEndTurn", (playerSlot) => {
   const playerName = playerNames.get(playerSlot);
   if (playerSlot !== playerTeam - 1) {
     logCombat(
-      `${playerName} confirmou o fim do turno. Aguardando sua confirmação.`,
+      `${playerName} confirmed the end of the turn. Waiting for your confirmation.`,
     );
   }
 });

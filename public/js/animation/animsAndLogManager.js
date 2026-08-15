@@ -1658,7 +1658,6 @@ export function createCombatAnimationManager(deps) {
 
     if (currentTurn !== undefined) {
       deps.setCurrentTurn(currentTurn);
-      deps.updateTurnDisplay(currentTurn);
     }
 
     if (!Array.isArray(champions)) return;
