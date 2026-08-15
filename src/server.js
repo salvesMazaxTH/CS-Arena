@@ -1768,6 +1768,14 @@ io.on("connection", (socket) => {
 
     const team = player.team;
 
+    // Invocação da line-up bloqueada no primeiro turno.
+    if (match.getCurrentTurn() === 1) {
+      return socket.emit(
+        "actionFailed",
+        "Você não pode invocar campeões da line-up no primeiro turno.",
+      );
+    }
+
     if (match.hasSummonedThisTurn(team)) {
       return socket.emit(
         "actionFailed",

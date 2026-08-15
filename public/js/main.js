@@ -1231,7 +1231,13 @@ function getPlayerRosterForEmblemEligibility() {
 
 function getEmblemShortCode(emblem) {
   if (!emblem?.name) return "EM";
-  const words = emblem.name.split(/\s+/).filter(Boolean).slice(0, 2);
+
+  const realName = emblem.name.replace(/^Emblem of(?: the)?\s+/i, "").trim();
+
+  if (!realName) return "EM";
+
+  const words = realName.split(/\s+/).filter(Boolean).slice(0, 2);
+
   return words.map((word) => word[0]?.toUpperCase() || "").join("") || "EM";
 }
 
@@ -2698,15 +2704,38 @@ function renderLineupBanners(lineupsByTeam = {}) {
 
   opponentBanner.classList.remove("hidden");
   opponentBanner.setAttribute("aria-hidden", "false");
+
   opponentChipsContainer.innerHTML = enemyLineup
     .map((champKey, idx) => {
       const champion = champKey ? championDB[champKey] : null;
-      const title = champKey ? champion?.name || champKey : `Slot ${idx + 1}`;
+
       const isMaterialized =
         !!champKey &&
         materializedLineupChampions.has(`${enemyTeam}:${champKey}`);
-      const chipClass = `lineup-chip${isMaterialized ? " materialized" : ""}`;
-      return `<div class="${chipClass}" title="${title}">${renderLineupChipContent(champion, idx)}</div>`;
+
+      const chipClass = `lineup-chip${
+        isMaterialized ? " materialized" : " unrevealed"
+      }`;
+
+      if (!isMaterialized) {
+        return `
+          <div
+            class="${chipClass}"
+            title="Campeão não revelado"
+            aria-label="Campeão não revelado"
+          >
+            <span class="lineup-chip-unknown">?</span>
+          </div>
+        `;
+      }
+
+      const title = champion?.name || champKey;
+
+      return `
+        <div class="${chipClass}" title="${title}">
+          ${renderLineupChipContent(champion, idx)}
+        </div>
+      `;
     })
     .join("");
 }

@@ -1,11 +1,12 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
-  name: "O Raio Pode Cair Duas Vezes",
+  name: "The Lightning Strikes Twice",
   initialChance: 1,
   chanceIncreasePerTurn: 5,
+
   description(champion) {
-    return `As habilidades de dano Elias Cross têm <b>${champion.runtime.passiveChance ?? this.initialChance}%</b> de chance de se repetirem. A cada turno, ele ganha <b>+${this.chanceIncreasePerTurn}%</b> de chance. `;
+    return `Elias Cross's damaging abilities have a <b>${champion.runtime.passiveChance ?? this.initialChance}%</b> chance to repeat. Each turn, he gains <b>+${this.chanceIncreasePerTurn}%</b> chance.`;
   },
 
   hookScope: {
@@ -19,7 +20,9 @@ export default {
 
     const didDealMainDamage = events.some(
       (e) =>
-        (e.damageDepth ?? 0) === 0 && e.sourceId === owner.id && e.amount > 0,
+        (e.damageDepth ?? 0) === 0 &&
+        e.sourceId === owner.id &&
+        e.amount > 0,
     );
 
     if (!didDealMainDamage) return;
@@ -29,12 +32,12 @@ export default {
     const chance = owner.runtime.passiveChance / 100;
     const roll = Math.random();
 
-    console.log(`[PASSIVA - Elias] roll=${roll} | chance=${chance}`);
+    console.log(`[PASSIVE - Elias] roll=${roll} | chance=${chance}`);
 
     if (roll >= chance) return;
 
     context.registerDialog({
-      message: `<b>[Passiva – "${this.name}"]</b>`,
+      message: `<b>[Passive – "${this.name}"]</b>`,
       sourceId: owner.id,
     });
 
@@ -70,8 +73,13 @@ export default {
     owner.runtime.passiveTempBuffs = activeBuffs;
 
     const next =
-      owner.runtime.passiveChance - expired + this.chanceIncreasePerTurn;
+      owner.runtime.passiveChance -
+      expired +
+      this.chanceIncreasePerTurn;
 
-    owner.runtime.passiveChance = Math.max(0, Math.min(100, next));
+    owner.runtime.passiveChance = Math.max(
+      0,
+      Math.min(100, next),
+    );
   },
 };

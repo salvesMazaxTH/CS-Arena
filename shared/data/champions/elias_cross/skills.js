@@ -4,15 +4,17 @@ import totalBlock from "../totalBlock.js";
 
 const eliasCrossSkills = [
   // =========================
-  // Bloqueio Total (global)
+  // Total Block (global)
   // =========================
   totalBlock,
+
   // =========================
-  // Habilidades Especiais
+  // Special Abilities
   // =========================
+
   {
-    key: "impacto_relampago",
-    name: "Impacto Relâmpago",
+    key: "lightning_impact",
+    name: "Lightning Impact",
     bf: 70,
     contact: false,
     damageMode: "standard",
@@ -21,19 +23,28 @@ const eliasCrossSkills = [
     priority: 0,
     cannotBeEvaded: true,
     element: "lightning",
+
     description() {
-      return `Se o alvo tiver "Condutor", causa ${this.damageBonus} de dano absoluto a mais. Esse ataque não pode ser esquivado.`;
+      return `If the target has Conductor, deals ${this.damageBonus} bonus Absolute Damage. This attack cannot be evaded.`;
     },
+
     targetSpec: ["enemy"],
+
     resolve({ user, targets, context }) {
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
 
       const isOverloaded = enemy.hasStatusEffect("conductor");
+
       /* console.log(
-        `Impacto Relâmpago: ${formatChampionName(enemy)} ${isOverloaded ? "está" : "não está"} sobrecarregado. StatusEffects do alvo: ${[...enemy.statusEffects.keys()].join(", ")}`,
+        `Lightning Impact: ${formatChampionName(enemy)} ${
+          isOverloaded ? "has" : "does not have"
+        } Conductor. Target Status Effects: ${[
+          ...enemy.statusEffects.keys(),
+        ].join(", ")}`,
       );
       */
+
       const results = [];
 
       const pushResult = (r) => {
@@ -42,7 +53,9 @@ const eliasCrossSkills = [
       };
 
       const result = new DamageEvent({
-        baseDamage: isOverloaded ? baseDamage + this.damageBonus : baseDamage,
+        baseDamage: isOverloaded
+          ? baseDamage + this.damageBonus
+          : baseDamage,
         attacker: user,
         defender: enemy,
         skill: this,
@@ -58,8 +71,8 @@ const eliasCrossSkills = [
   },
 
   {
-    key: "carga_latente",
-    name: "Carga Latente",
+    key: "latent_charge",
+    name: "Latent Charge",
     bf: 25,
     contact: false,
     damageMode: "standard",
@@ -67,23 +80,33 @@ const eliasCrossSkills = [
     damageBonusMode: "absolute",
     priority: 0,
     element: "lightning",
+
     description() {
-      return `Elias Cross ganha +35% de chance na passiva neste turno e no próximo (expira em currentTurn + 2). Se o alvo tiver "Condutor", causa ${this.damageBonus} de dano absoluto a mais.`;
+      return `Elias Cross gains +35% Passive chance this turn and the next. If the target has Conductor, deals ${this.damageBonus} bonus Absolute Damage.`;
     },
+
     targetSpec: ["enemy", "self"],
+
     resolve({ user, targets, context }) {
       const [enemy] = targets;
 
-      // Aplica o bônus temporário e guarda o valor REAL aplicado para expirar corretamente.
+      // Applies the temporary bonus and stores the actual amount applied
+      // so it can be correctly removed when it expires.
       const initialChance = user.passive?.initialChance ?? 1;
-      const currentChance = user.runtime.passiveChance ?? initialChance;
+      const currentChance =
+        user.runtime.passiveChance ?? initialChance;
+
       const nextChance = Math.min(100, currentChance + 35);
-      const appliedBonus = Math.max(0, nextChance - currentChance);
+      const appliedBonus = Math.max(
+        0,
+        nextChance - currentChance,
+      );
 
       user.runtime.passiveChance = nextChance;
 
       if (appliedBonus > 0) {
         user.runtime.passiveTempBuffs ??= [];
+
         user.runtime.passiveTempBuffs.push({
           amount: appliedBonus,
           expiresAtTurn: (context?.currentTurn ?? 0) + 2,
@@ -91,10 +114,13 @@ const eliasCrossSkills = [
       }
 
       const baseDamage = (user.Attack * this.bf) / 100;
-      const isOverloaded = enemy.hasStatusEffect("conductor");
+      const isOverloaded =
+        enemy.hasStatusEffect("conductor");
 
       const result = new DamageEvent({
-        baseDamage: isOverloaded ? baseDamage + this.damageBonus : baseDamage,
+        baseDamage: isOverloaded
+          ? baseDamage + this.damageBonus
+          : baseDamage,
         attacker: user,
         defender: enemy,
         skill: this,
@@ -108,8 +134,8 @@ const eliasCrossSkills = [
   },
 
   {
-    key: "tempestade_de_raios",
-    name: "Tempestade de Raios",
+    key: "lightning_storm",
+    name: "Lightning Storm",
     bf: 120,
 
     damageMode: "standard",
@@ -129,14 +155,16 @@ const eliasCrossSkills = [
     element: "lightning",
 
     description() {
-      return `Causa dano a TODOS os personagens, não afeta o próprio Elias. Personagens com 'Afinidade: Raio' ou 'Terra' sofrem apenas ${this.reductedDamagePercent}% do dano. No entanto, Elias sofre ${this.recoilDamage}% de sua vida máxima como dano absoluto de recuo. Quaisquer dos alvos que estiverem abaixo de 17% do HP são obliterados, e caso tenham "Condutor", o percentual necessário é apenas 25%. Esse ataque não pode ser esquivado.`;
+      return `Deals damage to ALL characters except Elias Cross. Characters with Lightning or Earth Affinity take only ${this.reductedDamagePercent}% damage. However, Elias Cross takes Absolute Recoil Damage equal to ${this.recoilDamage}% of his Max HP. Targets below 17% HP are obliterated, or below 25% HP if they have Conductor. This attack cannot be evaded.`;
     },
 
     finishingType: "obliterate",
 
     finishingRule(ctx) {
       const target = ctx.defender;
-      const hasOverload = target.hasStatusEffect("conductor");
+      const hasOverload =
+        target.hasStatusEffect("conductor");
+
       return hasOverload ? 0.25 : 0.17;
     },
 
@@ -153,8 +181,10 @@ const eliasCrossSkills = [
           ? [targets]
           : [];
 
-      // acha uma única iteração válida pra acoplar o recoil
-      const recoilIndex = targetList.findIndex((t) => t?.alive && t !== user);
+      // Find a single valid iteration to attach the recoil to.
+      const recoilIndex = targetList.findIndex(
+        (t) => t?.alive && t !== user,
+      );
 
       for (let i = 0; i < targetList.length; i++) {
         const target = targetList[i];
@@ -166,16 +196,22 @@ const eliasCrossSkills = [
 
         let finalBaseDamage = baseDamage;
 
-        if (affinities.includes("lightning") || affinities.includes("earth")) {
-          finalBaseDamage = baseDamage * (this.reductedDamagePercent / 100);
+        if (
+          affinities.includes("lightning") ||
+          affinities.includes("earth")
+        ) {
+          finalBaseDamage =
+            baseDamage *
+            (this.reductedDamagePercent / 100);
         }
 
-        // 🔥 injeta recoil em UMA única execução válida
+        // 🔥 Inject recoil into a single valid execution.
         if (i === recoilIndex) {
           context.extraDamageQueue ??= [];
 
           context.extraDamageQueue.push({
-            baseDamage: (user.maxHP * this.recoilDamage) / 100,
+            baseDamage:
+              (user.maxHP * this.recoilDamage) / 100,
             mode: this.recoilDamageMode,
             attacker: user,
             defender: user,
@@ -194,19 +230,26 @@ const eliasCrossSkills = [
           allChampions: context?.allChampions,
         }).execute();
 
-        if (Array.isArray(result)) results.push(...result);
-        else if (result) results.push(result);
+        if (Array.isArray(result)) {
+          results.push(...result);
+        } else if (result) {
+          results.push(result);
+        }
       }
 
-      const eliasUltLog = `${formatChampionName(user)} sofreu ${this.recoilDamage}% de sua vida máxima como dano absoluto de recuo.`;
+      const eliasUltLog = `${formatChampionName(
+        user,
+      )} took ${this.recoilDamage}% of his Max HP as Absolute Recoil Damage.`;
 
-      // injeta em apenas UM resultado (o primeiro válido)
+      // Inject into a single result (the first valid one).
       if (results.length > 0) {
-        results[0].log = (results[0].log ?? "") + `\n${eliasUltLog}`;
+        results[0].log =
+          (results[0].log ?? "") +
+          `\n${eliasUltLog}`;
       } else {
-        // fallback opcional
+        // Optional fallback.
         console.warn(
-          "Tempestade de Raios: nenhum resultado para anexar log de recoil",
+          "Lightning Storm: no result available to append recoil log",
         );
       }
 
