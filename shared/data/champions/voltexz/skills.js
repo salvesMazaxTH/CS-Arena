@@ -14,7 +14,7 @@ const voltexzSkills = [
   {
     key: "relampagos_gemeos",
     name: "Relâmpagos Gêmeos",
-    bf: 45,
+    bf: 40,
     contact: false,
     damageMode: "standard",
     priority: 0,
