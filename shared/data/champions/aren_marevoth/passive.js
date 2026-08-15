@@ -3,8 +3,8 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
-  key: "transfiguracao_profunda",
-  name: "Transfiguração Profunda",
+  key: "deep_transfiguration",
+  name: "Deep Transfiguration",
 
   healPercent: 0.08,
   hpThreshold: 0.5,
@@ -12,7 +12,9 @@ export default {
   nextAttackBonusFlat: 20,
 
   description(champion) {
-    return `Ao cair abaixo de ${this.hpThreshold * 100}% de HP, Marevóth remove 1 debuff negativo de si e recupera ${this.healPercent * 100}% do HP máximo (isso só pode ocorrer uma vez por turno.) Quando um debuff é removido dessa forma, seu próximo ataque converte ${this.nextAttackBonusPercent * 100}% do dano base que causaria em dano absoluto e recebe +${this.nextAttackBonusFlat} de dano absoluto.`;
+    return `When Marevóth falls below ${this.hpThreshold * 100}% HP, he removes 1 negative debuff from himself and restores ${this.healPercent * 100}% of his Max HP. This can only occur once per turn.
+
+    When a debuff is removed this way, Marevóth's next attack converts ${this.nextAttackBonusPercent * 100}% of its base damage into Absolute Damage and gains +${this.nextAttackBonusFlat} Absolute Damage.`;
   },
 
   hookScope: {
@@ -26,18 +28,21 @@ export default {
     const previousHP = owner.HP + damage;
     const threshold = owner.maxHP * this.hpThreshold;
 
-    // Só dispara ao CRUZAR o limiar, não em qualquer dano enquanto <50%.
+    // Only triggers when crossing the threshold, not from any damage while below 50%.
     if (previousHP > threshold && owner.HP <= threshold) {
       const lastTriggerTurn =
-        owner.runtime?.transfiguracaoProfundaLastTriggerTurn;
+        owner.runtime?.deepTransfigurationLastTriggerTurn;
 
       if (lastTriggerTurn === context.currentTurn) return;
 
-      owner.runtime.transfiguracaoProfundaLastTriggerTurn = context.currentTurn;
+      owner.runtime.deepTransfigurationLastTriggerTurn =
+        context.currentTurn;
 
-      const debuffStatusEffects = owner.getStatusEffects({ type: "debuff" });
+      const debuffStatusEffects = owner.getStatusEffects({
+        type: "debuff",
+      });
 
-      // Só ativa se houver um debuff para remover.
+      // Only activates if there is a debuff to remove.
       if (!debuffStatusEffects.length) return;
 
       const removedDebuff = debuffStatusEffects[0];
@@ -48,15 +53,15 @@ export default {
 
       owner.heal(healingAmount, context, owner);
 
-      owner.runtime.transfiguracaoProfundaNextAttackBonus = true;
+      owner.runtime.deepTransfigurationNextAttackBonus = true;
 
       return {
         log:
-          `<b>[Passiva - Transfiguração Profunda]</b> ` +
-          `${formatChampionName(owner)} rompeu o limiar de 50% de HP, ` +
-          `removeu ${removedDebuff.name ?? removedDebuff.key}, ` +
-          `recuperou ${Math.floor(healingAmount)} HP ` +
-          `e preparou seu próximo ataque.`,
+          `<b>[Passive - Deep Transfiguration]</b> ` +
+          `${formatChampionName(owner)} crossed the 50% HP threshold, ` +
+          `removed ${removedDebuff.name ?? removedDebuff.key}, ` +
+          `restored ${Math.floor(healingAmount)} HP ` +
+          `and empowered his next attack.`,
       };
     }
   },
@@ -64,15 +69,17 @@ export default {
   onBeforeDmgDealing({ owner, damage, context }) {
     if (owner !== context.attacker) return;
 
-    const state = owner.runtime?.transfiguracaoProfundaNextAttackBonus;
+    const state =
+      owner.runtime?.deepTransfigurationNextAttackBonus;
 
     if (!state) return;
 
-    // Consome o efeito: apenas este ataque é transfigurado.
-    owner.runtime.transfiguracaoProfundaNextAttackBonus = false;
+    // Consume the effect: only this attack is transfigured.
+    owner.runtime.deepTransfigurationNextAttackBonus = false;
 
     const transformedDamage =
-      damage * this.nextAttackBonusPercent + this.nextAttackBonusFlat;
+      damage * this.nextAttackBonusPercent +
+      this.nextAttackBonusFlat;
 
     return {
       damage: transformedDamage,

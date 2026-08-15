@@ -34,6 +34,7 @@ import morakhan from "./morakhan/index.js";
 import noyre from "./noyre/index.js";
 import tox_vipranna from "./tox_vipranna/index.js";
 import drex from "./drex/index.js";
+import aren_marevoth from "./aren_marevoth/index.js";
 
 const championDB = {
   ralia,
@@ -72,6 +73,7 @@ const championDB = {
   noyre,
   tox_vipranna,
   drex,
+  aren_marevoth,
 };
 
 export default championDB;

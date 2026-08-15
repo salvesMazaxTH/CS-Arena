@@ -1,3 +1,5 @@
+// shared/data/statusEffects/effectsRegistry.js
+
 import paralyzed from "./paralyzed.js";
 import stunned from "./stunned.js";
 import rooted from "./rooted.js";
