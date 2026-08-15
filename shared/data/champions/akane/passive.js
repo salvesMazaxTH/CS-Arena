@@ -1,6 +1,6 @@
 export default {
-  key: "corte_perfurante_absoluto",
-  name: "Corte Perfurante Absoluto",
+  key: "absolute_piercing_slash",
+  name: "Absolute Piercing Slash",
 
   critBonus: 25,
   piercingRatio: 0.75,
@@ -8,11 +8,11 @@ export default {
   lowDefenseDamageRatio: 2 / 3,
 
   description() {
-    return `Os ataques de Akane sempre são críticos.
+    return `Akane's hits are always critical.
 
-    Seus acertos críticos causam apenas +${this.critBonus}% de dano, mas ignoram ${this.piercingRatio * 100}% da defesa do alvo.
+    Her critical hits deal only +${this.critBonus}% damage, but ignore ${this.piercingRatio * 100}% of the target's defense.
     
-    Contra alvos com menos de ${this.minDefense} de Defesa, os ataques não ignoram Defesa e causam apenas ${this.lowDefenseDamageRatio * 100}% do dano.`;
+    Against targets with less than ${this.minDefense} Defense, her hits do not ignore Defense and deal only ${this.lowDefenseDamageRatio * 100}% of the damage.`;
   },
 
   hookScope: {

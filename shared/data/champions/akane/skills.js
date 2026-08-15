@@ -8,15 +8,15 @@ const akaneSkills = [
   // Skill 1 — ataque padrão
   // ========================
   {
-    key: "corte_carmesim",
-    name: "Corte Carmesim",
+    key: "crimson_slash",
+    name: "Crimson Slash",
     bf: 65,
     contact: true,
     damageMode: "standard",
     priority: 0,
 
     description() {
-      return `Causa dano ao inimigo.`;
+      return `Deals damage to the chosen target.`;
     },
 
     targetSpec: ["enemy"],
@@ -40,14 +40,14 @@ const akaneSkills = [
   // Skill 2 — lifesteal (forma correta)
   // ========================
   {
-    key: "banho_de_sangue",
-    name: "Banho de Sangue",
+    key: "bloodbath",
+    name: "Bloodbath",
     lifeStealBuff: 95,
     buffDuration: 2,
     priority: 0,
 
     description() {
-      return `Ganha ${this.lifeStealBuff}% de Roubo de Vida por ${this.buffDuration} turno(s).`;
+      return `Gains ${this.lifeStealBuff}% Life Steal for ${this.buffDuration} turn(s).`;
     },
 
     targetSpec: ["self"],
@@ -69,8 +69,8 @@ const akaneSkills = [
   // Ultimate
   // ========================
   {
-    key: "massacre_escarlate",
-    name: "Massacre Escarlate",
+    key: "scarlet_onslaught",
+    name: "Scarlet Onslaught",
     bf: 95,
     contact: true,
     damageMode: "standard",
@@ -79,7 +79,7 @@ const akaneSkills = [
     priority: 0,
 
     description() {
-      return `Causa dano elevado ao inimigo.`;
+      return `Deals heavy damage to the chosen target.`;
     },
 
     targetSpec: ["enemy"],

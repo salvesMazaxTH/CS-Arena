@@ -12,15 +12,15 @@ const tharoxSkills = [
   // ========================
 
   {
-    key: "provocação_primeva",
-    name: "Provocação Primeva",
+    key: "primeval_taunt",
+    name: "Primeval Taunt",
     tauntDuration: 1,
     damageReductionAmount: 10,
     damageReductionDuration: 2,
     contact: false,
     priority: 3,
     description() {
-      return `Provoca todos os inimigos por ${this.tauntDuration} turno(s) e ganha ${this.damageReductionAmount} de redução de dano por ${this.damageReductionDuration} turnos. Usos consecutivos têm chance de sucesso exponencialmente menor (reset ao falhar ou usar outra habilidade).`;
+      return `Taunts all enemies for ${this.tauntDuration} turn(s) and gains ${this.damageReductionAmount} Damage Reduction for ${this.damageReductionDuration} turn(s). Consecutive uses have an exponentially lower chance of success (resets on failure or using another skill.)`;
     },
 
     targetSpec: ["self"],
@@ -33,41 +33,39 @@ const tharoxSkills = [
 
       user.runtime.tauntStreak ??= 0;
       /* console.log(
-        `[Skill - Provocação Primeva] ${user.name} usou Provocação Primeva. Taunt Streak atual: ${user.runtime.tauntStreak}`,
+        `[Skill - Primeval Taunt] ${user.name} used Primeval Taunt. Current Taunt Streak: ${user.runtime.tauntStreak}`,
       );
       */
       const chance = 1 / Math.pow(3, user.runtime.tauntStreak); // Chance diminui exponencialmente a cada uso
       const sucess = Math.random() < chance;
       /* console.log(
-        `[Skill - Provocação Primeva] ${user.name} tentou Provocação Primeva. Chance: ${chance}, Sucesso?: ${sucess}`,
+        `[Skill - Primeval Taunt] ${user.name} attempted Primeval Taunt. Chance: ${chance}, Success?: ${sucess}`,
       );
       */
       if (!sucess) {
         user.runtime.tauntStreak = 0; // Reset streak se a provocação for mal-sucedida
 
         context.registerDialog({
-          message: `Mas falhou.`,
+          message: `But it failed.`,
           sourceId: user.id,
           targetId: user.id,
         });
 
         return {
-          log: `${formatChampionName(user)} executou <b>Provocação Primeva</b>. Mas falhou. Taunt Streak resetada.`,
+          log: `${formatChampionName(user)}  <b>Primeval Taunt</b>. But failed. Taunt Streak reset.`,
         };
       }
 
       user.runtime.lastTauntTurn = context.currentTurn;
 
       if (!context.currentTurn) {
-        throw new Error(
-          "Context must include currentTurn for Provocação Primeva.",
-        );
+        throw new Error("Context must include currentTurn for Primeval Taunt.");
       }
 
       // se foi bem-sucedida, incrementa a tauntStreak para a próxima tentativa
       user.runtime.tauntStreak += 1;
       /* console.log(
-        `[Skill - Provocação Primeva] ${user.name} usou Provocação Primeva. Taunt Streak atual: ${user.runtime.tauntStreak}`,
+        `[Skill - Primeval Taunt] ${user.name} used Primeval Taunt. Current Taunt Streak: ${user.runtime.tauntStreak}`,
       );
       */
       // Get all active champions on the opposing team
@@ -86,22 +84,22 @@ const tharoxSkills = [
       // Filter out falsy (e.g., if taunt not applied)
       const logs = tauntLogs.filter(Boolean);
       logs.unshift({
-        log: `${userName} executou <b>Provocação Primeva</b>. Todos os inimigos foram provocados e ${userName} recebeu ${this.damageReductionAmount} de Redução de Dano.`,
+        log: `${userName} executed <b>Primeval Taunt</b>. All enemies were taunted and ${userName} gained ${this.damageReductionAmount} Damage Reduction.`,
       });
       return logs;
     },
   },
 
   {
-    key: "impacto_da_couraça",
-    name: "Impacto da Couraça",
+    key: "carapace_impact",
+    name: "Carapace Impact",
     bf: 75,
     damageMode: "standard",
     defScaling: 15,
     contact: true,
     priority: 0,
     description() {
-      return `Causa dano ao inimigo somado a ${this.defScaling}% da Defesa.`;
+      return `Deals damage to the chosen target plus ${this.defScaling}% of Defense.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -123,12 +121,13 @@ const tharoxSkills = [
   },
 
   {
-    key: "apoteose_do_monolito",
-    name: "Apoteose do Monólito",
+    key: "apotheosis_of_the_monolith",
+    name: "Apotheosis of the Monolith",
 
     effectDuration: 2,
     defBonusWhileShielded: 20,
     defDamagePercent: 38,
+    healingUponShieldBreakPercent: 25,
 
     damageMode: "standard",
     contact: false,
@@ -137,9 +136,9 @@ const tharoxSkills = [
     priority: 2,
 
     description() {
-      return `Libera a Apoteose do Monólito, curando proporcionalmente à sua Defesa bônus e assumindo sua forma inamovível por ${this.effectDuration} turnos. Ganha SupremeShield pela duração do efeito.
-
-      Enquanto o escudo estiver ativo, Tharox recebe +${this.defBonusWhileShielded} de Defesa. Ao perder o escudo, cura em 25% da sua Defesa bônus. Além disso, seus ataques passam a causar dano adicional com base na Defesa excedente, escalando de forma crescente e tornando-se devastadores em níveis altos.`;
+      return `Unleashes the Apotheosis of the Monolith, restoring HP based on his bonus Defense and assuming his immovable form for ${this.effectDuration} turn(s). Gains SupremeShield for the duration of the effect.
+      
+      While the shield is active, Tharox gains +${this.defBonusWhileShielded} Defense. Upon losing the shield, he restores HP equal to ${this.healingUponShieldBreakPercent}% of his bonus Defense. Additionally, his attacks deal extra damage based on his bonus Defense, scaling increasingly and becoming devastating at high levels.`;
     },
 
     targetSpec: ["self"],
@@ -150,23 +149,23 @@ const tharoxSkills = [
       // Remove eventual efeito anterior da Apoteose.
       user.damageModifiers = user
         .getDamageModifiers()
-        .filter((mod) => mod.id !== "apoteose-do-monolito");
+        .filter((mod) => mod.id !== "apotheosis-of-the-monolith");
 
       // Remove eventual SupremeShield anterior da Apoteose.
       if (Array.isArray(user.runtime?.shields)) {
         user.runtime.shields = user.runtime.shields.filter(
-          (shield) => shield?.sourceId !== "apoteose-do-monolito",
+          (shield) => shield?.sourceId !== "apotheosis-of-the-monolith",
         );
       }
 
       // Remove eventual hook anterior da Apoteose.
       user.runtime.hookEffects ??= [];
       user.runtime.hookEffects = user.runtime.hookEffects.filter(
-        (hook) => hook.key !== "apoteose-do-monolito",
+        (hook) => hook.key !== "apotheosis-of-the-monolith",
       );
 
       // Registra o estado da Apoteose.
-      user.runtime.apoteoseDoMonolito = {
+      user.runtime.apotheosisOfTheMonolith = {
         active: true,
         expiresAtTurn,
         defenseBonus: this.defBonusWhileShielded,
@@ -190,14 +189,14 @@ const tharoxSkills = [
 
       // SupremeShield.
       user.addShield(1, 0, context, "supreme", {
-        sourceId: "apoteose-do-monolito",
+        sourceId: "apotheosis-of-the-monolith",
         expiresAtTurn,
       });
 
       // Hook da Apoteose.
       user.runtime.hookEffects.push({
-        key: "apoteose-do-monolito",
-        name: "Apoteose do Monólito",
+        key: "apotheosis-of-the-monolith",
+        name: "Apotheosis of the Monolith",
         expiresAtTurn,
 
         // ============================================================
@@ -216,7 +215,7 @@ const tharoxSkills = [
           const supremeShield = defender.runtime?.shields?.some(
             (shield) =>
               shield?.type === "supreme" &&
-              shield?.sourceId === "apoteose-do-monolito",
+              shield?.sourceId === "apotheosis-of-the-monolith",
           );
 
           if (!supremeShield) return;
@@ -243,32 +242,34 @@ const tharoxSkills = [
           const supremeShield = defender.runtime?.shields?.some(
             (shield) =>
               shield?.type === "supreme" &&
-              shield?.sourceId === "apoteose-do-monolito",
+              shield?.sourceId === "apotheosis-of-the-monolith",
           );
 
           if (supremeShield) return;
 
           // O shield foi quebrado por dano.
-          const state = defender.runtime.apoteoseDoMonolito;
+          const state = defender.runtime.apotheosisOfTheMonolith;
           if (!state?.active) return;
 
           state.brokenByDamage = true;
           state.active = false;
 
-          const healingAmount = this.defBonusWhileShielded * 0.25;
+          const healingAmount =
+            Math.max(0, defender.Defense - defender.baseDefense) *
+            (this.healingUponShieldBreakPercent / 100);
 
           if (healingAmount > 0) {
             defender.heal(healingAmount, context, defender);
           }
 
           defender.runtime.hookEffects = defender.runtime.hookEffects.filter(
-            (hook) => hook.key !== "apoteose-do-monolito",
+            (hook) => hook.key !== "apotheosis-of-the-monolith",
           );
 
           return {
             log:
-              `<b>[Apoteose do Monólito]</b> ${formatChampionName(defender)} ` +
-              `perdeu o SupremeShield e curou ${Math.floor(healingAmount)} HP.`,
+              `<b>[Apotheosis of the Monolith]</b> ${formatChampionName(defender)} ` +
+              `lost the SupremeShield and healed ${Math.floor(healingAmount)} HP.`,
           };
         },
 
@@ -278,7 +279,7 @@ const tharoxSkills = [
         onTurnStart({ owner, context }) {
           if (context.currentTurn < this.expiresAtTurn) return;
 
-          const state = owner.runtime.apoteoseDoMonolito;
+          const state = owner.runtime.apotheosisOfTheMonolith;
 
           // Se não foi quebrado por dano, a cura ocorre no início do turno, logo depois da expiração natural.
           if (!state?.brokenByDamage) {
@@ -294,7 +295,7 @@ const tharoxSkills = [
           }
 
           owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
-            (hook) => hook.key !== "apoteose-do-monolito",
+            (hook) => hook.key !== "apotheosis-of-the-monolith",
           );
         },
       });
@@ -303,8 +304,8 @@ const tharoxSkills = [
       // BÔNUS DE DANO
       //=================================
       user.addDamageModifier({
-        id: "apoteose-do-monolito",
-        name: "Bônus de Apoteose do Monólito",
+        id: "apotheosis-of-the-monolith",
+        name: "Apotheosis of the Monolith Bonus Damage",
         expiresAtTurn,
 
         apply: ({ baseDamage, attacker }) => {
@@ -322,10 +323,10 @@ const tharoxSkills = [
 
       return {
         log:
-          `${userName} executou <b>Apoteose do Monólito</b>, ` +
-          `liberando sua forma de guerra. ` +
-          `Recebeu +${this.defBonusWhileShielded} Defesa enquanto o SupremeShield estiver ativo ` +
-          `e curou ${Math.floor(proportionalHeal)} HP. ` +
+          `${userName} executed <b>Apotheosis of the Monolith</b>, ` +
+          `unleashing his war form. ` +
+          `Received +${this.defBonusWhileShielded} Defense while the SupremeShield was active ` +
+          `and healed ${Math.floor(proportionalHeal)} HP. ` +
           `(Defense: ${user.Defense}, HP: ${user.HP}/${user.maxHP})`,
       };
     },

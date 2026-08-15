@@ -2,8 +2,8 @@ import { formatChampionName } from "../../../ui/formatters.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 
 export default {
-  key: "frio_absoluto",
-  name: "Frio Absoluto",
+  key: "absolute_cold",
+  name: "Absolute Cold",
   passiveDamage: 45,
   lowLifeThresholdRatio: 0.3,
   forcedCritBonus: 55,
@@ -41,7 +41,9 @@ export default {
   },
 
   description() {
-    return `Se o alvo tiver 30% do HP máximo ou menos, os ataques de Bruno sempre são um Acerto Crítico.\n\nQuando um campeão inimigo for Congelado, Bruno causa ${this.passiveDamage} de dano absoluto a ele.`;
+    return `Against targets at or below 30% of their Max HP, Bruno's attacks are always Critical Hits.
+
+    Whenever an enemy champion becomes Frozen, Bruno deals ${this.passiveDamage} Absolute Damage to them.`;
   },
 
   onStatusEffectIncoming({ target, statusEffect, context, owner }) {
@@ -52,7 +54,7 @@ export default {
     if (!context?.allChampions) return;
 
     context.registerDialog?.({
-      message: `${formatChampionName(owner)} ativou <b>Frio Absoluto</b> e causou ${this.passiveDamage} de dano absoluto em ${formatChampionName(target)}!`,
+      message: `${formatChampionName(owner)} activated <b>Absolute Cold</b> and dealt ${this.passiveDamage} Absolute Damage to ${formatChampionName(target)}!`,
       sourceId: owner.id,
       targetId: target.id,
     });
@@ -63,8 +65,8 @@ export default {
       attacker: owner,
       defender: target,
       skill: {
-        key: "frio_absoluto_passiva",
-        name: "Frio Absoluto (Passiva)",
+        key: "absolute_cold_passive",
+        name: "Absolute Cold (Passive)",
         contact: false,
       },
       type: "magical",

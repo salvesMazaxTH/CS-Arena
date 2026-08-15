@@ -1,14 +1,15 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
-  name: "Massa Inamolgável",
+  key: "unyielding_mass",
+  name: "Unyielding Mass",
   stacksNeeded: 2,
   defBonus: 20,
   healingPerMaxHP: 0.025,
   defensePerHealingStep: 75,
   shieldPercentage: 0.075,
   description() {
-    return `Sempre que Tharox tomar dano, ele ganha 1 acúmulo de Inércia. Ao chegar a ${this.stacksNeeded}, consome ambos e ganha +${this.defBonus} de Defesa permanente. Além disso, cura em ${this.healingPerMaxHP * 100}% do HP máximo para cada ${this.defensePerHealingStep} de Defesa que possui e recebe um escudo equivalente a ${this.shieldPercentage * 100}% do HP máximo.`;
+    return `Whenever Tharox takes damage, he gains 1 Inertia stack. At ${this.stacksNeeded}, consume them and gain +${this.defBonus} permanent Defense. Additionally, he heals for ${this.healingPerMaxHP * 100}% of his Max HP for every ${this.defensePerHealingStep} Defense he has and gains a shield equivalent to ${this.shieldPercentage * 100}% of his Max HP.`;
   },
 
   hookScope: {
@@ -51,15 +52,15 @@ export default {
     owner.addShield(shieldAmount, 0, context, "regular");
 
     let log =
-      `<b>[Passiva - Massa Inamolgável]</b> ${formatChampionName(owner)} ` +
-      `consumiu ${this.stacksNeeded} Inércia e ganhou +${this.defBonus} Defesa permanente! ` +
-      `(Defesa: ${owner.Defense}).`;
+      `<b>[Passive - Unyielding Mass]</b> ${formatChampionName(owner)} ` +
+      `consumed ${this.stacksNeeded} Inertia and gained +${this.defBonus} permanent Defense! ` +
+      `(Defense: ${owner.Defense}).`;
 
     if (healingAmount > 0) {
-      log += `\nCurou ${Math.floor(healingAmount)} HP (${defenseMultipliers} × ${this.healingPerMaxHP * 100}% do HP máximo).`;
+      log += `\nHealed ${Math.floor(healingAmount)} HP (${defenseMultipliers} × ${this.healingPerMaxHP * 100}% of Max HP).`;
     }
 
-    log += `\nRecebeu um escudo de ${Math.floor(shieldAmount)} HP.`;
+    log += `\nGained a shield of ${Math.floor(shieldAmount)} HP.`;
 
     if (statResult?.log) {
       log += `\n${statResult.log}`;

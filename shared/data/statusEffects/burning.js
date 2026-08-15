@@ -4,19 +4,19 @@ import { formatChampionName } from "../../ui/formatters.js";
 
 const burning = {
   key: "burning",
-  name: "Queimando",
+  name: "Burning",
   type: "debuff",
   subtypes: ["dot", "fire"],
 
   onTurnStart({ owner, context }) {
-    const damage = 15 + Math.floor(owner.maxHP * 0.04); // dano base + 4% do HP máximo
+    const damage = 15 + Math.floor(owner.maxHP * 0.04);
 
     context.isDot = true;
 
     const dmgEvent = new DamageEvent({
       attacker: null,
       defender: owner,
-      skill: { name: "Queimadura", key: "burning_tick" },
+      skill: { name: "Burn", key: "burning_tick" },
       context,
       type: "magical",
       baseDamage: damage,
@@ -27,11 +27,13 @@ const burning = {
     const result = dmgEvent.execute();
 
     if (result?.immune) {
-      return { log: `${formatChampionName(owner)} é imune ao dano de <b>Queimadura</b>!` };
+      return {
+        log: `${formatChampionName(owner)} is immune to Burn damage!`,
+      };
     }
 
     return {
-      log: `${formatChampionName(owner)} sofre ${result?.totalDamage ?? damage} de dano de <b>Queimadura</b>.`,
+      log: `${formatChampionName(owner)} takes ${result?.totalDamage ?? damage} Burn damage.`,
     };
   },
 

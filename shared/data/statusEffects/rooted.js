@@ -3,7 +3,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 
 const rooted = {
   key: "rooted",
-  name: "Enraizado",
+  name: "Rooted",
   type: "debuff",
   subtypes: ["softCC"],
 
@@ -14,11 +14,11 @@ const rooted = {
   onValidateAction({ actionSource, skill }) {
     if (!skill?.contact) return;
 
-    const skillName = skill?.name || "habilidade";
+    const skillName = skill?.name || "ability";
 
     return {
       deny: true,
-      message: `${formatChampionName(actionSource)} está Enraizado e não pode usar a habilidade de contato "${skillName}"!`,
+      message: `${formatChampionName(actionSource)} is Rooted and cannot use the contact ability "${skillName}"!`,
     };
   },
 

@@ -2,17 +2,17 @@ import { formatChampionName } from "../../../ui/formatters.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 
 export default {
-  key: "progressao_irrefreavel",
-  name: "Progressão Irrefreável",
+  key: "unstoppable_progression",
+  name: "Unstoppable Progression",
   stackCap: 8,
   speedPercentAsDamage: 0.85,
 
   description(champion) {
-    return `Sempre que Blyskartri ou um aliado ganhar Velocidade ou Esquiva, Blyskartri ganha 1 Acúmulo; se Esquivar um ataque, ganha 1 Acúmulo adicional (máx. ${this.stackCap}).
+    return `Whenever Blyskartri or an ally gains Speed or Evasion, Blyskartri gains 1 stack of Impulse. Whenever Blyskartri evades an attack, he gains 1 additional stack. Max: ${this.stackCap}.
 
-    Acúmulos atuais: <b>${champion.runtime?.impulsoStacks ?? 0}</b>
+    Current Stacks: <b>${champion.runtime?.impulseStacks ?? 0}</b>
 
-    Ao atingir ${this.stackCap}, consome todos os acúmulos e causa imediatamente dano híbrido (50%) equivalente a ${this.speedPercentAsDamage * 100}% da Velocidade do personagem aliado mais rápido ao inimigo com menor vida.`;
+    At ${this.stackCap} stacks, consume all stacks to immediately deal 50% Hybrid Damage equal to ${this.speedPercentAsDamage * 100}% of the fastest ally's Speed to the enemy with the lowest HP.`;
   },
 
   hookScope: {
@@ -35,36 +35,40 @@ export default {
     if (stackResult?.log) return stackResult;
 
     return {
-      log: `${formatChampionName(owner)} ganhou 1 Acúmulo de Impulso. Acúmulos totais atuais: ${owner.runtime.impulsoStacks}`,
+      log: `${formatChampionName(owner)} gained 1 Impulse stack. Current stacks: ${owner.runtime.impulseStacks}`,
     };
   },
 
   onEvade({ owner, defender, context }) {
     if (!defender || defender.team !== owner.team) return;
 
-    const stackResult = this._addStack({ owner, context, reason: "evade" });
+    const stackResult = this._addStack({
+      owner,
+      context,
+      reason: "evade",
+    });
 
     if (stackResult?.log) return stackResult;
 
     return {
-      log: `${formatChampionName(owner)} ganhou 1 Acúmulo de Impulso. Acúmulos totais atuais: ${owner.runtime.impulsoStacks}`,
+      log: `${formatChampionName(owner)} gained 1 Impulse stack. Current stacks: ${owner.runtime.impulseStacks}`,
     };
   },
 
   _addStack({ owner, context, reason }) {
     owner.runtime ??= {};
-    owner.runtime.impulsoStacks ??= 0;
+    owner.runtime.impulseStacks ??= 0;
 
-    if (owner.runtime.impulsoStacks >= this.stackCap) return;
+    if (owner.runtime.impulseStacks >= this.stackCap) return;
 
-    owner.runtime.impulsoStacks++;
+    owner.runtime.impulseStacks++;
 
-    console.log("[BLYSKARTRI][PASSIVE] stack gained", {
-      stacks: owner.runtime.impulsoStacks,
+    console.log("[BLYSKARTRI][PASSIVE] Impulse stack gained", {
+      stacks: owner.runtime.impulseStacks,
       reason,
     });
 
-    if (owner.runtime.impulsoStacks < this.stackCap) return;
+    if (owner.runtime.impulseStacks < this.stackCap) return;
 
     const allies = context.aliveChampions.filter((c) => c.team === owner.team);
 
@@ -73,7 +77,7 @@ export default {
     const fastestAlly = allies.reduce((a, b) => (a.Speed > b.Speed ? a : b));
 
     console.log(
-      "[BLYSKARTRI][PASSIVE] STACK CAP REACHED → dealing damage to 'target' based on 'fastestAlly': ",
+      "[BLYSKARTRI][PASSIVE] STACK CAP REACHED → dealing damage based on fastest ally:",
       {
         fastestAlly: formatChampionName(fastestAlly),
         allies: allies.map((a) => formatChampionName(a)),
@@ -95,20 +99,17 @@ export default {
       if (a.HP < b.HP) return a;
       if (b.HP < a.HP) return b;
 
-      // empate → aleatório
+      // Tie → random
       return Math.random() < 0.5 ? a : b;
     }, enemies[0]);
 
-    console.log(
-      "[BLYSKARTRI][PASSIVE] lowest health enemy selected as target: ",
-      {
-        lowestHealthEnemy: formatChampionName(lowestHealthEnemy),
-        enemies: enemies.map((e) => formatChampionName(e)),
-      },
-    );
+    console.log("[BLYSKARTRI][PASSIVE] Lowest-HP enemy selected as target:", {
+      lowestHealthEnemy: formatChampionName(lowestHealthEnemy),
+      enemies: enemies.map((e) => formatChampionName(e)),
+    });
 
     context.registerDialog({
-      message: `${formatChampionName(owner)} explodiu em velocidade e descarregou os acúmulos sobre ${formatChampionName(lowestHealthEnemy)}!`,
+      message: `${formatChampionName(owner)} unleashed a burst of speed, consuming all Impulse against ${formatChampionName(lowestHealthEnemy)}!`,
       sourceId: owner.id,
       targetId: owner.id,
     });
@@ -118,9 +119,9 @@ export default {
       attacker: owner,
       defender: lowestHealthEnemy,
       mode: DamageEvent.Modes.PIERCING,
-      piercingPercentage: 50, // Ignora 50% da defesa do alvo
+      piercingPercentage: 50, // Ignores 50% of the target's Defense
       skill: {
-        key: "progressao_irrefreavel_explosion",
+        key: "unstoppable_progression_explosion",
         contact: false,
       },
       type: "magical",
@@ -128,11 +129,11 @@ export default {
       allChampions: context?.allChampions,
     }).execute();
 
-    owner.runtime.impulsoStacks = 0;
+    owner.runtime.impulseStacks = 0;
 
     return {
       damageEvent,
-      log: `${formatChampionName(owner)} explodiu em velocidade e descarregou os acúmulos sobre ${formatChampionName(lowestHealthEnemy)}!`,
+      log: `${formatChampionName(owner)} unleashed a burst of speed, consuming all Impulse against ${formatChampionName(lowestHealthEnemy)}!`,
     };
   },
 };

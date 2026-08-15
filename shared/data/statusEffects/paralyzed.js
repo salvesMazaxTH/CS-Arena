@@ -3,7 +3,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 
 const paralyzed = {
   key: "paralyzed",
-  name: "Paralisado",
+  name: "Paralyzed",
   type: "debuff",
   subtypes: ["softCC", "statMod", "lightning"],
 
@@ -20,21 +20,24 @@ const paralyzed = {
       isPercent: true,
       ignoreMinimum: true,
     });
+
     return {
-      message: `${formatChampionName(owner)} foi Paralisado! Velocidade reduzida, mas com chance de não agir!`,
+      message: `${formatChampionName(owner)} was Paralyzed! Speed reduced, but may still be unable to act!`,
     };
   },
 
   onValidateAction({ actionSource }) {
-    const chanceOfActing = 0.6; // 60% de chance de agir normalmente
+    const chanceOfActing = 0.6;
     const roll = Math.random();
+
     console.log(
-      `[PARALISADO] Rolando para ação de ${formatChampionName(actionSource)} (Paralisado): ${roll.toFixed(2)} vs ${chanceOfActing}. Conseguiu agir? ${roll < chanceOfActing ? "Sim" : "Não"}`,
+      `[PARALYZED] Rolling for ${formatChampionName(actionSource)}'s action (Paralyzed): ${roll.toFixed(2)} vs ${chanceOfActing}. Able to act? ${roll < chanceOfActing ? "Yes" : "No"}`,
     );
+
     if (roll >= chanceOfActing) {
       return {
         deny: true,
-        message: `${formatChampionName(actionSource)} está Paralisado e não pode agir!`,
+        message: `${formatChampionName(actionSource)} is Paralyzed and cannot act!`,
       };
     }
   },

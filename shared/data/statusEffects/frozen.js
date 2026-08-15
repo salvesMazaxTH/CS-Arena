@@ -1,10 +1,10 @@
 import { formatChampionName } from "../../ui/formatters.js";
 import { StatusEffect } from "../../core/StatusEffect.js";
 
-// Reduz velocidade e ataque a 0 e impede de agir por X turno(s) (X geralmente 1)
+// Reduces Speed and Attack to 0 and prevents the target from acting for X turns (usually 1)
 const frozen = {
   key: "frozen",
-  name: "Congelado",
+  name: "Frozen",
   type: "debuff",
   subtypes: ["hardCC", "ice"],
 
@@ -17,6 +17,7 @@ const frozen = {
       isPercent: true,
       ignoreMinimum: true,
     });
+
     owner.modifyStat({
       statName: "Attack",
       amount: -100,
@@ -25,8 +26,9 @@ const frozen = {
       isPercent: true,
       ignoreMinimum: true,
     });
+
     return {
-      message: `${owner.name} foi ${this.name}!`,
+      message: `${owner.name} was ${this.name}!`,
     };
   },
 
@@ -38,25 +40,31 @@ const frozen = {
   onValidateAction({ actionSource }) {
     return {
       deny: true,
-      message: `${formatChampionName(actionSource)} está Congelado e não pode agir!`,
+      message: `${formatChampionName(actionSource)} is Frozen and cannot act!`,
     };
   },
 
   onAfterDmgTaking({ attacker, defender, owner, damage, context }) {
     if (damage <= 0) return;
-    // Só remove se o status já estava presente antes do dano (evita remover logo após aplicar)
-    // Busca o status atual e verifica se o turno de expiração é maior que o turno atual
+
+    // Only remove the status if it was already present before the damage
+    // was dealt, preventing it from being removed immediately after application.
+    // Check the current effect and verify that it expires after the current turn.
     const currentTurn = context?.currentTurn ?? 0;
+
     const effect =
       defender.getStatusEffect?.("frozen") ||
       defender.statusEffects?.get?.("frozen");
+
     if (effect && effect.appliedAtTurn < currentTurn) {
       defender.removeStatusEffect("frozen");
+
       return {
-        log: `${formatChampionName(defender)} foi descongelado após receber dano!`,
+        log: `${formatChampionName(defender)} was unfrozen after taking damage!`,
       };
     }
-    // Se acabou de ser aplicado neste turno, não remove
+
+    // If it was just applied this turn, do not remove it.
     return;
   },
 

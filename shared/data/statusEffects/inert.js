@@ -3,7 +3,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 
 const inert = {
   key: "inert",
-  name: "Inerte",
+  name: "Inert",
   type: "debuff",
   subtypes: ["hardCC"],
 
@@ -14,7 +14,7 @@ const inert = {
   onValidateAction({ actionSource }) {
     return {
       deny: true,
-      message: `${formatChampionName(actionSource)} está Inerte e não pode agir!`,
+      message: `${formatChampionName(actionSource)} is Inert and cannot act!`,
     };
   },
 

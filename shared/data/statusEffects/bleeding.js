@@ -4,7 +4,7 @@ import { formatChampionName } from "../../ui/formatters.js";
 
 const bleeding = {
   key: "bleeding",
-  name: "Sangramento",
+  name: "Bleeding",
   type: "debuff",
   subtypes: ["dot", "physical"],
   isStackable: true,
@@ -18,7 +18,7 @@ const bleeding = {
     const result = new DamageEvent({
       attacker: null,
       defender: owner,
-      skill: { name: "Sangramento", key: "bleeding_tick" },
+      skill: { name: "Bleeding", key: "bleeding_tick" },
       context,
       type: "physical",
       baseDamage: dmgPerStack * stacks,
@@ -32,10 +32,15 @@ const bleeding = {
     if (next === 0) this.expiresAtTurn = context.currentTurn;
 
     const label = formatChampionName(owner);
-    if (result?.immune)
-      return { log: `${label} é imune ao dano de Sangramento!` };
+
+    if (result?.immune) {
+      return {
+        log: `${label} is immune to Bleeding damage!`,
+      };
+    }
+
     return {
-      log: `${label} sofre ${result?.totalDamage ?? dmgPerStack * stacks} de dano de <b>Sangramento</b> (${stacks}x).`,
+      log: `${label} takes ${result?.totalDamage ?? dmgPerStack * stacks} Bleeding damage (<b>${stacks}x</b>).`,
     };
   },
 

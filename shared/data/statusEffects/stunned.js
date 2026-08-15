@@ -3,7 +3,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 
 const stunned = {
   key: "stunned",
-  name: "Atordoado",
+  name: "Stunned",
   type: "debuff",
   subtypes: ["hardCC"],
 
@@ -14,7 +14,7 @@ const stunned = {
   onValidateAction({ actionSource }) {
     return {
       deny: true,
-      message: `${formatChampionName(actionSource)} está Atordoado e não pode agir!`,
+      message: `${formatChampionName(actionSource)} is Stunned and cannot act!`,
     };
   },
 

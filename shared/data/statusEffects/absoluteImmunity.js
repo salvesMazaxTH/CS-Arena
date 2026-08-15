@@ -3,7 +3,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 
 const absoluteImmunity = {
   key: "absoluteImmunity",
-  name: "Imunidade Absoluta",
+  name: "Absolute Immunity",
   type: "buff",
   subtypes: ["immunity"],
 
@@ -16,7 +16,7 @@ const absoluteImmunity = {
     return {
       cancel: true,
       immune: true,
-      message: `${formatChampionName(defender)} está com <b>${this.name}</b> e é imune a dano!`,
+      message: `${formatChampionName(defender)} has <b>${this.name}</b> and is immune to damage!`,
     };
   },
 
@@ -25,7 +25,7 @@ const absoluteImmunity = {
 
     return {
       cancel: true,
-      message: `${formatChampionName(target)} está com <b>${this.name}</b> e é imune a efeitos negativos!`,
+      message: `${formatChampionName(target)} has <b>${this.name}</b> and is immune to negative effects!`,
     };
   },
 

@@ -3,21 +3,21 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 
 const invisible = {
   key: "invisible",
-  name: "Invisível",
+  name: "Invisible",
   type: "buff",
   subtypes: ["stealth"],
 
-  description: "Não pode ser alvo de inimigos até sua próxima ação.",
+  description: "Cannot be targeted by enemies until its next action.",
 
   hookScope: {
     onValidateAction: "target",
   },
 
-  // 🔒 bloqueia ser alvo
+  // 🔒 Prevents the target from being targeted
   onValidateAction({ actionSource, owner, context }) {
     if (!actionSource || actionSource.id === owner.id) return;
 
-    const message = `${formatChampionName(actionSource)} não consegue encontrar ${formatChampionName(owner)}.`;
+    const message = `${formatChampionName(actionSource)} cannot find ${formatChampionName(owner)}.`;
 
     context?.registerDialog?.({
       message,

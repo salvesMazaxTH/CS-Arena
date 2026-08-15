@@ -4,24 +4,27 @@ import basicStrike from "../basicStrike.js";
 
 const baraoEstrondosoSkills = [
   // ========================
-  // Ataque Básico
+  // Basic Attack
   // ========================
   basicStrike,
+
   // ========================
-  // Habilidades Especiais
+  // Special Abilities
   // ========================
 
   {
-    key: "impacto_de_aco",
-    name: "Impacto de Aço",
+    key: "steel_impact",
+    name: "Steel Impact",
     bf: 100,
     contact: true,
     damageMode: "standard",
     priority: -999,
     targetSpec: ["enemy"],
+
     description() {
-      return `Causa dano ao inimigo.`;
+      return `Deals damage to the chosen target.`;
     },
+
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
@@ -35,16 +38,18 @@ const baraoEstrondosoSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
+
       if (result.totalDamage > 0 && user.runtime) {
-        user.runtime.storedDamage = 0; // Zera o dano armazenado após o ataque
+        user.runtime.storedDamage = 0; // Resets Stored Damage after the attack
       }
+
       return result;
     },
   },
 
   {
-    key: "blindagem_reforcada",
-    name: "Blindagem Reforçada",
+    key: "reinforced_plating",
+    name: "Reinforced Plating",
     contact: false,
 
     priority: -999,
@@ -52,11 +57,13 @@ const baraoEstrondosoSkills = [
     defBuffDuration: 2,
 
     description() {
-      return `Aumenta a Defesa em ${this.defenseBuff} por 2 turnos`;
+      return `Increases Defense by ${this.defenseBuff} for ${this.defBuffDuration} turn(s).`;
     },
+
     targetSpec: ["self"],
+
     resolve({ user, context }) {
-      /*       user.applyStatusEffect("blindagem_reforcada", 2, context); */
+      /* user.applyStatusEffect("reinforced_plating", 2, context); */
 
       user.modifyStat({
         statName: "Defense",
@@ -66,14 +73,14 @@ const baraoEstrondosoSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} reforçou sua blindagem!`,
+        log: `${formatChampionName(user)} reinforced his plating!`,
       };
     },
   },
 
   {
-    key: "super_hiper_ultra_mega_barrigada_atomico",
-    name: "Super Hiper Ultra Mega Barrigada Atômico",
+    key: "super_hyper_ultra_mega_atomic_belly_flop",
+    name: "Super Hyper Ultra Mega Atomic Belly Flop",
     bf: 730,
     contact: false,
     damageMode: "standard",
@@ -83,13 +90,16 @@ const baraoEstrondosoSkills = [
     momentumCost: 100,
 
     description() {
-      return `Causa dano ABSURDO ao inimigo somado ao dano armazenado. Este ataque é sempre um acerto Crítico. Após o ataque, o dano armazenado é zerado.`;
+      return `Deals ABSURD damage to the target plus all Stored Damage. This attack is always a Critical Hit. After the attack, Stored Damage is reset to 0.`;
     },
+
     targetSpec: ["enemy"],
+
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const storedDamage = user.runtime?.storedDamage || 0;
       const baseDamage = (user.Attack * this.bf) / 100 + storedDamage;
+
       const damageResult = new DamageEvent({
         baseDamage,
         attacker: user,
@@ -97,11 +107,13 @@ const baraoEstrondosoSkills = [
         skill: this,
         type: "physical",
         context,
-        critOptions: { force: true }, // crítico garantido
+        critOptions: { force: true },
         allChampions: context?.allChampions,
       }).execute();
-      // Zera o dano armazenado após o ataque
+
+      // Resets Stored Damage after the attack
       user.runtime.storedDamage = 0;
+
       return damageResult;
     },
   },
