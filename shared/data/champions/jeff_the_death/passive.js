@@ -35,6 +35,7 @@ function restoreRevivedState(champion, reviveFrom) {
 
   if (reviveFrom.statusEffects instanceof Map) {
     champion.statusEffects = new Map();
+
     for (const [key, value] of reviveFrom.statusEffects.entries()) {
       champion.statusEffects.set(
         key,
@@ -45,13 +46,13 @@ function restoreRevivedState(champion, reviveFrom) {
 }
 
 export default {
-  key: "a_morte_não_cessa",
-  name: "A Morte Não Cessa",
+  key: "death_does_not_end",
+  name: "Death Does Not End",
 
   description(champion) {
-    return `Quando Jeff for derrotado, ele volta ao campo de batalha no início do próximo turno com 75% de sua vida máxima e mantendo os buffs e stacks que já acumulou. Sempre que um personagem morrer, Jeff ganha um buff permanente de 30% de ataque e 30% de defesa.
-    
-    <b>Contador de mortes de Jeff:</b> ${champion.runtime.deathCounter ?? 0}`;
+    return `When Jeff is defeated, he returns to the battlefield at the start of the next turn with 75% of his Max HP, retaining his accumulated buffs and stacks. Whenever a character dies, Jeff gains +30% permanent Attack and +30% permanent Defense.
+
+    <b>Jeff's Death Count:</b> ${champion.runtime.deathCounter ?? 0}`;
   },
 
   hookScope: {
@@ -62,9 +63,15 @@ export default {
     if (defender !== owner) return;
     if (defender.HP > 0) return;
 
-    console.log("[Passiva - Jeff] A Morte Não Cessa ativada para", defender.id);
     console.log(
-      `[Passiva - Jeff] Agendando revival para o próximo turno (Turno ${context.currentTurn + 1})`,
+      "[Passive - Jeff] Death Does Not End activated for",
+      defender.id,
+    );
+
+    console.log(
+      `[Passive - Jeff] Scheduling revival for next turn (Turn ${
+        context.currentTurn + 1
+      })`,
     );
 
     defender.runtime.deathCounter ??= 0;
@@ -73,21 +80,23 @@ export default {
     context.schedule({
       type: "spawnChampion",
       turnToHappen: context.currentTurn + 1,
+
       payload: {
         championKey: defender.championKey,
         team: defender.team,
-        combatSlot: defender.combatSlot, // Garante o mesmo slot
-        reviveFrom: defender, // Passa referência do Jeff antigo
+        combatSlot: defender.combatSlot, // Ensures the same slot.
+        reviveFrom: defender, // Passes the previous Jeff's state.
         onSpawn: (champion, context, reviveFrom) => {
           restoreRevivedState(champion, reviveFrom);
 
           champion.HP = Math.floor(champion.maxHP * 0.75);
 
-          // buff pela própria morte, já que onChampionDeath é pulado quando Jeff morre
+          // Buff from Jeff's own death, since onChampionDeath is skipped.
           const buffsPerDeath = [
             { stat: "Attack", amount: 30, isPercent: true },
             { stat: "Defense", amount: 30, isPercent: true },
           ];
+
           buffsPerDeath.forEach((buff) => {
             champion.modifyStat({
               statName: buff.stat,
@@ -99,8 +108,11 @@ export default {
           });
         },
       },
+
       dialog: {
-        message: `[Passiva - <b>A Morte Não Cessa</b>] ${formatChampionName(defender)} retorna ao campo de batalha!`,
+        message: `[Passive - <b>Death Does Not End</b>] ${formatChampionName(
+          defender,
+        )} returns to the battlefield!`,
         sourceId: null,
         targetId: null,
       },
@@ -108,16 +120,21 @@ export default {
   },
 
   onChampionDeath({ owner, deadChampion, context }) {
-    if (owner === deadChampion) return; // buff da própria morte é tratado em onSpawn
+    if (owner === deadChampion) return; // Own death is handled in onSpawn.
     if (!owner.alive) return;
-    // não incluí hookScope, porque quando qualquer um morre, ele se buffa
+
+    // Whenever any character dies, Jeff gains the buffs.
     console.log(
-      `[Passiva - Jeff] Buffando Jeff pela morte de ${deadChampion?.name ?? "alguém"}.`,
+      `[Passive - Jeff] Buffing Jeff for the death of ${
+        deadChampion?.name ?? "someone"
+      }.`,
     );
+
     const buffsPerDeath = [
       { stat: "Attack", amount: 30, isPercent: true },
       { stat: "Defense", amount: 30, isPercent: true },
     ];
+
     buffsPerDeath.forEach((buff) => {
       owner.modifyStat({
         statName: buff.stat,

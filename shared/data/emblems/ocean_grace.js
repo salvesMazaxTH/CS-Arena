@@ -4,7 +4,7 @@ export const oceanGrace = {
   key: "ocean_grace",
   name: "Emblem of the Ocean's Grace",
 
-  healingMultiplier: 1.20,
+  healingMultiplier: 1.30,
   maxHPBonusPercent: 0.05,
 
   requirements: {
