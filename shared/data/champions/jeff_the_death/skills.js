@@ -4,26 +4,30 @@ import totalBlock from "../totalBlock.js";
 
 const jeffTheDeathSkills = [
   // =========================
-  // Bloqueio Total (global)
+  // Total Block (global)
   // =========================
   totalBlock,
+
   // =========================
-  // Habilidades Especiais
+  // Special Abilities
   // =========================
+
   {
-    key: "golpe_funebre",
-    name: "Golpe Fúnebre",
+    key: "funeral_strike",
+    name: "Funeral Strike",
 
     bf: 55,
     contact: true,
     damageMode: "piercing",
-    piercingPercentage: 70, // 70% de perfuração (ignora 70% da Defesa do inimigo)
+    piercingPercentage: 70, // 70% Piercing Damage
     priority: 0,
 
     description() {
-      return `Jeff causa dano perfurante (${this.piercingPercentage}% de perfuração) no alvo inimigo escolhido. Se Jeff já morreu, esta habilidade também causa dano aos campeões adjacentes.`;
+      return `Jeff deals Piercing Damage (${this.piercingPercentage}% Piercing) to the chosen enemy target. If Jeff has already died, this ability also deals damage to adjacent champions.`;
     },
+
     targetSpec: ["enemy"],
+
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
@@ -32,7 +36,7 @@ const jeffTheDeathSkills = [
 
       const results = [];
 
-      // 🎯 PRIMARY
+      // PRIMARY
       const primaryResult = new DamageEvent({
         baseDamage,
         mode: this.damageMode,
@@ -48,28 +52,33 @@ const jeffTheDeathSkills = [
       const primaryResults = Array.isArray(primaryResult)
         ? primaryResult
         : [primaryResult];
+
       results.push(...primaryResults);
 
-      // 🧠 Se não tiver stacks, acabou
+      // No death stacks, so the effect ends here.
       if (user.runtime.deathCounter <= 0) return results;
 
-      const adjacentEnemies = context.getAdjacentChampions(enemy) || [];
+      const adjacentEnemies =
+        context.getAdjacentChampions(enemy) || [];
 
-      // 🎯 Para cada adjacente, cria um resultado
-      for (const adjEnemy of adjacentEnemies) {
+      // Deal damage to each adjacent enemy.
+      for (const adjacentEnemy of adjacentEnemies) {
         const result = new DamageEvent({
           baseDamage,
           mode: this.damageMode,
           piercingPercentage: this.piercingPercentage,
           attacker: user,
-          defender: adjEnemy,
+          defender: adjacentEnemy,
           skill: this,
           type: "physical",
           context,
           allChampions: context?.allChampions,
         }).execute();
 
-        const adjacentResults = Array.isArray(result) ? result : [result];
+        const adjacentResults = Array.isArray(result)
+          ? result
+          : [result];
+
         results.push(...adjacentResults);
       }
 
@@ -78,25 +87,29 @@ const jeffTheDeathSkills = [
   },
 
   {
-    key: "abraço_da_morte",
-    name: "Abraço da Morte",
+    key: "deaths_embrace",
+    name: "Death's Embrace",
 
     bf: 40,
     damageMode: "standard",
 
     markDuration: 2,
-    rewardAttack: 20, // porcentagem de buff permanente por morte do inimigo marcado
-    punishPercent: 0.2, // porcentagem da vida atual como dano adicional por turno se o inimigo não morrer
+    rewardAttack: 20,
+    punishPercent: 0.2,
 
     contact: false,
     priority: 1,
 
     description() {
-      return `Causa dano e marca o alvo por ${this.markDuration} turno(s).
-      Se o alvo morrer enquanto marcado, Jeff recebe +${this.rewardAttack}% de Ataque permanentemente.
-      Caso contrário, o alvo sofre dano adicional equivalente a ${this.punishPercent * 100}% da vida atual por turno.`;
+      return `Deals damage to the chosen target and marks them for ${this.markDuration} turn(s).
+      
+      If the target dies while marked, Jeff gains +${this.rewardAttack} permanent Attack.
+      
+      Otherwise, the target takes bonus damage equal to ${this.punishPercent * 100}% of their current HP at the start of each turn.`;
     },
+
     targetSpec: ["enemy"],
+
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
@@ -112,21 +125,24 @@ const jeffTheDeathSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      // Marcar o inimigo
-      enemy.runtime.markedByAbraçoDaMorte = true;
+      // Mark the enemy.
+      enemy.runtime.markedByDeathsEmbrace = true;
 
       const punishDamage = enemy.HP * this.punishPercent;
       const rewardAttack = this.rewardAttack;
 
       enemy.runtime.hookEffects ??= [];
+
       enemy.runtime.hookEffects.push({
-        key: "abraco_da_morte_mark",
-        expiresAtTurn: context.currentTurn + this.markDuration,
+        key: "deaths_embrace_mark",
+        expiresAtTurn:
+          context.currentTurn + this.markDuration,
 
         onTurnStart({ owner, context }) {
-          if (!owner.runtime.markedByAbraçoDaMorte) return;
+          if (!owner.runtime.markedByDeathsEmbrace) return;
+
           if (this.expiresAtTurn < context.currentTurn) {
-            owner.runtime.markedByAbraçoDaMorte = false;
+            owner.runtime.markedByDeathsEmbrace = false;
             return;
           }
 
@@ -138,7 +154,7 @@ const jeffTheDeathSkills = [
             attacker: null,
             defender: owner,
             skill: {
-              key: "abraco_da_morte_punish",
+              key: "deaths_embrace_punish",
               contact: false,
               damageMode: "absolute",
             },
@@ -148,11 +164,19 @@ const jeffTheDeathSkills = [
           }).execute();
 
           if (result?.immune) {
-            return { log: `${owner.name} é imune ao dano de Abraço da Morte!` };
+            return {
+              log: `${formatChampionName(
+                owner,
+              )} is immune to Death's Embrace damage!`,
+            };
           }
 
           return {
-            log: `${owner.name} sofre ${result?.totalDamage ?? punishDamage} de dano de <b>Abraço da Morte</b>.`,
+            log: `${formatChampionName(
+              owner,
+            )} takes ${
+              result?.totalDamage ?? punishDamage
+            } <b>Death's Embrace</b> damage.`,
           };
         },
       });
@@ -160,13 +184,14 @@ const jeffTheDeathSkills = [
       user.runtime.hookEffects ??= [];
 
       user.runtime.hookEffects.push({
-        key: "abraco_da_morte_buff",
-        expiresAtTurn: context.currentTurn + this.markDuration,
+        key: "deaths_embrace_buff",
+        expiresAtTurn:
+          context.currentTurn + this.markDuration,
 
         onChampionDeath({ deadChampion, context }) {
           if (deadChampion !== enemy) return;
 
-          // Recompensa: Jeff ganha buff permanente
+          // Reward: Jeff gains permanent Attack.
           user.modifyStat({
             statName: "Attack",
             amount: rewardAttack,
@@ -174,9 +199,10 @@ const jeffTheDeathSkills = [
             context,
           });
 
-          user.runtime.hookEffects = user.runtime.hookEffects.filter(
-            (he) => he.key !== "abraco_da_morte_buff",
-          );
+          user.runtime.hookEffects =
+            user.runtime.hookEffects.filter(
+              (effect) => effect.key !== "deaths_embrace_buff",
+            );
         },
       });
 
@@ -185,8 +211,9 @@ const jeffTheDeathSkills = [
   },
 
   {
-    key: "inevitabilidade_da_morte",
-    name: "Inevitabilidade da Morte",
+    key: "deaths_inevitability",
+    name: "Death's Inevitability",
+
     bf: 50,
 
     contact: false,
@@ -198,11 +225,13 @@ const jeffTheDeathSkills = [
     priority: 0,
 
     threshold: 0.25,
-    // porcentagem de HP para ativar a execução (25%)
+
     description() {
-      return `Jeff causa dano moderado ao alvo e o marca para morrer. No início do próximo turno, se o alvo estiver abaixo de ${this.threshold * 100}% de HP, a Morte o reclama!`;
+      return `Deals moderate damage to the chosen target and marks them for death. At the start of the next turn, if the target is below ${this.threshold * 100}% HP, Death claims them.`;
     },
+
     targetSpec: ["enemy"],
+
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
@@ -219,27 +248,33 @@ const jeffTheDeathSkills = [
       }).execute();
 
       const threshold = this.threshold;
-      const triggerTurn = (context.currentTurn ?? 0) + 1;
-      enemy.runtime.markedByInevitabilidadeDaMorte = true;
+      const triggerTurn =
+        (context.currentTurn ?? 0) + 1;
 
-      // Hook interno da lógica de "execução inevitável"
+      enemy.runtime.markedByDeathsInevitability = true;
+
+      // Internal hook for the inevitable execution.
       const hook = {
         key: "death_claim_execution",
         group: "deathClaim",
         triggerTurn,
 
-        priority: -999, // se implementar
+        priority: -999,
 
         onTurnStart({ owner, context }) {
           if (!owner.alive) {
-            owner.runtime.markedByInevitabilidadeDaMorte = false;
-            owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
-              (he) => he.key !== "death_claim_execution",
-            );
+            owner.runtime.markedByDeathsInevitability = false;
+
+            owner.runtime.hookEffects =
+              owner.runtime.hookEffects.filter(
+                (effect) =>
+                  effect.key !== "death_claim_execution",
+              );
+
             return;
           }
 
-          // Checa uma única vez: no início do turno seguinte ao da aplicação (X+1)
+          // Check only once, at the start of the following turn.
           if (context.currentTurn !== this.triggerTurn) return;
 
           if (owner.HP / owner.maxHP <= threshold) {
@@ -248,29 +283,40 @@ const jeffTheDeathSkills = [
             owner.HP = 0;
             owner.alive = false;
 
-            // Caso execute, limpa imediatamente (alvo será removido no processamento de mortes)
-            owner.runtime.markedByInevitabilidadeDaMorte = false;
-            owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
-              (he) => he.key !== "death_claim_execution",
-            );
+            // Clear immediately upon execution.
+            owner.runtime.markedByDeathsInevitability = false;
+
+            owner.runtime.hookEffects =
+              owner.runtime.hookEffects.filter(
+                (effect) =>
+                  effect.key !== "death_claim_execution",
+              );
           }
         },
 
         onTurnEnd({ owner, context }) {
-          // Se não executou no check, expira visual/backend no fim do mesmo turno (X+1)
+          // If the execution did not trigger, the mark expires
+          // at the end of the same turn.
           if (context.currentTurn !== this.triggerTurn) return;
 
-          owner.runtime.markedByInevitabilidadeDaMorte = false;
+          owner.runtime.markedByDeathsInevitability = false;
         },
       };
+
       console.log(
-        `[JEFF][INEVITABILIDADE DA MORTE] Hook de execução a ser registrado para ${formatChampionName(enemy.name)}. hook: `,
+        `[JEFF][DEATH'S INEVITABILITY] Execution hook scheduled for ${formatChampionName(
+          enemy,
+        )}. Hook:`,
         hook,
       );
+
       enemy.runtime.hookEffects ??= [];
       enemy.runtime.hookEffects.push(hook);
+
       console.log(
-        `[JEFF][INEVITABILIDADE DA MORTE] Hook registrado. hookEffects atuais de ${formatChampionName(enemy.name)}: `,
+        `[JEFF][DEATH'S INEVITABILITY] Hook registered. Current hookEffects for ${formatChampionName(
+          enemy,
+        )}:`,
         enemy.runtime.hookEffects,
       );
 

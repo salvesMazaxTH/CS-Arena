@@ -5,7 +5,7 @@ import { getClaimPoints } from "../../../engine/combat/claim.js";
 
 const vaelSkills = [
   // ========================
-  // Bloqueio Total (global)
+  // Total block (global)
   // ========================
   totalBlock,
   // ========================
@@ -137,7 +137,10 @@ const vaelSkills = [
         : result?.killed;
 
       if (didKill) {
-        const claimPoints = context.preActionClaimPoints ?? getClaimPoints(user, context.currentTurn) ?? 0;
+        const claimPoints =
+          context.preActionClaimPoints ??
+          getClaimPoints(user, context.currentTurn) ??
+          0;
 
         if (claimPoints > 0) {
           context.registerScore({

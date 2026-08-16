@@ -9,5 +9,5 @@ export default {
 
   classKey: "brawler",
   elementalAffinities: ["water"],
-  species: ["transfigured", "Divine-forged"],
+  species: ["transfigured", "divine-forged"],
 };

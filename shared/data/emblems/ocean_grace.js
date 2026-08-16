@@ -10,7 +10,7 @@ export const oceanGrace = {
   requirements: {
     elementalAffinity: {
       element: "water",
-      count: 2,
+      count: 3,
     },
   },
 

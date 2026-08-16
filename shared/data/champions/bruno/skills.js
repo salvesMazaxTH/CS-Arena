@@ -3,7 +3,7 @@ import totalBlock from "../totalBlock.js";
 
 const brunoSkills = [
   // ========================
-  // Bloqueio Total (global)
+  // Total block (global)
   // ========================
   totalBlock,
 

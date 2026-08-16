@@ -46,8 +46,8 @@ function restoreRevivedState(champion, reviveFrom) {
 }
 
 export default {
-  key: "death_does_not_end",
-  name: "Death Does Not End",
+  key: "the_jeff_does_not_end",
+  name: "The Jeff Does Not End",
 
   description(champion) {
     return `When Jeff is defeated, he returns to the battlefield at the start of the next turn with 75% of his Max HP, retaining his accumulated buffs and stacks. Whenever a character dies, Jeff gains +30% permanent Attack and +30% permanent Defense.
@@ -110,7 +110,7 @@ export default {
       },
 
       dialog: {
-        message: `[Passive - <b>Death Does Not End</b>] ${formatChampionName(
+        message: `[Passive - <b>${this.name}</b>] ${formatChampionName(
           defender,
         )} returns to the battlefield!`,
         sourceId: null,

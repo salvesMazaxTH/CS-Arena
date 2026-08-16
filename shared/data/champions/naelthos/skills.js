@@ -4,7 +4,7 @@ import totalBlock from "../totalBlock.js";
 
 const naelthosSkills = [
   // ========================
-  // Bloqueio Total (global)
+  // Total block (global)
   // ========================
   totalBlock,
   // ========================
@@ -69,13 +69,14 @@ const naelthosSkills = [
         const userName = formatChampionName(user);
         const allyName = formatChampionName(ally);
         const purificationLog = debuffStatusEffects.length
-          ? ` e purifica ${allyName} de ${debuffStatusEffects.length} efeito(s) negativo(s)`
+          ? ` and purifies ${allyName} of ${debuffStatusEffects.length} negative effect(s)`
           : "";
 
-        allyLog = `${userName} cura ${allyName} em ${healAmount} de HP${purificationLog}. HP final de ${allyName}: ${ally.HP}/${ally.maxHP}`;
+        allyLog = `${userName} heals ${allyName} for ${healAmount} HP${purificationLog}. Final HP of ${allyName}: ${ally.HP}/${ally.maxHP}`;
+
       } else {
         const userName = formatChampionName(user);
-        allyLog = `${userName} tenta curar um aliado, mas nenhum está disponível.`;
+        allyLog = `${userName} attempted to heal an ally, but none are available.`;
       }
 
       results.push({
@@ -141,7 +142,7 @@ const naelthosSkills = [
           return {
             cancel: true,
             immune: true,
-            message: `${formatChampionName(defender)} está em Forma Aquática! É inalvejável e imune a dano!`,
+            message: `${formatChampionName(defender)} is in Aquatic Form! It is untargetable and immune to damage!`,
           };
         },
         onStatusEffectIncoming({ target, statusEffect }) {
@@ -149,7 +150,7 @@ const naelthosSkills = [
           return {
             cancel: true,
             immune: true,
-            message: `${formatChampionName(target)} está em Forma Aquática! É inalvejável e imune a efeitos negativos!`,
+            message: `${formatChampionName(target)} is in Aquatic Form! It is untargetable and immune to negative effects!`,
           };
         },
       };
@@ -165,7 +166,7 @@ const naelthosSkills = [
       const userName = formatChampionName(user);
       return [
         {
-          log: `${userName} usa Forma Aquática! Está inalvejável até o turno ${currentTurn + this.effectDuration}. (Pode ser interrompido por ação do usuário).`,
+          log: `${userName} uses Aquatic Form! It is untargetable until turn ${currentTurn + this.effectDuration}. (Can be interrupted by the user's action).`,
         },
       ];
     },
@@ -224,7 +225,7 @@ const naelthosSkills = [
       const userName = formatChampionName(user);
       return [
         {
-          log: `${userName} invoca o Mar Primordial! HP máximo dobrado; efeito "Mar em Ascensão" ativo neste e nos próximos 2 turnos.`,
+          log: `${userName} invokes the Primordial Sea! Maximum HP doubled; "Rising Sea" effect active this and the next 2 turns.`,
         },
       ];
     },

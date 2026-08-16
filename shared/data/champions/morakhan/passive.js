@@ -1,23 +1,23 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
-  key: "primeiro_sutra_coracao_adamantino",
-  name: "Primeiro Sutra: Coração Adamantino",
+  key: "first_sutra_adamantine_heart",
+  name: "First Sutra: Adamantine Heart",
 
-  flatReductionVSContact: 25, // Mantém para referência, mas não mais usado para trigger
+  flatReductionVSContact: 25, // Kept for reference, but no longer used as a trigger
   stabilityStacksCap: 4,
   dmgBuffAuraDuration: 2,
 
   description(champion) {
     const stacks = champion.runtime?.stabilityStacks || 0;
 
-    return `Morakhan reduz dano sofrido em 10% (exceto dano absoluto) e reduz ${this.flatReductionVSContact} de dano adicional de ataques físicos.
+    return `Morakhan takes 10% less damage (except Absolute Damage) and reduces damage taken from physical attacks by an additional ${this.flatReductionVSContact}.
 
-    Sempre que sofre dano físico, ganha 1 acúmulo de <b>Estabilidade</b> (máx. ${this.stabilityStacksCap}).
+    Whenever he takes Physical Damage, he gains 1 <b>Stability</b> stack (Max: ${this.stabilityStacksCap}).
 
-    Ao sofrer um golpe significativo, consome todos os acúmulos para reduzir o dano recebido em 10% por acúmulo e fortalece seus próximos danos por ${this.dmgBuffAuraDuration} turno(s).
+    When he takes a significant hit, he consumes all Stability stacks to reduce the damage taken by an additional 10% per stack and doubles his damage dealt for the next ${this.dmgBuffAuraDuration} turn(s).
 
-    <b>Acúmulos atuais: ${stacks}</b>`;
+    <b>Current Stacks: ${stacks}</b>`;
   },
 
   hookScope: {
@@ -32,51 +32,72 @@ export default {
 
     let finalDamage = damage;
 
-    if (isPhysical)
-      finalDamage = Math.max(5, finalDamage - this.flatReductionVSContact); // 5 para respeitar o piso mínimo global
+    if (isPhysical) {
+      finalDamage = Math.max(
+        5,
+        finalDamage - this.flatReductionVSContact,
+      );
+    }
 
     finalDamage *= 0.9;
 
-    // 🔹 avaliação de golpe significativo
+    // Evaluate whether this is a significant hit.
     const hp = owner.HP;
     const nextHp = hp - damage;
     const halfHp = owner.maxHP * 0.5;
 
     const isSignificantHit =
-      (hp > halfHp && nextHp < halfHp) || (hp <= halfHp && nextHp <= 0);
+      (hp > halfHp && nextHp < halfHp) ||
+      (hp <= halfHp && nextHp <= 0);
 
-    if (!stacks || !isSignificantHit) return { damage: finalDamage };
+    if (!stacks || !isSignificantHit) {
+      return { damage: finalDamage };
+    }
 
     finalDamage *= 1 - 0.1 * stacks;
     owner.runtime.stabilityStacks = 0;
 
     const runtime = (owner.runtime ??= {});
     runtime.hookEffects ??= [];
+
     runtime.hookEffects = runtime.hookEffects.filter(
-      (effect) => effect.key !== "morakhan_estabilidade_adamantina_burst",
+      (effect) =>
+        effect.key !== "morakhan_adamantine_stability_burst",
     );
+
     runtime.hookEffects.push({
-      key: "morakhan_estabilidade_adamantina_burst",
-      name: "Estabilidade Adamantina Amplificada",
+      key: "morakhan_adamantine_stability_burst",
+      name: "Empowered Adamantine Stability",
       expiresAtTurn: context.currentTurn + 2,
+
       hookScope: {
         onBeforeDmgDealing: "attacker",
       },
+
       hookPolicies: {
         onBeforeDmgDealing: {
           allowOnDot: true,
           allowOnNestedDamage: true,
         },
       },
+
       onBeforeDmgDealing({ damage, attacker, skill }) {
         return {
           damage: damage * 2,
-          log: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(attacker)} duplica o dano causado${skill?.key === "quarto_sutra_postura_da_montanha_counter" ? " pelo contra-ataque" : ""}!`,
+          log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
+            attacker,
+          )} doubles the damage dealt${
+            skill?.key === "fourth_sutra_mountain_stance_counter"
+              ? " by the counterattack"
+              : ""
+          }!`,
         };
       },
     });
 
-    const msg = `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} consumiu ${stacks} acúmulo(s) de Estabilidade!`;
+    const msg = `<b>[Passive — ${this.name}]</b> ${formatChampionName(
+      owner,
+    )} consumed ${stacks} Stability stack(s)!`;
 
     context.registerDialog?.({
       message: msg,
@@ -84,7 +105,10 @@ export default {
       targetId: defender.id,
     });
 
-    return { damage: finalDamage, log: msg };
+    return {
+      damage: finalDamage,
+      log: msg,
+    };
   },
 
   onAfterDmgTaking({ damage, skill, owner, type }) {
@@ -99,7 +123,9 @@ export default {
     runtime.stabilityStacks = stacks + 1;
 
     return {
-      log: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} ganha 1 acúmulo de Estabilidade (${runtime.stabilityStacks}/${this.stabilityStacksCap}).`,
+      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
+        owner,
+      )} gains 1 Stability stack (${runtime.stabilityStacks}/${this.stabilityStacksCap}).`,
     };
   },
 };

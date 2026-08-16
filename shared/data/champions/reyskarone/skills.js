@@ -4,7 +4,7 @@ import totalBlock from "../totalBlock.js";
 
 const reyskaroneSkills = [
   // =========================
-  // Bloqueio Total (global)
+  // Total block (global)
   // =========================
   totalBlock,
   // =========================

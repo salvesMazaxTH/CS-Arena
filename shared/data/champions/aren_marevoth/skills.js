@@ -6,7 +6,7 @@ import { getClaimPoints } from "../../../engine/combat/claim.js";
 
 const arenMarevothSkills = [
   // ========================
-  // Bloqueio Total (global)
+  // Total block (global)
   // ========================
   totalBlock,
 
@@ -129,7 +129,7 @@ const arenMarevothSkills = [
               (he) => he.key !== "blessing_of_the_ocean_depths_hook",
             );
 
-            const healAmount = owner.maxHP * 0.10;
+            const healAmount = owner.maxHP * 0.1;
             owner.heal(healAmount, context, owner);
 
             return {
@@ -223,9 +223,7 @@ const arenMarevothSkills = [
       user.runtime.hookEffects ??= [];
 
       if (
-        !user.runtime.hookEffects.some(
-          (he) => he.key === "abyssal_depths_hook",
-        )
+        !user.runtime.hookEffects.some((he) => he.key === "abyssal_depths_hook")
       ) {
         user.runtime.hookEffects.push({
           key: "abyssal_depths_hook",
