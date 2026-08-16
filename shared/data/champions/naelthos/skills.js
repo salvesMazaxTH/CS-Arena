@@ -8,11 +8,11 @@ const naelthosSkills = [
   // ========================
   totalBlock,
   // ========================
-  // Habilidades Especiais
+  // Special Skills
   // ========================
   {
-    key: "toque_da_mare_serena",
-    name: "Toque da Maré Serena",
+    key: "touch_of_the_serene_tide",
+    name: "Touch of the Serene Tide",
     bf: 75,
     healAmount: 30,
     damageMode: "standard",
@@ -21,7 +21,7 @@ const naelthosSkills = [
     priority: 0,
     element: "water",
     description() {
-      return `Naelthos causa dano ao inimigo. Em seguida, cura o aliado mais ferido em ${this.healAmount} HP e purifica-o de todos efeitos de status negativos.`;
+      return `Naelthos deals damage to the enemy. Then, heals the most injured ally for ${this.healAmount} HP and purifies them of all negative status effects.`;
     },
     targetSpec: ["enemy"],
 
@@ -33,7 +33,7 @@ const naelthosSkills = [
 
       const results = [];
 
-      // 🗡️ Dano no inimigo (se ainda vivo)
+      // 🗡️ Damage to enemy (if still alive)
       if (enemy) {
         const damageResult = new DamageEvent({
           baseDamage,
@@ -57,7 +57,7 @@ const naelthosSkills = [
         .sort((a, b) => a.HP / a.maxHP - b.HP / b.maxHP)[0];
       const ally = moreInjuredAlly || null;
 
-      // 💧 Cura no aliado (se existir)
+      // 💧 Heal ally (if available)
       if (ally) {
         ally.heal(healAmount, context, user);
         const debuffStatusEffects = ally.getStatusEffects({ type: "debuff" });
@@ -88,15 +88,15 @@ const naelthosSkills = [
   },
 
   {
-    key: "forma_aquatica",
-    name: "Forma Aquática",
+    key: "aquatic_form",
+    name: "Aquatic Form",
     effectDuration: 2,
     contact: false,
 
     priority: 2,
     element: "water",
     description() {
-      return `Transforma-se em água pura, ficando inalvejável por ${this.effectDuration} turnos. Pode ser interrompido se executar uma ação ou se for alvejado por uma habilidade de raio (nesse caso, o dano é reduzido pela metade).`;
+      return `Transforms into pure water, becoming untargetable for ${this.effectDuration} turns. Can be interrupted if the user takes an action, or if targeted by a lightning skill (in which case, damage is halved).`;
     },
     targetSpec: ["self"],
 
@@ -106,9 +106,9 @@ const naelthosSkills = [
       user.runtime.hookEffects ??= [];
 
       const hookEffect = {
-        key: "forma_aquatica_hook",
+        key: "aquatic_form_hook",
         group: "skill",
-        form: "bola_agua",
+        form: "aquatic_form",
         expiresAtTurn: currentTurn + this.effectDuration,
         hookScope: {
           onDamageIncoming: "defender",
@@ -121,16 +121,16 @@ const naelthosSkills = [
         },
         onActionResolved({ actionSource, owner, skill }) {
           if (actionSource !== owner) return;
-          if (skill?.key === "forma_aquatica") return;
+          if (skill?.key === "aquatic_form") return;
           owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
-            (e) => e.key !== "forma_aquatica_hook",
+            (e) => e.key !== "aquatic_form_hook",
           );
           owner.runtime.form = null;
         },
         onDamageIncoming({ defender, damage, skill }) {
           if (skill?.element === "lightning") {
             defender.runtime.hookEffects = defender.runtime.hookEffects.filter(
-              (e) => e.key !== "forma_aquatica_hook",
+              (e) => e.key !== "aquatic_form_hook",
             );
             defender.runtime.form = null;
             return {
@@ -156,7 +156,7 @@ const naelthosSkills = [
       };
 
       user.runtime.hookEffects.push(hookEffect);
-      user.runtime.form = "bola_agua"; // Para animação visual
+      user.runtime.form = "aquatic_form"; // Para animação visual
 
       // Apply inert como status effect (interrompível por ação)
       /*       user.applyStatusEffect("inert", this.effectDuration, context, {
@@ -173,8 +173,8 @@ const naelthosSkills = [
   },
 
   {
-    key: "transbordar_do_mar_primordial",
-    name: "Transbordar do Mar Primordial",
+    key: "overflow_of_the_primordial_sea",
+    name: "Overflow of the Primordial Sea",
     hpFactor: 55,
     healAmount: 50,
     effectDuration: 3,
@@ -190,7 +190,7 @@ const naelthosSkills = [
 
     priority: 0,
     description() {
-      return `Aumenta HP máximo em ${this.hpFactor}% do HP base, cura ${this.healAmount} HP e ativa o efeito Mar em Ascensão: ataques recebem bônus de dano (+${this.bonusPerStack} para cada ${this.hpPerStack} de HP atual, até ${this.maxBonus}) por ${this.effectDuration} turnos.`;
+      return `Increases max HP by ${this.hpFactor}% of base HP, restores ${this.healAmount} HP, and activates the Rising Sea effect: attacks gain a damage bonus (+${this.bonusPerStack} for every ${this.hpPerStack} current HP, up to ${this.maxBonus}) for ${this.effectDuration} turns.`;
     },
     targetSpec: ["self"],
 
@@ -208,9 +208,9 @@ const naelthosSkills = [
         isPermanent: true,
       });
 
-      // 🔮 Aplica o modificador de dano por 3 turnos (inclui o atual)
+      // 🔮 Applies damage modifier for 3 turns (including current)
       user.addDamageModifier({
-        id: "mar-em-ascensao",
+        id: "rising_sea",
         expiresAtTurn: currentTurn + this.effectDuration,
 
         apply: ({ baseDamage, attacker }) => {
@@ -225,7 +225,7 @@ const naelthosSkills = [
       const userName = formatChampionName(user);
       return [
         {
-          log: `${userName} invokes the Primordial Sea! Maximum HP doubled; "Rising Sea" effect active this and the next 2 turns.`,
+          log: `${userName} invokes the Primordial Sea! Maximum HP increased; "Rising Sea" effect active this and the next 2 turns.`,
         },
       ];
     },

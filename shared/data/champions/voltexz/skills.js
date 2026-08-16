@@ -9,18 +9,18 @@ const voltexzSkills = [
   // ========================
   totalBlock,
   // ========================
-  // Habilidades Especiais
+  // Special Skills
   // ========================
   {
     key: "relampagos_gemeos",
-    name: "Relâmpagos Gêmeos",
+    name: "Twin Lightnings",
     bf: 40,
     contact: false,
     damageMode: "standard",
     priority: 0,
     element: "lightning",
     description() {
-      return `Causa dano em até dois inimigos (pode escolher o mesmo alvo para ambos).`;
+      return `Deals damage to up to two enemies (the same target can be chosen for both).`;
     },
     targetSpec: [{ type: "enemy" }, { type: "enemy" }],
 
@@ -74,7 +74,7 @@ const voltexzSkills = [
   },
   {
     key: "choque_estatico",
-    name: "Choque Estático",
+    name: "Static Shock",
     bf: 20,
     paralyzeDuration: 2,
     contact: false,
@@ -82,7 +82,7 @@ const voltexzSkills = [
     priority: 1,
     element: "lightning",
     description() {
-      return `Causa dano (BF ${this.bf}) e deixa o alvo {paralisado} por ${this.paralyzeDuration} turno(s), fazendo-o perder a próxima ação.`;
+      return `Deals damage (BF ${this.bf}) and leaves the target {paralyzed} for ${this.paralyzeDuration} turn(s), causing them to lose their next action.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -110,13 +110,13 @@ const voltexzSkills = [
       let paralyzed;
 
       console.log(
-        "[Votexz - Choque Estático] DamageResult (mainDamage):",
+        "[Voltexz - Static Shock] DamageResult (mainDamage):",
         mainDamage,
         "mainDamage.totalDamage:",
         mainDamage?.totalDamage,
       );
 
-      // Aplica o efeito de paralisia (só se o golpe chegou)
+      // Apply paralysis effect (only if the hit landed)
       if (
         !mainDamage?.evaded &&
         !mainDamage?.immune &&
@@ -147,7 +147,7 @@ const voltexzSkills = [
 
   {
     key: "descarga_cataclismica",
-    name: "Descarga Cataclísmica",
+    name: "Cataclysmic Discharge",
     bf: 185,
     contact: false,
     damageMode: "standard",
@@ -156,7 +156,7 @@ const voltexzSkills = [
     priority: 0,
     element: "lightning",
     description() {
-      return `Causa dano massivo ao inimigo.`;
+      return `Deals massive damage to the enemy.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {

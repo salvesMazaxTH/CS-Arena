@@ -8,17 +8,17 @@ const torrenSkills = [
   // ========================
   totalBlock,
   // ========================
-  // Habilidades Especiais
+  // Special Skills
   // ========================
   {
-    key: "espada_estrondeante",
-    name: "Espada Estrondeante",
+    key: "thundering_sword",
+    name: "Thundering Sword",
     bf: 50,
     contact: true,
     damageMode: "standard",
     priority: 0,
     description() {
-      return `Causa dano ao inimigo escolhido e atordoa um outro inimigo aleatório.`;
+      return `Deals damage to the chosen enemy and stuns another random enemy.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -69,8 +69,8 @@ const torrenSkills = [
   },
 
   {
-    key: "desprezar_os_fracos",
-    name: "Desprezar os Fracos",
+    key: "scorn_the_weak",
+    name: "Scorn the Weak",
 
     bf: 40,
     contact: true,
@@ -82,8 +82,8 @@ const torrenSkills = [
     tauntDuration: 2,
 
     description() {
-      return `Causa dano perfurante (${this.piercingPercentage}% de perfuração) ao inimigo mais frágil.
-      Se sua fragilidade for significativamente maior que a de Torren, ele é provocado por ${this.tauntDuration} turno(s) e causa menos dano a outros alvos.`;
+      return `Deals piercing damage (${this.piercingPercentage}% pierce) to the most fragile enemy.
+      If their fragility is significantly greater than Torren's, they are taunted for ${this.tauntDuration} turn(s) and deal less damage to other targets.`;
     },
 
     targetSpec: ["all:enemy"],
@@ -98,12 +98,12 @@ const torrenSkills = [
         return { t, score };
       });
 
-      // 🔹 sempre escolhe o mais frágil (mesmo se não passar threshold)
+      // 🔹 always picks the most fragile (even if threshold isn't met)
       const best = scoredTargets.reduce((best, curr) => {
         return !best || curr.score > best.score ? curr : best;
       }, null);
 
-      if (!best) return null; // segurança
+      if (!best) return null; // safety
 
       const target = best.t;
       const targetScore = best.score;
@@ -120,7 +120,7 @@ const torrenSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      // 🔥 condição real de fraqueza
+      // 🔥 actual weakness condition
       const isWeakEnough =
         targetScore >= torrenScore * this.thresholdMultiplier;
 
@@ -129,7 +129,7 @@ const torrenSkills = [
       if (isWeakEnough) {
         tauntLog = target.applyTaunt(user.id, this.tauntDuration, context);
         target.addDamageModifier({
-          key: "desprezado",
+          key: "scorned",
           expiresAtTurn: context.currentTurn + this.tauntDuration,
           apply: ({ damage, defender }) => {
             if (!defender || defender.id !== user.id) {
@@ -159,8 +159,8 @@ const torrenSkills = [
 
     priority: 0,
     description() {
-      return `Causa dano perfurante (${this.piercingPercentage}% de perfuração) ao inimigo mais frágil. 
-      Se sua fragilidade for significativamente maior que a de Torren, ele é provocado por ${this.tauntDuration} turno(s).`;
+      return `Deals piercing damage (${this.piercingPercentage}% pierce) to the most fragile enemy.
+      If their fragility is significantly greater than Torren's, they are taunted for ${this.tauntDuration} turn(s).`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {

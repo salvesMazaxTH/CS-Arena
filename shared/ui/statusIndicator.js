@@ -46,7 +46,7 @@ export const StatusIndicator = {
     paralyzed: {
       type: "image",
       value: "/assets/indicators/paralisado_indicator.png",
-      background: "",
+      background: "none",
       label: "Paralisado",
     },
     stunned: {
@@ -82,7 +82,7 @@ export const StatusIndicator = {
     absoluteimmunity: {
       type: "image",
       value: "/assets/indicators/imunidade_absoluta_indicator.png",
-      background: "rgba(0, 255, 255, 0.8)",
+      background: "none",
       label: "Imunidade Absoluta",
     },
     burning: {
@@ -106,9 +106,9 @@ export const StatusIndicator = {
       showStackCount: true,
     },
     rooted: {
-      type: "emoji",
-      value: "🌱",
-      background: "rgba(34, 139, 34, 0.8)",
+      type: "image",
+      value: "/assets/indicators/rooted_indicator.png",
+      background: "none",
       label: "Enraizado",
     },
     provocado: {
@@ -278,7 +278,11 @@ export const StatusIndicator = {
           indicator.appendChild(img);
         }
 
-        indicator.style.backgroundColor = icon.background || "rgba(0,0,0,0.6)";
+        if (icon.background === "none") {
+          indicator.style.background = "none";
+        } else {
+          indicator.style.background = icon.background || "rgba(0, 0, 0, 0.6)";
+        }
 
         portrait.appendChild(indicator);
       }

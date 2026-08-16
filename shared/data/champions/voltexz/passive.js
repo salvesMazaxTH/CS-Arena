@@ -1,15 +1,15 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
-const editMode = false; // Ative para testar o recuo de Voltexz (dano: 0 ou 999), entre outras coisas.
+const editMode = false; // Enable to test Voltexz's recoil (damage: 0 or 999), among other things.
 
 export default {
-  key: "sobrecarga_instavel",
-  name: "Sobrecarga Instável",
+  key: "unstable_overcharge",
+  name: "Unstable Overcharge",
   recoilPercent: 15,
   conductorDuration: 2,
   conductorBonusPercent: 15,
   description() {
-    return `Sempre que Voltexz causar dano com uma habilidade, ela sofre ${this.recoilPercent}% do dano ({absoluto}) efetivamente causado como recuo. Além disso, ao causar dano, ela marca o alvo com "Condutor". Ao atacar um alvo com "Condutor", Voltexz causa ${this.conductorBonusPercent}% de dano adicional (consome o status) (Dano adicional Mín. 15).`;
+    return `Whenever Voltexz deals damage with a skill, she takes ${this.recoilPercent}% of the damage actually dealt as recoil (absolute damage). Additionally, when dealing damage, she marks the target with "Conductor". When attacking a target with "Conductor", Voltexz deals ${this.conductorBonusPercent}% bonus damage (consumes the status) (Min. bonus damage: 15).`;
   },
   hookScope: {
     onAfterDmgDealing: "attacker",
@@ -17,7 +17,7 @@ export default {
   },
 
   onAfterDmgDealing({ attacker, defender, owner, skill, damage, context }) {
-    if ((context.damageDepth ?? 0) > 0) return; // Evita recuo em dano causado pelo próprio recuo e etc.
+    if ((context.damageDepth ?? 0) > 0) return; // Avoids recoil on damage caused by the recoil itself, etc.
 
     let log = "";
 
@@ -38,17 +38,17 @@ export default {
         source: owner,
         defender: owner,
         skill: {
-          key: "sobrecarga_instavel_recoil",
-          name: "Recuo (Sobrecarga Instável)",
-          suppressLog: true, // <- flag para suprimir log padrão
+          key: "unstable_overcharge_recoil",
+          name: "Recoil (Unstable Overcharge)",
+          suppressLog: true, // <- flag to suppress default log
         },
 
         dialog: {
-          message: `${formatChampionName(owner)} sofreu ${Math.floor(recoilDamage)} de recuo por "<b>Sobrecarga Instável</b>"!`,
+          message: `${formatChampionName(owner)} took ${Math.floor(recoilDamage)} recoil damage from "<b>Unstable Overcharge</b>"!`,
           duration: 1000,
         },
       });
-      log += `[Passiva - <b>Sobrecarga Instável</b>] ${formatChampionName(owner)} sofreu ${Math.floor(recoilDamage)} de dano de recuo.`;
+      log += `[Passive - <b>Unstable Overcharge</b>] ${formatChampionName(owner)} took ${Math.floor(recoilDamage)} recoil damage.`;
     }
 
     if (defender.hasStatusEffect?.("conductor")) {
@@ -86,14 +86,14 @@ export default {
     defender.removeStatusEffect("conductor");
 
     context.registerDialog({
-      message: `${formatChampionName(defender)} foi consumido por <b>"Condutor"</b>!`,
+      message: `${formatChampionName(defender)} was consumed by <b>"Conductor"</b>!`,
       sourceId: attacker.id,
       targetId: defender.id,
       duration: 1000,
       timing: "post",
     });
 
-    let log = `⚡ ACERTO ! ${formatChampionName(attacker)} explorou "Condutor" de ${formatChampionName(defender)} (+${this.conductorBonusPercent}% dano)!`;
+    let log = `⚡ HIT! ${formatChampionName(attacker)} exploited "Conductor" on ${formatChampionName(defender)} (+${this.conductorBonusPercent}% damage)!`;
 
     return {
       damage: damage + bonusDamage,

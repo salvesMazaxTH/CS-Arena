@@ -10,7 +10,7 @@ export const ironclad = {
   },
 
   description() {
-    return "Seus campeões recebem 15% de redução de dano e são imunes a dano indireto.";
+    return "Your champions gain 15% damage reduction and are immune to indirect damage.";
   },
 
   hookScope: {
@@ -50,7 +50,7 @@ export const ironclad = {
     return {
       cancel: true,
       immune: true,
-      message: `<b>[Emblem — Ironclad]</b> ${defender.name} é imune a dano indireto!`,
+      message: `<b>[Emblem — Ironclad]</b> ${defender.name} is immune to indirect damage!`,
     };
   },
 };

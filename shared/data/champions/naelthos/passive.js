@@ -2,14 +2,14 @@ import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
   key: "mar_que_retorna",
-  name: "Mar que Retorna",
+  name: "Returning Sea",
   healPerStack: 5,
   hpPerStack: 25,
   maxHeal: 35,
   description() {
-    return `Sempre que Naelthos receber dano (exceto dano ao longo do tempo),
-    ele se cura em +${this.healPerStack} para cada ${this.hpPerStack} de HP perdido neste acerto.
-    (Máx. +${this.maxHeal} por acerto)`;
+    return `Whenever Naelthos takes damage (except DoT),
+    he restores ${this.healPerStack} HP for every ${this.hpPerStack} HP lost in that hit.
+    (Max. +${this.maxHeal} per hit)`;
   },
 
   hookScope: {
@@ -48,7 +48,7 @@ export default {
     */
     const ownerName = formatChampionName(owner);
     return {
-      log: `[PASSIVA — Mar que Retorna] ${ownerName} recuperou ${heal} HP.`,
+      log: `[PASSIVE — Returning Sea] ${ownerName} restored ${heal} HP.`,
     };
   },
 };

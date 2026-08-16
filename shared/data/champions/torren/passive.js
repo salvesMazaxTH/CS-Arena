@@ -1,13 +1,12 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
-formatChampionName
 
 export default {
-  key: "inexoravel",
-  name: "Inexorável",
+  key: "inexorable",
+  name: "Inexorable",
 
   description() {
-    return `Só pode sofrer dano direto de habilidades. Dano ao longo do tempo e efeitos não o afetam. Além disso, Torren recebe 10% a menos de dano de todas as fontes (exceto Dano Absoluto).`;
+    return `Can only take direct damage from skills. Damage over time and indirect effects do not affect him. Additionally, Torren takes 10% less damage from all sources (except Absolute Damage).`;
   },
 
   hookScope: {
@@ -20,7 +19,7 @@ export default {
       return {
         cancel: true,
         immune: true,
-        message: `<b>[Passiva - ${this.name}]</b> ${formatChampionName(defender)} é imune a dano indireto!`,
+        message: `<b>[Passive - ${this.name}]</b> ${formatChampionName(defender)} is immune to indirect damage!`,
       };
     }
   },
