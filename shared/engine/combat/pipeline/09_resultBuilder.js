@@ -1,8 +1,8 @@
-// step9 - resultBuilder.js - Consolida o resultado final do ataque, incluindo logs, dano total, HP final, etc. Pode ser um objeto ou um array (em caso de contra-ataques/reflects).
+// step9 - resultBuilder.js - Consolidates the final result of the attack, including logs, total damage, final HP, etc. Can be an object or an array (in case of counter-attacks/reflects).
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export function buildFinalResult(event) {
-  // Consolida todos os logs (os da pipeline + os que hooks podem ter jogado no context)
+  // Consolidates all logs (those from the pipeline + any that hooks may have added to the context)
   const allLogs = [
     ...event.beforeLogs,
     ...event.afterLogs,
@@ -17,10 +17,10 @@ export function buildFinalResult(event) {
         ? event.skill.name
         : event.skill;
     const dmg = Math.floor(event.damage);
-    finalLog = `${targetName} sofreu ${dmg} de dano${
-      effectName ? ` de <b>${effectName}</b>` : ""
+    finalLog = `${targetName} took ${dmg} damage${
+      effectName ? ` from <b>${effectName}</b>` : ""
     }`;
-    finalLog += `\nHP final de ${targetName}: ${event.hpAfter}/${event.defender.maxHP}`;
+    finalLog += `\nfinal HP of ${targetName}: ${event.hpAfter}/${event.defender.maxHP}`;
   } else {
     finalLog = _buildLog(
       event.attacker,
@@ -36,7 +36,7 @@ export function buildFinalResult(event) {
     finalLog += "\n" + allLogs.join("\n");
   }
 
-  if (event.constructor.debugMode) console.groupEnd(); // Fecha o grupo principal do CombatResolver
+  if (event.constructor.debugMode) console.groupEnd(); // Close the debug group if it was opened
 
   const mainResult = {
     totalDamage: event.actualDmg,
@@ -49,7 +49,7 @@ export function buildFinalResult(event) {
     crit: event.crit,
     damageDepth: event.context.damageDepth,
     skill: event.skill,
-    // Incluímos a jornada do dano para debug/painéis se necessário
+    // We include the damage journey for debugging/panels if needed
     journey: {
       base: event.baseDamage,
       mitigated: event.damage,
@@ -57,24 +57,24 @@ export function buildFinalResult(event) {
     },
   };
 
-  // Se houver contra-ataques/reflects, retorna um array, senão o objeto único
+  // If there are counter-attacks/reflects, return an array, otherwise the single object
   return event.extraResults.length > 0
     ? [mainResult, ...event.extraResults]
     : mainResult;
 }
 
 function _buildLog(user, target, skill, dmg, crit, hpAfter) {
-  const userName = user ? formatChampionName(user) : "Efeito";
+  const userName = user ? formatChampionName(user) : "Effect";
   const targetName = formatChampionName(target);
 
-  // skill pode ser objeto ou string
+  // skill can be a string (skill name) or an object (skill instance)
   const skillName = skill && typeof skill === "object" ? skill.name : skill;
   dmg = Math.floor(dmg);
-  let log = `${userName} usou <b>${skillName}</b> e causou ${dmg} de dano a ${targetName}`;
+  let log = `${userName} used <b>${skillName}</b> and dealt ${dmg} damage to ${targetName}`;
 
-  if (crit.didCrit) log += ` (CRÍTICO)`;
+  if (crit.didCrit) log += ` (CRITICAL)`;
 
-  log += `\nHP final de ${targetName}: ${hpAfter}/${target.maxHP}`;
+  log += `\nfinal HP of ${targetName}: ${hpAfter}/${target.maxHP}`;
 
   return log;
 }

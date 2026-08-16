@@ -1,6 +1,6 @@
 export default {
-  key: "absolute_piercing_slash",
-  name: "Absolute Piercing Slash",
+  key: "crimson_severance",
+  name: "Crimson Severance",
 
   critBonus: 25,
   piercingRatio: 0.75,

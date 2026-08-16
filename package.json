@@ -15,6 +15,7 @@
     "damage-lab": "node scripts/damageEventLab.js"
   },
   "devDependencies": {
+    "livereload": "^0.10.3",
     "nodemon": "^3.1.14",
     "typescript": "^6.0.2"
   }

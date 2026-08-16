@@ -8,6 +8,10 @@ import { Server } from "socket.io";
 import path, { format } from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import livereload from "livereload";
+
+const liveReloadServer = livereload.createServer();
+liveReloadServer.watch("public");
 
 import { GameMatch } from "../shared/engine/match/GameMatch.js";
 import { Player } from "../shared/engine/match/Player.js";

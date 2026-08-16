@@ -1854,6 +1854,10 @@
 }
 
 .emblem-selection-panel {
+  display: flex;
+  /* 🔹 Limit the height of the entire panel */
+  max-height: 180px;
+  flex-direction: column;
   background: linear-gradient(
     180deg,
     rgba(13, 18, 30, 0.92),
@@ -1907,6 +1911,11 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(164px, 1fr));
   gap: 10px;
+
+  min-height: 0;
+  overflow-y: auto;
+
+  padding-right: 6px;
 }
 
 .emblem-option {

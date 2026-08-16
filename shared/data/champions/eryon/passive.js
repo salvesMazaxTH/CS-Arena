@@ -3,14 +3,14 @@ import { formatChampionName } from "../../../ui/formatters.js";
 function _processResonance(owner, threshold, momentumGain, context, resolver) {
   let procs = 0;
 
-  while ((owner.runtime.ressonanceStacks || 0) >= threshold) {
+  while ((owner.runtime.resonanceStacks || 0) >= threshold) {
     const ally = context.aliveChampions
       .filter((c) => c.team === owner.team && c.id !== owner.id)
       .sort((a, b) => a.momentum - b.momentum)[0];
 
     if (!ally) break;
 
-    owner.runtime.ressonanceStacks -= threshold;
+    owner.runtime.resonanceStacks -= threshold;
 
     if (resolver?.applyResourceChange) {
       resolver.applyResourceChange({
@@ -23,6 +23,7 @@ function _processResonance(owner, threshold, momentumGain, context, resolver) {
     } else {
       ally.addMomentum(momentumGain);
     }
+
     procs++;
   }
 
@@ -30,19 +31,20 @@ function _processResonance(owner, threshold, momentumGain, context, resolver) {
 }
 
 export default {
-  key: "ressonancia_eryonica",
-  name: "Ressonância Eryônica",
+  key: "eryonic_resonance",
+  name: "Eryonic Resonance",
+
   stacksCap: 20,
   momentumGain: 4,
 
   description(champion) {
-    const stacks = champion.runtime.ressonanceStacks || 0;
+    const stacks = champion.runtime.resonanceStacks || 0;
 
-    return `Sempre que um aliado ganha ou consome Momentum, Eryon acumula Ressonância.
+    return `Whenever an ally gains or spends Momentum, Eryon gains Resonance.
 
-    <b>Acúmulos atuais: ${stacks}</b>
+    <b>Current Stacks: ${stacks}</b>
 
-    A cada ${this.stacksCap} unidades acumuladas, concede ${this.momentumGain} Momentum ao aliado com menor Momentum.`;
+    At ${this.stacksCap} Resonance stacks, grants ${this.momentumGain} Momentum to the ally with the lowest Momentum.`;
   },
 
   hookScope: {
@@ -55,8 +57,8 @@ export default {
     if (target.id === owner.id) return;
     if (amount <= 0) return;
 
-    owner.runtime.ressonanceStacks ??= 0;
-    owner.runtime.ressonanceStacks += amount;
+    owner.runtime.resonanceStacks ??= 0;
+    owner.runtime.resonanceStacks += amount;
 
     const procs = _processResonance(
       owner,
@@ -68,19 +70,19 @@ export default {
 
     if (procs > 0) {
       return {
-        log: `<b>[PASSIVA — Ressonância Eryônica]</b> ${formatChampionName(
+        log: `<b>[PASSIVE — Eryonic Resonance]</b> ${formatChampionName(
           owner,
-        )} converteu Ressonância ${procs}x. Acúmulos restantes: ${
-          owner.runtime.ressonanceStacks
+        )} converted Resonance ${procs}x. Remaining stacks: ${
+          owner.runtime.resonanceStacks
         }`,
       };
     }
 
     return {
-      log: `<b>[PASSIVA — Ressonância Eryônica]</b> ${formatChampionName(
+      log: `<b>[PASSIVE — Eryonic Resonance]</b> ${formatChampionName(
         owner,
-      )} acumulou ${amount} de Ressonância. Acúmulos atuais: ${
-        owner.runtime.ressonanceStacks
+      )} gained ${amount} Resonance. Current stacks: ${
+        owner.runtime.resonanceStacks
       }`,
     };
   },
@@ -90,8 +92,8 @@ export default {
     if (target.id === owner.id) return;
     if (amount <= 0) return;
 
-    owner.runtime.ressonanceStacks ??= 0;
-    owner.runtime.ressonanceStacks += amount;
+    owner.runtime.resonanceStacks ??= 0;
+    owner.runtime.resonanceStacks += amount;
 
     const procs = _processResonance(
       owner,
@@ -103,19 +105,19 @@ export default {
 
     if (procs > 0) {
       return {
-        log: `<b>[PASSIVA — Ressonância Eryônica]</b> ${formatChampionName(
+        log: `<b>[PASSIVE — Eryonic Resonance]</b> ${formatChampionName(
           owner,
-        )} converteu Ressonância ${procs}x. Acúmulos restantes: ${
-          owner.runtime.ressonanceStacks
+        )} converted Resonance ${procs}x. Remaining stacks: ${
+          owner.runtime.resonanceStacks
         }`,
       };
     }
 
     return {
-      log: `<b>[PASSIVA — Ressonância Eryônica]</b> ${formatChampionName(
+      log: `<b>[PASSIVE — Eryonic Resonance]</b> ${formatChampionName(
         owner,
-      )} acumulou ${amount} de Ressonância. Acúmulos atuais: ${
-        owner.runtime.ressonanceStacks
+      )} gained ${amount} Resonance. Current stacks: ${
+        owner.runtime.resonanceStacks
       }`,
     };
   },

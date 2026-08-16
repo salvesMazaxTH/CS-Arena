@@ -387,19 +387,6 @@ export class Champion {
     return applied;
   }
 
-  // Compatibilidade (LEGACY API)
-  addResource(input) {
-    return this.addMomentum(input);
-  }
-
-  spendResource(cost) {
-    return this.spendMomentum(cost);
-  }
-
-  applyResourceChange({ amount } = {}) {
-    return this._applyUltDelta(amount);
-  }
-
   // ===============================
   // ======== RUNTIME ========
   // ===============================

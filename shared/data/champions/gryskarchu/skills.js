@@ -4,27 +4,31 @@ import totalBlock from "../totalBlock.js";
 
 const gryskarchuSkills = [
   // =========================
-  // Bloqueio Total (global)
+  // Total Block (global)
   // =========================
 
   totalBlock,
+
   // =========================
-  // Habilidades Especiais
+  // Special Abilities
   // =========================
 
   {
-    key: "raizes_da_terra",
-    name: "Raízes da Terra",
+    key: "earthroot",
+    name: "Earthroot",
     bf: 75,
     damageMode: "standard",
     rootDuration: 2,
     contact: false,
 
     priority: 0,
+
     description() {
-      return `Causa dano ao inimigo e aplica "Enraizado" por ${this.rootDuration} turnos.`;
+      return `Deals damage to the chosen target and applies Rooted for ${this.rootDuration} turns.`;
     },
+
     targetSpec: ["enemy"],
+
     resolve({ user, targets, context }) {
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
@@ -39,18 +43,13 @@ const gryskarchuSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      // Status-effect só se aplica se o dano chegou (não esquivado, não imune)
+      // Status effect only applies if the damage connects.
       if (!result?.evaded && !result?.immune) {
         const rooted = enemy.applyStatusEffect(
           "rooted",
           this.rootDuration,
           context,
         );
-        // if (rooted && rooted.log && result?.log) {
-        //   result.log += `\n${enemy.name} foi Enraizado!`;
-        // } else if (rooted && rooted.log) {
-        //   result.log = `${enemy.name} foi Enraizado!`;
-        // }
       }
 
       return result;
@@ -58,16 +57,19 @@ const gryskarchuSkills = [
   },
 
   {
-    key: "florescimento_vital",
-    name: "Florescimento Vital",
+    key: "vital_bloom",
+    name: "Vital Bloom",
     healAmount: 40,
     contact: false,
 
     priority: 0,
+
     description() {
-      return `Gryskarchu cura a si e todos os aliados ativos em ${this.healAmount} HP.`;
+      return `Gryskarchu restores ${this.healAmount} HP to himself and all active allies.`;
     },
+
     targetSpec: ["all:ally"],
+
     resolve({ user, targets, context }) {
       let someoneHealed = false;
 
@@ -81,16 +83,18 @@ const gryskarchuSkills = [
 
       return {
         log: someoneHealed
-          ? `${formatChampionName(user)} evocou Florescimento Vital.`
-          : `${formatChampionName(user)} evocou Florescimento Vital, mas ninguém precisava de cura.`,
+          ? `${formatChampionName(user)} invoked Vital Bloom.`
+          : `${formatChampionName(user)} invoked Vital Bloom, but no one needed HP restored.`,
       };
     },
   },
 
   {
-    // 30% hp máx como cura , +25% DEF, CD 2, PARA O ALIADO
-    key: "proteção_da_mãe_terra",
-    name: "Proteção da Mãe Terra",
+    // 30% Max HP restored, +25% Defense, 2-turn duration
+    // Grants the effect to an ally.
+    key: "mother_earths_protection",
+    name: "Mother Earth's Protection",
+
     defBuff: 25,
     healPercent: 30,
     buffDuration: 2,
@@ -100,13 +104,18 @@ const gryskarchuSkills = [
     momentumCost: 55,
 
     priority: 5,
+
     description() {
-      return `Concede +${this.defBuff}% de DEF a si ou a um aliado por ${this.buffDuration} turnos, cura em ${this.healPercent}% do HP máximo e dá bônus de dano (+${this.defDamageBonus}% da DEF) por ${this.buffDuration} turnos.`;
+      return `Grants a chosen ally +${this.defBuff}% Defense for ${this.buffDuration} turns, restores ${this.healPercent}% of their Max HP, and grants them bonus damage equal to +${this.defDamageBonus}% of their Defense for ${this.buffDuration} turns.`;
     },
+
     targetSpec: ["select:ally"],
+
     resolve({ user, targets, context }) {
       const [ally] = targets;
-      let healAmount = ally.maxHP * (this.healPercent / 100);
+
+      const healAmount =
+        ally.maxHP * (this.healPercent / 100);
 
       ally.heal(healAmount, context, user);
 
@@ -116,14 +125,16 @@ const gryskarchuSkills = [
         duration: this.buffDuration,
         context,
         isPercent: true,
-        statModifierSrc: user, // Gryskarchu é explicitamente a fonte do buff
+        statModifierSrc: user,
       });
 
-      const bonus = ally.Defense * (this.defDamageBonus / 100);
+      const bonus =
+        ally.Defense * (this.defDamageBonus / 100);
 
       ally.addDamageModifier({
-        id: "proteção_da_mãe_terra",
-        expiresAtTurn: context.currentTurn + this.buffDuration,
+        id: "mother_earths_protection",
+        expiresAtTurn:
+          context.currentTurn + this.buffDuration,
 
         apply({ baseDamage, user }) {
           const total = baseDamage + bonus;
@@ -132,7 +143,11 @@ const gryskarchuSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} concede a ${formatChampionName(ally)} ${healAmount} de cura e +${this.defBuff}% DEF por ${this.buffDuration} turnos!`,
+        log:
+          `${formatChampionName(user)} grants ${formatChampionName(
+            ally,
+          )} ${healAmount} HP restored, +${this.defBuff}% Defense, ` +
+          `and bonus damage for ${this.buffDuration} turns!`,
       };
     },
   },
