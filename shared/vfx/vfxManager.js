@@ -52,7 +52,7 @@ const ExclusiveVFXTriggers = {
 
   fireStanceActive: (champion) => champion.runtime?.fireStance === "brasa_viva",
 
-  waterBubble: (champion) => champion.runtime?.form === "bola_agua",
+  waterBubble: (champion) => champion.runtime?.form === "aquatic_form",
 
   abracoDaMorteMark: (champion) => champion.runtime?.markedByAbraçoDaMorte,
 
