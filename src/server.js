@@ -1447,7 +1447,7 @@ io.on("connection", (socket) => {
     if (!match.areBothPlayersConnected()) {
       socket.emit(
         "waitingForOpponent",
-        `Olá, ${finalUsername}, aguardando outro jogador...`,
+        `Hello, ${finalUsername}, waiting for the other player...`,
       );
       return;
     }
@@ -2069,7 +2069,7 @@ io.on("connection", (socket) => {
     } else {
       socket.emit(
         "waitingForOpponentEndTurn",
-        "Aguardando o outro jogador confirmar o fim do turno.",
+        "Waiting for the other player to confirm the end of the turn.",
       );
     }
   });
