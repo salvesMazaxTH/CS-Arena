@@ -9,6 +9,7 @@ import { mageArcana } from "./mage_arcana.js";
 import { assassinAmbush } from "./assassin_ambush.js";
 import { enchanterWard } from "./enchanter_ward.js";
 import { marksmanPrecision } from "./marksman_precision.js";
+import { humanitysDefiance } from "./humanitys_defiance.js";
 
 export const EMBLEMS = [
   firelord,
@@ -22,5 +23,6 @@ export const EMBLEMS = [
   assassinAmbush,
   enchanterWard,
   marksmanPrecision,
+  humanitysDefiance,
 ];
 

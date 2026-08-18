@@ -135,7 +135,7 @@ export function composeDamage(event) {
 
   // If context requests to ignore defender damage reductions, skip percent/flat reductions
   if (!event.context?.ignoreDamageReduction) {
-    const tr = event.defender.getTotalDamageReduction?.() || {
+    const tr = event.defender.getTotalDamageReduction?.(event.context?.currentTurn) || {
       flat: 0,
       percent: 0,
     };

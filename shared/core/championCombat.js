@@ -227,13 +227,19 @@ export function applyDamageReduction(champion, config = {}) {
 /**
  * Get total damage reduction (flat and percent)
  * @param {object} champion - The champion instance
+ * @param {number} currentTurn - Optional: current turn number to check expiry
  * @returns {object} { flat, percent }
  */
-export function getTotalDamageReduction(champion) {
+export function getTotalDamageReduction(champion, currentTurn) {
   let flat = 0;
   let percent = 0;
 
   for (const mod of champion.damageReductionModifiers) {
+    // Skip expired modifiers if currentTurn is provided
+    if (currentTurn !== undefined && mod.expiresAtTurn <= currentTurn) {
+      continue;
+    }
+
     if (mod.type === "percent") {
       percent += mod.amount;
     } else {

@@ -573,8 +573,8 @@ export class Champion {
     return applyDamageReduction(this, config);
   }
 
-  getTotalDamageReduction() {
-    return getTotalDamageReduction(this);
+  getTotalDamageReduction(currentTurn) {
+    return getTotalDamageReduction(this, currentTurn);
   }
 
   purgeExpiredStatModifiers(currentTurn) {
