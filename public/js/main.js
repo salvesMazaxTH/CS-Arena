@@ -6,6 +6,7 @@ import { elementEmoji } from "../../shared/ui/elementEmoji.js";
 import {
   CLAIM_ACTION_KEY,
   CLAIM_MIN_MOMENTUM,
+  CLAIM_MAX_POINTS,
 } from "../../shared/engine/combat/claim.js";
 
 let skillOverlay = null;
@@ -98,21 +99,19 @@ function getClaimPointsPreview(champion) {
   }
 
   const momentumPoints =
-    momentum >= 80
-      ? 4
-      : momentum >= 60
-        ? 3
-        : momentum >= 40
-          ? 2
-          : momentum >= 20
-            ? 1
-            : 0;
+    momentum >= 75
+      ? 3
+      : momentum >= 50
+        ? 2
+        : momentum >= 25
+          ? 1
+          : 0;
   const fieldEntryTurn = Number.isFinite(champion?.runtime?.fieldEntryTurn)
     ? Number(champion.runtime.fieldEntryTurn)
     : currentTurn;
   const turnsInField = Math.max(0, currentTurn - fieldEntryTurn);
 
-  return Math.min(7, momentumPoints + turnsInField);
+  return Math.min(CLAIM_MAX_POINTS, momentumPoints + turnsInField);
 }
 
 // =========================

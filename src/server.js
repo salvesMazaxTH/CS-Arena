@@ -1035,8 +1035,6 @@ function handleEndTurn() {
     io.emit("gameStateUpdate", getGameState());
   }
 
-  emitGameOverIfNeeded({ checkTurnLimit: true });
-
   // 4. Hooks onTurnEnd
   const context = {
     currentTurn: match.combat.currentTurn,
@@ -1052,6 +1050,10 @@ function handleEndTurn() {
   match.clearTurnReadiness();
   match.clearFinishedAnimationSockets();
   match.clearTurnSummons();
+
+  // Checar fim de jogo (roster wipe, limite de turnos ou threshold de
+  // pontuação) somente após todas as demais tarefas de fim de turno.
+  emitGameOverIfNeeded({ checkTurnLimit: true });
 
   if (!match.isGameEnded()) {
     match.nextTurn();

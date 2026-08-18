@@ -53,10 +53,9 @@ function buildChampionHTML(champion, { editMode } = {}) {
             <div class="momentum-bar" aria-label="Momentum bar">
                 <div class="momentum-fill"></div>
                 <div class="momentum-markers" aria-hidden="true">
-                    <span class="momentum-threshold" style="left: 20%;">1</span>
-                    <span class="momentum-threshold" style="left: 40%;">2</span>
-                    <span class="momentum-threshold" style="left: 60%;">3</span>
-                    <span class="momentum-threshold" style="left: 80%;">4</span>
+                    <span class="momentum-threshold" style="left: 25%;">1</span>
+                    <span class="momentum-threshold" style="left: 50%;">2</span>
+                    <span class="momentum-threshold" style="left: 75%;">3</span>
                 </div>
             </div>
         </div>
