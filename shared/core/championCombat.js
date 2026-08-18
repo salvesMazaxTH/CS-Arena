@@ -80,7 +80,13 @@ export function decayShields(champion, currentTurn) {
       const amount = Number(shield.amount) || 0;
       const decayPerTurn = Number(shield.decayPerTurn) || 0;
 
-      if (amount <= 0 || decayPerTurn <= 0) {
+      // Already depleted (e.g. fully absorbed a hit) — prune regardless of decay config.
+      if (amount <= 0) {
+        removed += 1;
+        return null;
+      }
+
+      if (decayPerTurn <= 0) {
         return shield;
       }
 

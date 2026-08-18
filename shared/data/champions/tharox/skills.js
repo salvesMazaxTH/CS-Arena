@@ -93,19 +93,21 @@ const tharoxSkills = [
   {
     key: "carapace_impact",
     name: "Carapace Impact",
-    bf: 75,
+    bf: 0,
     damageMode: "standard",
-    defScaling: 15,
+    defScaling: 190,
+    hpExponent: 1.35,
     contact: true,
     priority: 0,
     description() {
-      return `Deals damage to the chosen target plus ${this.defScaling}% of Defense.`;
+      return `Deals damage equal to ${this.defScaling}% of Defense, scaled down the more Tharox is wounded — hits hard while he's healthy, but falls off sharply at low HP.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
+      const hpRatio = Math.max(0, Math.min(1, user.HP / user.maxHP));
       const baseDamage =
-        (user.Attack * this.bf) / 100 + user.Defense * (this.defScaling / 100);
+        user.Defense * (this.defScaling / 100) * Math.pow(hpRatio, this.hpExponent);
       const result = new DamageEvent({
         attacker: user,
         baseDamage,
@@ -126,7 +128,6 @@ const tharoxSkills = [
 
     effectDuration: 2,
     defBonusWhileShielded: 20,
-    defDamagePercent: 38,
     healingUponShieldBreakPercent: 25,
 
     damageMode: "standard",
@@ -137,19 +138,14 @@ const tharoxSkills = [
 
     description() {
       return `Unleashes the Apotheosis of the Monolith, restoring HP based on his bonus Defense and assuming his immovable form for ${this.effectDuration} turn(s). Gains SupremeShield for the duration of the effect.
-      
-      While the shield is active, Tharox gains +${this.defBonusWhileShielded} Defense. Upon losing the shield, he restores HP equal to ${this.healingUponShieldBreakPercent}% of his bonus Defense. Additionally, his attacks deal extra damage based on his bonus Defense, scaling increasingly and becoming devastating at high levels.`;
+
+      While the shield is active, Tharox gains +${this.defBonusWhileShielded} Defense. Upon losing the shield, he restores HP equal to ${this.healingUponShieldBreakPercent}% of his bonus Defense.`;
     },
 
     targetSpec: ["self"],
     resolve({ user, context = {} }) {
       const userName = formatChampionName(user);
       const expiresAtTurn = context.currentTurn + this.effectDuration;
-
-      // Remove eventual efeito anterior da Apoteose.
-      user.damageModifiers = user
-        .getDamageModifiers()
-        .filter((mod) => mod.id !== "apotheosis-of-the-monolith");
 
       // Remove eventual SupremeShield anterior da Apoteose.
       if (Array.isArray(user.runtime?.shields)) {
@@ -297,27 +293,6 @@ const tharoxSkills = [
           owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
             (hook) => hook.key !== "apotheosis-of-the-monolith",
           );
-        },
-      });
-
-      // =================================
-      // BÔNUS DE DANO
-      //=================================
-      user.addDamageModifier({
-        id: "apotheosis-of-the-monolith",
-        name: "Apotheosis of the Monolith Bonus Damage",
-        expiresAtTurn,
-
-        apply: ({ baseDamage, attacker }) => {
-          const baseDef = attacker.baseDefense;
-          const bonusDef = Math.max(0, attacker.Defense - baseDef);
-
-          const linear = bonusDef * 0.7;
-
-          const scaling =
-            (Math.pow(bonusDef, 1.4) * this.defDamagePercent) / 100;
-
-          return baseDamage + linear + scaling;
         },
       });
 
