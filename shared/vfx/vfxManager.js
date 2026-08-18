@@ -24,9 +24,10 @@ import { startShield } from "./shieldCanvas.js";
 import { startFireStance } from "./fireStanceCanvas.js";
 import { startFrozenCanvas } from "./frozenCanvas.js";
 import { startWaterBubble } from "./waterBubbleCanvas.js";
-import { startAbraçoDaMorteMark } from "./abracoDaMorteMarkCanvas.js";
-import { startInevitabilidadeDaMorte } from "./inevitabilidadeDaMorteCanvas.js";
+import { startDeathsEmbraceMark } from "./deathsEmbraceMarkCanvas.js";
+import { startDeathsInevitability } from "./deathsInevitabilityCanvas.js";
 import { startInvisibilityCanvas } from "./invisibilityCanvas.js";
+import { startCrimsonFrenzy } from "./crimsonFrenzyCanvas.js";
 
 // no futuro:
 // import { startBurn } from "./burnCanvas.js";
@@ -54,10 +55,12 @@ const ExclusiveVFXTriggers = {
 
   waterBubble: (champion) => champion.runtime?.form === "aquatic_form",
 
-  abracoDaMorteMark: (champion) => champion.runtime?.markedByAbraçoDaMorte,
+  deathsEmbraceMark: (champion) => champion.runtime?.markedByDeathsEmbrace,
 
-  inevitabilidadeDaMorteMark: (champion) =>
-    champion.runtime?.markedByInevitabilidadeDaMorte,
+  deathsInevitabilityMark: (champion) =>
+    champion.runtime?.markedByDeathsInevitability,
+
+  crimsonFrenzy: (champion) => champion.runtime?.drexBloodAscension,
   // Adicione outros triggers exclusivos seguindo o critério acima
 };
 
@@ -213,12 +216,16 @@ export function playVFX(type, canvas, data = {}) {
       controller = startWaterBubble(canvas, data);
       break;
 
-    case "abracoDaMorteMark":
-      controller = startAbraçoDaMorteMark(canvas, data);
+    case "deathsEmbraceMark":
+      controller = startDeathsEmbraceMark(canvas, data);
       break;
 
-    case "inevitabilidadeDaMorteMark":
-      controller = startInevitabilidadeDaMorte(canvas, data);
+    case "deathsInevitabilityMark":
+      controller = startDeathsInevitability(canvas, data);
+      break;
+
+    case "crimsonFrenzy":
+      controller = startCrimsonFrenzy(canvas, data);
       break;
 
     default:

@@ -1,5 +1,5 @@
-// Efeito "Abraço da Morte" (marca) — canvas VFX simples seguindo o padrão dos outros arquivos
-export function startAbraçoDaMorteMark(canvas) {
+// Efeito "Death's Embrace" (marca) — canvas VFX simples seguindo o padrão dos outros arquivos
+export function startDeathsEmbraceMark(canvas) {
   const ctx = canvas.getContext("2d");
 
   let running = true;

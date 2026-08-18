@@ -1,5 +1,5 @@
-// Efeito "Inevitabilidade da Morte" (marca da ult do Jeff)
-export function startInevitabilidadeDaMorte(canvas) {
+// Efeito "Death's Inevitability" (marca da ult do Jeff)
+export function startDeathsInevitability(canvas) {
   const ctx = canvas.getContext("2d");
 
   let running = true;

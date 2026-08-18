@@ -224,6 +224,13 @@ export default {
     this._ensureDamageModifier(owner);
     this._refreshDamageReduction({ owner, context });
 
+    context?.registerDialog?.({
+      message: `${formatChampionName(owner)} surpasses ${this.awakenThreshold}% LifeSteal and enters permanent <b>Crimson Frenzy</b>!`,
+      sourceId: owner.id,
+      targetId: owner.id,
+      duration: 1600,
+    });
+
     return {
       log: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} surpasses ${this.awakenThreshold}% LifeSteal and enters permanent Crimson Frenzy!`,
     };

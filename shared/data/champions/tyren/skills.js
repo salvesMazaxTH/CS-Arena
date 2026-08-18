@@ -107,7 +107,7 @@ const tyrenSkills = [
 
       const transformedDefense = originalAttack + this.defenseBonus;
 
-      const transformedSpeed = originalSpeed * this.speedMultiplier;
+      const transformedSpeed = Math.floor(originalSpeed * this.speedMultiplier);
 
       // Store the exact pre-transformation values so the effect
       // can be completely reverted when it expires.

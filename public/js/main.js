@@ -1759,9 +1759,7 @@ function handleChampionCardClick(championKey) {
     if (emptySlotIndex > -1) {
       selectedChampions[emptySlotIndex] = championKey;
     } else {
-      alert(
-        "All slots are filled. Remove one to add another.",
-      );
+      alert("All slots are filled. Remove one to add another.");
     }
   }
   updateSelectedChampionsUI();
@@ -2858,8 +2856,10 @@ function showTurnTransition(turn) {
 
   clearTimeout(turnTransitionTimer);
 
+  const turnLabel = turn === 15 ? "LAST TURN" : `TURN ${turn}`;
+
   // Garante que o overlay comece mostrando o novo turno
-  number.textContent = `TURN ${turn}`;
+  number.textContent = turnLabel;
 
   // Reset da animação do texto
   number.classList.remove("is-changing");
@@ -2880,7 +2880,7 @@ function showTurnTransition(turn) {
     setTimeout(() => {
       if (sequence !== turnTransitionSequence) return;
 
-      number.textContent = `TURN ${turn}`;
+      number.textContent = turnLabel;
 
       // Força reflow para reiniciar a entrada
       void number.offsetWidth;
@@ -2893,9 +2893,7 @@ function showTurnTransition(turn) {
 
         overlay.classList.remove("is-visible");
       }, 700);
-
     }, 230);
-
   }, 700);
 }
 
@@ -2906,7 +2904,7 @@ function updateTurnDisplay(turn) {
   const turnText = turnDisplay?.querySelector("p");
 
   if (turnText) {
-    turnText.textContent = `Turn ${turn}`;
+    turnText.textContent = turn === 15 ? "Last Turn" : `Turn ${turn}`;
   }
 
   if (isFirstTurnUpdate) {
@@ -2923,14 +2921,18 @@ function updateTurnDisplay(turn) {
 
 function endTurn() {
   if (hasConfirmedEndTurn) {
-    alert("You have already confirmed the end of the turn. Waiting for the other player.");
+    alert(
+      "You have already confirmed the end of the turn. Waiting for the other player.",
+    );
     return;
   }
 
   socket.emit("endTurn");
   hasConfirmedEndTurn = true;
   removeActionBar();
-  logCombat("You have confirmed the end of the turn. Waiting for the other player...");
+  logCombat(
+    "You have confirmed the end of the turn. Waiting for the other player...",
+  );
 
   document.getElementById("undo-actions-btn").disabled = false;
 }

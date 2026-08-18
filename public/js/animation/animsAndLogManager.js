@@ -542,7 +542,7 @@ export function createCombatAnimationManager(deps) {
       const config = handlers[key];
 
       if (!config) {
-        console.warn("Evento desconhecido:", key);
+        console.warn("Unknown event:", key);
         return;
       }
 
@@ -575,9 +575,61 @@ export function createCombatAnimationManager(deps) {
       }
     }
 
+    // 🔢 Flattens all event groups into a single list ordered by the real
+    // chronological sequence (event.seq) in which they were registered on
+    // the server, instead of the fixed category order above. Consecutive
+    // events of the same key are kept together in "chunks" so each chunk
+    // can still be run through the existing runGroup (preserving per-group
+    // behaviors like buffEvents' "single" mode and resourceEvents' phase gap).
+    function buildOrderedChunks(envelope) {
+      const flat = [];
+
+      for (const key of keys) {
+        const events = envelope[key];
+        if (!Array.isArray(events)) continue;
+
+        for (const event of events) {
+          if (!event) continue;
+          flat.push({ key, event });
+        }
+      }
+
+      // Stable sort by seq; events without a seq (legacy/fallback) fall back
+      // to their original push order.
+      flat.forEach((item, idx) => {
+        item._idx = idx;
+      });
+      flat.sort((a, b) => {
+        const seqA = Number.isFinite(a.event.seq) ? a.event.seq : Infinity;
+        const seqB = Number.isFinite(b.event.seq) ? b.event.seq : Infinity;
+        if (seqA !== seqB) return seqA - seqB;
+        return a._idx - b._idx;
+      });
+
+      const chunks = [];
+      for (const item of flat) {
+        const lastChunk = chunks[chunks.length - 1];
+        if (lastChunk && lastChunk.key === item.key) {
+          lastChunk.events.push(item.event);
+        } else {
+          chunks.push({ key: item.key, events: [item.event] });
+        }
+      }
+
+      return chunks;
+    }
+
+    async function runOrdered(envelope) {
+      const chunks = buildOrderedChunks(envelope);
+      for (const chunk of chunks) {
+        await runGroup(chunk.key, chunk.events);
+      }
+    }
+
     return {
       keys,
       runGroup,
+      runOrdered,
     };
   }
 
@@ -603,7 +655,7 @@ export function createCombatAnimationManager(deps) {
 
     /* console.log("[DEBUG] [JEFF REVIVAL DIALOG] CLIENT RECEIVED ENVELOPE:", envelope); */
 
-    // GLOBAL dialogs (SEMPRE executa)
+    // GLOBAL dialogs (ALWAYS runs)
     if (envelope.globalDialogs?.length) {
       await runDialogs(envelope.globalDialogs);
     }
@@ -617,10 +669,9 @@ export function createCombatAnimationManager(deps) {
       return;
     }
 
-    // event loop
-    for (const key of dispatcher.keys) {
-      await dispatcher.runGroup(key, envelope[key]);
-    }
+    // event loop — plays events in the real chronological order (seq)
+    // instead of a fixed category order.
+    await dispatcher.runOrdered(envelope);
 
     if (state) applyStateSnapshots(state);
     if (log) appendToLog(log);
