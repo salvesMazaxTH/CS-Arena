@@ -2856,7 +2856,7 @@ function showTurnTransition(turn) {
 
   clearTimeout(turnTransitionTimer);
 
-  const turnLabel = turn === 15 ? "LAST TURN" : `TURN ${turn}`;
+  const turnLabel = turn === 20 ? "LAST TURN" : `TURN ${turn}`;
 
   // Garante que o overlay comece mostrando o novo turno
   number.textContent = turnLabel;
@@ -2904,7 +2904,7 @@ function updateTurnDisplay(turn) {
   const turnText = turnDisplay?.querySelector("p");
 
   if (turnText) {
-    turnText.textContent = turn === 15 ? "Last Turn" : `Turn ${turn}`;
+    turnText.textContent = turn === 20 ? "Last Turn" : `Turn ${turn}`;
   }
 
   if (isFirstTurnUpdate) {

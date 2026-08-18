@@ -429,7 +429,7 @@ class CombatState {
     return null;
   }
 
-  checkGameEnd({ maxTurns = 15, checkTurnLimit = false } = {}) {
+  checkGameEnd({ maxTurns = 20, checkTurnLimit = false } = {}) {
     if (!this.gameEnded && checkTurnLimit && this.currentTurn >= maxTurns) {
       this.gameEnded = true;
     }
@@ -675,7 +675,7 @@ export class GameMatch {
     return this.combat.resolveWinnerSlot();
   }
 
-  checkGameEnd({ maxTurns = 15, checkTurnLimit = false } = {}) {
+  checkGameEnd({ maxTurns = 20, checkTurnLimit = false } = {}) {
     return this.combat.checkGameEnd({ maxTurns, checkTurnLimit });
   }
 
