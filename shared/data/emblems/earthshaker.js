@@ -19,26 +19,23 @@ export const earthshaker = {
   },
 
   onChampionAdded({ owner, context }) {
-    if (!owner?.team) return;
+    // Only apply buff to the champion being added
+    if (!owner || owner.team == null) return;
+    if (!owner.modifyStat) return;
 
-    const allChampions =
-      context?.allChampions instanceof Map
-        ? [...context.allChampions.values()]
-        : Array.isArray(context?.allChampions)
-          ? context.allChampions
-          : [];
+    // Check if already applied to this champion
+    if (owner.runtime?._earthShakerApplied) return;
 
-    for (const champion of allChampions) {
-      if (!champion || champion.team !== owner.team) continue;
-      if (!champion.modifyStat) continue;
+    if (!owner.runtime) owner.runtime = {};
+    owner.runtime._earthShakerApplied = true;
 
-      champion.modifyStat({
-        statName: "Defense",
-        amount: 25,
-        context,
-        isPermanent: true,
-      });
-    }
+    // Apply buff only to this specific champion
+    owner.modifyStat({
+      statName: "Defense",
+      amount: 25,
+      context,
+      isPermanent: true,
+    });
   },
 
   onStatusEffectIncoming({ target, statusEffect, owner }) {

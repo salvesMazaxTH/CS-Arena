@@ -19,27 +19,24 @@ export const ironclad = {
   },
 
   onChampionAdded({ owner, context }) {
-    if (!owner?.team) return;
+    // Only apply buff to the champion being added
+    if (!owner || owner.team == null) return;
+    if (!owner.applyDamageReduction) return;
 
-    const allChampions =
-      context?.allChampions instanceof Map
-        ? [...context.allChampions.values()]
-        : Array.isArray(context?.allChampions)
-          ? context.allChampions
-          : [];
+    // Check if already applied to this champion
+    if (owner.runtime?._ironCladApplied) return;
 
-    for (const champion of allChampions) {
-      if (!champion || champion.team !== owner.team) continue;
-      if (!champion.applyDamageReduction) continue;
+    if (!owner.runtime) owner.runtime = {};
+    owner.runtime._ironCladApplied = true;
 
-      champion.applyDamageReduction({
-        amount: 15,
-        type: "percent",
-        duration: 9999,
-        source: "Emblem of the Ironclad",
-        context,
-      });
-    }
+    // Apply buff only to this specific champion
+    owner.applyDamageReduction({
+      amount: 15,
+      type: "percent",
+      duration: 9999,
+      source: "Emblem of the Ironclad",
+      context,
+    });
   },
 
   onDamageIncoming({ defender, damage, context, owner }) {

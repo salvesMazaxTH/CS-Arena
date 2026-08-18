@@ -1,6 +1,6 @@
-// shared/data/emblems/enchanter_ward.js
+// shared/data/emblems/silent_blade.js
 
-function isEnchanter(champion) {
+function isAssassin(champion) {
   if (!champion) return false;
   const candidates = [
     champion.classKey,
@@ -11,60 +11,55 @@ function isEnchanter(champion) {
   for (const candidate of candidates) {
     if (typeof candidate !== "string") continue;
     const normalized = candidate.replace(/^class\s*:\s*/i, "").trim().toLowerCase();
-    if (normalized === "enchanter") return true;
+    if (normalized === "assassin") return true;
   }
   return false;
 }
 
-export const enchanterWard = {
-  key: "enchanter_ward",
-  name: "Emblem of Mystic Sanctuary",
+export const silentBlade = {
+  key: "silent_blade",
+  name: "Emblem of the Silent Blade",
 
   requirements: {
     classKey: {
-      key: "enchanter",
+      key: "assassin",
       count: 4,
     },
   },
 
   description() {
-    return "Your Enchanter class champions gain +10 Evasion and their healing effectiveness is increased by +15%.";
+    return "Your Assassin class champions gain +15 Speed and +10% Critical Chance.";
   },
 
   hookScope: {
     onChampionAdded: "owner",
-    onBeforeHealing: "owner",
   },
 
   onChampionAdded({ owner, context }) {
     // Only apply buff to the champion being added
     if (!owner || owner.team == null) return;
-    if (!isEnchanter(owner)) return;
+    if (!isAssassin(owner)) return;
 
     // Mark that this champion has already received the emblem buff
-    if (owner.runtime?._enchanterWardApplied) return;
+    if (owner.runtime?._silentBladeApplied) return;
 
     if (!owner.runtime) owner.runtime = {};
-    owner.runtime._enchanterWardApplied = true;
+    owner.runtime._silentBladeApplied = true;
 
     // Apply buff only to this specific champion
     if (owner.modifyStat) {
       owner.modifyStat({
-        statName: "Evasion",
+        statName: "Speed",
+        amount: 15,
+        context,
+        isPermanent: true,
+      });
+      owner.modifyStat({
+        statName: "Critical",
         amount: 10,
         context,
         isPermanent: true,
       });
     }
-  },
-
-  onBeforeHealing({ source, amount, owner }) {
-    if (!amount || amount <= 0) return;
-    if (source?.team !== owner?.team) return;
-    if (!isEnchanter(source)) return;
-
-    return {
-      amount: Math.round(amount * 1.15),
-    };
   },
 };

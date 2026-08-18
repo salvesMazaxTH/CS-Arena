@@ -32,44 +32,36 @@ export const oceanGrace = {
   },
 
   onChampionAdded({ owner, context }) {
-    if (!owner?.team) return;
+    // Only apply buff to the champion being added
+    if (!owner || owner.team == null) return;
 
-    const allChampions =
-      context?.allChampions instanceof Map
-        ? [...context.allChampions.values()]
-        : Array.isArray(context?.allChampions)
-          ? context.allChampions
-          : [];
+    // Check if already applied to this champion
+    if (owner.runtime?._oceanGraceApplied) return;
 
-    for (const champion of allChampions) {
-      if (!champion || champion.team !== owner.team) continue;
-      if (champion.runtime?._oceanGraceApplied) continue;
+    if (!owner.runtime) owner.runtime = {};
+    owner.runtime._oceanGraceApplied = true;
 
-      if (!champion.runtime) champion.runtime = {};
-      champion.runtime._oceanGraceApplied = true;
+    // +5% do Max HP que o campeão possui ao entrar em campo.
+    const hpBonus = Math.max(
+      1,
+      Math.round(
+        (owner.maxHP || owner.baseHP || 100) *
+          this.maxHPBonusPercent,
+      ),
+    );
 
-      // +5% do Max HP que o campeão possui ao entrar em campo.
-      const hpBonus = Math.max(
-        1,
-        Math.round(
-          (champion.maxHP || champion.baseHP || 100) *
-            this.maxHPBonusPercent,
-        ),
+    if (owner.modifyHP) {
+      owner.modifyHP(hpBonus, {
+        affectMax: true,
+        isPermanent: true,
+        context,
+      });
+    } else {
+      owner.maxHP = (owner.maxHP || 0) + hpBonus;
+      owner.HP = Math.min(
+        (owner.HP || 0) + hpBonus,
+        owner.maxHP,
       );
-
-      if (champion.modifyHP) {
-        champion.modifyHP(hpBonus, {
-          affectMax: true,
-          isPermanent: true,
-          context,
-        });
-      } else {
-        champion.maxHP = (champion.maxHP || 0) + hpBonus;
-        champion.HP = Math.min(
-          (champion.HP || 0) + hpBonus,
-          champion.maxHP,
-        );
-      }
     }
   },
 

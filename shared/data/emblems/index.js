@@ -6,7 +6,7 @@ import { oceanGrace } from "./ocean_grace.js";
 import { brawlerFury } from "./brawler_fury.js";
 import { tankBulwark } from "./tank_bulwark.js";
 import { mageArcana } from "./mage_arcana.js";
-import { assassinAmbush } from "./assassin_ambush.js";
+import { silentBlade } from "./silent_blade.js";
 import { enchanterWard } from "./enchanter_ward.js";
 import { marksmanPrecision } from "./marksman_precision.js";
 import { humanitysDefiance } from "./humanitys_defiance.js";
@@ -20,7 +20,7 @@ export const EMBLEMS = [
   brawlerFury,
   tankBulwark,
   mageArcana,
-  assassinAmbush,
+  silentBlade,
   enchanterWard,
   marksmanPrecision,
   humanitysDefiance,

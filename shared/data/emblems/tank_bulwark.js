@@ -36,43 +36,36 @@ export const tankBulwark = {
   },
 
   onChampionAdded({ owner, context }) {
-    if (!owner?.team) return;
+    // Only apply buff to the champion being added
+    if (!owner || owner.team == null) return;
+    if (!isTank(owner)) return;
 
-    const allChampions =
-      context?.allChampions instanceof Map
-        ? [...context.allChampions.values()]
-        : Array.isArray(context?.allChampions)
-          ? context.allChampions
-          : [];
+    // Mark that this champion has already received the emblem buff
+    if (owner.runtime?._tankBulwarkApplied) return;
 
-    for (const champion of allChampions) {
-      if (!champion || champion.team !== owner.team) continue;
-      if (!isTank(champion)) continue;
-      if (champion.runtime?._tankBulwarkApplied) continue;
+    if (!owner.runtime) owner.runtime = {};
+    owner.runtime._tankBulwarkApplied = true;
 
-      if (!champion.runtime) champion.runtime = {};
-      champion.runtime._tankBulwarkApplied = true;
+    // Apply buff only to this specific champion
+    if (owner.modifyStat) {
+      owner.modifyStat({
+        statName: "Defense",
+        amount: 30,
+        context,
+        isPermanent: true,
+      });
+    }
 
-      if (champion.modifyStat) {
-        champion.modifyStat({
-          statName: "Defense",
-          amount: 30,
-          context,
-          isPermanent: true,
-        });
-      }
-
-      const hpBonus = Math.max(1, Math.round((champion.maxHP || 100) * 0.05));
-      if (champion.modifyHP) {
-        champion.modifyHP(hpBonus, {
-          affectMax: true,
-          isPermanent: true,
-          context,
-        });
-      } else {
-        champion.maxHP = (champion.maxHP || 0) + hpBonus;
-        champion.HP = Math.min((champion.HP || 0) + hpBonus, champion.maxHP);
-      }
+    const hpBonus = Math.max(1, Math.round((owner.maxHP || 100) * 0.05));
+    if (owner.modifyHP) {
+      owner.modifyHP(hpBonus, {
+        affectMax: true,
+        isPermanent: true,
+        context,
+      });
+    } else {
+      owner.maxHP = (owner.maxHP || 0) + hpBonus;
+      owner.HP = Math.min((owner.HP || 0) + hpBonus, owner.maxHP);
     }
   },
 };

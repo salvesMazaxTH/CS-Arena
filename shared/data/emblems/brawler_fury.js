@@ -36,37 +36,30 @@ export const brawlerFury = {
   },
 
   onChampionAdded({ owner, context }) {
-    if (!owner?.team) return;
+    // Only apply buff to the champion being added
+    if (!owner || owner.team == null) return;
+    if (!isBrawler(owner)) return;
 
-    const allChampions =
-      context?.allChampions instanceof Map
-        ? [...context.allChampions.values()]
-        : Array.isArray(context?.allChampions)
-          ? context.allChampions
-          : [];
+    // Mark that this champion has already received the emblem buff
+    if (owner.runtime?._brawlerFuryApplied) return;
 
-    for (const champion of allChampions) {
-      if (!champion || champion.team !== owner.team) continue;
-      if (!isBrawler(champion)) continue;
-      if (champion.runtime?._brawlerFuryApplied) continue;
+    if (!owner.runtime) owner.runtime = {};
+    owner.runtime._brawlerFuryApplied = true;
 
-      if (!champion.runtime) champion.runtime = {};
-      champion.runtime._brawlerFuryApplied = true;
-
-      if (champion.modifyStat) {
-        champion.modifyStat({
-          statName: "Attack",
-          amount: 15,
-          context,
-          isPermanent: true,
-        });
-        champion.modifyStat({
-          statName: "Critical",
-          amount: 5,
-          context,
-          isPermanent: true,
-        });
-      }
+    // Apply buff only to this specific champion
+    if (owner.modifyStat) {
+      owner.modifyStat({
+        statName: "Attack",
+        amount: 15,
+        context,
+        isPermanent: true,
+      });
+      owner.modifyStat({
+        statName: "Critical",
+        amount: 5,
+        context,
+        isPermanent: true,
+      });
     }
   },
 };
