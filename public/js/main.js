@@ -2536,6 +2536,10 @@ async function selectTargetForRole(
   const filterUnique = (list) =>
     enforceUnique ? list.filter((c) => !chosenTargets.has(c.id)) : list;
 
+  // Helper: sorts candidates to strictly match their visual order on the field (by combatSlot)
+  const byFieldOrder = (list) =>
+    [...list].sort((a, b) => (a.combatSlot ?? 0) - (b.combatSlot ?? 0));
+
   const role = spec.type;
 
   console.log(`[selectTargetForRole] Selecting target for role: ${role}`);
@@ -2551,7 +2555,7 @@ async function selectTargetForRole(
     let allies = championsInField.filter(
       (c) => c.team === user.team && c.id !== user.id,
     );
-    allies = filterUnique(allies);
+    allies = byFieldOrder(filterUnique(allies));
     if (allies.length === 0) return undefined;
     chosenTargets.add(allies[0].id);
     return { ally: allies[0] };
@@ -2565,7 +2569,7 @@ async function selectTargetForRole(
       candidates = candidates.filter((c) => c.id !== user.id);
     }
 
-    candidates = filterUnique(candidates);
+    candidates = byFieldOrder(filterUnique(candidates));
 
     const target = await createTargetSelectionOverlay(
       candidates,
@@ -2589,7 +2593,7 @@ async function selectTargetForRole(
     const index = enemyCounter.count;
 
     let candidates = championsInField.filter((c) => c.team !== user.team);
-    candidates = filterUnique(candidates);
+    candidates = byFieldOrder(filterUnique(candidates));
 
     const target = await createTargetSelectionOverlay(
       candidates,
