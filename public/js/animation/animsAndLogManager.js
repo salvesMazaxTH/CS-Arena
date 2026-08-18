@@ -151,6 +151,7 @@ export function createCombatAnimationManager(deps) {
   let lastLoggedTurn = null;
   let currentPhase = null;
   let activeDialogController = null;
+  let lastDamageAnimationTime = 0; // 🛡️ Track when damage was last animated
   const editMode = deps.editMode || { freeCostSkills: false };
   const statsTabKeys = [
     "damage",
@@ -798,11 +799,13 @@ export function createCombatAnimationManager(deps) {
       await wait(450);
 
       championEl.classList.remove("damage");
+      lastDamageAnimationTime = Date.now(); // 🛡️ Track damage animation completion
       return;
     }
 
     // If there's only shield absorption without HP damage, maintain visual pacing
     await wait(300);
+    lastDamageAnimationTime = Date.now(); // 🛡️ Track even shield-only animations
   }
 
   /** * Unique helper to clean up the animation event boilerplate
@@ -1520,18 +1523,49 @@ export function createCombatAnimationManager(deps) {
       const champion = deps.activeChampions.get(snap.id);
       if (!champion) continue;
 
+      // 🛡️ Check if shields changed to add buffer for animation
+      const hadShieldsBefore = Array.isArray(champion.runtime?.shields) && champion.runtime.shields.length > 0;
+      const hasShieldsAfter = Array.isArray(snap.runtime?.shields) && snap.runtime.shields.length > 0;
+      const shieldsChanged = hadShieldsBefore !== hasShieldsAfter;
+
       syncChampionFromSnapshot(champion, snap);
 
-      champion.updateUI({
-        freeCostSkills: editMode?.freeCostSkills === true,
-      });
+      // 🛡️ Calculate delay for shield changes
+      let delayMs = 0;
+      if (shieldsChanged) {
+        const timeSinceLastDamage = Date.now() - lastDamageAnimationTime;
+        // If shield changed within 1 second of damage animation, add extra buffer
+        if (timeSinceLastDamage < 1000) {
+          delayMs = 500; // Longer buffer when shield consumed after damage
+        } else {
+          delayMs = 250; // Normal buffer for other shield changes
+        }
+      }
 
-      StatusIndicator.updateChampionIndicators(champion);
+      // Apply UI updates with appropriate delay
+      if (delayMs > 0) {
+        setTimeout(() => {
+          champion.updateUI({
+            freeCostSkills: editMode?.freeCostSkills === true,
+          });
+          StatusIndicator.updateChampionIndicators(champion);
+        }, delayMs);
+      } else {
+        champion.updateUI({
+          freeCostSkills: editMode?.freeCostSkills === true,
+        });
+        StatusIndicator.updateChampionIndicators(champion);
+      }
 
       const shouldSyncVfxNow =
         currentPhase !== "combat" && !hasPendingCombatAction();
 
-      if (shouldSyncVfxNow) {
+      if (shouldSyncVfxNow && delayMs > 0) {
+        // 🛡️ Sync VFX with same delay as UI when shields changed
+        setTimeout(() => {
+          syncChampionVFX(champion);
+        }, delayMs);
+      } else if (shouldSyncVfxNow) {
         syncChampionVFX(champion);
       }
     }
