@@ -240,7 +240,7 @@ const arenMarevothSkills = [
               context?.preActionClaimPoints ??
               getClaimPoints(owner, context?.currentTurn);
 
-            if (claimPoints >= 5) {
+            if (claimPoints >= 4) {
               owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
                 (he) => he.key !== "abyssal_depths_hook",
               );

@@ -3,8 +3,8 @@ import { formatChampionName } from "../../../ui/formatters.js";
 export default {
   key: "unyielding_mass",
   name: "Unyielding Mass",
-  stacksNeeded: 2,
-  defBonus: 20,
+  stacksNeeded: 3,
+  defBonus: 15,
   healingPerMaxHP: 0.025,
   defensePerHealingStep: 75,
   shieldPercentage: 0.075,
@@ -24,7 +24,7 @@ export default {
 
     if (owner.runtime.tharoxInerciaStacks < this.stacksNeeded) {
       return {
-        log: `<b>[Passiva - Massa Inamolgável]</b> ${formatChampionName(owner)} acumulou Inércia (${owner.runtime.tharoxInerciaStacks}/${this.stacksNeeded}).`,
+        log: `<b>[Passive - Unyielding Mass]</b> ${formatChampionName(owner)} gained Inertia (${owner.runtime.tharoxInerciaStacks}/${this.stacksNeeded}).`,
       };
     }
 

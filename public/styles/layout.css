@@ -239,11 +239,7 @@ body.team-selection-active .team-container:hover {
 
 .player-name-score {
   min-width: 1ch;
-  color: #0096ff;
-}
-
-.player-name-display[data-team="2"] .player-name-score {
-  color: #ff0000;
+  color: inherit;
 }
 
 .team-container .champion {

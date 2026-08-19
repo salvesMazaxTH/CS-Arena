@@ -59,12 +59,12 @@ const editMode = {
   alwaysEvade: false, // Força evasão em todo ataque. (SERVER-ONLY)
   executionOverride: null, // null = normal
   // number = força threshold (ex: 1 = 100%, 0.5 = 50%)
-  freeCostSkills: false, // Habilidades não consomem recurso. (SERVER-ONLY)
+  freeCostSkills: true, // Habilidades não consomem recurso. (SERVER-ONLY)
 };
 
 const TEAM_SIZE = 8;
 const ACTIVE_PER_TEAM = 3; // máximo de campeões simultâneos em campo por time (roster=8, active=3)
-const MAX_MATCH_TURNS = 15; // fim do jogo no final do turno 15
+const MAX_MATCH_TURNS = 20; // fim do jogo no final do turno 20
 const CHAMPION_SELECTION_TIME = 120; // Segundos para seleção de campeões
 const FIRST_CHOICE_TIMEOUT = 99999 * 1000; //30 * 1000; // 30s para escolha do 1v1 (99.999s para testes)
 const DISCONNECT_TIMEOUT = 30 * 1000; // 30 s para reconexão
@@ -1035,8 +1035,6 @@ function handleEndTurn() {
     io.emit("gameStateUpdate", getGameState());
   }
 
-  emitGameOverIfNeeded({ checkTurnLimit: true });
-
   // 4. Hooks onTurnEnd
   const context = {
     currentTurn: match.combat.currentTurn,
@@ -1052,6 +1050,10 @@ function handleEndTurn() {
   match.clearTurnReadiness();
   match.clearFinishedAnimationSockets();
   match.clearTurnSummons();
+
+  // Checar fim de jogo (roster wipe, limite de turnos ou threshold de
+  // pontuação) somente após todas as demais tarefas de fim de turno.
+  emitGameOverIfNeeded({ checkTurnLimit: true });
 
   if (!match.isGameEnded()) {
     match.nextTurn();
@@ -1193,13 +1195,17 @@ function handleStartTurn() {
   });
 
   // 3. Hooks onTurnStart (DoTs, passivas reativas, etc.)
-  const turnStartResults = emitCombatEvent(
-    "onTurnStart",
-    { context: turnStartContext },
-    match.combat.activeChampions,
-  );
+  // Skip turn 1 hooks — no previous effects to process on the first turn
+  let turnStartResults = [];
+  if (currentTurn > 1) {
+    turnStartResults = emitCombatEvent(
+      "onTurnStart",
+      { context: turnStartContext },
+      match.combat.activeChampions,
+    );
 
-  emitCombatLogsFromResults(turnStartResults);
+    emitCombatLogsFromResults(turnStartResults);
+  }
 
   // 4. Executar scheduled effects deste turno (inclusive os agendados durante onTurnStart)
   const remaining = [];

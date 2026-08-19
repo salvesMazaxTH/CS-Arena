@@ -53,10 +53,9 @@ function buildChampionHTML(champion, { editMode } = {}) {
             <div class="momentum-bar" aria-label="Momentum bar">
                 <div class="momentum-fill"></div>
                 <div class="momentum-markers" aria-hidden="true">
-                    <span class="momentum-threshold" style="left: 20%;">1</span>
-                    <span class="momentum-threshold" style="left: 40%;">2</span>
-                    <span class="momentum-threshold" style="left: 60%;">3</span>
-                    <span class="momentum-threshold" style="left: 80%;">4</span>
+                    <span class="momentum-threshold" style="left: 25%;">1</span>
+                    <span class="momentum-threshold" style="left: 50%;">2</span>
+                    <span class="momentum-threshold" style="left: 75%;">3</span>
                 </div>
             </div>
         </div>
@@ -155,19 +154,30 @@ export function updateChampionUI(champion, context) {
   // Texto base
   let hpText = `${champion.HP}/${champion.maxHP}`;
 
-  // Se tiver escudo, soma total e adiciona ao texto
+  // Se tiver escudo, adiciona ao texto conforme tipo
   if (hasShield) {
-    const totalShield = champion.runtime.shields.reduce(
-      (sum, s) => sum + s.amount,
-      0,
-    );
-    hpText += ` 🛡️ (${totalShield})`;
+    // 🛡️ Verificar tipo de escudo prioritário
+    const supremeShield = champion.runtime.shields.find((s) => s.type === "supreme");
+    const spellShield = champion.runtime.shields.find((s) => s.type === "spell");
+    const regularShields = champion.runtime.shields.filter((s) => !s.type || s.type === "regular");
+
+    if (supremeShield) {
+      // Escudo Supremo: mostrar "SUP" em negrito
+      hpText += ` 🛡️ <b>SUP</b>`;
+    } else if (spellShield) {
+      // Escudo de Feitiço: mostrar "S"
+      hpText += ` 🛡️ <b>S</b>`;
+    } else if (regularShields.length > 0) {
+      // Escudo Regular: mostrar valor numérico
+      const totalShield = regularShields.reduce((sum, s) => sum + s.amount, 0);
+      hpText += ` 🛡️ (${totalShield})`;
+    }
     champion.el.classList.add("has-shield");
   } else {
     champion.el.classList.remove("has-shield");
   }
 
-  HpDiv.textContent = hpText;
+  HpDiv.innerHTML = hpText;
 
   // Barra de HP
   const percent = (champion.HP / champion.maxHP) * 100;

@@ -26,6 +26,11 @@
   z-index: 20;
 }
 
+/* Crimson Frenzy VFX (Drex — Bloodthirst awakened) */
+.vfx-crimsonFrenzy {
+  z-index: 8;
+}
+
 .obliterate-canvas,
 .finishing-canvas {
   position: absolute;

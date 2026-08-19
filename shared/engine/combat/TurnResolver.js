@@ -953,6 +953,7 @@ export class TurnResolver {
       targets[roleKey] = taunter;
       redirected = true;
       redirectionEvents.push({
+        seq: context.visual.seq++,
         type: "tauntRedirection",
         attackerId: user.id,
         fromTargetId: original.id,
@@ -962,7 +963,7 @@ export class TurnResolver {
 
     if (!redirected) return null;
 
-    // Preencher roles não redirecionados com os alvos originais
+    // Fill in roles that weren't redirected with the original targets
     for (const role in action.targetIds) {
       if (!targets[role]) {
         const target = this.combat.activeChampions.get(action.targetIds[role]);
@@ -1058,8 +1059,12 @@ export class TurnResolver {
         resourceEvents: [],
         shieldEvents: [],
         redirectionEvents: [],
-        // fallback (mantém compatibilidade)
+        // fallback (keeps compatibility)
         globalDialogs: [],
+        // 🔢 Global sequence counter: preserves the real chronological order
+        // in which events were registered inside the skill's resolve(),
+        // regardless of category (damage, buff, heal, etc).
+        seq: 0,
       },
 
       _lastEventRef: null, // referência para o último evento registrado, útil para diálogos que precisam se referir a ele
@@ -1184,7 +1189,7 @@ export class TurnResolver {
         const hasFinishing = !!finishingType;
 
         const event = {
-          // eventIndex: this.nextEventIndex(),
+          seq: this.visual.seq++,
           type: "damage",
           sourceId: sourceId || null,
           targetId: target.id,
@@ -1210,7 +1215,7 @@ export class TurnResolver {
         };
 
         this.visual.damageEvents.push(event);
-        this._lastEventRef = event; // referência para possível uso em diálogos relacionados a esse dano
+        this._lastEventRef = event; // reference for dialogs possibly related to this damage
       },
 
       // -- HEAL REGISTRY -- //
@@ -1229,6 +1234,7 @@ export class TurnResolver {
         this._lastEventRef = null;
 
         const event = {
+          seq: this.visual.seq++,
           type: "heal",
           targetId: target.id,
           sourceId: sourceChamp?.id || target.id,
@@ -1238,9 +1244,9 @@ export class TurnResolver {
         };
 
         this.visual.healEvents.push(event);
-        this._lastEventRef = event; // referência para possível uso em diálogos relacionados a essa cura
+        this._lastEventRef = event; // reference for dialogs possibly related to this heal
 
-        // 🔥 Dispara hook de cura
+        // 🔥 Fires the heal hook
         emitCombatEvent(
           "onAfterHealing",
           {
@@ -1290,6 +1296,7 @@ export class TurnResolver {
         );
 
         const event = {
+          seq: this.visual.seq++,
           type: "lifesteal",
           targetId: target.id,
           sourceId: sourceChamp?.id || target.id,
@@ -1315,10 +1322,10 @@ export class TurnResolver {
 
         this._lastEventRef = null;
 
-        // Mantém comportamento anterior de UI/ult: apenas ganhos positivos entram em buffEvents
+        // Keeps previous UI/ult behavior: only positive gains enter buffEvents
         if (value > 0) {
           const event = {
-            // eventIndex: this.nextEventIndex(),
+            seq: this.visual.seq++,
             type: "buff",
             targetId: target.id,
             sourceId: sourceChamp?.id || target.id,
@@ -1331,7 +1338,7 @@ export class TurnResolver {
           this.visual.buffEvents.push(event);
           this._lastEventRef = event;
         } else {
-          this._lastEventRef = null; // mudanças negativas não geram evento visual, então limpa a referência para evitar associações incorretas em diálogos
+          this._lastEventRef = null; // negative changes don't generate a visual event, so clear the reference to avoid wrong dialog associations
         }
 
         emitCombatEvent(
@@ -1355,6 +1362,7 @@ export class TurnResolver {
         this._lastEventRef = null;
 
         const event = {
+          seq: this.visual.seq++,
           type: "shield",
           targetId: target.id,
           sourceId: sourceId || this.healSourceId || target.id,
@@ -1374,6 +1382,7 @@ export class TurnResolver {
         const eventType = value > 0 ? "resourceGain" : "resourceSpend";
 
         const event = {
+          seq: this.visual.seq++,
           type: eventType,
           targetId: target.id,
           sourceId: sourceId || this.healSourceId || target.id,

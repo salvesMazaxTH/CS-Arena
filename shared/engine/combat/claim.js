@@ -1,13 +1,13 @@
 export const CLAIM_ACTION_KEY = "claim";
-export const CLAIM_MIN_MOMENTUM = 20;
+export const CLAIM_MIN_MOMENTUM = 25;
+export const CLAIM_MAX_POINTS = 5;
 
 export function getMomentumClaimPoints(momentum) {
   const value = Math.max(0, Number(momentum) || 0);
 
-  if (value >= 80) return 4;
-  if (value >= 60) return 3;
-  if (value >= 40) return 2;
-  if (value >= 20) return 1;
+  if (value >= 75) return 3;
+  if (value >= 50) return 2;
+  if (value >= 25) return 1;
   return 0;
 }
 
@@ -24,7 +24,7 @@ export function getClaimPoints(champion, currentTurn) {
     : Number(currentTurn) || 0;
   const turnsInField = Math.max(0, Number(currentTurn) - fieldEntryTurn);
 
-  return Math.min(7, momentumPoints + turnsInField);
+  return Math.min(CLAIM_MAX_POINTS, momentumPoints + turnsInField);
 }
 
 export function getClaimPointsFromMomentum(momentum) {

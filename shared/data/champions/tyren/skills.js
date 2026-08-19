@@ -107,7 +107,7 @@ const tyrenSkills = [
 
       const transformedDefense = originalAttack + this.defenseBonus;
 
-      const transformedSpeed = originalSpeed * this.speedMultiplier;
+      const transformedSpeed = Math.floor(originalSpeed * this.speedMultiplier);
 
       // Store the exact pre-transformation values so the effect
       // can be completely reverted when it expires.
@@ -135,11 +135,22 @@ const tyrenSkills = [
 
         expiresAtTurn: context.currentTurn + this.duration,
 
-        hookScope: {
-          onTurnEnd: "owner",
-        },
-
-        onTurnEnd({ owner, context }) {
+        // No hookScope needed here: this event is already dispatched once per
+        // champion by emitCombatEvent, and this hookEffect only ever lives on
+        // its own owner's runtime.hookEffects — so it's inherently self-scoped.
+        // A hookScope of "owner" would never match: the payload for
+        // onTurnStart/onTurnEnd is just { context }, with no "owner" key to
+        // compare against.
+        //
+        // Must be onTurnStart, not onTurnEnd: each turn, the server runs
+        // onTurnStart hooks and *then* champion.purgeExpiredHookEffects(),
+        // which silently drops any hookEffect once expiresAtTurn <= currentTurn
+        // — without ever calling its handler. onTurnEnd only fires later, at
+        // the end of that same turn, by which point the purge has already
+        // deleted this effect, so the revert would never run. Checking on
+        // onTurnStart (same pattern as Kai's postura_da_brasa_viva) lets the
+        // revert execute before the purge can remove it.
+        onTurnStart({ owner, context }) {
           if (context.currentTurn < this.expiresAtTurn) return;
 
           const originalStats = owner.runtime?.livingSteelAegisOriginalStats;

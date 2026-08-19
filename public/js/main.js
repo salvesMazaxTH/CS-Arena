@@ -6,6 +6,7 @@ import { elementEmoji } from "../../shared/ui/elementEmoji.js";
 import {
   CLAIM_ACTION_KEY,
   CLAIM_MIN_MOMENTUM,
+  CLAIM_MAX_POINTS,
 } from "../../shared/engine/combat/claim.js";
 
 let skillOverlay = null;
@@ -98,21 +99,19 @@ function getClaimPointsPreview(champion) {
   }
 
   const momentumPoints =
-    momentum >= 80
-      ? 4
-      : momentum >= 60
-        ? 3
-        : momentum >= 40
-          ? 2
-          : momentum >= 20
-            ? 1
-            : 0;
+    momentum >= 75
+      ? 3
+      : momentum >= 50
+        ? 2
+        : momentum >= 25
+          ? 1
+          : 0;
   const fieldEntryTurn = Number.isFinite(champion?.runtime?.fieldEntryTurn)
     ? Number(champion.runtime.fieldEntryTurn)
     : currentTurn;
   const turnsInField = Math.max(0, currentTurn - fieldEntryTurn);
 
-  return Math.min(7, momentumPoints + turnsInField);
+  return Math.min(CLAIM_MAX_POINTS, momentumPoints + turnsInField);
 }
 
 // =========================
@@ -1759,9 +1758,7 @@ function handleChampionCardClick(championKey) {
     if (emptySlotIndex > -1) {
       selectedChampions[emptySlotIndex] = championKey;
     } else {
-      alert(
-        "All slots are filled. Remove one to add another.",
-      );
+      alert("All slots are filled. Remove one to add another.");
     }
   }
   updateSelectedChampionsUI();
@@ -2538,6 +2535,10 @@ async function selectTargetForRole(
   const filterUnique = (list) =>
     enforceUnique ? list.filter((c) => !chosenTargets.has(c.id)) : list;
 
+  // Helper: sorts candidates to strictly match their visual order on the field (by combatSlot)
+  const byFieldOrder = (list) =>
+    [...list].sort((a, b) => (a.combatSlot ?? 0) - (b.combatSlot ?? 0));
+
   const role = spec.type;
 
   console.log(`[selectTargetForRole] Selecting target for role: ${role}`);
@@ -2553,7 +2554,7 @@ async function selectTargetForRole(
     let allies = championsInField.filter(
       (c) => c.team === user.team && c.id !== user.id,
     );
-    allies = filterUnique(allies);
+    allies = byFieldOrder(filterUnique(allies));
     if (allies.length === 0) return undefined;
     chosenTargets.add(allies[0].id);
     return { ally: allies[0] };
@@ -2567,7 +2568,7 @@ async function selectTargetForRole(
       candidates = candidates.filter((c) => c.id !== user.id);
     }
 
-    candidates = filterUnique(candidates);
+    candidates = byFieldOrder(filterUnique(candidates));
 
     const target = await createTargetSelectionOverlay(
       candidates,
@@ -2591,7 +2592,7 @@ async function selectTargetForRole(
     const index = enemyCounter.count;
 
     let candidates = championsInField.filter((c) => c.team !== user.team);
-    candidates = filterUnique(candidates);
+    candidates = byFieldOrder(filterUnique(candidates));
 
     const target = await createTargetSelectionOverlay(
       candidates,
@@ -2858,8 +2859,10 @@ function showTurnTransition(turn) {
 
   clearTimeout(turnTransitionTimer);
 
+  const turnLabel = turn === 20 ? "LAST TURN" : `TURN ${turn}`;
+
   // Garante que o overlay comece mostrando o novo turno
-  number.textContent = `TURN ${turn}`;
+  number.textContent = turnLabel;
 
   // Reset da animação do texto
   number.classList.remove("is-changing");
@@ -2880,7 +2883,7 @@ function showTurnTransition(turn) {
     setTimeout(() => {
       if (sequence !== turnTransitionSequence) return;
 
-      number.textContent = `TURN ${turn}`;
+      number.textContent = turnLabel;
 
       // Força reflow para reiniciar a entrada
       void number.offsetWidth;
@@ -2893,9 +2896,7 @@ function showTurnTransition(turn) {
 
         overlay.classList.remove("is-visible");
       }, 700);
-
     }, 230);
-
   }, 700);
 }
 
@@ -2906,7 +2907,7 @@ function updateTurnDisplay(turn) {
   const turnText = turnDisplay?.querySelector("p");
 
   if (turnText) {
-    turnText.textContent = `Turn ${turn}`;
+    turnText.textContent = turn === 20 ? "Last Turn" : `Turn ${turn}`;
   }
 
   if (isFirstTurnUpdate) {
@@ -2923,14 +2924,18 @@ function updateTurnDisplay(turn) {
 
 function endTurn() {
   if (hasConfirmedEndTurn) {
-    alert("You have already confirmed the end of the turn. Waiting for the other player.");
+    alert(
+      "You have already confirmed the end of the turn. Waiting for the other player.",
+    );
     return;
   }
 
   socket.emit("endTurn");
   hasConfirmedEndTurn = true;
   removeActionBar();
-  logCombat("You have confirmed the end of the turn. Waiting for the other player...");
+  logCombat(
+    "You have confirmed the end of the turn. Waiting for the other player...",
+  );
 
   document.getElementById("undo-actions-btn").disabled = false;
 }

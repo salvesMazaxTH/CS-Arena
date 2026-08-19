@@ -40,7 +40,7 @@ const ELEMENTAL_MATRIX = {
 };
 
 function applyAffinity(event, debugMode) {
-  const skillElement = event.skill?.element;
+  const skillElement = event.element ?? event.skill?.element;
 
   if (!skillElement) return;
 

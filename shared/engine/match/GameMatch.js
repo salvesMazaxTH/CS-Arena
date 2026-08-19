@@ -346,18 +346,27 @@ class CombatState {
 
     const scoringTeam = champion.team === 1 ? 2 : 1;
     const scoringSlot = scoringTeam - 1;
+    const victimSlot = champion.team - 1;
     const claimValueAtDeath = Math.max(
       0,
       Number(champion.runtime?.claimValueBeforeDeath ?? 0) || 0,
     );
-    const killPoints = Math.max(1, claimValueAtDeath);
+
+    // Toda morte concede o claim value do campeão morto no momento da morte
+    // (mesmo se 0) mais um bônus fixo de 2pts pela kill em si.
+    const deathBonus = 2;
+    // Se quem recebe os pontos está 10pts ou mais atrás no placar, ganha
+    // mais 2pts de bônus (totalizando 4pts de bônus pela kill).
+    const scoreDeficit =
+      (this.playerScores[victimSlot] || 0) -
+      (this.playerScores[scoringSlot] || 0);
+    const comebackBonus = scoreDeficit >= 10 ? 2 : 0;
+    const killPoints = claimValueAtDeath + deathBonus + comebackBonus;
 
     let scoreAwarded = false;
 
     if (killPoints > 0) {
-      for (let i = 0; i < killPoints; i++) {
-        this.addPointForSlot(scoringSlot);
-      }
+      this.addPointForSlot(scoringSlot, killPoints);
       scoreAwarded = true;
     }
 
@@ -367,6 +376,8 @@ class CombatState {
       team: champion.team,
       scoringTeam,
       claimValueAtDeath,
+      deathBonus,
+      comebackBonus,
       killPoints,
     });
     this.ensureTurnEntry().championsDeadThisTurn.push(championId);
@@ -384,6 +395,8 @@ class CombatState {
       scoringTeam,
       scoringSlot,
       claimValueAtDeath,
+      deathBonus,
+      comebackBonus,
       killPoints,
       scoreAwarded,
       scorePayload: scoreAwarded ? this.getScorePayload() : null,
@@ -429,8 +442,22 @@ class CombatState {
     return null;
   }
 
-  checkGameEnd({ maxTurns = 15, checkTurnLimit = false } = {}) {
+  checkGameEnd({
+    maxTurns = 20,
+    checkTurnLimit = false,
+    scoreThreshold = 60,
+  } = {}) {
     if (!this.gameEnded && checkTurnLimit && this.currentTurn >= maxTurns) {
+      this.gameEnded = true;
+    }
+
+    if (
+      !this.gameEnded &&
+      checkTurnLimit &&
+      Number.isFinite(scoreThreshold) &&
+      (this.playerScores[0] >= scoreThreshold ||
+        this.playerScores[1] >= scoreThreshold)
+    ) {
       this.gameEnded = true;
     }
 
@@ -675,8 +702,16 @@ export class GameMatch {
     return this.combat.resolveWinnerSlot();
   }
 
-  checkGameEnd({ maxTurns = 15, checkTurnLimit = false } = {}) {
-    return this.combat.checkGameEnd({ maxTurns, checkTurnLimit });
+  checkGameEnd({
+    maxTurns = 20,
+    checkTurnLimit = false,
+    scoreThreshold = 60,
+  } = {}) {
+    return this.combat.checkGameEnd({
+      maxTurns,
+      checkTurnLimit,
+      scoreThreshold,
+    });
   }
 
   clearActions() {

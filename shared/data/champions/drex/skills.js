@@ -84,6 +84,23 @@ const drexSkills = [
       for (const enemy of targets) {
         if (!enemy?.alive) continue;
 
+        // Deal initial damage to the enemy
+        const initialDamage = new DamageEvent({
+          baseDamage: (user.Attack * this.bf) / 100,
+          attacker: user,
+          defender: enemy,
+          skill: this,
+          type: "magical",
+          context,
+          allChampions: context?.allChampions,
+        }).execute();
+
+        if (Array.isArray(initialDamage)) {
+          results.push(...initialDamage);
+        } else if (initialDamage) {
+          results.push(initialDamage);
+        }
+
         const existingStacks =
           Number(enemy.getStatusEffect("bleeding")?.stacks) || 0;
 
@@ -140,8 +157,8 @@ const drexSkills = [
     bf: 75,
     damagePerBleedStack: 18,
 
-    minimumBleedStacks: 4,
-    shieldFromTargetMaxHpRatio: 0.35,
+    minimumBleedStacks: 5,
+    shieldFromTargetMaxHpRatio: 0.245,
     shieldDecayTurns: 3,
 
     contact: false,
@@ -152,7 +169,7 @@ const drexSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Deals moderate-high damage to the chosen target. Deals +${this.damagePerBleedStack}% bonus damage for each Bleeding stack on the target. If the target has fewer than ${this.minimumBleedStacks} Bleeding stacks, applies enough stacks to reach ${this.minimumBleedStacks}. If this ability hits a target with ${this.minimumBleedStacks}+ Bleeding stacks, Drex gains a shield equal to 35% of the target's Max HP for ${this.shieldDecayTurns} turns.`;
+      return `Deals moderate-high damage to the chosen target. Deals +${this.damagePerBleedStack}% bonus damage for each Bleeding stack on the target. If the target has fewer than ${this.minimumBleedStacks} Bleeding stacks, applies 2 stacks or enough to reach ${this.minimumBleedStacks}. If this ability hits a target with ${this.minimumBleedStacks}+ Bleeding stacks, Drex gains a shield equal to ${this.shieldFromTargetMaxHpRatio * 100}% of the target's Max HP for ${this.shieldDecayTurns} turns.`;
     },
 
     resolve({ user, targets, context = {} }) {
@@ -160,9 +177,12 @@ const drexSkills = [
 
       let bleedStacks = Number(enemy.getStatusEffect("bleeding")?.stacks) || 0;
 
-      // The Ultimate guarantees its own Bleeding threshold.
+      // If below the minimum, apply +2 stacks or enough to reach the minimum.
       if (bleedStacks < this.minimumBleedStacks) {
-        const stacksToApply = this.minimumBleedStacks - bleedStacks;
+        const stacksToApply = Math.min(
+          2,
+          this.minimumBleedStacks - bleedStacks,
+        );
 
         enemy.applyStatusEffect(
           "bleeding",
@@ -172,7 +192,8 @@ const drexSkills = [
           stacksToApply,
         );
 
-        bleedStacks = this.minimumBleedStacks;
+        // Re-read after applying the Ultimate's Bleeding.
+        bleedStacks = Number(enemy.getStatusEffect("bleeding")?.stacks) || 0;
       }
 
       const damageMultiplier =
@@ -198,6 +219,7 @@ const drexSkills = [
       const connected =
         !mainDamage?.evaded && !mainDamage?.immune && dealtDamage;
 
+      // Shield check happens AFTER the Ultimate applies its own Bleeding.
       if (connected && bleedStacks >= this.minimumBleedStacks) {
         const shieldAmount = Math.floor(
           Number(enemy?.maxHP || 0) * this.shieldFromTargetMaxHpRatio,
