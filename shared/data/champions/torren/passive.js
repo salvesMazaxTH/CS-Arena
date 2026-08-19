@@ -2,8 +2,8 @@ import { formatChampionName } from "../../../ui/formatters.js";
 
 
 export default {
-  key: "inexorable",
-  name: "Inexorable",
+  key: "unyielding",
+  name: "Unyielding",
 
   description() {
     return `Can only take direct damage from skills. Damage over time and indirect effects do not affect him. Additionally, Torren takes 10% less damage from all sources (except Absolute Damage).`;

@@ -1195,13 +1195,17 @@ function handleStartTurn() {
   });
 
   // 3. Hooks onTurnStart (DoTs, passivas reativas, etc.)
-  const turnStartResults = emitCombatEvent(
-    "onTurnStart",
-    { context: turnStartContext },
-    match.combat.activeChampions,
-  );
+  // Skip turn 1 hooks — no previous effects to process on the first turn
+  let turnStartResults = [];
+  if (currentTurn > 1) {
+    turnStartResults = emitCombatEvent(
+      "onTurnStart",
+      { context: turnStartContext },
+      match.combat.activeChampions,
+    );
 
-  emitCombatLogsFromResults(turnStartResults);
+    emitCombatLogsFromResults(turnStartResults);
+  }
 
   // 4. Executar scheduled effects deste turno (inclusive os agendados durante onTurnStart)
   const remaining = [];

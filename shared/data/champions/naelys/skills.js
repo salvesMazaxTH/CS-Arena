@@ -3,11 +3,17 @@ import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../basicStrike.js";
 
 const naelysSkills = [
+  // ========================
+  // Basic Attack
+  // ========================
   basicStrike,
 
+  // ========================
+  // Special Abilities
+  // ========================
   {
-    key: "pingente_das_ondas",
-    name: "Pingente das Ondas",
+    key: "pendant_of_the_waves",
+    name: "Pendant of the Waves",
     contact: false,
     bf: 80,
     damageMode: "standard",
@@ -17,29 +23,19 @@ const naelysSkills = [
     allyHealAmount: 20,
 
     description() {
-      return `Naelys cura a si mesma em ${this.selfHealAmount} HP e um aliado em ${this.allyHealAmount} HP, causando dano ao inimigo.`;
+      return `Naelys restores ${this.selfHealAmount} HP to herself and ${this.allyHealAmount} HP to an ally, dealing damage to the enemy.`;
     },
 
     targetSpec: ["enemy", { type: "select:ally", excludesSelf: true }],
 
     resolve({ user, targets, context = {} }) {
-      // console.log("[NAELYS] Pingente das Ondas iniciou.");
-      /* console.log(
-        "[NAELYS] Targets:",
-        targets?.map((t) => t?.name),
-      );
-      */
       const [enemy, ally] = targets;
 
       const baseDamage = (user.Attack * this.bf) / 100;
 
-      // console.log("[NAELYS] BaseDamage calculado:", baseDamage);
-
       const results = [];
 
       if (enemy) {
-        // console.log("[NAELYS] Executando DamageEvent contra:", enemy.name);
-
         const damageResult = new DamageEvent({
           baseDamage,
           attacker: user,
@@ -50,26 +46,16 @@ const naelysSkills = [
           allChampions: context?.allChampions,
         }).execute();
 
-        // console.log("[NAELYS] DamageEvent resultado:", damageResult);
-
         const damageResults = Array.isArray(damageResult)
           ? damageResult
           : [damageResult];
         results.push(...damageResults);
       }
 
-      // console.log("[NAELYS] Cura própria:", this.selfHealAmount);
       const selfHealApplied = user.heal(this.selfHealAmount, context, user);
-      // console.log("[NAELYS] Cura aplicada na Naelys:", selfHealApplied);
 
       if (ally) {
-        // console.log("[NAELYS] Cura no aliado:", ally.name, this.allyHealAmount);
-
         const allyHealApplied = ally.heal(this.allyHealAmount, context, user);
-
-        // console.log("[NAELYS] Cura aplicada no aliado:", allyHealApplied);
-      } else {
-        // console.log("[NAELYS] Nenhum aliado selecionado.");
       }
 
       results.push({
@@ -77,7 +63,7 @@ const naelysSkills = [
         userId: user.id,
         targetId: user.id,
         amount: this.selfHealAmount,
-        log: `${formatChampionName(user)} recupera ${this.selfHealAmount} HP.`,
+        log: `${formatChampionName(user)} restores ${this.selfHealAmount} HP.`,
       });
 
       if (ally) {
@@ -86,38 +72,35 @@ const naelysSkills = [
           userId: user.id,
           targetId: ally.id,
           amount: this.allyHealAmount,
-          log: `${formatChampionName(ally)} recupera ${this.allyHealAmount} HP.`,
+          log: `${formatChampionName(
+            ally,
+          )} restores ${this.allyHealAmount} HP.`,
         });
       }
-
-      // console.log("[NAELYS] Pingente das Ondas finalizado.");
 
       return results;
     },
   },
 
   {
-    key: "massa_do_mar_revolto",
-    name: "Massa do Mar Revolto",
+    key: "mass_of_the_raging_sea",
+    name: "Mass of the Raging Sea",
     contact: false,
     priority: 2,
     element: "water",
     damageReduction: 20,
 
     description() {
-      return `Naelys assume uma postura marítima até o fim do próximo turno, recebendo ${this.damageReduction}% de redução de dano. Primeira vez que for atingida por turno, contra-ataca o agressor com Ataque Básico.`;
+      return `Naelys assumes a maritime stance until the end of the next turn, gaining ${this.damageReduction}% damage reduction. The first time she is hit each turn, she counterattacks the attacker with Basic Strike.`;
     },
 
     targetSpec: ["self"],
 
     resolve({ user, context }) {
-      // console.log("[NAELYS] Massa do Mar Revolto ativada.");
-      // console.log("[NAELYS] Turno atual:", context.currentTurn);
-
       user.runtime.hookEffects ??= [];
 
       const effect = {
-        key: "massa_do_mar_revolto",
+        key: "mass_of_the_raging_sea",
         expiresAtTurn: context.currentTurn + 2,
         lastTriggerTurn: null,
 
@@ -129,42 +112,20 @@ const naelysSkills = [
           owner,
           context,
         }) {
-          // console.log("[NAELYS] Hook onAfterDmgTaking disparado.");
-          // console.log("[NAELYS] Target:", defender?.name);
-          // console.log("[NAELYS] Damage:", damage);
-          // console.log("[NAELYS] Skill recebida:", skill?.key);
+          if (defender !== owner) return;
+          if (damage <= 0) return;
 
-          if (defender !== owner) {
-            // console.log("[NAELYS] Ignorado: defender !== owner");
-            return;
-          }
-
-          if (damage <= 0) {
-            // console.log("[NAELYS] Ignorado: dano <= 0");
-            return;
-          }
-
-          if (this.lastTriggerTurn === context.currentTurn) {
-            // console.log("[NAELYS] Já contra-atacou neste turno.");
-            return;
-          }
+          if (this.lastTriggerTurn === context.currentTurn) return;
 
           this.lastTriggerTurn = context.currentTurn;
 
-          // console.log("[NAELYS] Contra-ataque autorizado.");
-
           context.extraDamageQueue ??= [];
 
-          const basic = owner.skills.find((s) => s.key === "ataque_basico");
+          const basic = owner.skills.find((s) => s.key === "basic_strike");
 
-          if (!basic) {
-            // console.log("[NAELYS] ERRO: ataque básico não encontrado.");
-            return;
-          }
+          if (!basic) return;
 
           const baseDamage = (owner.Attack * basic.bf) / 100;
-
-          // console.log("[NAELYS] Contra-ataque baseDamage:", baseDamage);
 
           context.extraDamageQueue.push({
             mode: "standard",
@@ -174,31 +135,27 @@ const naelysSkills = [
             type: "physical",
             skill: {
               ...basic,
-              key: "massa_do_mar_revolto_counter",
-              name: "Contra-ataque Mar Revolto",
+              key: "mass_of_the_raging_sea_counter",
+              name: "Raging Sea Counterattack",
             },
 
             dialog: {
-              message: `${formatChampionName(owner)} executou um contra-ataque da Massa do Mar Revolto em ${formatChampionName(source)}!`,
+              message: `${formatChampionName(
+                owner,
+              )} counterattacked with the force of the Raging Sea!`,
               duration: 1000,
             },
           });
 
-          /* console.log(
-            "[NAELYS] Contra-ataque enfileirado contra:",
-            source?.name,
-          );
-          */
-
           return {
-            log: `🌊 ${formatChampionName(owner)} contra-ataca com a força do mar!`,
+            log: `🌊 ${formatChampionName(
+              owner,
+            )} counterattacks with the force of the sea!`,
           };
         },
       };
 
       user.runtime.hookEffects.push(effect);
-
-      // console.log("[NAELYS] HookEffect registrado.");
 
       user.applyDamageReduction({
         amount: this.damageReduction,
@@ -207,17 +164,17 @@ const naelysSkills = [
         context,
       });
 
-      // console.log("[NAELYS] Redução de dano aplicada:", this.damageReduction);
-
       return {
-        log: `${formatChampionName(user)} assume a Massa do Mar Revolto!`,
+        log: `${formatChampionName(
+          user,
+        )} assumes the stance of the Raging Sea!`,
       };
     },
   },
 
   {
-    key: "sobrefluxo",
-    name: "Sobrefluxo",
+    key: "overflow",
+    name: "Overflow",
     contact: false,
     damageMode: "standard",
     priority: 3,
@@ -228,22 +185,19 @@ const naelysSkills = [
     element: "water",
 
     isUltimate: true,
-    momentumCost: 55,
+    momentumCost: 40,
 
     description() {
-      return `Por ${this.duration} turnos, Naelys causa dano adicional baseado no HP perdido (até +${this.maxBonus}).`;
+      return `For ${this.duration} turns, Naelys deals bonus damage based on her lost HP (up to +${this.maxBonus}).`;
     },
 
     targetSpec: ["self"],
 
     resolve({ user, context }) {
-      // console.log("[NAELYS] Sobrefluxo ativado.");
-      // console.log("[NAELYS] Turno atual:", context.currentTurn);
-
       const { currentTurn } = context;
 
       user.addDamageModifier({
-        id: "sobrefluxo",
+        id: "overflow",
         expiresAtTurn: currentTurn + this.duration,
 
         apply: ({ baseDamage, attacker }) => {
@@ -253,22 +207,12 @@ const naelysSkills = [
 
           const bonus = Math.min(stacks * this.bonusPerStack, this.maxBonus);
 
-          // console.log("[NAELYS] Sobrefluxo cálculo:");
-          // console.log("[NAELYS] lostHP:", lostHP);
-          // console.log("[NAELYS] stacks:", stacks);
-          // console.log("[NAELYS] bonus:", bonus);
-          // console.log("[NAELYS] baseDamage:", baseDamage);
-          // console.log("[NAELYS] totalDamage:", baseDamage + bonus);
-
           return baseDamage + bonus;
         },
       });
 
-      // console.log("[NAELYS] DamageModifier Sobrefluxo registrado.");
-      // console.log("[NAELYS] Expira no turno:", currentTurn + this.duration);
-
       return {
-        log: `🌊 ${formatChampionName(user)} libera o Sobrefluxo!`,
+        log: `🌊 ${formatChampionName(user)} unleashes Overflow!`,
       };
     },
   },

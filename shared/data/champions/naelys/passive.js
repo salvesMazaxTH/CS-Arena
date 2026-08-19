@@ -1,8 +1,8 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
-  key: "coracao_das_mares",
-  name: "Coração das Marés",
+  key: "heart_of_the_tides",
+  name: "Heart of the Tides",
 
   healPerHit: 10,
   dmgPerStack: 10,
@@ -11,12 +11,12 @@ export default {
   description(champion) {
     const stacks = champion?.runtime?.mareStacks || 0;
 
-    return `Ao causar dano, cura ${this.healPerHit} HP. Cada cura concede 1 acúmulo de Maré.
+    return `Whenever she deals damage, she restores ${this.healPerHit} HP. Each time she restores HP this way, she gains 1 Tides stack.
 
-    Cada stack concede +${this.dmgPerStack} de dano flat. Máx ${this.maxStacks} acúmulos. Os acúmulos são permanentes.
+  Each stack grants +${this.dmgPerStack} flat damage. Max ${this.maxStacks} stacks. Stacks are permanent.
 
-    Stacks atuais: ${stacks}/${this.maxStacks}
-    Máximo bônus total: +${this.dmgPerStack * this.maxStacks} de dano.`;
+  Current stacks: ${stacks}/${this.maxStacks}
+  Maximum total bonus: +${this.dmgPerStack * this.maxStacks} damage.`;
   },
 
   hookScope: {
@@ -30,13 +30,15 @@ export default {
     owner.runtime = owner.runtime || {};
     owner.runtime.mareStacks = owner.runtime.mareStacks || 0;
 
-    // cura
-    const healed = owner.heal(this.healPerHit, context);
+    // Restore HP
+    const restored = owner.heal(this.healPerHit, context);
 
-    if (healed <= 0) return;
+    if (restored <= 0) return;
 
     return {
-      log: `[Coração das Marés] ${formatChampionName(owner)} recuperou ${healed} HP e ganhou 1 stack de Maré (${owner.runtime.mareStacks}/${this.maxStacks}).`,
+      log: `[Heart of the Tides] ${formatChampionName(
+        owner,
+      )} restored ${restored} HP and gained 1 Tides stack (${owner.runtime.mareStacks}/${this.maxStacks}).`,
     };
   },
 
@@ -50,15 +52,15 @@ export default {
 
     owner.runtime.mareStacks++;
 
-    // Adiciona o modifier UMA vez, no primeiro stack (igual Naelthos faz na ult)
+    // Add the modifier ONCE, on the first stack (same as Naelthos does on his Ultimate)
     const alreadyHas = owner
       .getDamageModifiers()
-      .some((m) => m.id === "mare-stacks");
+      .some((m) => m.id === "tides-stacks");
 
     if (!alreadyHas) {
       owner.addDamageModifier({
-        id: "mare-stacks",
-        name: "Maré",
+        id: "tides-stacks",
+        name: "Tides",
         permanent: true,
         apply: ({ baseDamage, attacker }) => {
           const stacks = Math.min(
