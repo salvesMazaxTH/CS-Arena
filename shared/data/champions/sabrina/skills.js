@@ -95,8 +95,8 @@ const sabrinaSkills = [
     key: "deluge_of_winter",
     name: "Deluge of Winter",
 
-    bfWater: 55,
-    bfIce: 55,
+    bfWater: 65,
+    bfIce: 65,
     chillDuration: 2,
     freezeDuration: 1,
 
