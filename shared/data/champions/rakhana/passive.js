@@ -1,3 +1,5 @@
+import { formatChampionName } from "../../../ui/formatters.js";
+
 export default {
   key: "silver_flow",
   name: "Silver Flow",

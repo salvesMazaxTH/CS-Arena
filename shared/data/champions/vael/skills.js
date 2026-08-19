@@ -1,3 +1,6 @@
+import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import totalBlock from "../totalBlock.js";
+
 const vaelSkills = [
   // ========================
   // Total Block (global)
