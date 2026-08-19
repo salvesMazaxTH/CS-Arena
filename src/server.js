@@ -49,8 +49,8 @@ import { EMBLEMS } from "../shared/data/emblems/index.js";
 // ============================================================
 
 const editMode = {
-  enabled: true,
-  autoLogin: true,
+  enabled: false,
+  autoLogin: false,
   autoSelection: false, // Seleção automática de campeões (sem tela de seleção)
   actMultipleTimesPerTurn: false,
   unavailableChampions: false,
