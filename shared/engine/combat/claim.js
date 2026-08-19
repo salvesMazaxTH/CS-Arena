@@ -1,6 +1,14 @@
 export const CLAIM_ACTION_KEY = "claim";
 export const CLAIM_MIN_MOMENTUM = 25;
 export const CLAIM_MAX_POINTS = 5;
+// Minions são alvos mais baratos: seu claim (e o valor concedido na morte) vai só até 3.
+export const CLAIM_MAX_POINTS_MINION = 3;
+
+export function getClaimMaxPoints(champion) {
+  return champion?.entityType === "minion"
+    ? CLAIM_MAX_POINTS_MINION
+    : CLAIM_MAX_POINTS;
+}
 
 export function getMomentumClaimPoints(momentum) {
   const value = Math.max(0, Number(momentum) || 0);
@@ -24,7 +32,7 @@ export function getClaimPoints(champion, currentTurn) {
     : Number(currentTurn) || 0;
   const turnsInField = Math.max(0, Number(currentTurn) - fieldEntryTurn);
 
-  return Math.min(CLAIM_MAX_POINTS, momentumPoints + turnsInField);
+  return Math.min(getClaimMaxPoints(champion), momentumPoints + turnsInField);
 }
 
 export function getClaimPointsFromMomentum(momentum) {

@@ -1,3 +1,5 @@
+import { getClaimMaxPoints } from "../combat/claim.js";
+
 class LobbyState {
   constructor(match) {
     this.match = match;
@@ -336,9 +338,9 @@ class CombatState {
   }
 
   /**
-   * Remove um campeão morto do jogo: registra no histórico, move para deadChampions.
-   * Se a eliminação deixar o time sem campeões vivos na lineup, o jogo termina.
-   * Retorna um objeto com os dados necessários para o server emitir sockets, ou null se não encontrado.
+   * Remove a dead champion from the game: registers in the history, moves to deadChampions.
+   * If the elimination leaves the team without living champions in the lineup, the game ends.
+   * Returns an object with the data needed for the server to emit sockets, or null if not found.
    */
   removeChampionFromGame(championId) {
     const champion = this.activeChampions.get(championId);
@@ -347,20 +349,21 @@ class CombatState {
     const scoringTeam = champion.team === 1 ? 2 : 1;
     const scoringSlot = scoringTeam - 1;
     const victimSlot = champion.team - 1;
-    const claimValueAtDeath = Math.max(
-      0,
-      Number(champion.runtime?.claimValueBeforeDeath ?? 0) || 0,
+    const isMinion = champion.entityType === "minion";
+    const claimValueAtDeath = Math.min(
+      getClaimMaxPoints(champion),
+      Math.max(0, Number(champion.runtime?.claimValueBeforeDeath ?? 0) || 0),
     );
 
-    // Toda morte concede o claim value do campeão morto no momento da morte
-    // (mesmo se 0) mais um bônus fixo de 2pts pela kill em si.
+    // Every death concedes the claim value of the dead champion at the moment of death (even if 0) plus a fixed 2pts bonus for the kill itself.
     const deathBonus = 2;
-    // Se quem recebe os pontos está 10pts ou mais atrás no placar, ganha
-    // mais 2pts de bônus (totalizando 4pts de bônus pela kill).
+    // If the team receiving the points is 10pts or more behind on the scoreboard, they get
+    // an additional 2pts bonus (totaling 4pts bonus for the kill).
+    // Minions never grant the comeback bonus.
     const scoreDeficit =
       (this.playerScores[victimSlot] || 0) -
       (this.playerScores[scoringSlot] || 0);
-    const comebackBonus = scoreDeficit >= 10 ? 2 : 0;
+    const comebackBonus = !isMinion && scoreDeficit >= 10 ? 2 : 0;
     const killPoints = claimValueAtDeath + deathBonus + comebackBonus;
 
     let scoreAwarded = false;
