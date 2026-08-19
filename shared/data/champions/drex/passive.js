@@ -221,6 +221,9 @@ export default {
 
     owner.runtime.drexBloodAscension = true;
 
+    // Change portrait to Crimson Frenzy form
+    owner.portrait = "/assets/portraits/drex_crimson_frenzy.webp";
+
     this._ensureDamageModifier(owner);
     this._refreshDamageReduction({ owner, context });
 
