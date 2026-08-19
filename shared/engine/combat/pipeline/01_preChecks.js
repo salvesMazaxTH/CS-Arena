@@ -23,6 +23,7 @@ export function preChecks(event) {
       defender: event.defender,
       damage: event.damage,
       skill: event.skill,
+      element: event.element,
       type: event.type,
       context: event.context,
     },

@@ -80,6 +80,11 @@ export class DamageEvent {
     );
     this.skill = skill;
     this.type = type;
+    // Element override for this specific hit. Most skills only ever deal
+    // damage of their own `skill.element`, so this defaults to it — but
+    // multi-element skills (e.g. a hybrid Water/Ice ultimate) can pass an
+    // explicit `element` per DamageEvent instance to override it.
+    this.element = params.element ?? skill?.element;
     console.log("[DamageEvent_constructor] Damage type:", this.type);
 
     this.context = context ?? {};
