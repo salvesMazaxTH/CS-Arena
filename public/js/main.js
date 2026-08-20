@@ -512,6 +512,15 @@ import { GAME_GLOSSARY } from "./gameGlossary.js";
 import { syncChampionVFX } from "../../shared/vfx/vfxManager.js";
 import { audioManager } from "./utils/AudioManager.js";
 import { EMBLEMS } from "/shared/data/emblems/index.js";
+import {
+  ELEMENT_IDENTITIES,
+  CLASS_IDENTITIES,
+  getRequirementIdentity,
+  buildIdentityGradient,
+  applyIdentityPaletteCssVariables,
+} from "../../shared/ui/identityPalette.js";
+
+applyIdentityPaletteCssVariables(document.documentElement);
 
 // ============================================================
 //  SOCKET
@@ -1073,23 +1082,15 @@ function sortChampionKeysAlphabetically(keys) {
   });
 }
 
-const affinityBadgeByKey = Object.freeze({
-  fire: "🔥",
-  water: "🌊",
-  lightning: "⚡",
-  earth: "🌱",
-  ice: "❄️",
-  steel: "🛡️",
-});
+// Icons and colors for affinities/classes live in the shared identity palette
+// so badges, emblem tiles and the stylesheet all read from the same source.
+const affinityBadgeByKey = Object.freeze(
+  Object.fromEntries(
+    Object.entries(ELEMENT_IDENTITIES).map(([key, { icon }]) => [key, icon]),
+  ),
+);
 
-const championClassConfig = Object.freeze({
-  assassin: { label: "Assassin", icon: "🗡" },
-  mage: { label: "Mage", icon: "✦" },
-  enchanter: { label: "Enchanter", icon: "✧" },
-  brawler: { label: "Brawler", icon: "🥊" },
-  tank: { label: "Tank", icon: "🛡" },
-  marksman: { label: "Marksman", icon: "🏹" },
-});
+const championClassConfig = CLASS_IDENTITIES;
 
 function toReadableLabel(value) {
   return String(value || "")
@@ -1240,168 +1241,151 @@ function getEmblemShortCode(emblem) {
   return words.map((word) => word[0]?.toUpperCase() || "").join("") || "EM";
 }
 
-function getEmblemRequirementLabel(requirement) {
-  if (!requirement || typeof requirement !== "object") return "Disponível";
+function getChampionAffinityKeys(champion) {
+  const affinities = Array.isArray(champion.elementalAffinities)
+    ? champion.elementalAffinities
+    : typeof champion.elementalAffinities === "string"
+      ? [champion.elementalAffinities]
+      : [];
 
-  if (requirement.elementalAffinity) {
-    const { element, count } = requirement.elementalAffinity;
-    return `${toReadableLabel(element)} x${count}`;
-  }
+  return affinities.map((affinity) =>
+    String(affinity).trim().toLowerCase(),
+  );
+}
 
-  if (requirement.species) {
-    const speciesValue =
-      requirement.species.value ??
-      requirement.species.species ??
-      requirement.species.key ??
-      "";
-    return `${toReadableLabel(speciesValue)} x${requirement.species.count ?? 1}`;
-  }
+// One entry per supported requirement kind: how to read its target value out of
+// the emblem data and how to count the roster champions that satisfy it.
+// Emblems may combine several kinds (mixed emblems); all of them must pass.
+const EMBLEM_REQUIREMENT_KINDS = Object.freeze([
+  {
+    kind: "elementalAffinity",
+    readTarget: (requirement) =>
+      requirement.value ?? requirement.element ?? requirement.key,
+    countMatches: (roster, target) =>
+      roster.filter((champion) =>
+        getChampionAffinityKeys(champion).includes(target),
+      ).length,
+    describe: (identity) => `${identity.label} affinity`,
+  },
+  {
+    kind: "species",
+    readTarget: (requirement) =>
+      requirement.value ?? requirement.species ?? requirement.key,
+    countMatches: (roster, target) =>
+      roster.filter((champion) =>
+        getChampionSpecies(champion)
+          .map((entry) => entry.toLowerCase())
+          .includes(target),
+      ).length,
+    describe: (identity) => `${identity.label} species`,
+  },
+  {
+    kind: "classKey",
+    readTarget: (requirement) =>
+      requirement.value ?? requirement.class ?? requirement.key,
+    countMatches: (roster, target) =>
+      roster.filter((champion) => normalizeChampionClassKey(champion) === target)
+        .length,
+    describe: (identity) => `${identity.label} class`,
+  },
+  {
+    kind: "baseStat",
+    readTarget: (requirement) =>
+      requirement.stat ?? requirement.key ?? requirement.name,
+    readThreshold: (requirement) =>
+      requirement.min ?? requirement.value ?? requirement.threshold,
+    countMatches: (roster, target, threshold) =>
+      roster.filter((champion) => {
+        const value = Number(champion[target]);
+        if (!Number.isFinite(value)) return false;
+        return threshold == null || value >= Number(threshold);
+      }).length,
+    describe: (identity, threshold) =>
+      `${identity.label}${threshold == null ? "" : ` ≥ ${threshold}`}`,
+  },
+]);
 
-  if (requirement.classKey) {
-    const classValue =
-      requirement.classKey.value ??
-      requirement.classKey.class ??
-      requirement.classKey.key ??
-      "";
-    return `${toReadableLabel(classValue)} x${requirement.classKey.count ?? 1}`;
-  }
+/**
+ * Flattens an emblem's requirements into renderable tokens, each carrying the
+ * visual identity (emoji + color) the UI paints it with.
+ */
+function getEmblemRequirementTokens(requirements) {
+  if (!requirements || typeof requirements !== "object") return [];
 
-  if (requirement.baseStat) {
-    const statKey =
-      requirement.baseStat.stat ??
-      requirement.baseStat.key ??
-      requirement.baseStat.name ??
-      "Status";
-    const targetValue =
-      requirement.baseStat.min ??
-      requirement.baseStat.value ??
-      requirement.baseStat.threshold ??
-      "";
-    return `${toReadableLabel(statKey)} ${targetValue ? `≥ ${targetValue}` : ""} x${requirement.baseStat.count ?? 1}`.trim();
-  }
+  return EMBLEM_REQUIREMENT_KINDS.flatMap((descriptor) => {
+    const requirement = requirements[descriptor.kind];
+    if (!requirement) return [];
 
-  return "Disponível";
+    // baseStat targets a stat name (case-sensitive lookup); the others target a
+    // normalized key.
+    const rawTarget = String(descriptor.readTarget(requirement) ?? "").trim();
+    const target =
+      descriptor.kind === "baseStat" ? rawTarget : rawTarget.toLowerCase();
+    const threshold = descriptor.readThreshold?.(requirement) ?? null;
+    const identity = getRequirementIdentity(descriptor.kind, target);
+
+    return [
+      {
+        descriptor,
+        target,
+        threshold,
+        identity,
+        required: Number(requirement.count || 0),
+        label: descriptor.describe(identity, threshold),
+      },
+    ];
+  });
 }
 
 function evaluateEmblemRequirements(emblem, rosterKeys = []) {
-  const requirements = emblem?.requirements ?? {};
-
-  const requirementChecks = [];
   const roster = rosterKeys.map((key) => championDB[key]).filter(Boolean);
 
-  const addCheck = ({ label, actual, required }) => {
-    requirementChecks.push({
-      label,
-      actual,
-      required,
-      pass: actual >= required,
-    });
-  };
-
-  if (requirements.elementalAffinity) {
-    const targetElement = String(requirements.elementalAffinity.element || "")
-      .trim()
-      .toLowerCase();
-    const requiredCount = Number(requirements.elementalAffinity.count || 0);
-    const actualCount = roster.filter((champion) => {
-      const affinities = Array.isArray(champion.elementalAffinities)
-        ? champion.elementalAffinities
-        : typeof champion.elementalAffinities === "string"
-          ? [champion.elementalAffinities]
-          : [];
-      return affinities.some(
-        (affinity) => String(affinity).trim().toLowerCase() === targetElement,
+  const checks = getEmblemRequirementTokens(emblem?.requirements).map(
+    (token) => {
+      const actual = token.descriptor.countMatches(
+        roster,
+        token.target,
+        token.threshold,
       );
-    }).length;
-    addCheck({
-      label: `${toReadableLabel(targetElement)} affinity`,
-      actual: actualCount,
-      required: requiredCount,
-    });
-  }
 
-  if (requirements.species) {
-    const targetSpecies = String(
-      requirements.species.value ??
-        requirements.species.species ??
-        requirements.species.key ??
-        "",
-    )
-      .trim()
-      .toLowerCase();
-    const requiredCount = Number(requirements.species.count || 0);
-    const actualCount = roster.filter((champion) => {
-      const species = getChampionSpecies(champion).map((entry) =>
-        String(entry).trim().toLowerCase(),
-      );
-      return species.includes(targetSpecies);
-    }).length;
-    addCheck({
-      label: `${toReadableLabel(targetSpecies)} species`,
-      actual: actualCount,
-      required: requiredCount,
-    });
-  }
-
-  if (requirements.classKey) {
-    const targetClass = String(
-      requirements.classKey.value ??
-        requirements.classKey.class ??
-        requirements.classKey.key ??
-        "",
-    )
-      .trim()
-      .toLowerCase();
-    const requiredCount = Number(requirements.classKey.count || 0);
-    const actualCount = roster.filter((champion) => {
-      const classKey = normalizeChampionClassKey(champion);
-      return classKey === targetClass;
-    }).length;
-    addCheck({
-      label: `${toReadableLabel(targetClass)} class`,
-      actual: actualCount,
-      required: requiredCount,
-    });
-  }
-
-  if (requirements.baseStat) {
-    const statKey = String(
-      requirements.baseStat.stat ??
-        requirements.baseStat.key ??
-        requirements.baseStat.name ??
-        "",
-    ).trim();
-    const requiredCount = Number(requirements.baseStat.count || 0);
-    const threshold =
-      requirements.baseStat.min ??
-      requirements.baseStat.value ??
-      requirements.baseStat.threshold;
-    const actualCount = roster.filter((champion) => {
-      const value = Number(champion[statKey]);
-      if (!Number.isFinite(value)) return false;
-      if (threshold == null) return true;
-      return value >= Number(threshold);
-    }).length;
-    addCheck({
-      label: `${toReadableLabel(statKey)} ≥ ${threshold ?? ""}`.trim(),
-      actual: actualCount,
-      required: requiredCount,
-    });
-  }
-
-  const allMet =
-    requirementChecks.length === 0 ||
-    requirementChecks.every((check) => check.pass);
+      return {
+        ...token,
+        actual,
+        pass: actual >= token.required,
+      };
+    },
+  );
 
   return {
-    allMet,
-    checks: requirementChecks,
-    summary: requirementChecks.length
-      ? requirementChecks
-          .map((check) => `${check.label}: ${check.actual}/${check.required}`)
-          .join(" • ")
-      : "Sem requisitos",
+    allMet: checks.every((check) => check.pass),
+    checks,
   };
+}
+
+/**
+ * Requirement marker: the emoji when the identity has one, otherwise the name
+ * spelled out (species are far too numerous to all have a symbol).
+ */
+function renderRequirementMarkerMarkup({ identity, label }) {
+  const marker = identity.icon ?? identity.label ?? label;
+  return `<span class="emblem-requirement-marker" title="${escapeHtml(label)}">${escapeHtml(marker)}</span>`;
+}
+
+/** e.g. `🥊 2/3 · ⚡ 1/2` — one marker + progress per requirement. */
+function renderRequirementCountsMarkup(checks) {
+  if (!checks.length) return "No requirements";
+
+  return checks
+    .map(
+      (check) =>
+        `${renderRequirementMarkerMarkup(check)} ${check.actual}/${check.required}`,
+    )
+    .join(" · ");
+}
+
+/** Paints the emblem tile with the color(s) of the requirement(s) it asks for. */
+function getEmblemRequirementGradient(checks) {
+  return buildIdentityGradient(checks.map((check) => check.identity));
 }
 
 function renderEmblemSelectionUI() {
@@ -1425,11 +1409,19 @@ function renderEmblemSelectionUI() {
     item.className = `emblem-option ${isSelected ? "selected" : ""} ${requirementStatus.allMet ? "eligible" : "blocked"}`;
     item.disabled = isLocked || isBlocked;
     item.dataset.emblemKey = emblem.key;
+
+    const requirementGradient = getEmblemRequirementGradient(
+      requirementStatus.checks,
+    );
+    if (requirementGradient) {
+      item.style.setProperty("--emblem-requirement-tint", requirementGradient);
+    }
+
     item.innerHTML = `
       <span class="emblem-option-badge">${escapeHtml(getEmblemShortCode(emblem))}</span>
       <span class="emblem-option-copy">
         <strong>${escapeHtml(emblem.name || emblem.key)}</strong>
-        <small>${escapeHtml(getEmblemRequirementLabel(emblem.requirements))}</small>
+        <small>Requirements ${renderRequirementCountsMarkup(requirementStatus.checks)}</small>
       </span>
       <span class="emblem-option-state">${isSelected ? "ON" : requirementStatus.allMet ? "OK" : "REQ"}</span>
     `;
@@ -1473,11 +1465,7 @@ function renderEmblemSelectionUI() {
   }
 }
 
-function showEmblemTooltip(
-  target,
-  emblem,
-  requirementStatus = { summary: "Disponível" },
-) {
+function showEmblemTooltip(target, emblem, requirementStatus = { checks: [] }) {
   hideEmblemTooltip();
 
   const tooltip = document.createElement("div");
@@ -1486,8 +1474,8 @@ function showEmblemTooltip(
     <div class="emblem-tooltip-title">${escapeHtml(emblem.name || emblem.key)}</div>
     <div class="emblem-tooltip-copy">${escapeHtml(typeof emblem.description === "function" ? emblem.description() : emblem.description || "")}</div>
     <div class="emblem-tooltip-meta">
-      <span class="emblem-tooltip-meta-label">Requisitos</span>
-      <strong>${escapeHtml(requirementStatus.summary || "Sem requisitos")}</strong>
+      <span class="emblem-tooltip-meta-label">Requirements</span>
+      <strong>${renderRequirementCountsMarkup(requirementStatus.checks ?? [])}</strong>
     </div>
   `;
   document.body.appendChild(tooltip);

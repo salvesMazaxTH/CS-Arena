@@ -7,4 +7,7 @@ export default {
   Attack: 130,
   Defense: 95,
   Speed: 75,
+
+  classKey: "enchanter",
+  species: ["hollowed"],
 };

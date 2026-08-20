@@ -10,6 +10,8 @@ import { silentBlade } from "./silent_blade.js";
 import { enchanterWard } from "./enchanter_ward.js";
 import { marksmanPrecision } from "./marksman_precision.js";
 import { humanitysDefiance } from "./humanitys_defiance.js";
+import { divineMandate } from "./divine_mandate.js";
+import { stormFist } from "./storm_fist.js";
 
 export const EMBLEMS = [
   firelord,
@@ -24,5 +26,7 @@ export const EMBLEMS = [
   enchanterWard,
   marksmanPrecision,
   humanitysDefiance,
+  divineMandate,
+  stormFist,
 ];
 
