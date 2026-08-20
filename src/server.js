@@ -238,7 +238,62 @@ function logTurnEvent(eventType, eventData) {
 //  SERIALIZAÇÃO DO ESTADO
 // ============================================================
 
-function getGameState(extraChampions = []) {
+/**
+ * Whether a team can still summon a line-up champion this turn, and which of its
+ * reserve champions would actually be accepted right now.
+ *
+ * Mirrors the rules enforced by the "summonFromLineup" handler so the client can
+ * remind the player about an unused summon without re-deriving them and drifting.
+ */
+function getLineupSummonAvailability(team) {
+  if (match.getCurrentTurn() === 1 || match.hasSummonedThisTurn(team)) {
+    return { canSummon: false, champions: [] };
+  }
+
+  const reserve = match.combat.reserveQueues.get(team) || [];
+
+  const champions = reserve.filter((championKey) => {
+    const baseData = championDB[championKey];
+    if (!baseData) return false;
+
+    return match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM, {
+      entityType: baseData.entityType ?? "champion",
+    });
+  });
+
+  return { canSummon: champions.length > 0, champions };
+}
+
+/**
+ * Champions that entered the field this turn and must stay concealed from the
+ * opposing player until the turn is locked and resolution begins — knowing about
+ * a reinforcement while actions are still being chosen is privileged information.
+ *
+ * Concealment lives in the payload rather than in the emit sites: any broadcast
+ * that happens to fire mid-turn (a disconnect, an emblem sync, a debug reset)
+ * would otherwise reveal them, which is why the leak had no obvious pattern.
+ */
+const concealedSummonIds = new Set();
+
+/** Reveals every concealed summon to everyone. Called when the turn locks. */
+function revealConcealedSummons() {
+  concealedSummonIds.clear();
+}
+
+/** A viewer sees their own team in full; everyone else waits for the reveal. */
+function isConcealedFromViewer(serializedChampion, viewerTeam) {
+  if (!concealedSummonIds.has(serializedChampion?.id)) return false;
+  return viewerTeam == null || serializedChampion.team !== viewerTeam;
+}
+
+/**
+ * Serializes the match state from one viewer's perspective.
+ *
+ * @param {object[]} [extraChampions] Champions to force into the payload (e.g. just-killed ones).
+ * @param {object}   [options]
+ * @param {number|null} [options.viewerTeam] Team of the recipient; null for spectators.
+ */
+function getGameState(extraChampions = [], { viewerTeam = null } = {}) {
   const champions = Array.from(match.combat.activeChampions.values()).map((c) =>
     c.serialize(),
   );
@@ -250,12 +305,18 @@ function getGameState(extraChampions = []) {
     }
   }
 
+  const visibleChampions = concealedSummonIds.size
+    ? champions.filter((c) => !isConcealedFromViewer(c, viewerTeam))
+    : champions;
+
   // Roster completo (8 campeões) de cada time, para exibição das lineup banners no cliente
   const lineups = {};
   const playerEmblems = {};
+  const lineupSummons = {};
   for (const player of match.players) {
     if (!player) continue;
     lineups[player.team] = player.selectedChampionKeys || [];
+    lineupSummons[player.team] = getLineupSummonAvailability(player.team);
     playerEmblems[player.team] = Array.isArray(player.emblems)
       ? player.emblems
           .map((emblem) => (typeof emblem === "string" ? emblem : emblem?.key))
@@ -264,11 +325,38 @@ function getGameState(extraChampions = []) {
   }
 
   return {
-    champions,
+    champions: visibleChampions,
     currentTurn: match.combat.currentTurn,
     lineups,
     playerEmblems,
+    lineupSummons,
   };
+}
+
+/** Team of the player behind a socket, or null when the socket is not playing. */
+function getViewerTeam(socketId) {
+  const slot = match.getSlotBySocket(socketId);
+  if (slot === undefined) return null;
+  return match.getPlayer(slot)?.team ?? null;
+}
+
+/**
+ * Sends the game state to every connected socket, tailored to what that viewer
+ * is allowed to know. Use this instead of io.emit("gameStateUpdate", ...) so a
+ * concealed summon can never leak through an unrelated broadcast.
+ */
+function broadcastGameState(extraChampions = []) {
+  if (concealedSummonIds.size === 0) {
+    io.emit("gameStateUpdate", getGameState(extraChampions));
+    return;
+  }
+
+  for (const [socketId, socket] of io.sockets.sockets) {
+    socket.emit(
+      "gameStateUpdate",
+      getGameState(extraChampions, { viewerTeam: getViewerTeam(socketId) }),
+    );
+  }
 }
 
 // ============================================================
@@ -553,7 +641,7 @@ function spawnChampion({
   }
 
   if (emitState) {
-    io.emit("gameStateUpdate", getGameState());
+    broadcastGameState();
   }
 
   return newChampion;
@@ -610,7 +698,7 @@ function clearTemporaryEffectsOnSwitch(_champion) {
 function checkAllTeamsSelected() {
   if (match.isTeamSelected(0) && match.isTeamSelected(1)) {
     io.emit("allTeamsSelected");
-    io.emit("gameStateUpdate", getGameState());
+    broadcastGameState();
     return true;
   }
   return false;
@@ -659,7 +747,7 @@ function emitChampionDeath(deathResult) {
     });
   }
 
-  io.emit("gameStateUpdate", state);
+  broadcastGameState(champ ? [champ] : []);
   io.emit("championRemoved", deathResult.championId);
 }
 
@@ -1003,9 +1091,10 @@ function emitGameOverIfNeeded({ checkTurnLimit = false } = {}) {
 function handleEndTurn() {
   io.emit("turnLocked");
 
-  // Revela imediatamente os campeões da line-up materializados antes da
-  // resolução das ações deste turno.
-  io.emit("gameStateUpdate", getGameState());
+  // Nobody can act any more, so this is the moment the line-up summons made
+  // during the turn become public — right before their actions are resolved.
+  revealConcealedSummons();
+  broadcastGameState();
 
   // 1. Resolver todas as ações via TurnResolver (switches têm prioridade 6 — saem primeiro)
   const resolver = new TurnResolver(match, editMode, {
@@ -1069,7 +1158,7 @@ function handleEndTurn() {
       processChampionMutationRequest(req);
     }
 
-    io.emit("gameStateUpdate", getGameState());
+    broadcastGameState();
   }
 
   // 4. Hooks onTurnEnd
@@ -1324,7 +1413,7 @@ function handleStartTurn() {
   });
 
   io.emit("turnUpdate", match.combat.currentTurn);
-  io.emit("gameStateUpdate", getGameState());
+  broadcastGameState();
 }
 
 // ============================================================
@@ -1333,6 +1422,7 @@ function handleStartTurn() {
 
 /** Reseta completamente o estado do jogo (todos desconectados ou timeout). */
 function resetGameState() {
+  revealConcealedSummons();
   match.clearPlayers();
 }
 
@@ -1340,6 +1430,7 @@ function resetGameState() {
 function resetCombatState() {
   const snapshot = [...match.combat.combatSnapshot];
 
+  revealConcealedSummons();
   match.combat.reset();
 
   for (const champ of snapshot) {
@@ -1373,7 +1464,7 @@ io.on("connection", (socket) => {
   // --- Socket handler para reset de combate (debug) ---
   socket.on("debugResetCombat", () => {
     resetCombatState();
-    io.emit("gameStateUpdate", getGameState());
+    broadcastGameState();
   });
 
   // --- Socket handler para início de turno após animações ---
@@ -1449,7 +1540,10 @@ io.on("connection", (socket) => {
     });
     io.emit("playerCountUpdate", match.getConnectedCount());
     io.emit("playerNamesUpdate", match.getPlayerNamesEntries());
-    socket.emit("gameStateUpdate", getGameState());
+    socket.emit(
+      "gameStateUpdate",
+      getGameState([], { viewerTeam: getViewerTeam(socket.id) }),
+    );
     // io.emit("switchesUpdate", {
     //   team1: match.players[0]?.remainingSwitches ?? 0,
     //   team2: match.players[1]?.remainingSwitches ?? 0,
@@ -1622,7 +1716,7 @@ io.on("connection", (socket) => {
     const { choices } = match.finalizeFirstChampionChoices(spawnChampion);
 
     io.emit("firstChampionChoicesFinalized", { choices });
-    io.emit("gameStateUpdate", getGameState());
+    broadcastGameState();
 
     // Inicia o primeiro turno
     setTimeout(() => {
@@ -1675,7 +1769,7 @@ io.on("connection", (socket) => {
     // Nenhum jogador restante — reset total
     if (connectedCount === 0) {
       resetGameState();
-      io.emit("gameStateUpdate", getGameState());
+      broadcastGameState();
       return;
     }
 
@@ -1701,7 +1795,7 @@ io.on("connection", (socket) => {
         resetGameState();
         io.emit("playerCountUpdate", match.getConnectedCount());
         io.emit("playerNamesUpdate", match.getPlayerNamesEntries());
-        io.emit("gameStateUpdate", getGameState());
+        broadcastGameState();
       }, DISCONNECT_TIMEOUT);
 
       match.setDisconnectionTimer(disconnectedSlot, timer);
@@ -1765,7 +1859,7 @@ io.on("connection", (socket) => {
     socket.emit("playerEmblemsUpdated", {
       emblems: player.emblems.map((emblem) => emblem.key),
     });
-    io.emit("gameStateUpdate", getGameState());
+    broadcastGameState();
   });
 
   // =============================
@@ -1888,13 +1982,19 @@ io.on("connection", (socket) => {
       return socket.emit("actionFailed", "This champion could not be summoned.");
     }
 
-    socket.emit("gameStateUpdate", getGameState());
-
     match.combat.reserveQueues.set(
       team,
       reserve.filter((key) => key !== championKey),
     );
     match.markSummonedThisTurn(team);
+
+    // The opponent is still choosing actions, so this reinforcement stays hidden
+    // from them until the turn locks and resolution begins.
+    concealedSummonIds.add(spawned.id);
+
+    // Emitted only after the bookkeeping above, so the payload's summon
+    // availability already reflects this summon.
+    broadcastGameState();
 
     logTurnEvent("championSummoned", {
       championId: spawned.id,
