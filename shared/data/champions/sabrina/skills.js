@@ -55,6 +55,7 @@ const sabrinaSkills = [
     name: "Glacial Bind",
 
     bf: 85,
+    chilledBonusPercent: 25,
     freezeDuration: 1,
 
     contact: false,
@@ -62,7 +63,7 @@ const sabrinaSkills = [
 
     element: "ice",
     description() {
-      return `Conjures a mass of hardened ice around an enemy, dealing Ice magical damage. If the target is already Chilled, the Chilled effect is consumed and replaced by Frozen for ${this.freezeDuration} turn(s).`;
+      return `Conjures a mass of hardened ice around an enemy, dealing Ice magical damage. If the target is already Chilled, this deals ${this.chilledBonusPercent}% increased damage and the Chilled effect is consumed and replaced by Frozen for ${this.freezeDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -70,7 +71,12 @@ const sabrinaSkills = [
     resolve({ user, targets, context = {} }) {
       const [target] = targets;
       const isChilled = target.hasStatusEffect("chilled");
-      const baseDamage = (user.Attack * this.bf) / 100;
+
+      // The ice feeds on the Chilled it is about to consume.
+      const chilledMultiplier = isChilled
+        ? 1 + this.chilledBonusPercent / 100
+        : 1;
+      const baseDamage = (user.Attack * this.bf * chilledMultiplier) / 100;
 
       const result = new DamageEvent({
         baseDamage,

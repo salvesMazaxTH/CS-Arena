@@ -207,9 +207,9 @@ const tyrenSkills = [
     description() {
       return `Tyren unleashes a massive wave of living steel, dealing powerful Steel magical damage.
 
-    If the target is under Crowd Control, the metal violently crystallizes around them, dealing an additional ${this.empoweredPercent}% of this ability's base damage as Absolute Damage and extending their current Crowd Control by ${this.stunDuration} turn.
+      If the target is under Crowd Control, the metal violently crystallizes around them, dealing an additional ${this.empoweredPercent}% of this ability's base damage as Absolute Damage and extending their current Crowd Control by ${this.stunDuration} turn.
 
-    Otherwise, the target becomes Stunned for ${this.stunDuration} turn.`;
+      Otherwise, the target becomes Stunned for ${this.stunDuration} turn.`;
     },
 
     targetSpec: ["enemy"],

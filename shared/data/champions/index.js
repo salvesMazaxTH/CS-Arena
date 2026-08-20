@@ -38,6 +38,7 @@ import aren_marevoth from "./aren_marevoth/index.js";
 import rakhana from "./rakhana/index.js";
 import tyren from "./tyren/index.js";
 import sabrina from "./sabrina/index.js";
+import dlorafya from "./dlorafya/index.js";
 
 const championDB = {
   ralia,
@@ -80,6 +81,7 @@ const championDB = {
   rakhana,
   tyren,
   sabrina,
+  dlorafya,
 };
 
 export default championDB;

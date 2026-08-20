@@ -6,10 +6,9 @@ export default {
   name: "Thermal Convergence",
 
   iceBonusRatio: 0.4,
-  chillRefreshDuration: 2,
 
   description() {
-    return `Whenever Sabrina deals Water damage to a Chilled enemy, the water crystallizes into Ice, dealing an additional Ice hit equal to ${this.iceBonusRatio * 100}% of the Water damage dealt and refreshing the target's Chilled duration to ${this.chillRefreshDuration} turn(s).`;
+    return `Whenever Sabrina deals Water damage to a Chilled enemy, the water crystallizes into Ice, dealing an additional Ice hit equal to ${this.iceBonusRatio * 100}% of the Water damage dealt.`;
   },
 
   hookScope: {
@@ -45,11 +44,5 @@ export default {
       context: { ...context, damageDepth: (context.damageDepth || 0) + 1 },
       allChampions: context.allChampions,
     }).execute();
-
-    // Refresh Chilled — não empilha, então é preciso removê-lo antes de reaplicar.
-    if (defender.alive) {
-      defender.removeStatusEffect("chilled");
-      defender.applyStatusEffect("chilled", this.chillRefreshDuration, context);
-    }
   },
 };

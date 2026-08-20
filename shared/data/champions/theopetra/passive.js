@@ -1,13 +1,16 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
-  key: "rocha_eternizada",
-  name: "Rocha Eternizada",
+  key: "eternalized_rock",
+  name: "Eternalized Rock",
   maxStacks: 3,
-  bonusPercent: 135, // bônus de dano na próxima habilidade
-  piercingRatio: 0.35, // 35% do dano se torna perfurante
+  bonusPercent: 135, // bonus damage on the next ability
+  piercingRatio: 0.35, // 35% of the damage becomes Piercing
+
   description() {
-    return `Ganha 1 stack ao tomar dano (máx ${this.maxStacks}). Ao atingir ${this.maxStacks} stacks, a próxima habilidade causa +${this.bonusPercent}% de dano e se torna perfurante (${this.piercingRatio * 100}% de perfuração) e os stacks são zerados.\nTheópetra é imune a efeitos de Controle (softCC e hardCC).`;
+    return `Gains 1 stack whenever she takes damage (max ${this.maxStacks}). Upon reaching ${this.maxStacks} stacks, her next ability deals +${this.bonusPercent}% bonus damage and becomes Piercing (${this.piercingRatio * 100}% Piercing), then all stacks are consumed.
+    
+    Theópetra is immune to Control effects (softCC and hardCC).`;
   },
 
   hookScope: {
@@ -22,33 +25,36 @@ export default {
       (owner.runtime.theopetraStacks || 0) + 1,
       this.maxStacks,
     );
+
     if (owner.runtime.theopetraStacks === this.maxStacks) {
       context.registerDialog({
-        message: `<b>[PASSIVA — ${this.name}]</b> ${formatChampionName(owner)} atingiu o máximo de stacks (${this.maxStacks})! A próxima habilidade terá bônus de dano.`,
+        message: `<b>[PASSIVE — ${this.name}]</b> ${formatChampionName(owner)} reached the maximum number of stacks (${this.maxStacks})! Her next ability will deal bonus damage.`,
         sourceId: owner.id,
         targetId: owner.id,
       });
+
       return {
-        log: `<b>[PASSIVA — ${this.name}]</b> ${formatChampionName(owner)} atingiu o máximo de stacks (${this.maxStacks})! A próxima habilidade terá bônus de dano.`,
+        log: `<b>[PASSIVE — ${this.name}]</b> ${formatChampionName(owner)} reached the maximum number of stacks (${this.maxStacks})! Her next ability will deal bonus damage.`,
       };
     } else {
       return {
-        log: `<b>[PASSIVA — ${this.name}]</b> ${formatChampionName(owner)} ganhou 1 stack (${owner.runtime.theopetraStacks}/${this.maxStacks}).`,
+        log: `<b>[PASSIVE — ${this.name}]</b> ${formatChampionName(owner)} gained 1 stack (${owner.runtime.theopetraStacks}/${this.maxStacks}).`,
       };
     }
   },
 
   onBeforeDmgDealing({ attacker, owner, skill, damage, context }) {
     if (attacker !== owner) return;
+
     if (
       !owner.runtime?.theopetraStacks ||
       owner.runtime.theopetraStacks < this.maxStacks
     )
       return;
+
     owner.runtime.theopetraStacks = 0;
 
     const bonus = Math.floor(damage * (this.bonusPercent / 100));
-
     const finalBaseDamage = damage + bonus;
 
     return {
@@ -57,19 +63,20 @@ export default {
       mode: "piercing",
       baseDamage: finalBaseDamage,
       preMitigationDamage: finalBaseDamage,
-      log: `[PASSIVA — Rocha Eternizada] ${formatChampionName(owner)} consome os stacks e recebe +${this.bonusPercent}% de dano nesta habilidade!`,
+      log: `[PASSIVE — Eternalized Rock] ${formatChampionName(owner)} consumes all stacks and gains +${this.bonusPercent}% bonus damage on this ability!`,
     };
   },
 
   onStatusEffectIncoming({ target, statusEffect }) {
     if (!statusEffect?.subtypes) return;
+
     if (
       statusEffect.subtypes.includes("hardCC") ||
       statusEffect.subtypes.includes("softCC")
     ) {
       return {
         cancel: true,
-        message: `${formatChampionName(target)} é imune a efeitos de Controle!`,
+        message: `${formatChampionName(target)} is immune to Control effects!`,
       };
     }
   },

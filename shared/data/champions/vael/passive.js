@@ -1,12 +1,14 @@
 export default {
-  key: "lamina_que_procura_a_falha",
-  name: "Lâmina que Procura a Falha",
+  key: "flawseeking_blade",
+  name: "Flawseeking Blade",
+
   critBuff: 15,
   critCap: 95,
   critThreshold: 50,
   enhancedCritBonus: 85,
+
   description() {
-    return `Cada acerto crítico aumenta a chance de crítico em +${this.critBuff}% (máx. ${this.critCap}%). Quando a chance de crítico ultrapassa ${this.critThreshold}%, o bônus de crítico sobe para 1,${this.enhancedCritBonus}x.`;
+    return `Each critical hit increases Vael's Critical by +${this.critBuff}% (up to ${this.critCap}%). Once his Critical exceeds ${this.critThreshold}%, his critical damage bonus is increased to ${this.enhancedCritBonus}%.`;
   },
 
   hookScope: {
@@ -17,7 +19,8 @@ export default {
   onBeforeDmgDealing({ owner, context, crit }) {
     if (owner.Critical > this.critThreshold) {
       owner.critBonusOverride = this.enhancedCritBonus;
-      // retorna crit atualizado para a pipeline detectar a mudança e recompor
+
+      // Return updated crit data so the pipeline can detect the change and recalculate.
       if (crit?.didCrit) {
         return { crit: { ...crit, bonus: this.enhancedCritBonus } };
       }
@@ -27,7 +30,7 @@ export default {
   },
 
   onCriticalHit({ owner, context }) {
-    // Buffa a chance de crítico ao acertar crítico
+    // Increases Critical upon landing a critical hit.
     owner.modifyStat({
       statName: "Critical",
       amount: this.critBuff,

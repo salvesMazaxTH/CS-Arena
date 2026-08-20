@@ -1,27 +1,29 @@
-import { formatChampionName } from "../../../ui/formatters.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import totalBlock from "../totalBlock.js";
-import { getClaimPoints } from "../../../engine/combat/claim.js";
 
 const vaelSkills = [
   // ========================
-  // Total block (global)
+  // Total Block (global)
   // ========================
   totalBlock,
+
   // ========================
-  // Habilidades Especiais
+  // Special Abilities
   // ========================
   {
-    key: "corte_instantaneo",
-    name: "Corte Instantâneo",
+    key: "instantaneous_slash",
+    name: "Instantaneous Slash",
     bf: 65,
     contact: true,
     damageMode: "standard",
     priority: 0,
+
     description() {
-      return `Causa dano ao inimigo com chance de crítico.`;
+      return `Vael flashes forward in a swift slash, dealing damage to the enemy with a chance to land a critical hit.`;
     },
+
     targetSpec: ["enemy"],
+
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
@@ -37,17 +39,20 @@ const vaelSkills = [
       }).execute();
     },
   },
+
   {
-    key: "investida_transpassante",
-    name: "Investida Transpassante",
+    key: "piercing_lunge",
+    name: "Piercing Lunge",
     bfPrimary: 55,
     bfSecondary: 60,
     contact: true,
     damageMode: "standard",
     priority: 0,
+
     description() {
-      return `Causa dano ao inimigo (BF ${this.bfPrimary}, sem crítico) e ao inimigo à esquerda do alvo, caso exista (BF ${this.bfSecondary}, crítico garantido).`;
+      return `Vael lunges through the chosen target with a swift strike, dealing ${this.bfPrimary}% damage without critical hits. The enemy to the target's left is struck as well, if one exists, taking ${this.bfSecondary}% damage as a guaranteed critical hit.`;
     },
+
     targetSpec: ["enemy"],
 
     resolve({ user, targets, context = {} }) {
@@ -63,26 +68,18 @@ const vaelSkills = [
         skill: this,
         type: "physical",
         context,
-        critOptions: { disable: true }, // sem crítico
+        critOptions: { disable: true },
         allChampions: context?.allChampions,
       }).execute();
+
       const primaryResults = Array.isArray(primaryResult)
         ? primaryResult
         : [primaryResult];
       results.push(...primaryResults);
 
-      console.log(
-        `[INVESTIDA TRANSPASSANTE] primary.combatSlot: ${primary.combatSlot}, primary.team: ${primary.team}`,
-      );
-
       const [secondaryTarget] = context.getAdjacentChampions(primary, {
         side: "left",
       });
-
-      console.log(
-        "[INVESTIDA TRANSPASSANTE] Alvo adjacente (left):",
-        secondaryTarget?.name ?? "NENHUM",
-      );
 
       if (!secondaryTarget) return results;
 
@@ -93,9 +90,10 @@ const vaelSkills = [
         skill: this,
         type: "physical",
         context,
-        critOptions: { force: true }, // crítico garantido
+        critOptions: { force: true },
         allChampions: context?.allChampions,
       }).execute();
+
       const secondaryResults = Array.isArray(secondaryResult)
         ? secondaryResult
         : [secondaryResult];
@@ -106,18 +104,22 @@ const vaelSkills = [
   },
 
   {
-    key: "veredito_do_fio_silencioso",
-    name: "Veredito do Fio Silencioso",
+    key: "verdict_of_the_silent_edge",
+    name: "Verdict of the Silent Edge",
     bf: 145,
     contact: true,
     damageMode: "standard",
+
     isUltimate: true,
     momentumCost: 55,
     priority: 0,
+
     description() {
-      return `Causa dano devastador ao alvo inimigo escolhido. Se esse ataque matar o alvo, você ganha  pontos equivalentes ao meu valor atual de Claim.`;
+      return `Vael delivers a devastating strike with his silent blade, dealing massive damage to the chosen target. If this attack kills the target, Vael scores points equal to his current Claim value.`;
     },
+
     targetSpec: ["enemy"],
+
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
@@ -146,7 +148,7 @@ const vaelSkills = [
           context.registerScore({
             amount: claimPoints,
             scoringSlot: user.team - 1,
-            reason: "veredito_do_fio_silencioso",
+            reason: "verdict_of_the_silent_edge",
             sourceId: user.id,
           });
         }

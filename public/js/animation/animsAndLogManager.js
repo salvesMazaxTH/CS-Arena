@@ -515,7 +515,7 @@ export function createCombatAnimationManager(deps) {
 
   function createEventDispatcher() {
     const handlers = {
-      damageEvents: { handler: animateDamage },
+      damageEvents: { handler: animateDamage, parallel: true },
       healEvents: { handler: animateHeal },
       lifestealEvents: { handler: animateLifesteal },
       shieldEvents: { handler: animateShield },
@@ -536,6 +536,50 @@ export function createCombatAnimationManager(deps) {
       }
     }
 
+    // Plays a whole wave at once: dialogs stay sequential (they share the
+    // single dialog bubble), while the animations themselves overlap.
+    async function runBatch(batch, handler) {
+      for (const event of batch) {
+        if (event.preDialogs?.length) await runDialogs(event.preDialogs);
+      }
+
+      await Promise.all(batch.map((event) => Promise.resolve(handler(event))));
+
+      for (const event of batch) {
+        if (event.postDialogs?.length) await runDialogs(event.postDialogs);
+      }
+    }
+
+    // 💥 Splits a chunk of events into "waves" that can be animated at the
+    // same time. Any skill that hits more than one champion is AoE by
+    // definition, so its hits are played simultaneously. A repeated target
+    // means a new hit on someone already struck in this wave, so it opens
+    // the next wave and keeps multi-hit skills readable.
+    function buildSimultaneousBatches(events) {
+      const batches = [];
+      let current = [];
+      let seenTargets = new Set();
+
+      for (const event of events) {
+        if (!event) continue;
+
+        const targetId = event.targetId ?? null;
+
+        if (current.length && (targetId === null || seenTargets.has(targetId))) {
+          batches.push(current);
+          current = [];
+          seenTargets = new Set();
+        }
+
+        current.push(event);
+        if (targetId !== null) seenTargets.add(targetId);
+      }
+
+      if (current.length) batches.push(current);
+
+      return batches;
+    }
+
     async function runGroup(key, events) {
       if (!Array.isArray(events) || events.length === 0) return;
 
@@ -546,7 +590,15 @@ export function createCombatAnimationManager(deps) {
         return;
       }
 
-      const { handler, single } = config;
+      const { handler, single, parallel } = config;
+
+      if (parallel) {
+        // AoE: every hit of the same wave is played simultaneously.
+        for (const batch of buildSimultaneousBatches(events)) {
+          await runBatch(batch, handler);
+        }
+        return;
+      }
 
       if (single) {
         const event = events[0];
@@ -1492,7 +1544,19 @@ export function createCombatAnimationManager(deps) {
    * @param {string} text
    * @param {number} [duration] - Optional duration in ms. If omitted, dialog is blocking (user/skip only).
    */
-  async function showDialog(text, duration) {
+  // The dialog bubble is a single shared element, so concurrent animations
+  // (AoE damage played simultaneously) must never write to it at the same
+  // time. Every call is chained onto the previous one, keeping dialogs
+  // sequential even when their animations run in parallel.
+  let dialogQueueTail = Promise.resolve();
+
+  function showDialog(text, duration) {
+    const run = dialogQueueTail.then(() => presentDialog(text, duration));
+    dialogQueueTail = run.catch(() => {});
+    return run;
+  }
+
+  async function presentDialog(text, duration) {
     const dialog = deps.combatDialog;
     const dialogText = deps.combatDialogText;
     if (!dialog || !dialogText) return;

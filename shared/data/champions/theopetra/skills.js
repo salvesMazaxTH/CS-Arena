@@ -4,26 +4,32 @@ import totalBlock from "../totalBlock.js";
 
 const theopetraSkills = [
   // ========================
-  // Total block (global)
+  // Total Block (global)
   // ========================
   totalBlock,
+
   // ========================
-  // Habilidades Especiais
+  // Special Abilities
   // ========================
-  {
-    key: "golpe_petreo",
-    name: "Golpe Pétreo",
-    bf: 70,
-    damageMode: "standard",
-    contact: true,
-    priority: 0,
-    description() {
-      return `Theópetra desfere um golpe de pedra, causando dano ao inimigo.`;
-    },
+
+    {
+      key: "petrium_strike",
+      name: "Petrium Strike",
+      bf: 70,
+      damageMode: "standard",
+      contact: true,
+      priority: 0,
+
+      description() {
+        return `Theópetra closes in and strikes with her stone-forged body, dealing physical damage to the chosen target.`;
+      },
+
     targetSpec: ["enemy"],
+
     resolve({ user, targets, context }) {
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
+
       return new DamageEvent({
         baseDamage,
         attacker: user,
@@ -35,14 +41,18 @@ const theopetraSkills = [
       }).execute();
     },
   },
+
   {
-    key: "muralha_ancestral",
-    name: "Muralha Ancestral",
+    key: "ancestral_wall",
+    name: "Ancestral Wall",
     priority: 1,
+
     description() {
-      return `Theópetra ergue uma barreira, aumentando sua Defesa em 30% por 2 turnos.`;
+      return `Theópetra raises a barrier, increasing her Defense by 30% for 2 turns.`;
     },
+
     targetSpec: ["self"],
+
     resolve({ user, context }) {
       return user.modifyStat({
         statName: "Defense",
@@ -50,14 +60,14 @@ const theopetraSkills = [
         duration: 2,
         isPercent: true,
         context,
-        statModifierSrc: "muralha_ancestral",
+        statModifierSrc: "ancestral_wall",
       });
     },
   },
 
   {
-    key: "magnitude_11",
-    name: "Magnitude 11",
+    key: "earthshattering_judgment",
+    name: "Earthshattering Judgment",
     bf: 85,
 
     damageMode: "standard",
@@ -72,15 +82,19 @@ const theopetraSkills = [
     priority: 0,
 
     description() {
-      return `Theópetra invoca a magnitude 11, causando dano massivo a todos os inimigos. Esse ataque não pode ser esquivado.`;
+      return `Theópetra commands the earth itself to pass judgment upon all enemies, dealing massive damage to them. This attack cannot be evaded.`;
     },
+
     targetSpec: ["all:enemy"],
+
     resolve({ user, targets, context = {} }) {
       const enemies = targets.filter(
         (champion) => champion.team !== user.team && champion.alive,
       );
+
       const baseDamage = (user.Attack * this.bf) / 100;
       const results = [];
+
       for (const enemy of enemies) {
         const damageResult = new DamageEvent({
           baseDamage,
@@ -91,11 +105,14 @@ const theopetraSkills = [
           context,
           allChampions: context?.allChampions,
         }).execute();
+
         const damageResults = Array.isArray(damageResult)
           ? damageResult
           : [damageResult];
+
         results.push(...damageResults);
       }
+
       return results;
     },
   },
