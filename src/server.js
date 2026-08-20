@@ -525,7 +525,10 @@ function spawnChampion({
   emitCombatEvent(
     "onChampionAdded",
     {
-      owner: newChampion,
+      // Must NOT be named "owner": emitCombatEvent overwrites that key with the
+      // hook's own owner (the champion on the champion path, the Player on the
+      // emblem path), so emblem hooks could never see the champion being added.
+      champion: newChampion,
       context: {
         currentTurn: match.combat.currentTurn,
         allChampions: match.combat.activeChampions,

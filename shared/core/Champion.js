@@ -179,15 +179,15 @@ export class Champion {
       group: "system",
 
       hookScope: {
-        onChampionAdded: "owner",
+        onChampionAdded: "champion",
       },
 
-      onChampionAdded({ owner, context, spawnProtection = true }) {
+      onChampionAdded({ champion, context, spawnProtection = true }) {
         if (spawnProtection === false) return;
-        if (owner?.entityType !== "champion") return;
+        if (champion?.entityType !== "champion") return;
 
-        owner.applyStatusEffect("inert", 1, context);
-        owner.applyStatusEffect("absoluteImmunity", 1, context);
+        champion.applyStatusEffect("inert", 1, context);
+        champion.applyStatusEffect("absoluteImmunity", 1, context);
       },
     });
 

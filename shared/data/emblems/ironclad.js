@@ -14,23 +14,23 @@ export const ironclad = {
   },
 
   hookScope: {
-    onChampionAdded: "owner",
     onDamageIncoming: "defender",
   },
 
-  onChampionAdded({ owner, context }) {
-    // Only apply buff to the champion being added
-    if (!owner || owner.team == null) return;
-    if (!owner.applyDamageReduction) return;
+  onChampionAdded({ champion, owner, context }) {
+    // `owner` is the Player carrying the emblem; `champion` is the one entering.
+    if (!champion || !owner) return;
+    if (champion.team !== owner.team) return;
+    if (!champion.applyDamageReduction) return;
 
     // Check if already applied to this champion
-    if (owner.runtime?._ironCladApplied) return;
+    if (champion.runtime?._ironCladApplied) return;
 
-    if (!owner.runtime) owner.runtime = {};
-    owner.runtime._ironCladApplied = true;
+    if (!champion.runtime) champion.runtime = {};
+    champion.runtime._ironCladApplied = true;
 
     // Apply buff only to this specific champion
-    owner.applyDamageReduction({
+    champion.applyDamageReduction({
       amount: 15,
       type: "percent",
       duration: 9999,

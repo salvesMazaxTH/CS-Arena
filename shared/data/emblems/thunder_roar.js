@@ -10,26 +10,23 @@ export const thunderRoar = {
   },
 
   description() {
-    return "Seus campeões recebem +10 Speed. A energia do trovão faz seu ataque se tornar mais difícil de escapar.";
+    return "Your champions gain +10 Speed. The thunder's energy makes their attacks harder to evade.";
   },
 
-  hookScope: {
-    onChampionAdded: "owner",
-  },
-
-  onChampionAdded({ owner, context }) {
-    // Only apply buff to the champion being added
-    if (!owner || owner.team == null) return;
+  onChampionAdded({ champion, owner, context }) {
+    // `owner` is the Player carrying the emblem; `champion` is the one entering.
+    if (!champion || !owner) return;
+    if (champion.team !== owner.team) return;
 
     // Check if already applied to this champion
-    if (owner.runtime?._thunderRoarApplied) return;
+    if (champion.runtime?._thunderRoarApplied) return;
 
-    if (!owner.runtime) owner.runtime = {};
-    owner.runtime._thunderRoarApplied = true;
+    if (!champion.runtime) champion.runtime = {};
+    champion.runtime._thunderRoarApplied = true;
 
     // Apply buff only to this specific champion
-    if (owner.modifyStat) {
-      owner.modifyStat({
+    if (champion.modifyStat) {
+      champion.modifyStat({
         statName: "Speed",
         amount: 10,
         context,
@@ -37,8 +34,8 @@ export const thunderRoar = {
       });
     }
 
-    if (Array.isArray(owner.skills)) {
-      owner.skills.forEach((skill) => {
+    if (Array.isArray(champion.skills)) {
+      champion.skills.forEach((skill) => {
         if (!skill || typeof skill !== "object") return;
         skill.cannotBeEvaded = true;
       });
