@@ -1,5 +1,9 @@
 import { getClaimMaxPoints } from "../combat/claim.js";
 
+// Sanity ceiling for the minion slot search. Minions have no rule-level cap;
+// this only keeps the lookup from running away if something goes wrong.
+const MAX_MINION_SLOTS = 24;
+
 class LobbyState {
   constructor(match) {
     this.match = match;
@@ -271,17 +275,32 @@ class CombatState {
   }
 
   /**
-   * Verifica se o time tem espaço para mais um campeão vivo.
+   * Checks whether the team has room for one more living champion.
+   *
+   * The field cap applies to champions ONLY: minions occupy none of those
+   * slots and have no cap of their own, so a team already fielding three
+   * minions can still summon three champions.
    */
-  canSpawnOnTeam(team, maxPerTeam = 3) {
-    return this.getTeamChampions(team, { alive: true }).length < maxPerTeam;
+  canSpawnOnTeam(team, maxPerTeam = 3, { entityType = "champion" } = {}) {
+    if (entityType === "minion") return true;
+
+    const championsOnField = this.getTeamChampions(team, {
+      alive: true,
+    }).filter((champion) => champion.entityType !== "minion");
+
+    return championsOnField.length < maxPerTeam;
   }
 
   /**
-   * Retorna o próximo combatSlot livre (0-based) para um time,
-   * ou null se todos os slots 0..maxPerTeam-1 estiverem ocupados.
+   * Returns the next free combatSlot (0-based) for a team, or null when every
+   * slot in 0..maxPerTeam-1 is taken.
+   *
+   * Minions never take a champion slot: they search from `maxPerTeam` upwards
+   * (extra slots, rendered after the champion line). Occupancy itself still
+   * considers every living entity — two entities cannot share a slot, minion
+   * or not.
    */
-  getNextAvailableSlot(team, maxPerTeam = 3) {
+  getNextAvailableSlot(team, maxPerTeam = 3, { entityType = "champion" } = {}) {
     const occupied = new Set(
       [...this.activeChampions.values()]
         .filter(
@@ -289,6 +308,15 @@ class CombatState {
         )
         .map((c) => c.combatSlot),
     );
+
+    if (entityType === "minion") {
+      // No minion cap — the ceiling only bounds the iteration.
+      const ceiling = maxPerTeam + MAX_MINION_SLOTS;
+      for (let i = maxPerTeam; i < ceiling; i++) {
+        if (!occupied.has(i)) return i;
+      }
+      return null;
+    }
 
     for (let i = 0; i < maxPerTeam; i++) {
       if (!occupied.has(i)) return i;

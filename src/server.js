@@ -413,15 +413,15 @@ function processChampionMutationRequest(
 }
 
 /**
- * Cria, registra e (opcionalmente) notifica os clientes de um novo campeão.
+ * Creates, registers and (optionally) notifies the clients of a new champion.
  *
  * @param {Object}  opts
- * @param {string}  opts.championKey   – chave no championDB
- * @param {number}  opts.team          – 1 ou 2
- * @param {number|null}  [opts.combatSlot]  – slot explícito; se omitido, encontra o próximo livre
- * @param {boolean} [opts.trackSnapshot=true]  – se registra no combatSnapshot (false na montagem inicial)
- * @param {boolean} [opts.emit=false]          – se emite "championAdded" para os clientes
- * @returns {Champion|null} a instância criada, ou null se impossível (time cheio ou dados inválidos)
+ * @param {string}  opts.championKey   – key in championDB
+ * @param {number}  opts.team          – 1 or 2
+ * @param {number|null}  [opts.combatSlot]  – explicit slot; when omitted, the next free one is used
+ * @param {boolean} [opts.trackSnapshot=true]  – whether to record it in combatSnapshot (false during initial setup)
+ * @param {boolean} [opts.emit=false]          – whether to emit "championAdded" to the clients
+ * @returns {Champion|null} the created instance, or null when impossible (team full or invalid data)
  */
 function spawnChampion({
   championKey,
@@ -432,15 +432,49 @@ function spawnChampion({
   spawnProtection = true,
 } = {}) {
   const baseData = championDB[championKey];
-  if (!baseData) return null;
+  if (!baseData) {
+    console.warn(`[SPAWN] Aborted: "${championKey}" is not in the championDB.`);
+    return null;
+  }
 
-  // --- Checar se o time pode receber mais um campeão vivo ---
-  if (!match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM)) return null;
+  const entityType = baseData.entityType ?? "champion";
 
-  // --- Resolver combatSlot ---
+  // --- Check whether the team can take one more living champion ---
+  // Minions go straight through: the field cap only counts champions.
+  if (!match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM, { entityType })) {
+    console.warn(
+      `[SPAWN] Aborted: team ${team} already fields ${ACTIVE_PER_TEAM} champions (attempted: ${championKey}).`,
+    );
+    return null;
+  }
+
+  // --- Resolve combatSlot ---
   if (!Number.isInteger(combatSlot)) {
-    combatSlot = match.combat.getNextAvailableSlot(team, ACTIVE_PER_TEAM);
-    if (combatSlot === null) return null; // sem slot livre
+    combatSlot = match.combat.getNextAvailableSlot(team, ACTIVE_PER_TEAM, {
+      entityType,
+    });
+
+    if (combatSlot === null) {
+      console.warn(
+        `[SPAWN] Aborted: no free slot on team ${team} (attempted: ${championKey}).`,
+      );
+      return null; // no free slot
+    }
+  } else if (match.combat.getChampionAtSlot(team, combatSlot)) {
+    // The explicit slot (e.g. Jeff's revival) is already taken by another
+    // entity — relocate instead of stacking two entities on the same spot.
+    const fallbackSlot = match.combat.getNextAvailableSlot(
+      team,
+      ACTIVE_PER_TEAM,
+      { entityType },
+    );
+
+    console.warn(
+      `[SPAWN] Slot ${combatSlot} on team ${team} is taken; relocating ${championKey} to ${fallbackSlot}.`,
+    );
+
+    if (fallbackSlot === null) return null;
+    combatSlot = fallbackSlot;
   }
 
   const id = generateId(championKey);
@@ -464,7 +498,7 @@ function spawnChampion({
 
     const winterPath = `/assets/portraits/${baseName}_curtindo_o_inverno.webp`;
 
-    // caminho físico no disco (ajusta se necessário)
+    // Physical path on disk (adjust if needed).
     const absolutePath = path.join(
       process.cwd(),
       "public",
@@ -473,7 +507,7 @@ function spawnChampion({
       `${baseName}_curtindo_o_inverno.webp`,
     );
 
-    // 👇 só aplica se existir
+    // 👇 only applied when the file actually exists
     if (fs.existsSync(absolutePath)) {
       champion.portrait = winterPath;
     }
@@ -483,7 +517,7 @@ function spawnChampion({
 
   newChampion.championKey = championKey;
   /* console.log(
-    `[SPAWN] ${newChampion.name} (ID: ${id}) no time ${team}, no slot ${combatSlot}, com championKey ${championKey}`,
+    `[SPAWN] ${newChampion.name} (ID: ${id}) on team ${team}, slot ${combatSlot}, with championKey ${championKey}`,
   ); */
 
   match.combat.registerChampion(newChampion, { trackSnapshot });
@@ -506,7 +540,7 @@ function spawnChampion({
   );
 
   if (!trackSnapshot) {
-    // Montagem inicial — snapshot manual
+    // Initial setup — manual snapshot.
     match.combat.combatSnapshot.push({
       championKey,
       id,
@@ -522,8 +556,8 @@ function spawnChampion({
   return newChampion;
 }
 
-/** Instancia e registra campeões de uma lista de keys em um time (fase de seleção inicial). */
-/** Apenas os ACTIVE_PER_TEAM primeiros entram em campo; os restantes ficam na fila de reserva. */
+/** Instantiates and registers champions from a list of keys into a team (initial selection phase). */
+/** Only the first ACTIVE_PER_TEAM take the field; the rest go to the reserve queue. */
 function assignChampionsToTeam(team, championKeys) {
   championKeys.slice(0, ACTIVE_PER_TEAM).forEach((championKey, index) => {
     if (!championKey) return;
@@ -1067,18 +1101,44 @@ function handleEndTurn() {
 function handleScheduledEffect(effect, context) {
   switch (effect.type) {
     case "spawnChampion": {
-      // Se for revival, remova o antigo Jeff antes de spawnar o novo
+      // On a revival, remove the old instance before spawning the new one.
       if (effect.payload.reviveFrom && effect.payload.reviveFrom.id) {
         match.combat.removeChampion(effect.payload.reviveFrom.id);
       }
-      // Garante que o novo Jeff nasce no mesmo combatSlot
+      // Keeps the revived champion on its original combatSlot.
       const spawned = spawnChampion({
         ...effect.payload,
         combatSlot: effect.payload.combatSlot ?? null,
       });
-      // Suporte para transferência de estado do Jeff antigo
-      if (spawned && typeof effect.payload.onSpawn === "function") {
-        // Se reviveFrom foi passado, injeta como 3º argumento
+
+      if (!spawned) {
+        // Field full (or no slot left): the scheduled entry is simply lost.
+        // That is the intended rule, but it must never pass unnoticed.
+        console.warn(
+          `[SCHEDULED SPAWN] Failed for ${effect.payload.championKey} (team ${effect.payload.team}).`,
+          effect.payload.reviveFrom
+            ? "It was a revival — the champion was lost."
+            : "",
+        );
+
+        if (effect.payload.reviveFrom && context?.registerDialog) {
+          context.registerDialog({
+            message: `${formatChampionName(
+              effect.payload.reviveFrom,
+            )} found no room on the battlefield and could not return.`,
+            sourceId: null,
+            targetId: null,
+          });
+        }
+
+        // Without a spawn there is no return message to show.
+        effect.dialog = null;
+        break;
+      }
+
+      // Supports state transfer from the previous instance.
+      if (typeof effect.payload.onSpawn === "function") {
+        // When reviveFrom is present, it is injected as the 3rd argument.
         effect.payload.onSpawn(
           spawned,
           context,
@@ -1769,7 +1829,7 @@ io.on("connection", (socket) => {
   });
 
   // =============================
-  //  summonFromLineup (invoca um campeão da line-up para o campo)
+  //  summonFromLineup (brings a line-up champion onto the field)
   // =============================
   socket.on("summonFromLineup", ({ championKey } = {}) => {
     const playerSlot = match.getSlotBySocket(socket.id);
@@ -1778,18 +1838,18 @@ io.on("connection", (socket) => {
 
     const team = player.team;
 
-    // Invocação da line-up bloqueada no primeiro turno.
+    // Line-up summons are blocked on the first turn.
     if (match.getCurrentTurn() === 1) {
       return socket.emit(
         "actionFailed",
-        "Você não pode invocar campeões da line-up no primeiro turno.",
+        "You cannot summon line-up champions on the first turn.",
       );
     }
 
     if (match.hasSummonedThisTurn(team)) {
       return socket.emit(
         "actionFailed",
-        "Você já invocou um campeão da line-up neste turno.",
+        "You have already summoned a line-up champion this turn.",
       );
     }
 
@@ -1797,14 +1857,21 @@ io.on("connection", (socket) => {
     if (!championKey || !reserve.includes(championKey)) {
       return socket.emit(
         "actionFailed",
-        "Esse campeão não está disponível para ser invocado.",
+        "That champion is not available to be summoned.",
       );
     }
 
-    if (!match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM)) {
+    // The field cap counts champions only — minions are always allowed in.
+    const summonEntityType = championDB[championKey]?.entityType ?? "champion";
+
+    if (
+      !match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM, {
+        entityType: summonEntityType,
+      })
+    ) {
       return socket.emit(
         "actionFailed",
-        "Não há espaço livre no campo para invocar mais campeões.",
+        "There is no free space on the battlefield to summon more champions.",
       );
     }
 
@@ -1815,10 +1882,7 @@ io.on("connection", (socket) => {
       emitState: false,
     });
     if (!spawned) {
-      return socket.emit(
-        "actionFailed",
-        "Não foi possível invocar este campeão.",
-      );
+      return socket.emit("actionFailed", "This champion could not be summoned.");
     }
 
     socket.emit("gameStateUpdate", getGameState());
