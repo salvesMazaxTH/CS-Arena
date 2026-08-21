@@ -1271,6 +1271,41 @@ function handleScheduledEffect(effect, context) {
       break;
     }
 
+    // A status effect deliberately postponed to a later turn (e.g. the Barão's
+    // Reactor Overload). It lands here inside handleStartTurn, *before* the
+    // expiration purge, so a duration of 1 covers exactly this turn's
+    // resolution and is purged at the start of the next one.
+    case "applyStatusEffect": {
+      const {
+        targetId,
+        statusEffectKey,
+        duration = 1,
+        metadata = {},
+        stackCount = 1,
+        dialog = null,
+      } = effect.payload ?? {};
+
+      const target = match.combat.activeChampions.get(targetId);
+      if (!target || !target.alive || !statusEffectKey) break;
+
+      target.applyStatusEffect(
+        statusEffectKey,
+        duration,
+        context ?? { currentTurn: match.combat.currentTurn },
+        metadata,
+        stackCount,
+      );
+
+      if (dialog && context?.registerDialog) {
+        context.registerDialog({
+          message: dialog,
+          sourceId: target.id,
+          targetId: target.id,
+        });
+      }
+      break;
+    }
+
     case "championMutation": {
       const result = processChampionMutationRequest(effect.payload);
       if (result?.log && context?.registerDialog) {
