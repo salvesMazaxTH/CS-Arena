@@ -4,14 +4,14 @@ import totalBlock from "../totalBlock.js";
 const sengokuPrimordialSkills = [
   totalBlock,
   {
-    key: "garra_primordial",
-    name: "Garra Primordial",
+    key: "primordial_talon",
+    name: "Primordial Talon",
     bf: 95,
     damageMode: "standard",
     contact: true,
     priority: 0,
     description() {
-      return `Sengoku rasga o inimigo com suas garras dracônicas, causando dano elevado.`;
+      return `Sengoku tears through the chosen target with draconic talons older than the war itself, dealing heavy physical damage.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context }) {
@@ -29,8 +29,8 @@ const sengokuPrimordialSkills = [
     },
   },
   {
-    key: "sopro_cataclismico",
-    name: "Sopro Cataclísmico",
+    key: "cataclysmic_breath",
+    name: "Cataclysmic Breath",
     bf: 130,
     damageMode: "standard",
     contact: false,
@@ -38,7 +38,7 @@ const sengokuPrimordialSkills = [
     momentumCost: 33,
     priority: 0,
     description() {
-      return `Sengoku expele fogo primordial sobre todos os inimigos.`;
+      return `Sengoku draws breath and pours primordial fire across the field, dealing magical damage to all enemies.`;
     },
     targetSpec: ["all:enemy"],
     resolve({ user, targets, context }) {

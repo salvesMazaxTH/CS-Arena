@@ -30,16 +30,16 @@ function buildChampionHTML(champion, { editMode } = {}) {
   return `
   <div class="portrait-wrapper">
     <div class="portrait" data-id="${champion.id}">
-      <img 
+      <img
         data-id="${champion.id}"
         src="${champion.portrait}"
       >
     </div>
-    
-  </div> 
+
+  </div>
 
           <div class="stat-block hp-stat">
-            <p>HP: <span class="hp">${champion.HP}/${champion.maxHP}</span></p>
+            <p>HP: <span class="hp">${Math.floor(Number(champion.HP) || 0)}/${Math.floor(Number(champion.maxHP) || 0)}</span></p>
 
             <div class="hp-bar">
                 <div class="hp-fill"></div>
@@ -48,7 +48,7 @@ function buildChampionHTML(champion, { editMode } = {}) {
         </div>
 
         <div class="stat-block momentum-stat">
-            <p>Momentum: <span class="momentum">${champion.momentum || 0}/100</span></p>
+            <p>Momentum: <span class="momentum">${Math.floor(Number(champion.momentum) || 0)}/100</span></p>
 
             <div class="momentum-bar" aria-label="Momentum bar">
                 <div class="momentum-fill"></div>
@@ -152,7 +152,9 @@ export function updateChampionUI(champion, context) {
     champion.runtime.shields.length > 0;
 
   // Texto base
-  let hpText = `${champion.HP}/${champion.maxHP}`;
+  const currentHP = Number(champion.HP) || 0;
+  const maxHP = Number(champion.maxHP) || 0;
+  let hpText = `${Math.floor(currentHP)}/${Math.floor(maxHP)}`;
 
   // Se tiver escudo, adiciona ao texto conforme tipo
   if (hasShield) {
@@ -169,7 +171,7 @@ export function updateChampionUI(champion, context) {
       hpText += ` 🛡️ <b>S</b>`;
     } else if (regularShields.length > 0) {
       // Escudo Regular: mostrar valor numérico
-      const totalShield = regularShields.reduce((sum, s) => sum + s.amount, 0);
+      const totalShield = Math.floor(regularShields.reduce((sum, s) => sum + (Number(s.amount) || 0), 0));
       hpText += ` 🛡️ (${totalShield})`;
     }
     champion.el.classList.add("has-shield");
@@ -197,7 +199,7 @@ export function updateChampionUI(champion, context) {
   const momentumValueEl = champion.el.querySelector(".momentum");
   const momentumFillEl = champion.el.querySelector(".momentum-fill");
 
-  const currentUnits = champion.momentum || 0;
+  const currentUnits = Math.floor(Number(champion.momentum) || 0);
   const totalUnits = 100;
 
   if (momentumValueEl) {

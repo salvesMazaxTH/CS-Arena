@@ -1,13 +1,15 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
-  key: "energia_pulsante",
-  name: "Energia Pulsante",
+  key: "live_current",
+  name: "Live Current",
   speedBuff: 10,
   paralyzeChance: 20,
   paralyzeDuration: 2,
   description() {
-    return `Node-SPARCKINA-07 gera uma onda de energia a cada turno, aumentando sua velocidade em ${this.speedBuff}%. As paralisias aplicadas por Node-SPARCKINA-07 duram um turno a mais. Sempre que ele causar dano, tem ${this.paralyzeChance}% de chance de aplicar {Paralisado} {paraliasdo} por ${this.paralyzeDuration} turnos (duração aumentada por sua passiva).`;
+    return `A current never stops running through Node-SPARCKINA-07's frame. Every turn, the surge builds and raises its Speed by ${this.speedBuff}%.
+
+    Whenever it deals damage, there is a ${this.paralyzeChance}% chance the discharge locks the target's body down, applying Paralyzed for ${this.paralyzeDuration} turn(s).`;
   },
 
   hookScope: {
@@ -26,7 +28,7 @@ export default {
     if (result?.appliedAmount === 0) return;
 
     return {
-      log: `[PASSIVA — Energia Pulsante] ${formatChampionName(owner)} ganhou +${result?.appliedAmount ?? this.speedBuff} VEL.`,
+      log: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} gains +${result?.appliedAmount ?? this.speedBuff} Speed.`,
     };
   },
 
@@ -36,13 +38,7 @@ export default {
     const roll = Math.random();
     const success = roll < this.paralyzeChance / 100;
 
-    if (!success) {
-      /* console.log(
-        `[PASSIVA — Energia Pulsante] Node-SPARCKINA-07 não rolou ${roll} para aplicar "Paralisado" e falhou.`,
-      );
-      */
-      return;
-    }
+    if (!success) return;
 
     const paralyzed = defender.applyStatusEffect(
       "paralyzed",
@@ -54,20 +50,10 @@ export default {
       },
     );
 
-    if (!paralyzed) {
-      /* console.log(
-        `[PASSIVA — Energia Pulsante] ${formatChampionName(attacker)} tentou aplicar "Paralisado" em ${formatChampionName(defender)}, mas falhou.`,
-      );
-      */
-      return;
-    }
+    if (!paralyzed) return;
 
-    /* console.log(
-      `— [PASSIVA — Energia Pulsante] ${formatChampionName(attacker)} aplicou "Paralisado" em ${formatChampionName(defender)} por ${this.paralyzeDuration} turnos. roll: ${roll}`,
-    );
-    */
     return {
-      log: `[PASSIVA — Energia Pulsante] ${formatChampionName(attacker)} aplicou "Paralisado" em ${formatChampionName(defender)} por ${this.paralyzeDuration} turnos!`,
+      log: `[PASSIVE — ${this.name}] ${formatChampionName(attacker)} leaves ${formatChampionName(defender)} Paralyzed for ${this.paralyzeDuration} turn(s)!`,
     };
   },
 };

@@ -1,32 +1,33 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
-  name: "Presságio Glacial",
+  key: "glacial_omen",
+  name: "Glacial Omen",
   chillDuration: 2,
   freezeDuration: 2,
   description() {
-    return `Sempre que Nythera sofrer dano que cause contato (exceto dano absoluto): o agressor recebe ❄️ Gelado.
+    return `The cold around Nythera answers for her. Whenever she takes damage from a contact source (Absolute Damage excluded), the aggressor is left ❄️ Chilled for ${this.chillDuration} turn(s).
 
-    Se já estiver Gelado: → torna-se Congelado.`;
+    If they are already Chilled, the frost closes in and they become Frozen for ${this.freezeDuration} turn(s) instead.`;
   },
 
   hookScope: {
     onAfterDmgTaking: "defender",
   },
 
-  onAfterDmgTaking({ attacker, defender, owner, skill, damage, context }) {
+  onAfterDmgTaking({ attacker, owner, skill, damage, context }) {
     if (damage <= 0 || attacker.team === owner.team) return;
 
     if (!skill.contact) return;
 
-    // não empilhar com o efeito da skill, que faz o mesmo, mas melhor
+    // Do not stack with Stasis Chamber, which does the same thing, but better.
     if (
       owner.runtime?.hookEffects?.some(
-        (effect) => effect.key === "camara_de_estase",
+        (effect) => effect.key === "stasis_chamber",
       )
     ) {
       console.log(
-        `[PASSIVA — Presságio Glacial] ${formatChampionName(owner)} já tem um efeito de gancho que aplica "Congelado". Ignorando aplicação adicional.`,
+        `[PASSIVE — ${this.name}] ${formatChampionName(owner)} already has a hook effect applying "Frozen". Skipping the extra application.`,
       );
       return;
     }

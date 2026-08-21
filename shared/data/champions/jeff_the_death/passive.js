@@ -1,10 +1,88 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
+const BUFFS_PER_DEATH = [
+  { stat: "Attack", amount: 30, isPercent: true },
+  { stat: "Defense", amount: 30, isPercent: true },
+];
+
+/**
+ * Queues Jeff's return for the start of the next turn.
+ *
+ * Called from two places on purpose: `onAfterDmgTaking` covers deaths dealt by
+ * a DamageEvent, and `onChampionDeath` covers everything else (executions that
+ * set `alive = false` directly, for instance). The `revivalScheduledForTurn`
+ * flag makes the second call a no-op when the first one already ran.
+ *
+ * @returns {boolean} whether a revival was scheduled by this call
+ */
+function scheduleRevival(champion, context, passiveName) {
+  if (!champion || typeof context?.schedule !== "function") {
+    console.warn(
+      "[Passive - Jeff] Revival could not be scheduled: no schedulable context.",
+    );
+    return false;
+  }
+
+  const turnToHappen = (context.currentTurn ?? 0) + 1;
+
+  champion.runtime ??= {};
+  if (champion.runtime.revivalScheduledForTurn === turnToHappen) return false;
+  champion.runtime.revivalScheduledForTurn = turnToHappen;
+
+  champion.runtime.deathCounter ??= 0;
+  champion.runtime.deathCounter++;
+
+  console.log(
+    `[Passive - Jeff] Scheduling revival for Turn ${turnToHappen} (${champion.id}).`,
+  );
+
+  context.schedule({
+    type: "spawnChampion",
+    turnToHappen,
+
+    payload: {
+      championKey: champion.championKey,
+      team: champion.team,
+      combatSlot: champion.combatSlot, // Ensures the same slot.
+      reviveFrom: champion, // Passes the previous Jeff's state.
+      onSpawn: (revived, spawnContext, reviveFrom) => {
+        restoreRevivedState(revived, reviveFrom);
+
+        revived.HP = Math.floor(revived.maxHP * 0.75);
+
+        // Buff from Jeff's own death, since onChampionDeath skips the owner.
+        BUFFS_PER_DEATH.forEach((buff) => {
+          revived.modifyStat({
+            statName: buff.stat,
+            amount: buff.amount,
+            context: spawnContext,
+            isPermanent: true,
+            isPercent: buff.isPercent,
+          });
+        });
+      },
+    },
+
+    dialog: {
+      message: `[Passive - <b>${passiveName}</b>] ${formatChampionName(
+        champion,
+      )} returns to the battlefield!`,
+      sourceId: null,
+      targetId: null,
+    },
+  });
+
+  return true;
+}
+
 function restoreRevivedState(champion, reviveFrom) {
   if (!reviveFrom) return;
 
   champion.runtime = { ...reviveFrom.runtime };
   delete champion.runtime.currentContext;
+  // The revived instance is alive again — it must be free to schedule its own
+  // next death, otherwise the flag copied over here would block it.
+  delete champion.runtime.revivalScheduledForTurn;
 
   champion.maxHP = reviveFrom.maxHP;
   champion.Attack = reviveFrom.Attack;
@@ -59,68 +137,37 @@ export default {
     onAfterDmgTaking: "defender",
   },
 
-  onAfterDmgTaking({ attacker, defender, owner, damage, context }) {
+  // Death is death, no matter the source: reactive hooks are suppressed on DoT
+  // and nested damage by default, which silently skipped the revival whenever
+  // Jeff was finished off by poison/burn/bleed or by reflect/recoil damage.
+  hookPolicies: {
+    onAfterDmgTaking: {
+      allowOnDot: true,
+      allowOnNestedDamage: true,
+    },
+  },
+
+  onAfterDmgTaking({ defender, owner, context }) {
     if (defender !== owner) return;
     if (defender.HP > 0) return;
 
     console.log(
-      "[Passive - Jeff] Death Does Not End activated for",
+      "[Passive - Jeff] The Jeff Does Not End activated for",
       defender.id,
     );
 
-    console.log(
-      `[Passive - Jeff] Scheduling revival for next turn (Turn ${
-        context.currentTurn + 1
-      })`,
-    );
-
-    defender.runtime.deathCounter ??= 0;
-    defender.runtime.deathCounter++;
-
-    context.schedule({
-      type: "spawnChampion",
-      turnToHappen: context.currentTurn + 1,
-
-      payload: {
-        championKey: defender.championKey,
-        team: defender.team,
-        combatSlot: defender.combatSlot, // Ensures the same slot.
-        reviveFrom: defender, // Passes the previous Jeff's state.
-        onSpawn: (champion, context, reviveFrom) => {
-          restoreRevivedState(champion, reviveFrom);
-
-          champion.HP = Math.floor(champion.maxHP * 0.75);
-
-          // Buff from Jeff's own death, since onChampionDeath is skipped.
-          const buffsPerDeath = [
-            { stat: "Attack", amount: 30, isPercent: true },
-            { stat: "Defense", amount: 30, isPercent: true },
-          ];
-
-          buffsPerDeath.forEach((buff) => {
-            champion.modifyStat({
-              statName: buff.stat,
-              amount: buff.amount,
-              context,
-              isPermanent: true,
-              isPercent: buff.isPercent,
-            });
-          });
-        },
-      },
-
-      dialog: {
-        message: `[Passive - <b>${this.name}</b>] ${formatChampionName(
-          defender,
-        )} returns to the battlefield!`,
-        sourceId: null,
-        targetId: null,
-      },
-    });
+    scheduleRevival(defender, context, this.name);
   },
 
   onChampionDeath({ owner, deadChampion, context }) {
-    if (owner === deadChampion) return; // Own death is handled in onSpawn.
+    if (owner === deadChampion) {
+      // Fallback for deaths that never ran onAfterDmgTaking — executions that
+      // set HP/alive directly, for instance. A no-op when the damage hook has
+      // already scheduled this same revival.
+      scheduleRevival(owner, context, this.name);
+      return;
+    }
+
     if (!owner.alive) return;
 
     // Whenever any character dies, Jeff gains the buffs.
@@ -130,12 +177,7 @@ export default {
       }.`,
     );
 
-    const buffsPerDeath = [
-      { stat: "Attack", amount: 30, isPercent: true },
-      { stat: "Defense", amount: 30, isPercent: true },
-    ];
-
-    buffsPerDeath.forEach((buff) => {
+    BUFFS_PER_DEATH.forEach((buff) => {
       owner.modifyStat({
         statName: buff.stat,
         amount: buff.amount,

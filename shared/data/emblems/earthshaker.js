@@ -10,27 +10,27 @@ export const earthshaker = {
   },
 
   description() {
-    return "Seus campeões recebem +25 Defesa e são imunes a efeitos de controle.";
+    return "Your champions gain +25 Defense and are immune to control effects.";
   },
 
   hookScope: {
-    onChampionAdded: "owner",
     onStatusEffectIncoming: "target",
   },
 
-  onChampionAdded({ owner, context }) {
-    // Only apply buff to the champion being added
-    if (!owner || owner.team == null) return;
-    if (!owner.modifyStat) return;
+  onChampionAdded({ champion, owner, context }) {
+    // `owner` is the Player carrying the emblem; `champion` is the one entering.
+    if (!champion || !owner) return;
+    if (champion.team !== owner.team) return;
+    if (!champion.modifyStat) return;
 
     // Check if already applied to this champion
-    if (owner.runtime?._earthShakerApplied) return;
+    if (champion.runtime?._earthShakerApplied) return;
 
-    if (!owner.runtime) owner.runtime = {};
-    owner.runtime._earthShakerApplied = true;
+    if (!champion.runtime) champion.runtime = {};
+    champion.runtime._earthShakerApplied = true;
 
     // Apply buff only to this specific champion
-    owner.modifyStat({
+    champion.modifyStat({
       statName: "Defense",
       amount: 25,
       context,
@@ -50,7 +50,7 @@ export const earthshaker = {
 
     return {
       cancel: true,
-      message: `<b>[Emblem — Earthshaker]</b> ${target.name} é imune a efeitos de controle!`,
+      message: `<b>[Emblem — Earthshaker]</b> ${target.name} is immune to control effects!`,
     };
   },
 };

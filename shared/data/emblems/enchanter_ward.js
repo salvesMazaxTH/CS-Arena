@@ -31,25 +31,21 @@ export const enchanterWard = {
     return "Your Enchanter class champions gain +10 Evasion and their healing effectiveness is increased by +15%.";
   },
 
-  hookScope: {
-    onChampionAdded: "owner",
-    onBeforeHealing: "owner",
-  },
-
-  onChampionAdded({ owner, context }) {
-    // Only apply buff to the champion being added
-    if (!owner || owner.team == null) return;
-    if (!isEnchanter(owner)) return;
+  onChampionAdded({ champion, owner, context }) {
+    // `owner` is the Player carrying the emblem; `champion` is the one entering.
+    if (!champion || !owner) return;
+    if (champion.team !== owner.team) return;
+    if (!isEnchanter(champion)) return;
 
     // Mark that this champion has already received the emblem buff
-    if (owner.runtime?._enchanterWardApplied) return;
+    if (champion.runtime?._enchanterWardApplied) return;
 
-    if (!owner.runtime) owner.runtime = {};
-    owner.runtime._enchanterWardApplied = true;
+    if (!champion.runtime) champion.runtime = {};
+    champion.runtime._enchanterWardApplied = true;
 
     // Apply buff only to this specific champion
-    if (owner.modifyStat) {
-      owner.modifyStat({
+    if (champion.modifyStat) {
+      champion.modifyStat({
         statName: "Evasion",
         amount: 10,
         context,

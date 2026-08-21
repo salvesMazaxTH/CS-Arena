@@ -26,41 +26,37 @@ export const oceanGrace = {
     return `Increases all healing performed or received by your team by +${healingBonus}% and grants +${maxHPBonus}% bonus Max HP to allied champions when entering combat.`;
   },
 
-  hookScope: {
-    onChampionAdded: "owner",
-    onBeforeHealing: "owner",
-  },
-
-  onChampionAdded({ owner, context }) {
-    // Only apply buff to the champion being added
-    if (!owner || owner.team == null) return;
+  onChampionAdded({ champion, owner, context }) {
+    // `owner` is the Player carrying the emblem; `champion` is the one entering.
+    if (!champion || !owner) return;
+    if (champion.team !== owner.team) return;
 
     // Check if already applied to this champion
-    if (owner.runtime?._oceanGraceApplied) return;
+    if (champion.runtime?._oceanGraceApplied) return;
 
-    if (!owner.runtime) owner.runtime = {};
-    owner.runtime._oceanGraceApplied = true;
+    if (!champion.runtime) champion.runtime = {};
+    champion.runtime._oceanGraceApplied = true;
 
-    // +5% do Max HP que o campeão possui ao entrar em campo.
+    // +5% of the Max HP the champion has when entering the field.
     const hpBonus = Math.max(
       1,
       Math.round(
-        (owner.maxHP || owner.baseHP || 100) *
+        (champion.maxHP || champion.baseHP || 100) *
           this.maxHPBonusPercent,
       ),
     );
 
-    if (owner.modifyHP) {
-      owner.modifyHP(hpBonus, {
+    if (champion.modifyHP) {
+      champion.modifyHP(hpBonus, {
         affectMax: true,
         isPermanent: true,
         context,
       });
     } else {
-      owner.maxHP = (owner.maxHP || 0) + hpBonus;
-      owner.HP = Math.min(
-        (owner.HP || 0) + hpBonus,
-        owner.maxHP,
+      champion.maxHP = (champion.maxHP || 0) + hpBonus;
+      champion.HP = Math.min(
+        (champion.HP || 0) + hpBonus,
+        champion.maxHP,
       );
     }
   },

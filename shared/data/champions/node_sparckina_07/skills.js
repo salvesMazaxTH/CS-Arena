@@ -5,7 +5,7 @@ import basicStrike from "../basicStrike.js";
 const nodeSparckina07Skills = [
   basicStrike,
   // ========================
-  // Habilidades Especiais
+  // Special Abilities
   // ========================
 
   {
@@ -17,7 +17,7 @@ const nodeSparckina07Skills = [
     priority: 0,
     element: "lightning",
     description() {
-      return `Causa dano ao inimigo.`;
+      return `Node-SPARCKINA-07 carves a live arc through the chosen target, dealing Lightning magical damage.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -36,16 +36,16 @@ const nodeSparckina07Skills = [
   },
 
   {
-    key: "radiant_Rush",
+    key: "radiant_rush",
     name: "Radiant Rush",
     speedBuff: 10,
-    evasionPercent: 10, // Aumenta a Esquiva em 10% da Velocidade
+    evasionPercent: 10, // Evasion gain, as a percentage of Speed
     contact: false,
 
     priority: 3,
     element: "lightning",
     description() {
-      return `Aumenta a Velocidade em ${this.speedBuff} e a Esquiva em ${this.evasionPercent}% da Velocidade.`;
+      return `Node-SPARCKINA-07 overclocks its drive and blurs into motion, gaining +${this.speedBuff} Speed and Evasion equal to ${this.evasionPercent}% of its Speed.`;
     },
     targetSpec: ["self"],
     resolve({ user, context = {} }) {
@@ -56,7 +56,7 @@ const nodeSparckina07Skills = [
         context,
       });
 
-      // buffar a ESQ depois de buffar a VEL para garantir que o aumento de ESQ seja baseado na VEL atualizada
+      // Buff Evasion after Speed so the gain is based on the updated Speed.
       const evasionBuff = user.Speed * (this.evasionPercent / 100);
 
       user.modifyStat({
@@ -67,7 +67,7 @@ const nodeSparckina07Skills = [
       });
 
       return {
-        log: `${formatChampionName(user)} acelera radiante (+${this.speedBuff} VEL, +${evasionBuff} ESQ).`,
+        log: `${formatChampionName(user)} surges into a radiant rush (+${this.speedBuff} Speed, +${evasionBuff} Evasion).`,
       };
     },
   },
@@ -87,7 +87,7 @@ const nodeSparckina07Skills = [
     momentumCost: 55,
 
     description() {
-      return `Causa alto dano ao inimigo e aplica paralisia por ${this.paralyzeDuration} turnos.`;
+      return `Node-SPARCKINA-07 dumps its whole charge at once, blasting the chosen target with heavy Lightning magical damage and leaving them Paralyzed for ${this.paralyzeDuration} turn(s).`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {

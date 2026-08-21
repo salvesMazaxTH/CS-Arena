@@ -1,9 +1,8 @@
 export default {
-  name: "Desacreditar",
-  critReduction: 45,
+  key: "disdain",
+  name: "Disdain",
   description() {
-    return `
-      Acertos Críticos contra Rália são anulados e causam dano normal.`;
+    return `Rália gives fortune no credit. Critical Hits against her are denied and land as ordinary damage instead.`;
   },
 
   hookScope: {

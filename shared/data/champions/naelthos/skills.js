@@ -4,11 +4,11 @@ import totalBlock from "../totalBlock.js";
 
 const naelthosSkills = [
   // ========================
-  // Total block (global)
+  // Total Block (global)
   // ========================
   totalBlock,
   // ========================
-  // Special Skills
+  // Special Abilities
   // ========================
   {
     key: "touch_of_the_serene_tide",
@@ -21,7 +21,7 @@ const naelthosSkills = [
     priority: 0,
     element: "water",
     description() {
-      return `Naelthos deals damage to the enemy. Then, heals the most injured ally for ${this.healAmount} HP and purifies them of all negative status effects.`;
+      return `Naelthos calls a calm swell over the chosen target, dealing Water magical damage. The same tide then washes back over his most wounded ally, restoring ${this.healAmount} HP and carrying away every negative status effect clinging to them.`;
     },
     targetSpec: ["enemy"],
 
@@ -72,11 +72,10 @@ const naelthosSkills = [
           ? ` and purifies ${allyName} of ${debuffStatusEffects.length} negative effect(s)`
           : "";
 
-        allyLog = `${userName} heals ${allyName} for ${healAmount} HP${purificationLog}. Final HP of ${allyName}: ${ally.HP}/${ally.maxHP}`;
-
+        allyLog = `${userName} restores ${healAmount} HP to ${allyName}${purificationLog}. ${allyName} is now at ${ally.HP}/${ally.maxHP} HP.`;
       } else {
         const userName = formatChampionName(user);
-        allyLog = `${userName} attempted to heal an ally, but none are available.`;
+        allyLog = `${userName} reaches for an ally to mend, but finds none.`;
       }
 
       results.push({
@@ -96,7 +95,9 @@ const naelthosSkills = [
     priority: 2,
     element: "water",
     description() {
-      return `Transforms into pure water, becoming untargetable for ${this.effectDuration} turns. Can be interrupted if the user takes an action, or if targeted by a lightning skill (in which case, damage is halved).`;
+      return `Naelthos comes apart into pure water, untargetable and untouchable for ${this.effectDuration} turn(s).
+
+      The form breaks the moment he takes an action of his own, and a Lightning skill will find him even so — it interrupts the form, though the water spreads the blow and the damage is halved.`;
     },
     targetSpec: ["self"],
 
@@ -156,17 +157,12 @@ const naelthosSkills = [
       };
 
       user.runtime.hookEffects.push(hookEffect);
-      user.runtime.form = "aquatic_form"; // Para animação visual
+      user.runtime.form = "aquatic_form"; // Drives the visual effect.
 
-      // Apply inert como status effect (interrompível por ação)
-      /*       user.applyStatusEffect("inert", this.effectDuration, context, {
-        canBeInterruptedByAction: true,
-      });
- */
       const userName = formatChampionName(user);
       return [
         {
-          log: `${userName} uses Aquatic Form! It is untargetable until turn ${currentTurn + this.effectDuration}. (Can be interrupted by the user's action).`,
+          log: `${userName} dissolves into Aquatic Form, untargetable until turn ${currentTurn + this.effectDuration} — unless he acts first.`,
         },
       ];
     },
@@ -190,13 +186,14 @@ const naelthosSkills = [
 
     priority: 0,
     description() {
-      return `Increases max HP by ${this.hpFactor}% of base HP, restores ${this.healAmount} HP, and activates the Rising Sea effect: attacks gain a damage bonus (+${this.bonusPerStack} for every ${this.hpPerStack} current HP, up to ${this.maxBonus}) for ${this.effectDuration} turns.`;
+      return `Naelthos opens the depths of the Primordial Sea and lets them rise through him: his Max HP swells by ${this.hpFactor}% of his base HP and he restores ${this.healAmount} HP.
+
+      For ${this.effectDuration} turn(s), the Rising Sea carries every blow he lands: his attacks gain +${this.bonusPerStack} bonus damage for every ${this.hpPerStack} current HP, up to ${this.maxBonus}.`;
     },
     targetSpec: ["self"],
 
     resolve({ user, context = {} }) {
       const { currentTurn } = context;
-      // console.log("ULT EXECUTADA:", user.name, "TURNO:", currentTurn);
 
       const factor = this.hpFactor / 100;
 
@@ -208,7 +205,7 @@ const naelthosSkills = [
         isPermanent: true,
       });
 
-      // 🔮 Applies damage modifier for 3 turns (including current)
+      // Applies the damage modifier for the effect's duration (current turn included).
       user.addDamageModifier({
         id: "rising_sea",
         expiresAtTurn: currentTurn + this.effectDuration,
@@ -217,15 +214,14 @@ const naelthosSkills = [
           const stacks = Math.floor(attacker.HP / this.hpPerStack);
           const bonus = Math.min(stacks * this.bonusPerStack, this.maxBonus);
 
-          const total = baseDamage + bonus;
-          return total;
+          return baseDamage + bonus;
         },
       });
 
       const userName = formatChampionName(user);
       return [
         {
-          log: `${userName} invokes the Primordial Sea! Maximum HP increased; "Rising Sea" effect active this and the next 2 turns.`,
+          log: `${userName} invokes the Primordial Sea! Max HP increased; the <b>Rising Sea</b> carries his attacks for ${this.effectDuration} turn(s).`,
         },
       ];
     },

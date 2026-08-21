@@ -9,7 +9,9 @@ export default {
   defBonus: 10,
 
   description() {
-    return `Whenever Gryskarchu restores HP to an ally, he restores ${this.selfHeal} HP himself. Any excess HP restored this way is converted into permanent Max HP. If the ally was below ${this.hpThreshold}% HP, Gryskarchu gains +${this.defBonus} Defense.`;
+    return `Life given never leaves Gryskarchu. Whenever he restores HP to an ally, the same current runs back through him and he restores ${this.selfHeal} HP himself; anything the wound cannot hold spills over into permanent Max HP.
+
+    If the ally was below ${this.hpThreshold}% HP, the earth braces him in return and he gains +${this.defBonus} permanent Defense.`;
   },
 
   hookScope: {

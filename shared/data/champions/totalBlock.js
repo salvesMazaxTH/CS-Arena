@@ -1,22 +1,22 @@
-// Centralização do Total block (ranged global)
+// Centralized Total Block (global)
 import { formatChampionName } from "../../ui/formatters.js";
 
 const totalBlock = {
   key: "total_block",
-  name: "Total block",
+  name: "Total Block",
   priority: 5,
   effectDuration: 1,
   description() {
-    return `\n Total block genérico, físico e à distância. Anula totalmente o próximo dano recebido e todos os efeitos de status neste turno.`;
+    return `\n The champion braces completely: the next instance of damage taken is fully negated, along with every negative status effect this turn.`;
   },
   targetSpec: ["self"],
   resolve({ user, context = {} }) {
     user.runtime.hookEffects ??= [];
     user.runtime.totalBlockStreak ??= 0;
 
-    // Progressão geométrica base 2: 100%, 50%, 25%, 12.5%, ...
+    // Geometric progression, base 2: 100%, 50%, 25%, 12.5%, ...
     console.log(
-      `[totalBlock debug] ${formatChampionName(user)} tem uma streak atual de ${user.runtime.totalBlockStreak}.`,
+      `[totalBlock debug] ${formatChampionName(user)} has a current streak of ${user.runtime.totalBlockStreak}.`,
     );
     const streak = user.runtime.totalBlockStreak;
     const chance = 1 / Math.pow(2, streak);
@@ -29,7 +29,7 @@ const totalBlock = {
     if (!success) {
       user.runtime.totalBlockStreak = 0;
 
-      const failMessage = `${formatChampionName(user)} tentou usar <b>Total block</b>, mas falhou.`;
+      const failMessage = `${formatChampionName(user)} tries to use <b>Total Block</b>, but fails.`;
 
       context.registerDialog?.({
         message: failMessage,
@@ -56,14 +56,14 @@ const totalBlock = {
       },
 
       onDamageIncoming({ defender }) {
-        // remover depois de anular o primeiro dano
+        // Remove the effect once the first instance of damage is negated.
         user.runtime.hookEffects = user.runtime.hookEffects.filter(
           (e) => e.key !== "total_block_effect",
         );
         return {
           cancel: true,
           immune: true,
-          message: `${formatChampionName(defender)} bloqueou o ataque com <b>Total block</b>!`,
+          message: `${formatChampionName(defender)} blocks the attack with <b>Total Block</b>!`,
         };
       },
 
@@ -71,7 +71,7 @@ const totalBlock = {
         if (statusEffect.type !== "debuff") return;
         return {
           cancel: true,
-          message: `${formatChampionName(target)} bloqueou um efeito negativo com <b>Total block</b>!`,
+          message: `${formatChampionName(target)} blocks a negative effect with <b>Total Block</b>!`,
         };
       },
 
@@ -79,7 +79,7 @@ const totalBlock = {
         if (context.currentTurn !== owner.runtime.lastTotalBlockTurn) {
           owner.runtime.totalBlockStreak = 0;
           console.log(
-            `[totalBlock debug] ${owner.name} não usou Total block neste turno. Basic Block Streak resetada.`,
+            `[totalBlock debug] ${owner.name} did not use Total Block this turn. Streak reset.`,
           );
         }
       },
@@ -89,7 +89,7 @@ const totalBlock = {
     user.runtime.lastTotalBlockTurn = context.currentTurn;
 
     return {
-      message: `${formatChampionName(user)} usou <b>Total block</b> e está protegido contra o próximo ataque!`,
+      message: `${formatChampionName(user)} uses <b>Total Block</b> and is protected against the next attack!`,
     };
   },
 };

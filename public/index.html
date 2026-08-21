@@ -59,6 +59,9 @@
             <button id="skip-slot-btn" disabled>
               <i class="bx bx-skip-next"></i> Skip slot
             </button>
+            <button id="end-turn-btn" class="end-turn-btn hidden" type="button">
+              <i class="bx bx-check"></i> End turn
+            </button>
           </div>
 
           <div class="game-controls" aria-label="General match settings">
@@ -135,6 +138,43 @@
           <div id="firstChoiceChips" class="first-choice-chips"></div>
           <div class="first-choice-actions">
             <button id="firstChoiceCancel" class="btn">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unused line-up summon reminder, raised when the player is about to end
+           the turn while a summon is still available to them -->
+      <div
+        id="summonReminderOverlay"
+        class="summon-reminder-overlay hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="summonReminderTitle"
+      >
+        <div class="summon-reminder-dialog">
+          <span class="summon-reminder-eyebrow">Line-up reserve</span>
+          <h2 id="summonReminderTitle" class="summon-reminder-title">
+            You still have a summon this turn
+          </h2>
+          <p class="summon-reminder-subtitle">
+            One champion may enter the battlefield per turn. Choose one, or end
+            the turn without reinforcements.
+          </p>
+
+          <div
+            id="summonReminderChips"
+            class="summon-reminder-chips"
+            role="list"
+          ></div>
+
+          <div class="summon-reminder-actions">
+            <button
+              id="summonReminderDismiss"
+              class="summon-reminder-dismiss"
+              type="button"
+            >
+              End turn anyway
+            </button>
           </div>
         </div>
       </div>

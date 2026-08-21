@@ -238,7 +238,62 @@ function logTurnEvent(eventType, eventData) {
 //  SERIALIZAÇÃO DO ESTADO
 // ============================================================
 
-function getGameState(extraChampions = []) {
+/**
+ * Whether a team can still summon a line-up champion this turn, and which of its
+ * reserve champions would actually be accepted right now.
+ *
+ * Mirrors the rules enforced by the "summonFromLineup" handler so the client can
+ * remind the player about an unused summon without re-deriving them and drifting.
+ */
+function getLineupSummonAvailability(team) {
+  if (match.getCurrentTurn() === 1 || match.hasSummonedThisTurn(team)) {
+    return { canSummon: false, champions: [] };
+  }
+
+  const reserve = match.combat.reserveQueues.get(team) || [];
+
+  const champions = reserve.filter((championKey) => {
+    const baseData = championDB[championKey];
+    if (!baseData) return false;
+
+    return match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM, {
+      entityType: baseData.entityType ?? "champion",
+    });
+  });
+
+  return { canSummon: champions.length > 0, champions };
+}
+
+/**
+ * Champions that entered the field this turn and must stay concealed from the
+ * opposing player until the turn is locked and resolution begins — knowing about
+ * a reinforcement while actions are still being chosen is privileged information.
+ *
+ * Concealment lives in the payload rather than in the emit sites: any broadcast
+ * that happens to fire mid-turn (a disconnect, an emblem sync, a debug reset)
+ * would otherwise reveal them, which is why the leak had no obvious pattern.
+ */
+const concealedSummonIds = new Set();
+
+/** Reveals every concealed summon to everyone. Called when the turn locks. */
+function revealConcealedSummons() {
+  concealedSummonIds.clear();
+}
+
+/** A viewer sees their own team in full; everyone else waits for the reveal. */
+function isConcealedFromViewer(serializedChampion, viewerTeam) {
+  if (!concealedSummonIds.has(serializedChampion?.id)) return false;
+  return viewerTeam == null || serializedChampion.team !== viewerTeam;
+}
+
+/**
+ * Serializes the match state from one viewer's perspective.
+ *
+ * @param {object[]} [extraChampions] Champions to force into the payload (e.g. just-killed ones).
+ * @param {object}   [options]
+ * @param {number|null} [options.viewerTeam] Team of the recipient; null for spectators.
+ */
+function getGameState(extraChampions = [], { viewerTeam = null } = {}) {
   const champions = Array.from(match.combat.activeChampions.values()).map((c) =>
     c.serialize(),
   );
@@ -250,12 +305,18 @@ function getGameState(extraChampions = []) {
     }
   }
 
+  const visibleChampions = concealedSummonIds.size
+    ? champions.filter((c) => !isConcealedFromViewer(c, viewerTeam))
+    : champions;
+
   // Roster completo (8 campeões) de cada time, para exibição das lineup banners no cliente
   const lineups = {};
   const playerEmblems = {};
+  const lineupSummons = {};
   for (const player of match.players) {
     if (!player) continue;
     lineups[player.team] = player.selectedChampionKeys || [];
+    lineupSummons[player.team] = getLineupSummonAvailability(player.team);
     playerEmblems[player.team] = Array.isArray(player.emblems)
       ? player.emblems
           .map((emblem) => (typeof emblem === "string" ? emblem : emblem?.key))
@@ -264,11 +325,38 @@ function getGameState(extraChampions = []) {
   }
 
   return {
-    champions,
+    champions: visibleChampions,
     currentTurn: match.combat.currentTurn,
     lineups,
     playerEmblems,
+    lineupSummons,
   };
+}
+
+/** Team of the player behind a socket, or null when the socket is not playing. */
+function getViewerTeam(socketId) {
+  const slot = match.getSlotBySocket(socketId);
+  if (slot === undefined) return null;
+  return match.getPlayer(slot)?.team ?? null;
+}
+
+/**
+ * Sends the game state to every connected socket, tailored to what that viewer
+ * is allowed to know. Use this instead of io.emit("gameStateUpdate", ...) so a
+ * concealed summon can never leak through an unrelated broadcast.
+ */
+function broadcastGameState(extraChampions = []) {
+  if (concealedSummonIds.size === 0) {
+    io.emit("gameStateUpdate", getGameState(extraChampions));
+    return;
+  }
+
+  for (const [socketId, socket] of io.sockets.sockets) {
+    socket.emit(
+      "gameStateUpdate",
+      getGameState(extraChampions, { viewerTeam: getViewerTeam(socketId) }),
+    );
+  }
 }
 
 // ============================================================
@@ -413,15 +501,15 @@ function processChampionMutationRequest(
 }
 
 /**
- * Cria, registra e (opcionalmente) notifica os clientes de um novo campeão.
+ * Creates, registers and (optionally) notifies the clients of a new champion.
  *
  * @param {Object}  opts
- * @param {string}  opts.championKey   – chave no championDB
- * @param {number}  opts.team          – 1 ou 2
- * @param {number|null}  [opts.combatSlot]  – slot explícito; se omitido, encontra o próximo livre
- * @param {boolean} [opts.trackSnapshot=true]  – se registra no combatSnapshot (false na montagem inicial)
- * @param {boolean} [opts.emit=false]          – se emite "championAdded" para os clientes
- * @returns {Champion|null} a instância criada, ou null se impossível (time cheio ou dados inválidos)
+ * @param {string}  opts.championKey   – key in championDB
+ * @param {number}  opts.team          – 1 or 2
+ * @param {number|null}  [opts.combatSlot]  – explicit slot; when omitted, the next free one is used
+ * @param {boolean} [opts.trackSnapshot=true]  – whether to record it in combatSnapshot (false during initial setup)
+ * @param {boolean} [opts.emit=false]          – whether to emit "championAdded" to the clients
+ * @returns {Champion|null} the created instance, or null when impossible (team full or invalid data)
  */
 function spawnChampion({
   championKey,
@@ -432,15 +520,49 @@ function spawnChampion({
   spawnProtection = true,
 } = {}) {
   const baseData = championDB[championKey];
-  if (!baseData) return null;
+  if (!baseData) {
+    console.warn(`[SPAWN] Aborted: "${championKey}" is not in the championDB.`);
+    return null;
+  }
 
-  // --- Checar se o time pode receber mais um campeão vivo ---
-  if (!match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM)) return null;
+  const entityType = baseData.entityType ?? "champion";
 
-  // --- Resolver combatSlot ---
+  // --- Check whether the team can take one more living champion ---
+  // Minions go straight through: the field cap only counts champions.
+  if (!match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM, { entityType })) {
+    console.warn(
+      `[SPAWN] Aborted: team ${team} already fields ${ACTIVE_PER_TEAM} champions (attempted: ${championKey}).`,
+    );
+    return null;
+  }
+
+  // --- Resolve combatSlot ---
   if (!Number.isInteger(combatSlot)) {
-    combatSlot = match.combat.getNextAvailableSlot(team, ACTIVE_PER_TEAM);
-    if (combatSlot === null) return null; // sem slot livre
+    combatSlot = match.combat.getNextAvailableSlot(team, ACTIVE_PER_TEAM, {
+      entityType,
+    });
+
+    if (combatSlot === null) {
+      console.warn(
+        `[SPAWN] Aborted: no free slot on team ${team} (attempted: ${championKey}).`,
+      );
+      return null; // no free slot
+    }
+  } else if (match.combat.getChampionAtSlot(team, combatSlot)) {
+    // The explicit slot (e.g. Jeff's revival) is already taken by another
+    // entity — relocate instead of stacking two entities on the same spot.
+    const fallbackSlot = match.combat.getNextAvailableSlot(
+      team,
+      ACTIVE_PER_TEAM,
+      { entityType },
+    );
+
+    console.warn(
+      `[SPAWN] Slot ${combatSlot} on team ${team} is taken; relocating ${championKey} to ${fallbackSlot}.`,
+    );
+
+    if (fallbackSlot === null) return null;
+    combatSlot = fallbackSlot;
   }
 
   const id = generateId(championKey);
@@ -464,7 +586,7 @@ function spawnChampion({
 
     const winterPath = `/assets/portraits/${baseName}_curtindo_o_inverno.webp`;
 
-    // caminho físico no disco (ajusta se necessário)
+    // Physical path on disk (adjust if needed).
     const absolutePath = path.join(
       process.cwd(),
       "public",
@@ -473,7 +595,7 @@ function spawnChampion({
       `${baseName}_curtindo_o_inverno.webp`,
     );
 
-    // 👇 só aplica se existir
+    // 👇 only applied when the file actually exists
     if (fs.existsSync(absolutePath)) {
       champion.portrait = winterPath;
     }
@@ -483,7 +605,7 @@ function spawnChampion({
 
   newChampion.championKey = championKey;
   /* console.log(
-    `[SPAWN] ${newChampion.name} (ID: ${id}) no time ${team}, no slot ${combatSlot}, com championKey ${championKey}`,
+    `[SPAWN] ${newChampion.name} (ID: ${id}) on team ${team}, slot ${combatSlot}, with championKey ${championKey}`,
   ); */
 
   match.combat.registerChampion(newChampion, { trackSnapshot });
@@ -491,7 +613,10 @@ function spawnChampion({
   emitCombatEvent(
     "onChampionAdded",
     {
-      owner: newChampion,
+      // Must NOT be named "owner": emitCombatEvent overwrites that key with the
+      // hook's own owner (the champion on the champion path, the Player on the
+      // emblem path), so emblem hooks could never see the champion being added.
+      champion: newChampion,
       context: {
         currentTurn: match.combat.currentTurn,
         allChampions: match.combat.activeChampions,
@@ -506,7 +631,7 @@ function spawnChampion({
   );
 
   if (!trackSnapshot) {
-    // Montagem inicial — snapshot manual
+    // Initial setup — manual snapshot.
     match.combat.combatSnapshot.push({
       championKey,
       id,
@@ -516,14 +641,14 @@ function spawnChampion({
   }
 
   if (emitState) {
-    io.emit("gameStateUpdate", getGameState());
+    broadcastGameState();
   }
 
   return newChampion;
 }
 
-/** Instancia e registra campeões de uma lista de keys em um time (fase de seleção inicial). */
-/** Apenas os ACTIVE_PER_TEAM primeiros entram em campo; os restantes ficam na fila de reserva. */
+/** Instantiates and registers champions from a list of keys into a team (initial selection phase). */
+/** Only the first ACTIVE_PER_TEAM take the field; the rest go to the reserve queue. */
 function assignChampionsToTeam(team, championKeys) {
   championKeys.slice(0, ACTIVE_PER_TEAM).forEach((championKey, index) => {
     if (!championKey) return;
@@ -573,7 +698,7 @@ function clearTemporaryEffectsOnSwitch(_champion) {
 function checkAllTeamsSelected() {
   if (match.isTeamSelected(0) && match.isTeamSelected(1)) {
     io.emit("allTeamsSelected");
-    io.emit("gameStateUpdate", getGameState());
+    broadcastGameState();
     return true;
   }
   return false;
@@ -622,7 +747,7 @@ function emitChampionDeath(deathResult) {
     });
   }
 
-  io.emit("gameStateUpdate", state);
+  broadcastGameState(champ ? [champ] : []);
   io.emit("championRemoved", deathResult.championId);
 }
 
@@ -966,9 +1091,10 @@ function emitGameOverIfNeeded({ checkTurnLimit = false } = {}) {
 function handleEndTurn() {
   io.emit("turnLocked");
 
-  // Revela imediatamente os campeões da line-up materializados antes da
-  // resolução das ações deste turno.
-  io.emit("gameStateUpdate", getGameState());
+  // Nobody can act any more, so this is the moment the line-up summons made
+  // during the turn become public — right before their actions are resolved.
+  revealConcealedSummons();
+  broadcastGameState();
 
   // 1. Resolver todas as ações via TurnResolver (switches têm prioridade 6 — saem primeiro)
   const resolver = new TurnResolver(match, editMode, {
@@ -1032,7 +1158,7 @@ function handleEndTurn() {
       processChampionMutationRequest(req);
     }
 
-    io.emit("gameStateUpdate", getGameState());
+    broadcastGameState();
   }
 
   // 4. Hooks onTurnEnd
@@ -1067,18 +1193,44 @@ function handleEndTurn() {
 function handleScheduledEffect(effect, context) {
   switch (effect.type) {
     case "spawnChampion": {
-      // Se for revival, remova o antigo Jeff antes de spawnar o novo
+      // On a revival, remove the old instance before spawning the new one.
       if (effect.payload.reviveFrom && effect.payload.reviveFrom.id) {
         match.combat.removeChampion(effect.payload.reviveFrom.id);
       }
-      // Garante que o novo Jeff nasce no mesmo combatSlot
+      // Keeps the revived champion on its original combatSlot.
       const spawned = spawnChampion({
         ...effect.payload,
         combatSlot: effect.payload.combatSlot ?? null,
       });
-      // Suporte para transferência de estado do Jeff antigo
-      if (spawned && typeof effect.payload.onSpawn === "function") {
-        // Se reviveFrom foi passado, injeta como 3º argumento
+
+      if (!spawned) {
+        // Field full (or no slot left): the scheduled entry is simply lost.
+        // That is the intended rule, but it must never pass unnoticed.
+        console.warn(
+          `[SCHEDULED SPAWN] Failed for ${effect.payload.championKey} (team ${effect.payload.team}).`,
+          effect.payload.reviveFrom
+            ? "It was a revival — the champion was lost."
+            : "",
+        );
+
+        if (effect.payload.reviveFrom && context?.registerDialog) {
+          context.registerDialog({
+            message: `${formatChampionName(
+              effect.payload.reviveFrom,
+            )} found no room on the battlefield and could not return.`,
+            sourceId: null,
+            targetId: null,
+          });
+        }
+
+        // Without a spawn there is no return message to show.
+        effect.dialog = null;
+        break;
+      }
+
+      // Supports state transfer from the previous instance.
+      if (typeof effect.payload.onSpawn === "function") {
+        // When reviveFrom is present, it is injected as the 3rd argument.
         effect.payload.onSpawn(
           spawned,
           context,
@@ -1261,7 +1413,7 @@ function handleStartTurn() {
   });
 
   io.emit("turnUpdate", match.combat.currentTurn);
-  io.emit("gameStateUpdate", getGameState());
+  broadcastGameState();
 }
 
 // ============================================================
@@ -1270,6 +1422,7 @@ function handleStartTurn() {
 
 /** Reseta completamente o estado do jogo (todos desconectados ou timeout). */
 function resetGameState() {
+  revealConcealedSummons();
   match.clearPlayers();
 }
 
@@ -1277,6 +1430,7 @@ function resetGameState() {
 function resetCombatState() {
   const snapshot = [...match.combat.combatSnapshot];
 
+  revealConcealedSummons();
   match.combat.reset();
 
   for (const champ of snapshot) {
@@ -1310,7 +1464,7 @@ io.on("connection", (socket) => {
   // --- Socket handler para reset de combate (debug) ---
   socket.on("debugResetCombat", () => {
     resetCombatState();
-    io.emit("gameStateUpdate", getGameState());
+    broadcastGameState();
   });
 
   // --- Socket handler para início de turno após animações ---
@@ -1386,7 +1540,10 @@ io.on("connection", (socket) => {
     });
     io.emit("playerCountUpdate", match.getConnectedCount());
     io.emit("playerNamesUpdate", match.getPlayerNamesEntries());
-    socket.emit("gameStateUpdate", getGameState());
+    socket.emit(
+      "gameStateUpdate",
+      getGameState([], { viewerTeam: getViewerTeam(socket.id) }),
+    );
     // io.emit("switchesUpdate", {
     //   team1: match.players[0]?.remainingSwitches ?? 0,
     //   team2: match.players[1]?.remainingSwitches ?? 0,
@@ -1559,7 +1716,7 @@ io.on("connection", (socket) => {
     const { choices } = match.finalizeFirstChampionChoices(spawnChampion);
 
     io.emit("firstChampionChoicesFinalized", { choices });
-    io.emit("gameStateUpdate", getGameState());
+    broadcastGameState();
 
     // Inicia o primeiro turno
     setTimeout(() => {
@@ -1612,7 +1769,7 @@ io.on("connection", (socket) => {
     // Nenhum jogador restante — reset total
     if (connectedCount === 0) {
       resetGameState();
-      io.emit("gameStateUpdate", getGameState());
+      broadcastGameState();
       return;
     }
 
@@ -1638,7 +1795,7 @@ io.on("connection", (socket) => {
         resetGameState();
         io.emit("playerCountUpdate", match.getConnectedCount());
         io.emit("playerNamesUpdate", match.getPlayerNamesEntries());
-        io.emit("gameStateUpdate", getGameState());
+        broadcastGameState();
       }, DISCONNECT_TIMEOUT);
 
       match.setDisconnectionTimer(disconnectedSlot, timer);
@@ -1702,7 +1859,7 @@ io.on("connection", (socket) => {
     socket.emit("playerEmblemsUpdated", {
       emblems: player.emblems.map((emblem) => emblem.key),
     });
-    io.emit("gameStateUpdate", getGameState());
+    broadcastGameState();
   });
 
   // =============================
@@ -1769,7 +1926,7 @@ io.on("connection", (socket) => {
   });
 
   // =============================
-  //  summonFromLineup (invoca um campeão da line-up para o campo)
+  //  summonFromLineup (brings a line-up champion onto the field)
   // =============================
   socket.on("summonFromLineup", ({ championKey } = {}) => {
     const playerSlot = match.getSlotBySocket(socket.id);
@@ -1778,18 +1935,18 @@ io.on("connection", (socket) => {
 
     const team = player.team;
 
-    // Invocação da line-up bloqueada no primeiro turno.
+    // Line-up summons are blocked on the first turn.
     if (match.getCurrentTurn() === 1) {
       return socket.emit(
         "actionFailed",
-        "Você não pode invocar campeões da line-up no primeiro turno.",
+        "You cannot summon line-up champions on the first turn.",
       );
     }
 
     if (match.hasSummonedThisTurn(team)) {
       return socket.emit(
         "actionFailed",
-        "Você já invocou um campeão da line-up neste turno.",
+        "You have already summoned a line-up champion this turn.",
       );
     }
 
@@ -1797,14 +1954,21 @@ io.on("connection", (socket) => {
     if (!championKey || !reserve.includes(championKey)) {
       return socket.emit(
         "actionFailed",
-        "Esse campeão não está disponível para ser invocado.",
+        "That champion is not available to be summoned.",
       );
     }
 
-    if (!match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM)) {
+    // The field cap counts champions only — minions are always allowed in.
+    const summonEntityType = championDB[championKey]?.entityType ?? "champion";
+
+    if (
+      !match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM, {
+        entityType: summonEntityType,
+      })
+    ) {
       return socket.emit(
         "actionFailed",
-        "Não há espaço livre no campo para invocar mais campeões.",
+        "There is no free space on the battlefield to summon more champions.",
       );
     }
 
@@ -1815,19 +1979,22 @@ io.on("connection", (socket) => {
       emitState: false,
     });
     if (!spawned) {
-      return socket.emit(
-        "actionFailed",
-        "Não foi possível invocar este campeão.",
-      );
+      return socket.emit("actionFailed", "This champion could not be summoned.");
     }
-
-    socket.emit("gameStateUpdate", getGameState());
 
     match.combat.reserveQueues.set(
       team,
       reserve.filter((key) => key !== championKey),
     );
     match.markSummonedThisTurn(team);
+
+    // The opponent is still choosing actions, so this reinforcement stays hidden
+    // from them until the turn locks and resolution begins.
+    concealedSummonIds.add(spawned.id);
+
+    // Emitted only after the bookkeeping above, so the payload's summon
+    // availability already reflects this summon.
+    broadcastGameState();
 
     logTurnEvent("championSummoned", {
       championId: spawned.id,

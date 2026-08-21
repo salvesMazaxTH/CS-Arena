@@ -627,6 +627,7 @@ const disconnectionMessage = document.getElementById("disconnection-message");
 // --- Main content (arena) ---
 const mainContent = document.getElementById("main-content");
 const skipSlotBtn = document.querySelector("#skip-slot-btn");
+const endTurnBtn = document.querySelector("#end-turn-btn");
 const combatDialog = document.getElementById("combat-dialog");
 const combatDialogText = document.getElementById("combat-dialog-text");
 
@@ -1904,11 +1905,159 @@ function requestSummonFromLineup(chip) {
     logCombat("This champion has already been summoned this match.");
     return;
   }
-  if (pendingSummonChampionKey) return;
+
+  emitLineupSummon(championKey);
+}
+
+/** Sends a line-up summon request, unless one is already awaiting a server reply. */
+/** Returns whether the request was actually sent. */
+function emitLineupSummon(championKey) {
+  if (!championKey || pendingSummonChampionKey) return false;
 
   pendingSummonChampionKey = championKey;
   socket.emit("summonFromLineup", { championKey });
+  return true;
 }
+
+// ============================================================
+//  UNUSED SUMMON REMINDER
+// ============================================================
+// Raised when the player is about to end a turn while a line-up summon is still
+// available. Whether one is available is decided by the server and shipped with
+// every gameStateUpdate; the client only decides when to raise the reminder.
+
+let lineupSummonState = { canSummon: false, champions: [] };
+let summonReminderEndsTurn = false;
+
+const summonReminderOverlay = document.getElementById("summonReminderOverlay");
+const summonReminderChips = document.getElementById("summonReminderChips");
+const summonReminderDismiss = document.getElementById("summonReminderDismiss");
+
+function isSummonReminderOpen() {
+  return summonReminderOverlay?.classList.contains("active") === true;
+}
+
+/** Line-up champions the server would accept as a summon right now. */
+function getSummonableLineupChampions() {
+  if (!lineupSummonState?.canSummon) return [];
+  return (lineupSummonState.champions || []).filter((key) => championDB[key]);
+}
+
+function openSummonReminder(championKeys) {
+  if (!summonReminderOverlay || !summonReminderChips) return;
+
+  summonReminderChips.classList.remove("is-busy");
+  summonReminderChips.innerHTML = "";
+
+  championKeys.forEach((championKey) => {
+    const champion = championDB[championKey];
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "summon-reminder-chip";
+    button.dataset.championKey = championKey;
+    button.setAttribute("role", "listitem");
+
+    button.innerHTML = `
+      <span class="lineup-chip">${renderLineupChipContent(champion, 0)}</span>
+      <span class="summon-reminder-chip-name">${escapeHtml(champion.name || championKey)}</span>
+    `;
+
+    button.addEventListener("click", () => summonFromReminder(button));
+    summonReminderChips.appendChild(button);
+  });
+
+  summonReminderOverlay.classList.remove("hidden");
+  // Force a reflow so the dialog animates in instead of appearing already opaque.
+  void summonReminderOverlay.offsetWidth;
+  summonReminderOverlay.classList.add("active");
+
+  summonReminderChips.querySelector(".summon-reminder-chip")?.focus();
+}
+
+function closeSummonReminder() {
+  if (!summonReminderOverlay) return;
+
+  summonReminderOverlay.classList.remove("active");
+  summonReminderChips?.classList.remove("is-busy");
+  summonReminderEndsTurn = false;
+
+  // Kept in the layout until the fade-out ends, then taken out of the page.
+  window.setTimeout(() => {
+    if (!isSummonReminderOpen()) summonReminderOverlay.classList.add("hidden");
+  }, 300);
+}
+
+/** Summons the picked champion; the turn is ended once the server confirms it. */
+function summonFromReminder(chipButton) {
+  const championKey = chipButton?.dataset.championKey;
+  if (!emitLineupSummon(championKey)) return;
+
+  summonReminderEndsTurn = true;
+
+  summonReminderChips.classList.add("is-busy");
+  chipButton.classList.add("is-pending");
+}
+
+/** Called once the server confirms (or rejects) a summon requested from the reminder. */
+function resolveSummonReminderRequest({ summoned }) {
+  if (!isSummonReminderOpen()) {
+    summonReminderEndsTurn = false;
+    return;
+  }
+
+  if (!summoned) {
+    // Rejected: hand the dialog back to the player instead of ending the turn.
+    summonReminderEndsTurn = false;
+    summonReminderChips?.classList.remove("is-busy");
+    summonReminderChips
+      ?.querySelector(".summon-reminder-chip.is-pending")
+      ?.classList.remove("is-pending");
+    return;
+  }
+
+  const shouldEndTurn = summonReminderEndsTurn;
+  closeSummonReminder();
+  if (shouldEndTurn) endTurn();
+}
+
+/**
+ * End-of-turn gate: ends the turn straight away, unless the player still has a
+ * line-up summon available — in that case the reminder is raised first.
+ */
+function requestEndTurn() {
+  if (hasConfirmedEndTurn || isSummonReminderOpen()) return;
+
+  const summonable = getSummonableLineupChampions();
+  console.log("[END TURN] Line-up summon availability:", {
+    canSummon: lineupSummonState?.canSummon === true,
+    champions: summonable,
+  });
+
+  if (!summonable.length) {
+    endTurn();
+    return;
+  }
+
+  openSummonReminder(summonable);
+}
+
+summonReminderDismiss?.addEventListener("click", () => {
+  closeSummonReminder();
+  endTurn();
+});
+
+// Dismissing without choosing leaves the turn open — the End turn button in the
+// header is the way back out, so the player is never cornered by the reminder.
+summonReminderOverlay?.addEventListener("click", (event) => {
+  if (event.target === summonReminderOverlay) closeSummonReminder();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && isSummonReminderOpen()) closeSummonReminder();
+});
+
+endTurnBtn?.addEventListener("click", () => requestEndTurn());
 
 function openFirstChoiceOverlay() {
   if (!firstChoiceOverlay) return;
@@ -2744,6 +2893,21 @@ socket.on("gameStateUpdate", (gameState) => {
     selectedEmblemKeys = [...playerEmblems];
   }
 
+  if (playerTeam !== null) {
+    if (!gameState?.lineupSummons) {
+      // Older server payload: without it the client can never tell that a summon
+      // is still available, so the end-of-turn reminder would stay silent.
+      console.warn(
+        "[GAME STATE] Payload has no lineupSummons — is the server running the current build?",
+      );
+    }
+
+    lineupSummonState = gameState?.lineupSummons?.[playerTeam] ?? {
+      canSummon: false,
+      champions: [],
+    };
+  }
+
   syncMaterializedLineupChampions(gameState?.champions || []);
   renderLineupBanners(gameState?.lineups);
   renderPlayerEmblemStrip();
@@ -2757,6 +2921,7 @@ socket.on("gameStateUpdate", (gameState) => {
   ) {
     pendingSummonChampionKey = null;
     renderLineupBanner();
+    resolveSummonReminderRequest({ summoned: true });
   }
 });
 
@@ -2767,12 +2932,14 @@ socket.on("scoreUpdate", (score) => {
 socket.on("actionFailed", (message) => {
   console.warn("[ActionFailed]", message);
   pendingSummonChampionKey = null;
+  resolveSummonReminderRequest({ summoned: false });
   combatAnimations.handleActionFailed(message);
 });
 
 socket.on("turnLocked", () => {
   document.getElementById("undo-actions-btn").disabled = true;
   hasConfirmedEndTurn = false;
+  closeSummonReminder();
   removeActionBar();
 });
 
@@ -2783,6 +2950,7 @@ socket.on("turnUpdate", (turn) => {
 socket.on("gameOver", (data) => {
   combatAnimations.handleGameOver(data);
   gameEnded = true;
+  closeSummonReminder();
 
   // Stop music when game is over
   if (audioManager.stopMusic) audioManager.stopMusic();
@@ -2812,6 +2980,7 @@ function applyTurnUpdate(turn) {
   updateTurnDisplay(currentTurn);
   hasConfirmedEndTurn = false;
   pendingSummonChampionKey = null;
+  closeSummonReminder();
   renderLineupBanner();
 
   activeChampions.forEach((champion) => champion.resetActionStatus());
@@ -2911,12 +3080,9 @@ function updateTurnDisplay(turn) {
 }
 
 function endTurn() {
-  if (hasConfirmedEndTurn) {
-    alert(
-      "You have already confirmed the end of the turn. Waiting for the other player.",
-    );
-    return;
-  }
+  // Reached again by any state refresh that rebuilds an already-finished action
+  // bar, so a repeat call is normal and stays silent.
+  if (hasConfirmedEndTurn) return;
 
   socket.emit("endTurn");
   hasConfirmedEndTurn = true;
@@ -3029,6 +3195,12 @@ function getActionBarChampion() {
 
 function isChampionAutoSkippedInActionBar(champion) {
   if (!champion || !champion.alive) return true;
+  // A mid-turn summon refreshes the game state, which rebuilds the action bar
+  // from slot 0 — champions that already locked in an action must not be asked
+  // again, or the bar would rewind on every summon.
+  if (!editMode.actMultipleTimesPerTurn && champion.hasActedThisTurn === true) {
+    return true;
+  }
   if (champion.actionBlockedByHardCC === true) return true;
   return champion.isActionBlockedByHardCC?.() === true;
 }
@@ -3043,13 +3215,27 @@ function initActionBar() {
     .map((c) => c.id);
 
   currentActionBarSlot = 0;
-  showActionBarSlot();
+  // A rebuild is never allowed to end the turn on the player's behalf: every
+  // state refresh re-runs this, and the previous turn's acted flags are still
+  // set while the resolution is being animated, which would silently confirm
+  // the end of the turn (or pop the summon reminder) with nobody clicking.
+  showActionBarSlot({ playerAdvanced: false });
 }
 
-function showActionBarSlot() {
+/**
+ * @param {{ playerAdvanced?: boolean }} options - playerAdvanced is true only
+ *   when the bar moved on because the player locked in or skipped a slot, which
+ *   is the only situation where running out of slots may end the turn.
+ */
+function showActionBarSlot({ playerAdvanced = true } = {}) {
   removeActionBar();
   if (currentActionBarSlot >= actionBarSlotOrder.length) {
-    if (actionBarSlotOrder.length > 0) endTurn();
+    if (actionBarSlotOrder.length > 0) {
+      if (playerAdvanced) requestEndTurn();
+      // Kept available while the turn is still open, so a dismissed summon
+      // reminder always has a way back to ending the turn.
+      setEndTurnButtonVisible(!hasConfirmedEndTurn);
+    }
     return;
   }
 
@@ -3058,7 +3244,7 @@ function showActionBarSlot() {
 
   if (isChampionAutoSkippedInActionBar(champion)) {
     currentActionBarSlot++;
-    showActionBarSlot();
+    showActionBarSlot({ playerAdvanced });
     return;
   }
 
@@ -3190,6 +3376,10 @@ function skipCurrentSlot() {
   showActionBarSlot();
 }
 
+function setEndTurnButtonVisible(visible) {
+  endTurnBtn?.classList.toggle("hidden", !visible);
+}
+
 function removeActionBar() {
   removeSkillOverlay();
 
@@ -3198,6 +3388,7 @@ function removeActionBar() {
     actionBarEl = null;
   }
   if (skipSlotBtn) skipSlotBtn.disabled = true;
+  setEndTurnButtonVisible(false);
   // Rebuild reserve display disabled.
   // if (playerTeam !== null) rebuildReserveDisplay(playerTeam);
 }

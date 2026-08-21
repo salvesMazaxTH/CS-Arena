@@ -31,30 +31,27 @@ export const marksmanPrecision = {
     return "Your Marksman class champions gain +20 Attack and +8% Critical Chance.";
   },
 
-  hookScope: {
-    onChampionAdded: "owner",
-  },
-
-  onChampionAdded({ owner, context }) {
-    // Only apply buff to the champion being added
-    if (!owner || owner.team == null) return;
-    if (!isMarksman(owner)) return;
+  onChampionAdded({ champion, owner, context }) {
+    // `owner` is the Player carrying the emblem; `champion` is the one entering.
+    if (!champion || !owner) return;
+    if (champion.team !== owner.team) return;
+    if (!isMarksman(champion)) return;
 
     // Mark that this champion has already received the emblem buff
-    if (owner.runtime?._marksmanPrecisionApplied) return;
+    if (champion.runtime?._marksmanPrecisionApplied) return;
 
-    if (!owner.runtime) owner.runtime = {};
-    owner.runtime._marksmanPrecisionApplied = true;
+    if (!champion.runtime) champion.runtime = {};
+    champion.runtime._marksmanPrecisionApplied = true;
 
     // Apply buff only to this specific champion
-    if (owner.modifyStat) {
-      owner.modifyStat({
+    if (champion.modifyStat) {
+      champion.modifyStat({
         statName: "Attack",
         amount: 20,
         context,
         isPermanent: true,
       });
-      owner.modifyStat({
+      champion.modifyStat({
         statName: "Critical",
         amount: 8,
         context,

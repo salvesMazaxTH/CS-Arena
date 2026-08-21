@@ -4,16 +4,16 @@ import basicShot from "../basicShot.js";
 
 const sereneSkills = [
   // ========================
-  // Disparo Básico (global)
+  // Basic Shot (global)
   // ========================
   { ...basicShot, type: "magical" },
   // ========================
-  // Habilidades Especiais
+  // Special Abilities
   // ========================
 
   {
-    key: "voto_harmonico",
-    name: "Voto Harmônico",
+    key: "harmonic_vow",
+    name: "Harmonic Vow",
     shieldFull: 60,
     shieldReduced: 35,
     hpThreshold: 65,
@@ -21,7 +21,7 @@ const sereneSkills = [
 
     priority: 2,
     description() {
-      return `Concede ${this.shieldFull} de escudo a si mesma ou a um aliado. Se estiver abaixo de ${this.hpThreshold}% do HP máximo, concede ${this.shieldReduced}.`;
+      return `Serene sings a vow of harmony over the chosen ally, wrapping them in ${this.shieldFull} Shield. If her own HP is below ${this.hpThreshold}% of her Max HP, the vow falters and grants only ${this.shieldReduced}.`;
     },
     targetSpec: ["select:ally"],
 
@@ -40,16 +40,16 @@ const sereneSkills = [
       const allyName = formatChampionName(ally);
 
       return {
-        log: `${userName} concedeu ${shieldAmount} de escudo a ${
-          userName === allyName ? "si mesmo" : allyName
+        log: `${userName} grants ${shieldAmount} Shield to ${
+          userName === allyName ? "herself" : allyName
         }.`,
       };
     },
   },
 
   {
-    key: "selo_da_quietude",
-    name: "Selo da Quietude",
+    key: "sigil_of_quietude",
+    name: "Sigil of the Quietude",
     hpDamagePercent: 15,
     stunDuration: 1,
     contact: false,
@@ -57,7 +57,9 @@ const sereneSkills = [
     piercingPercentage: 100,
     priority: 1, // buff: prio +1
     description() {
-      return `Causa dano perfurante (${this.piercingPercentage}% de perfuração) igual a ${this.hpDamagePercent}% do HP máximo do alvo e deixa o alvo {atordoado} por ${this.stunDuration} turno(s). Se usada consecutivamente, a partir do segundo uso, a chance de atordoar é 50%.`;
+      return `Serene sets a sigil upon the chosen target and lets a sliver of the Quietude through it. Where that stillness touches, nothing moves and nothing mends: the target takes piercing damage (${this.piercingPercentage}% piercing) equal to ${this.hpDamagePercent}% of their Max HP and is left stunned for ${this.stunDuration} turn(s).
+
+      No mind stays a stranger to that place for long. From the second consecutive use onward, the Stun only takes hold 50% of the time.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -68,10 +70,10 @@ const sereneSkills = [
       user.runtime.sereneStreak ??= 0;
 
       console.debug(
-        `[Serene:selo_da_quietude] START turn=${context.currentTurn} execIdx=${context.executionIndex ?? "N/A"} user=${user.name} target=${enemy?.name} prevSkill=${previousSkillKey} prevStreak=${user.runtime.sereneStreak}`,
+        `[Serene:sigil_of_the_quietude] START turn=${context.currentTurn} execIdx=${context.executionIndex ?? "N/A"} user=${user.name} target=${enemy?.name} prevSkill=${previousSkillKey} prevStreak=${user.runtime.sereneStreak}`,
       );
 
-      // streak: conta usos consecutivos da própria skill da Serene
+      // Streak: counts consecutive uses of Serene's own skill.
       const isConsecutiveQuietudeUse = previousSkillKey === this.key;
       if (isConsecutiveQuietudeUse) {
         user.runtime.sereneStreak += 1;
@@ -80,7 +82,7 @@ const sereneSkills = [
       }
 
       console.debug(
-        `[Serene:selo_da_quietude] STREAK turn=${context.currentTurn} consecutiveBySkill=${isConsecutiveQuietudeUse} streakNow=${user.runtime.sereneStreak}`,
+        `[Serene:sigil_of_the_quietude] STREAK turn=${context.currentTurn} consecutiveBySkill=${isConsecutiveQuietudeUse} streakNow=${user.runtime.sereneStreak}`,
       );
 
       const baseDamage = enemy.maxHP * (this.hpDamagePercent / 100);
@@ -100,13 +102,13 @@ const sereneSkills = [
       let stunSuccess = true;
       let stunRoll = null;
       if (user.runtime.sereneStreak > 1) {
-        // 50% chance a partir do segundo uso consecutivo
+        // 50% chance from the second consecutive use onward.
         stunRoll = Math.random();
         stunSuccess = stunRoll < 0.5;
       }
 
       console.debug(
-        `[Serene:selo_da_quietude] STUN_CHECK streak=${user.runtime.sereneStreak} roll=${stunRoll ?? "N/A"} success=${stunSuccess} evaded=${Boolean(result?.evaded)} immune=${Boolean(result?.immune)}`,
+        `[Serene:sigil_of_the_quietude] STUN_CHECK streak=${user.runtime.sereneStreak} roll=${stunRoll ?? "N/A"} success=${stunSuccess} evaded=${Boolean(result?.evaded)} immune=${Boolean(result?.immune)}`,
       );
 
       if (!result?.evaded && !result?.immune && stunSuccess) {
@@ -116,29 +118,29 @@ const sereneSkills = [
           context,
         );
         console.debug(
-          `[Serene:selo_da_quietude] APPLY_STUN attempted=true applied=${Boolean(stunned)} target=${enemy?.name}`,
+          `[Serene:sigil_of_the_quietude] APPLY_STUN attempted=true applied=${Boolean(stunned)} target=${enemy?.name}`,
         );
         if (stunned && stunned.log && result?.log) {
-          result.log += `\n${formatChampionName(enemy)} foi atordoado pela Quietude!`;
+          result.log += `\n${formatChampionName(enemy)} is drawn into the Quietude!`;
         } else if (stunned && stunned.log) {
-          result.log = `${formatChampionName(enemy)} foi atordoado pela Quietude!`;
+          result.log = `${formatChampionName(enemy)} is drawn into the Quietude!`;
         }
       } else if (
         user.runtime.sereneStreak > 1 &&
         !result?.evaded &&
         !result?.immune
       ) {
-        // Falhou o stun por chance
+        // The Stun roll failed.
         result.log =
           (result.log || "") +
-          `\n${formatChampionName(enemy)} resistiu ao atordoamento!`;
+          `\n${formatChampionName(enemy)} resists the Stun!`;
         console.debug(
-          `[Serene:selo_da_quietude] APPLY_STUN attempted=true applied=false reason=roll_failed target=${enemy?.name}`,
+          `[Serene:sigil_of_the_quietude] APPLY_STUN attempted=true applied=false reason=roll_failed target=${enemy?.name}`,
         );
       }
 
       console.debug(
-        `[Serene:selo_da_quietude] END turn=${context.currentTurn} streak=${user.runtime.sereneStreak} resultLogPresent=${Boolean(result?.log)}`,
+        `[Serene:sigil_of_the_quietude] END turn=${context.currentTurn} streak=${user.runtime.sereneStreak} resultLogPresent=${Boolean(result?.log)}`,
       );
 
       return result;
@@ -146,8 +148,8 @@ const sereneSkills = [
   },
 
   {
-    key: "epifania_do_limiar",
-    name: "Epifania do Limiar",
+    key: "epiphany_of_the_threshold",
+    name: "Epiphany of the Threshold",
 
     damageReduction: 30,
     reductionDuration: 2,
@@ -163,60 +165,42 @@ const sereneSkills = [
     priority: 4,
 
     description() {
-      return `Serene atinge o Limiar da Existência, concedendo a si mesma e aos aliados ${this.damageReduction}% de redução de dano por ${this.reductionDuration} turnos.
+      return `Serene crosses into the Quietude and stands at the Threshold of Existence, where the newly dead have not yet finished dying. What she carries back settles over her and her allies as ${this.damageReduction}% damage reduction for ${this.reductionDuration} turn(s).
 
-      Enquanto a aura persistir (${this.auraDuration} turnos), o primeiro aliado que sofreria dano letal, em vez disso, sobrevive com ${this.surviveHP} de HP, torna-se imune por ${this.immunityDuration} turno e consome a aura, dissipando-a para todos os aliados.`;
+      While that stillness lingers (${this.auraDuration} turn(s)), the first ally who would take lethal damage is held at the Threshold instead: they survive with ${this.surviveHP} HP and become Immune for ${this.immunityDuration} turn(s), spending the aura and dispelling it for the whole team.`;
     },
 
     targetSpec: ["self"],
     resolve({ user, context = {} }) {
-      // console.log("══════════════════════════════════");
-      // console.log("[SERENE ULT] Epifania do Limiar ativada");
-      // console.log("[SERENE ULT] Usuária:", user.name);
-      // console.log("[SERENE ULT] Turno:", context.currentTurn);
-
       const ownerId = user.id;
 
       const allies = context.aliveChampions.filter((c) => c.team === user.team);
 
-      /* console.log(
-        "[SERENE ULT] Aliados afetados:",
-        allies.map((a) => a.name),
-      );
-      */
-
       const alreadyActive = allies.some((c) =>
-        c.runtime.hookEffects?.some((e) => e.key === "epifania_limiar"),
+        c.runtime.hookEffects?.some((e) => e.key === "epiphany_threshold"),
       );
 
       if (alreadyActive) {
         return {
-          log: `${formatChampionName(user)} tentou invocar o Limiar, mas ele já está ativo...`,
+          log: `${formatChampionName(user)} reaches for the Threshold, but it already stands open...`,
         };
       }
 
       allies.forEach((ally) => {
-        // console.log("──────────────");
-        // console.log("[SERENE ULT] Aplicando proteção em:", ally.name);
-
         ally.applyDamageReduction({
           amount: this.damageReduction,
           duration: this.reductionDuration,
-          source: "epifania",
+          source: "epiphany",
           context,
         });
 
-        /* console.log(
-          `[SERENE ULT] ${ally.name} recebeu ${this.damageReduction}% redução por ${this.reductionDuration} turnos`,
-        );
-        */
         ally.runtime.hookEffects ??= [];
 
         const surviveHP = this.surviveHP;
 
         const effect = {
-          key: "epifania_limiar",
-          group: "epifania",
+          key: "epiphany_threshold",
+          group: "epiphany",
           ownerId,
           expiresAtTurn: context.currentTurn + this.auraDuration,
 
@@ -224,50 +208,27 @@ const sereneSkills = [
             onBeforeDmgTaking: "defender",
           },
 
-          onBeforeDmgTaking({ attacker, defender, owner, damage, context }) {
-            // console.log("════════ EPIFANIA CHECK ════════");
-            // console.log("[EPIFANIA] Hook disparado");
-            // console.log("[EPIFANIA] Alvo:", owner.name);
-            // console.log("[EPIFANIA] HP atual:", owner.HP);
-            // console.log("[EPIFANIA] Dano recebido:", damage);
-            // console.log("[EPIFANIA] Atacante:", attacker?.name);
-
+          onBeforeDmgTaking({ defender, owner, damage, context }) {
             if (!defender || defender.id !== owner.id || defender !== owner)
               return;
 
-            if (owner.HP - damage > 0) {
-              // console.log("[EPIFANIA] Abortado → dano não é letal");
-              return;
-            }
+            // Not lethal: the Threshold stays shut.
+            if (owner.HP - damage > 0) return;
 
             owner.runtime.preventFinishing = true;
 
-            if (owner.hasStatusEffect("absoluteImmunity")) {
-              // console.log("[EPIFANIA] Abortado → já possui imunidade absoluta");
-              return;
-            }
-
-            // console.log("[EPIFANIA] DANO LETAL DETECTADO");
+            if (owner.hasStatusEffect("absoluteImmunity")) return;
 
             const lockedHP = surviveHP;
 
             const adjustedDamage = Math.max(owner.HP - lockedHP, 0);
 
-            // FORÇA O HP FINAL
+            // Force the final HP value.
             owner.HP = Math.max(owner.HP - adjustedDamage, lockedHP);
 
-            // console.log("[EPIFANIA] HP final desejado:", lockedHP);
-            // console.log("[EPIFANIA] Dano ajustado:", adjustedDamage);
-
             owner.applyStatusEffect("absoluteImmunity", 1, context, {
-              source: "epifania",
+              source: "epiphany",
             });
-
-            /* console.log(
-              "[EPIFANIA] Imunidade absoluta aplicada em",
-              owner.name,
-            );
-            */
 
             const allies = context.aliveChampions.filter(
               (c) => c.team === owner.team,
@@ -275,37 +236,29 @@ const sereneSkills = [
 
             for (const champ of allies) {
               champ.runtime.hookEffects = champ.runtime.hookEffects.filter(
-                (e) => e.key !== "epifania_limiar",
+                (e) => e.key !== "epiphany_threshold",
               );
               delete champ.runtime.preventFinishing;
             }
 
             context.registerDialog({
-              message: `${formatChampionName(owner)} escapou da morte graças à Epifania do Limiar!`,
+              message: `${formatChampionName(owner)} is held at the Threshold, and death lets go!`,
               sourceId: owner.id,
               targetId: owner.id,
             });
 
             return {
               damage: adjustedDamage,
-              log: `${formatChampionName(owner)} recusou a morte e tornou-se imune, permanecendo com ${lockedHP} de HP!`,
+              log: `${formatChampionName(owner)} is drawn back from the Threshold, Immune and holding on with ${lockedHP} HP!`,
             };
           },
         };
 
-        // console.log("[SERENE ULT] Limpando efeitos anteriores de Epifania");
-
         ally.runtime.hookEffects.push(effect);
-
-        // console.log("[SERENE ULT] Hook registrado em", ally.name);
       });
 
-      // console.log("[SERENE ULT] Proteção aplicada a todos os aliados");
-      // console.log("══════════════════════════════════");
-
       return {
-        log: `${formatChampionName(user)} alcança o Limiar da Existência.
-        Aliados recebem proteção de campo!`,
+        log: `${formatChampionName(user)} crosses into the Quietude and reaches the Threshold of Existence. Her allies are wrapped in its stillness!`,
       };
     },
   },

@@ -1,11 +1,11 @@
 export default {
-  key: "chama_ascendente",
-  name: "Chama Ascendente",
+  key: "ascendant_flame",
+  name: "Ascendant Flame",
   critCap: 95,
   enhancedCritBonus: 70,
   atkBuff: 5,
   description() {
-    return `Cada acerto crítico de Vulnara aumenta seu Ataque em ${this.atkBuff}. O bônus de crítico de Vulnara é 1,${this.enhancedCritBonus}x.`;
+    return `Vulnara's fire climbs with every clean shot. Each of her critical hits permanently raises her Attack by ${this.atkBuff}, and her critical hits strike at 1.${this.enhancedCritBonus}x instead of the usual multiplier.`;
   },
 
   hookScope: {
@@ -13,10 +13,10 @@ export default {
     onCriticalHit: "attacker",
   },
 
-  onBeforeDmgDealing({ owner, context, crit }) {
-    // bônus de crítico dela é sempre 1,70x
+  onBeforeDmgDealing({ owner, crit }) {
+    // Her critical bonus is always the enhanced one.
     owner.critBonusOverride = this.enhancedCritBonus;
-    // retorna crit atualizado para a pipeline detectar a mudança e recompor
+    // Return the updated crit so the pipeline detects the change and recomposes it.
     if (crit?.didCrit) {
       return { crit: { ...crit, bonus: this.enhancedCritBonus } };
     }

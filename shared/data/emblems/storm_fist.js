@@ -65,7 +65,7 @@ export const stormFist = {
     },
     elementalAffinity: {
       element: "lightning",
-      count: 2,
+      count: 3,
     },
   },
 
@@ -77,24 +77,25 @@ export const stormFist = {
   },
 
   hookScope: {
-    onChampionAdded: "owner",
     onBeforeDmgDealing: "attacker",
   },
 
-  onChampionAdded({ owner, context }) {
-    if (!owner || owner.team == null) return;
+  onChampionAdded({ champion, owner, context }) {
+    // `owner` is the Player carrying the emblem; `champion` is the one entering.
+    if (!champion || !owner) return;
+    if (champion.team !== owner.team) return;
 
-    const speedBonus = getSpeedGrant(owner);
+    const speedBonus = getSpeedGrant(champion);
     if (!speedBonus) return;
 
     // Mark that this champion has already received the emblem buff
-    if (owner.runtime?._stormFistApplied) return;
+    if (champion.runtime?._stormFistApplied) return;
 
-    if (!owner.runtime) owner.runtime = {};
-    owner.runtime._stormFistApplied = true;
+    if (!champion.runtime) champion.runtime = {};
+    champion.runtime._stormFistApplied = true;
 
-    if (owner.modifyStat) {
-      owner.modifyStat({
+    if (champion.modifyStat) {
+      champion.modifyStat({
         statName: "Speed",
         amount: speedBonus,
         context,

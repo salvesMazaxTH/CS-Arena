@@ -1,13 +1,13 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
-  key: "metabolismo_toxico",
-  name: "Metabolismo Tóxico",
+  key: "toxic_metabolism",
+  name: "Toxic Metabolism",
 
   healPercent: 35,
 
   description() {
-    return `Uma porcentagem do dano causado por <b>Envenenado</b> a qualquer personagem é convertida em cura para Tox Vipranna.`;
+    return `Tox Vipranna absorbs the venom released by Poisoned targets, restoring ${this.healPercent}% of the damage dealt by Poisoned to her HP.`;
   },
 
   hookPolicies: {
@@ -17,23 +17,26 @@ export default {
     },
   },
 
-  // Sem hookScope — dispara para Tox Vipranna sempre que onAfterDmgTaking for emitido,
-  // independente de quem sofreu o dano (intenção: reagir a qualquer tick de Poisoned).
+  // No hookScope — triggers for Tox Vipranna whenever onAfterDmgTaking is emitted,
+  // regardless of who took the damage (intended to react to any Poisoned tick).
   onAfterDmgTaking({ owner, damage, context, skill }) {
     if (!context?.isDot) return;
     if (skill?.key !== "poisoned_tick") return;
     if (!damage || damage <= 0) return;
 
     const healAmount = Math.floor(damage * (this.healPercent / 100));
+
     if (healAmount <= 0) return;
 
     const before = owner.HP;
     const healed = owner.heal(healAmount, context);
+
     if (healed <= 0) return;
 
     const ownerName = formatChampionName(owner);
+
     return {
-      log: `[PASSIVA — ${this.name}] ${ownerName} absorveu o veneno e recuperou ${healed} HP (${before} → ${owner.HP}).`,
+      log: `[PASSIVE — ${this.name}] ${ownerName} absorbs the venom and restores ${healed} HP (${before} → ${owner.HP}).`,
     };
   },
 };

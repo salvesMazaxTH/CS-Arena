@@ -1,17 +1,17 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
-  key: "punhos_em_combustao",
-  name: "Punhos em Combustão",
+  key: "kindled_fists",
+  name: "Kindled Fists",
   flamingFistsDamage: 30,
+  livingEmberBonusDamage: 40,
   burnDuration: 1,
+  livingEmberBurnDuration: 2,
 
   description() {
-    return `Sempre que Kai causa dano com um Ataque Básico, ele aplica um impacto térmico adicional:
-  - O impacto térmico causa ${this.flamingFistsDamage} de dano (perfurante).
+    return `Kai's knuckles never fully cool. Whenever he deals damage with a Basic Strike, the heat lands with it as ${this.flamingFistsDamage} bonus piercing damage, and the target catches fire unless their element already knows the burn.
 
-  em 'Brasa Viva':
-  - Todos os ataques causam 40 de dano adicional e aplicam queimadura independente da afinidade elemental do alvo.`;
+    Under Living Ember, nothing is spared: all of his attacks deal ${this.livingEmberBonusDamage} bonus damage and always apply Burning, whatever the target's elemental affinity.`;
   },
 
   hookScope: {
@@ -22,11 +22,13 @@ export default {
   onBeforeDmgDealing({ attacker, owner, skill, damage }) {
     if (attacker !== owner) return;
 
-    const isBrasa = owner.runtime?.fireStance === "brasa_viva";
+    const isLivingEmber = owner.runtime?.fireStance === "livingEmber";
 
-    if (!isBrasa && skill?.key !== "ataque_basico") return;
+    if (!isLivingEmber && skill?.key !== "basic_strike") return;
 
-    const bonus = isBrasa ? 40 : this.flamingFistsDamage;
+    const bonus = isLivingEmber
+      ? this.livingEmberBonusDamage
+      : this.flamingFistsDamage;
 
     return {
       damage: damage + bonus,
@@ -38,35 +40,31 @@ export default {
     if (damage <= 0) return;
     if (!defender) return;
 
-    const isBrasa = owner.runtime?.fireStance === "brasa_viva";
-    console.log(`[${owner.name}] isBrasa: ${isBrasa}, skill: ${skill?.key}`);
+    const isLivingEmber = owner.runtime?.fireStance === "livingEmber";
 
-    // 🔥 GATE PRINCIPAL (o que você pediu)
-    if (!isBrasa && skill?.key !== "golpe_basico") return;
+    // Main gate: only Basic Strikes burn, unless Living Ember is up.
+    if (!isLivingEmber && skill?.key !== "basic_strike") return;
 
     const affinities = defender.elementalAffinities ?? [];
 
+    // Earth, Water and Fire affinities shrug off the ordinary heat.
     if (
-      isBrasa ||
-      !affinities.some((a) => ["earth", "water", "fire"].includes(a))
+      !isLivingEmber &&
+      affinities.some((a) => ["earth", "water", "fire"].includes(a))
     ) {
-      const burnDuration = isBrasa ? 2 : this.burnDuration;
-
-      console.log(
-        `Aplicando queimadura padrão (duração: ${burnDuration}) em ${defender.name} por ataque de ${skill?.key}.`,
-      );
-
-      defender.applyStatusEffect("burning", burnDuration, context, {
-        source: owner.name,
-      });
-
-      return {
-        log: `${formatChampionName(attacker)} aplicou Queimadura em ${formatChampionName(defender)}.`,
-      };
-    } else {
-      console.log(
-        `Não aplicando queimadura em ${defender.name} por ataque de ${skill?.key} devido à afinidade elemental. Não tinha brasa viva ativa: ${isBrasa}.`,
-      );
+      return;
     }
+
+    const burnDuration = isLivingEmber
+      ? this.livingEmberBurnDuration
+      : this.burnDuration;
+
+    defender.applyStatusEffect("burning", burnDuration, context, {
+      source: owner.name,
+    });
+
+    return {
+      log: `${formatChampionName(attacker)} sets ${formatChampionName(defender)} Burning.`,
+    };
   },
 };

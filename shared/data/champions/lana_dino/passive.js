@@ -1,9 +1,9 @@
 export default {
-  key: "instinto_selvagem",
-  name: "Instinto Selvagem",
+  key: "wild_instinct",
+  name: "Wild Instinct",
 
   description() {
-    return `Quando Tutu é derrotado, Lana retorna ao combate com o mesmo HP que tinha ao sair.`;
+    return `Tutu stands in front of Lana until there is nothing left of him. When he is defeated, Lana returns to the battle with the same HP she left it with.`;
   },
 
   hookScope: {
@@ -11,30 +11,30 @@ export default {
   },
 
   onAfterDmgTaking({ owner, context }) {
-    // se ainda estiver vivo, não faz nada
+    // Still standing: nothing to do.
     if (owner.HP > 0) return;
 
     const lanaOriginalId = owner.runtime.swappedFrom;
 
     if (!lanaOriginalId) {
-      // Sem ID original armazenado (situação anormal — Lana nunca foi swapped out)
+      // No original id stored (abnormal state — Lana was never swapped out).
       return;
     }
 
     if (!context)
       throw new Error(
-        `[instinto_selvagem] ERRO: context é undefined ao tentar registrar replaceRequest em ${owner.name}`,
+        `[wild_instinct] ERROR: context is undefined while registering the replace request for ${owner.name}`,
       );
 
-    // Registra intenção de restore (Tutu → Lana)
-    // Estado completo de Lana (incluindo HP original) será restaurado automaticamente
+    // Register the restore intent (Tutu → Lana).
+    // Lana's full state (original HP included) is restored automatically.
     context.requestChampionMutation?.({
       mode: "restore",
       targetId: lanaOriginalId,
     });
 
     return {
-      log: `${owner.name} foi derrotado! Lana retorna ao combate!`,
+      log: `${owner.name} falls! Lana returns to the battle!`,
     };
   },
 };

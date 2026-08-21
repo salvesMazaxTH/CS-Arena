@@ -6,22 +6,23 @@
    BUTTON STYLES
    ============================================ */
 
+/* Secondary next to the End turn button, so it sits a size below it. */
 #skip-slot-btn {
   background: linear-gradient(180deg, #ff3c3c, #b30000);
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
 
-  padding: clamp(4px, 0.8vw, 6px) clamp(8px, 1.5vw, 14px);
-  font-size: clamp(0.65rem, 1.3vw, 0.95rem);
+  padding: clamp(3px, 0.6vw, 4px) clamp(6px, 1.1vw, 10px);
+  font-size: clamp(0.56rem, 1.05vw, 0.78rem);
 
   color: white;
   font-weight: bold;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
   white-space: nowrap;
 
   cursor: pointer;
 
-  box-shadow: 0 0 12px rgba(255, 0, 0, 0.4);
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.28);
   transition:
     transform 0.1s ease,
     box-shadow 0.1s ease;
@@ -29,7 +30,7 @@
 
 #skip-slot-btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(255, 0, 0, 0.7);
+  box-shadow: 0 0 16px rgba(255, 0, 0, 0.6);
 }
 
 #skip-slot-btn:active {
@@ -3421,6 +3422,284 @@ body.perspective-team2 .combat-dialog-bubble .team-2 {
 .surrender-confirm:active {
   transform: scale(0.97);
   box-shadow: 0 0 8px rgba(255, 0, 0, 0.2);
+}
+
+/* ============================================
+   END TURN BUTTON
+   ============================================ */
+
+/* Only surfaces once every slot has an action locked in, so the turn always has
+   a deliberate exit even when the summon reminder is dismissed. */
+#end-turn-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 31, 24, 0.96),
+    rgba(8, 18, 16, 0.98)
+  );
+  border: 1px solid rgba(0, 255, 153, 0.55);
+  border-radius: 10px;
+  padding: clamp(4px, 0.8vw, 6px) clamp(8px, 1.5vw, 14px);
+  font-family: "Montserrat", sans-serif;
+  font-size: clamp(0.65rem, 1.3vw, 0.95rem);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  color: #6dffbf;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(0, 255, 153, 0.16);
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+#end-turn-btn:hover {
+  border-color: rgba(0, 255, 153, 0.85);
+  box-shadow: 0 0 20px rgba(0, 255, 153, 0.32);
+  transform: scale(1.04);
+}
+
+#end-turn-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 8px rgba(0, 255, 153, 0.2);
+}
+
+/* The id selector above outranks the global .hidden rule, so it needs its own. */
+#end-turn-btn.hidden {
+  display: none;
+}
+
+/* ============================================
+   SUMMON REMINDER OVERLAY
+   ============================================ */
+
+.summon-reminder-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 15000;
+  padding: 20px;
+  background: rgba(4, 7, 10, 0.72);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+}
+
+.summon-reminder-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Both selectors weigh the same, and this file loads after base.css, so the
+   global .hidden rule only wins here because it is repeated explicitly. */
+.summon-reminder-overlay.hidden {
+  display: none;
+}
+
+.summon-reminder-dialog {
+  /* The line-up chips inherit their accent from these, as they do inside the banner. */
+  --lineup-accent: rgba(0, 150, 255, 0.72);
+  --lineup-accent-soft: rgba(0, 150, 255, 0.24);
+  --lineup-accent-strong: rgba(122, 201, 255, 0.34);
+
+  position: relative;
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: 26px 28px 22px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, #14181d, #0a0c0f);
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(0, 150, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transform: translateY(10px) scale(0.985);
+  opacity: 0;
+  transition:
+    transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.28s ease;
+}
+
+.summon-reminder-overlay.active .summon-reminder-dialog {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* Hairline of light along the top edge — the dialog's only ornament. */
+.summon-reminder-dialog::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 22%;
+  right: 22%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(122, 201, 255, 0),
+    rgba(122, 201, 255, 0.55),
+    rgba(122, 201, 255, 0)
+  );
+  pointer-events: none;
+}
+
+.summon-reminder-eyebrow {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: rgba(122, 201, 255, 0.85);
+}
+
+.summon-reminder-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #f2f8ff;
+}
+
+.summon-reminder-subtitle {
+  margin: 0 0 12px;
+  max-width: 38ch;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.summon-reminder-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 18px;
+}
+
+.summon-reminder-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 78px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: "Montserrat", sans-serif;
+}
+
+.summon-reminder-chip .lineup-chip {
+  width: 78px;
+  height: 100px;
+  border-radius: 14px;
+  padding: 3px;
+}
+
+.summon-reminder-chip .lineup-chip-identity-row {
+  bottom: 4px;
+  width: calc(100% - 8px);
+  height: 22px;
+  min-height: 22px;
+  max-height: 22px;
+  gap: 3px;
+  border-radius: 999px;
+}
+
+.summon-reminder-chip .champion-identity-badge {
+  width: 22px;
+  height: 22px;
+  font-size: 0.82rem;
+}
+
+.summon-reminder-chip-name {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.55);
+  transition: color 0.16s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.summon-reminder-chip:hover .summon-reminder-chip-name,
+.summon-reminder-chip:focus-visible .summon-reminder-chip-name {
+  color: #dff1ff;
+}
+
+.summon-reminder-chip:focus-visible {
+  outline: none;
+}
+
+.summon-reminder-chip:focus-visible .lineup-chip {
+  border-color: var(--lineup-accent);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.34),
+    0 0 16px var(--lineup-accent-soft);
+}
+
+/* While a summon request is in flight nothing else should be clickable. */
+.summon-reminder-chips.is-busy .summon-reminder-chip {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.summon-reminder-chips.is-busy .summon-reminder-chip.is-pending {
+  opacity: 1;
+}
+
+.summon-reminder-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.summon-reminder-dismiss {
+  background: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  padding: 2px 0;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.summon-reminder-dismiss:hover,
+.summon-reminder-dismiss:focus-visible {
+  color: rgba(255, 255, 255, 0.72);
+  border-bottom-color: rgba(255, 255, 255, 0.25);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .summon-reminder-overlay,
+  .summon-reminder-dialog {
+    transition: none;
+  }
+
+  .summon-reminder-dialog {
+    transform: none;
+  }
 }
 
 /* ============================================

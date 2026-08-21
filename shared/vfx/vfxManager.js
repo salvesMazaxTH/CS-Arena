@@ -49,9 +49,9 @@ const ExclusiveVFXTriggers = {
     Array.isArray(champion.runtime?.shields) &&
     champion.runtime.shields.length > 0,
 
-  fireStanceIdle: (champion) => champion.runtime?.fireStance === "postura",
+  fireStanceIdle: (champion) => champion.runtime?.fireStance === "emberStance",
 
-  fireStanceActive: (champion) => champion.runtime?.fireStance === "brasa_viva",
+  fireStanceActive: (champion) => champion.runtime?.fireStance === "livingEmber",
 
   waterBubble: (champion) => champion.runtime?.form === "aquatic_form",
 

@@ -149,7 +149,7 @@ export class TurnResolver {
     }
 
     const deathContext = this.createBaseContext({ sourceId: null });
-    const deathResults = this.processChampionDeaths(30, deathContext);
+    const deathResults = this.processChampionDeaths(deathContext);
 
     return { actionResults, deathResults, switchResults };
   }
@@ -219,7 +219,7 @@ export class TurnResolver {
   }
 
   // ============================================================
-  //  PROCESSAMENTO DE MORTES
+  //  DEATH PROCESSING
   // ============================================================
 
   processChampionDeaths(context = null) {
@@ -230,10 +230,14 @@ export class TurnResolver {
         if (result) results.push(result);
 
         if (context) {
+          // The dead champion is already out of activeChampions, so it is
+          // appended explicitly: passives that react to their OWN death (such
+          // as Jeff's revival) must still be reached, and it is the only hook
+          // that fires for deaths that never went through a DamageEvent.
           emitCombatEvent(
             "onChampionDeath",
             { deadChampion: champ, context },
-            this.combat.activeChampions,
+            [...this.combat.activeChampions.values(), champ],
           );
         }
       }

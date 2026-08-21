@@ -20,7 +20,7 @@ const tharoxSkills = [
     contact: false,
     priority: 3,
     description() {
-      return `Taunts all enemies for ${this.tauntDuration} turn(s) and gains ${this.damageReductionAmount} Damage Reduction for ${this.damageReductionDuration} turn(s). Consecutive uses have an exponentially lower chance of success (resets on failure or using another skill.)`;
+      return `Tharox draws the attention of all enemies to himself for ${this.tauntDuration} turn(s), daring them to strike against his immovable bulk. He gains ${this.damageReductionAmount} Damage Reduction for ${this.damageReductionDuration} turn(s). Consecutive uses have an exponentially lower chance of success (resets on failure or using another skill.)`;
     },
 
     targetSpec: ["self"],
@@ -62,7 +62,7 @@ const tharoxSkills = [
         throw new Error("Context must include currentTurn for Primeval Taunt.");
       }
 
-      // se foi bem-sucedida, incrementa a tauntStreak para a próxima tentativa
+      // if it was successful, increment the tauntStreak for the next attempt
       user.runtime.tauntStreak += 1;
       /* console.log(
         `[Skill - Primeval Taunt] ${user.name} used Primeval Taunt. Current Taunt Streak: ${user.runtime.tauntStreak}`,
@@ -100,14 +100,16 @@ const tharoxSkills = [
     contact: true,
     priority: 0,
     description() {
-      return `Deals damage equal to ${this.defScaling}% of Defense, scaled down the more Tharox is wounded — hits hard while he's healthy, but falls off sharply at low HP.`;
+      return `Tharox crashes into the enemy with the overwhelming weight of his stone-like frame, dealing damage equal to ${this.defScaling}% of his Defense. The more wounded he becomes, the less force he can bring to bear — his devastating strength waning as his colossal body begins to falter.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const hpRatio = Math.max(0, Math.min(1, user.HP / user.maxHP));
       const baseDamage =
-        user.Defense * (this.defScaling / 100) * Math.pow(hpRatio, this.hpExponent);
+        user.Defense *
+        (this.defScaling / 100) *
+        Math.pow(hpRatio, this.hpExponent);
       const result = new DamageEvent({
         attacker: user,
         baseDamage,
@@ -137,9 +139,9 @@ const tharoxSkills = [
     priority: 2,
 
     description() {
-      return `Unleashes the Apotheosis of the Monolith, restoring HP based on his bonus Defense and assuming his immovable form for ${this.effectDuration} turn(s). Gains SupremeShield for the duration of the effect.
+      return `Tharox unleashes the Apotheosis of the Monolith, becoming an immovable force of living stone for ${this.effectDuration} turn(s). His immense frame hardens further, granting him a SupremeShield and +${this.defBonusWhileShielded} Defense while the shield endures.
 
-      While the shield is active, Tharox gains +${this.defBonusWhileShielded} Defense. Upon losing the shield, he restores HP equal to ${this.healingUponShieldBreakPercent}% of his bonus Defense.`;
+      The power of the Monolith restores his strength as it manifests, healing him based on his bonus Defense. When the SupremeShield is broken, that stored power surges back through his body, restoring HP equal to ${this.healingUponShieldBreakPercent}% of his bonus Defense.`;
     },
 
     targetSpec: ["self"],
@@ -147,27 +149,27 @@ const tharoxSkills = [
       const userName = formatChampionName(user);
       const expiresAtTurn = context.currentTurn + this.effectDuration;
 
-      // Remove eventual SupremeShield anterior da Apoteose.
+      // Remove any previous SupremeShield of the Apotheosis.
       if (Array.isArray(user.runtime?.shields)) {
         user.runtime.shields = user.runtime.shields.filter(
           (shield) => shield?.sourceId !== "apotheosis-of-the-monolith",
         );
       }
 
-      // Remove eventual hook anterior da Apoteose.
+      // Remove any previous hook of the Apotheosis.
       user.runtime.hookEffects ??= [];
       user.runtime.hookEffects = user.runtime.hookEffects.filter(
         (hook) => hook.key !== "apotheosis-of-the-monolith",
       );
 
-      // Registra o estado da Apoteose.
+      // Register the state of the Apotheosis.
       user.runtime.apotheosisOfTheMonolith = {
         active: true,
         expiresAtTurn,
         defenseBonus: this.defBonusWhileShielded,
       };
 
-      // +20 Defesa enquanto o efeito estiver ativo.
+      // +20 Defense while the effect is active.
       user.modifyStat({
         statName: "Defense",
         amount: this.defBonusWhileShielded,
@@ -176,7 +178,7 @@ const tharoxSkills = [
         isPermanent: false,
       });
 
-      // Cura proporcional à Defesa bônus atual.
+      // Heal proportional to the current bonus Defense.
       const proportionalHeal = Math.max(0, user.Defense - user.baseDefense);
 
       if (proportionalHeal > 0) {
@@ -189,17 +191,17 @@ const tharoxSkills = [
         expiresAtTurn,
       });
 
-      // Hook da Apoteose.
+      // Hook of the Apotheosis.
       user.runtime.hookEffects.push({
         key: "apotheosis-of-the-monolith",
         name: "Apotheosis of the Monolith",
         expiresAtTurn,
 
         // ============================================================
-        // ANTES DO DANO
+        // BEFORE DAMAGE
         // ============================================================
-        // Hook destinado às interações que precisam observar a Defesa
-        // bônus da Apoteose antes que o dano seja aplicado.
+        // Hook intended for interactions that need to observe the bonus
+        // Defense of the Apotheosis before the damage is applied.
         hookScope: {
           onBeforeDmgTaking: "defender",
           onAfterDmgTaking: "defender",
@@ -219,18 +221,18 @@ const tharoxSkills = [
           const defenseBonus = this.defBonusWhileShielded;
 
           return {
-            // Disponibiliza explicitamente o bônus para efeitos que
-            // precisem consultar a Defesa concedida pela Apoteose.
+            // Explicitly makes the bonus available for effects that
+            // need to consult the Defense granted by the Apotheosis.
             defenseBonus,
             log: null,
           };
         },
 
         // ============================================================
-        // DEPOIS DO DANO
+        // AFTER DAMAGE
         // ============================================================
-        // Se o dano acabou de destruir o SupremeShield, a cura ocorre
-        // imediatamente após esse dano.
+        // If the damage has just destroyed the SupremeShield, the healing occurs
+        // immediately after that damage.
         onAfterDmgTaking({ defender, damage, context }) {
           if (defender !== user) return;
           if (damage <= 0) return;
@@ -243,7 +245,7 @@ const tharoxSkills = [
 
           if (supremeShield) return;
 
-          // O shield foi quebrado por dano.
+          // The shield was broken by damage.
           const state = defender.runtime.apotheosisOfTheMonolith;
           if (!state?.active) return;
 
@@ -270,14 +272,14 @@ const tharoxSkills = [
         },
 
         // ============================================================
-        // EXPIRAÇÃO NATURAL
+        // NATURAL EXPIRATION
         // ============================================================
         onTurnStart({ owner, context }) {
           if (context.currentTurn < this.expiresAtTurn) return;
 
           const state = owner.runtime.apotheosisOfTheMonolith;
 
-          // Se não foi quebrado por dano, a cura ocorre no início do turno, logo depois da expiração natural.
+          // If it was not broken by damage, the healing occurs at the start of the turn, right after the natural expiration.
           if (!state?.brokenByDamage) {
             const healingAmount = this.defBonusWhileShielded * 0.25;
 
