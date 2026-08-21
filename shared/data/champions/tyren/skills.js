@@ -148,7 +148,7 @@ const tyrenSkills = [
         // — without ever calling its handler. onTurnEnd only fires later, at
         // the end of that same turn, by which point the purge has already
         // deleted this effect, so the revert would never run. Checking on
-        // onTurnStart (same pattern as Kai's postura_da_brasa_viva) lets the
+        // onTurnStart (same pattern as Kai's living_ember_stance) lets the
         // revert execute before the purge can remove it.
         onTurnStart({ owner, context }) {
           if (context.currentTurn < this.expiresAtTurn) return;

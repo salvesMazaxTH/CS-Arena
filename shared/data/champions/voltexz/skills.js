@@ -1,41 +1,40 @@
-/* import { CombatResolver } from "../../engine/combat/combatResolver.js"; */
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../totalBlock.js";
 
 const voltexzSkills = [
   // ========================
-  // Total block (global)
+  // Total Block (global)
   // ========================
   totalBlock,
+
   // ========================
   // Special Skills
   // ========================
+
   {
-    key: "relampagos_gemeos",
+    key: "twin_lightnings",
     name: "Twin Lightnings",
+
     bf: 40,
     contact: false,
     damageMode: "standard",
     priority: 0,
     element: "lightning",
+
     description() {
-      return `Deals damage to up to two enemies (the same target can be chosen for both).`;
+      return `Voltexz fires a bolt of lightning from each hand at once, dealing Lightning magical damage to two chosen targets or to the same target twice.`;
     },
+
     targetSpec: [{ type: "enemy" }, { type: "enemy" }],
 
     resolve({ user, targets, context = {} }) {
       const [primary, secondary] = targets;
+
       const baseDamage = (user.Attack * this.bf) / 100;
       const results = [];
 
       if (primary) {
-        /* console.log(
-          "🌊 ALL-CHAMPIONS DEBUG, allChampions in context (Voltexz 1st skill):",
-          context?.allChampions,
-        );
-        */
-
         const primaryResult = new DamageEvent({
           baseDamage,
           attacker: user,
@@ -45,10 +44,11 @@ const voltexzSkills = [
           context,
           allChampions: context?.allChampions,
         }).execute();
-        // console.log("🌊 Target affinities:", primary.elementalAffinities);
+
         const primaryResults = Array.isArray(primaryResult)
           ? primaryResult
           : [primaryResult];
+
         results.push(...primaryResults);
       }
 
@@ -62,33 +62,42 @@ const voltexzSkills = [
           context,
           allChampions: context?.allChampions,
         }).execute();
-        // console.log("🌊 Target affinities:", secondary.elementalAffinities);
+
         const secondaryResults = Array.isArray(secondaryResult)
           ? secondaryResult
           : [secondaryResult];
+
         results.push(...secondaryResults);
       }
 
       return results;
     },
   },
+
   {
-    key: "choque_estatico",
+    key: "static_shock",
     name: "Static Shock",
+
     bf: 20,
     paralyzeDuration: 2,
+
     contact: false,
     damageMode: "standard",
     priority: 1,
     element: "lightning",
+
     description() {
-      return `Deals damage (BF ${this.bf}) and leaves the target {paralyzed} for ${this.paralyzeDuration} turn(s), causing them to lose their next action.`;
+      return `Voltexz discharges a crackling surge of electricity into the target, dealing damage and leaving them Paralyzed for ${this.paralyzeDuration} turn(s).`;
     },
+
     targetSpec: ["enemy"],
+
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
+
       const baseDamage = (user.Attack * this.bf) / 100;
       const results = [];
+
       const damageResult = new DamageEvent({
         baseDamage,
         attacker: user,
@@ -107,38 +116,14 @@ const voltexzSkills = [
 
       const mainDamage = damageArray[0];
 
-      let paralyzed;
-
-      console.log(
-        "[Voltexz - Static Shock] DamageResult (mainDamage):",
-        mainDamage,
-        "mainDamage.totalDamage:",
-        mainDamage?.totalDamage,
-      );
-
-      // Apply paralysis effect (only if the hit landed)
+      // Paralysis only lands if the hit connected.
+      // Its log is handled by the status effect system.
       if (
         !mainDamage?.evaded &&
         !mainDamage?.immune &&
         mainDamage?.totalDamage > 0
       ) {
-        paralyzed = enemy.applyStatusEffect(
-          "paralyzed",
-          this.paralyzeDuration,
-          context,
-        );
-      }
-
-      if (paralyzed) {
-        /* console.log(
-          `${formatChampionName(enemy)} foi PARALISADO por Choque Estático e perderá sua próxima ação!`,
-        );
-        */
-        // if (paralyzed && paralyzed.log && damageResult?.log) {
-        //   damageResult.log += `\n${formatChampionName(enemy)} foi PARALISADO por Choque Estático e perderá sua próxima ação!`;
-        // } else if (paralyzed && paralyzed.log) {
-        //   damageResult.log = `${formatChampionName(enemy)} foi PARALISADO por Choque Estático e perderá sua próxima ação!`;
-        // }
+        enemy.applyStatusEffect("paralyzed", this.paralyzeDuration, context);
       }
 
       return results;
@@ -146,23 +131,31 @@ const voltexzSkills = [
   },
 
   {
-    key: "descarga_cataclismica",
+    key: "cataclysmic_discharge",
     name: "Cataclysmic Discharge",
+
     bf: 185,
+
     contact: false,
     damageMode: "standard",
+
     isUltimate: true,
     momentumCost: 55,
     priority: 0,
     element: "lightning",
+
     description() {
-      return `Deals massive damage to the enemy.`;
+      return `Voltexz stops holding the current back and lets all of it go at once, burying the chosen target under a cataclysmic discharge of Lightning magical damage.`;
     },
+
     targetSpec: ["enemy"],
+
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
+
       const baseDamage = (user.Attack * this.bf) / 100;
       const results = [];
+
       const damageResult = new DamageEvent({
         baseDamage,
         attacker: user,

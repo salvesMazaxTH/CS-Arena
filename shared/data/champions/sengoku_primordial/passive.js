@@ -1,29 +1,29 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
-  key: "intimidacao_colossal",
-  name: "Intimidação Colossal",
+  key: "colossal_presence",
+  name: "Colossal Presence",
   hookScope: {
     onValidateAction: "target",
   },
-  threshold: 0.4, // 40% do Ataque de Sengoku
+  threshold: 0.4, // Fraction of Sengoku's Attack
   description() {
-    return `Personagens inimigos com menos de ${this.threshold * 100}% do Ataque de Sengoku não conseguem mirá-lo como alvo: a ação falha.`;
+    return `Standing before Sengoku Primordial is a weight of its own. Enemies with less than ${this.threshold * 100}% of his Attack cannot bring themselves to target him at all — their action simply fails.`;
   },
   /**
-   * Bloqueia ações de inimigos com menos de 40% do Ataque de Sengoku Primordial.
-   * @param {object} params - Parâmetros do hook
-   * @param {object} params.action - Objeto da ação
-   * @param {object} params.actionSource - Campeão que está tentando agir
-   * @param {object} params.target - Alvo da ação (sempre o Sengoku aqui)
-   * @param {object} params.context - Contexto do combate
-   * @param {object} params.owner - O próprio Sengoku
+   * Blocks actions from enemies below the Attack threshold.
+   * @param {object} params - Hook parameters
+   * @param {object} params.action - The action object
+   * @param {object} params.actionSource - The champion attempting to act
+   * @param {object} params.target - The action's target (always Sengoku here)
+   * @param {object} params.context - The combat context
+   * @param {object} params.owner - Sengoku himself
    */
   onValidateAction({ action, actionSource, target, context, owner }) {
-    // Não bloqueia auto-target (ele mesmo)
+    // Never blocks self-targeting.
     if (!actionSource || actionSource.id === owner.id) return;
 
-    // Se o atacante tem menos de 40% do ataque do Sengoku, bloqueia
+    // Block attackers below the Attack threshold.
     const threshold = owner.Attack * this.threshold;
     if (
       typeof actionSource.Attack !== "number" ||
@@ -31,8 +31,7 @@ export default {
     )
       return;
 
-    // Mensagem de bloqueio
-    const message = `${formatChampionName(actionSource)} sente uma pressão colossal e falha ao tentar agir contra ${formatChampionName(owner)}!`;
+    const message = `${formatChampionName(actionSource)} buckles under a colossal presence and fails to act against ${formatChampionName(owner)}!`;
     if (context?.registerDialog) {
       context.registerDialog({
         message,

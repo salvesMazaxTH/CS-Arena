@@ -3,20 +3,20 @@ import totalBlock from "../totalBlock.js";
 
 const brunoSkills = [
   // ========================
-  // Total block (global)
+  // Total Block (global)
   // ========================
   totalBlock,
 
   // ========================
-  // Habilidades Especiais
+  // Special Abilities
   // ========================
 
   // ========================
-  // H1 - Míssil de Gelo
+  // H1 — Frost Missile
   // ========================
   {
-    key: "missil_de_gelo",
-    name: "Míssil de Gelo",
+    key: "frost_missile",
+    name: "Frost Missile",
     bf: 55,
     chillDuration: 2,
     contact: false,
@@ -25,7 +25,7 @@ const brunoSkills = [
     element: "ice",
 
     description() {
-      return `Causa dano ao inimigo e o deixa Gelado por ${this.chillDuration} turno(s).`;
+      return `Bruno hurls a shard of hard frost at the chosen target, dealing Ice magical damage and leaving them Chilled for ${this.chillDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -53,11 +53,11 @@ const brunoSkills = [
   },
 
   // ========================
-  // H2 - Investida Glacial
+  // H2 — Glacial Charge
   // ========================
   {
-    key: "investida_glacial",
-    name: "Investida Glacial",
+    key: "glacial_charge",
+    name: "Glacial Charge",
     bf: 90,
     contact: true,
     damageMode: "standard",
@@ -65,7 +65,7 @@ const brunoSkills = [
     element: "ice",
 
     description() {
-      return `Avança sobre o inimigo com força glacial, causando dano.`;
+      return `Bruno closes the distance behind a wall of advancing ice and drives it into the chosen target, dealing Ice magical damage.`;
     },
 
     targetSpec: ["enemy"],
@@ -87,11 +87,11 @@ const brunoSkills = [
   },
 
   // ========================
-  // Ultimate - Tempestade de Gelo
+  // Ultimate — Blizzard
   // ========================
   {
-    key: "tempestade_de_gelo",
-    name: "Tempestade de Gelo",
+    key: "blizzard",
+    name: "Blizzard",
     bf: 120,
     chillDuration: 2,
     contact: false,
@@ -102,7 +102,7 @@ const brunoSkills = [
     element: "ice",
 
     description() {
-      return `Desencadeia uma tempestade de gelo sobre o inimigo, causando dano devastador e o Gelando por ${this.chillDuration} turno(s).`;
+      return `Bruno pulls the whole winter down onto the chosen target, dealing devastating Ice magical damage and leaving them Chilled for ${this.chillDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],

@@ -1,12 +1,11 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
-  name: "Ecos de Vitalidade",
+  key: "echoes_of_vitality",
+  name: "Echoes of Vitality",
   lifeStealHealPercent: 35,
-  tributeBonusDamage: 10,
-  tributeHeal: 15,
   description() {
-    return `Sempre que um aliado curar por Roubo de Vida, Reyskarone recupera ${this.lifeStealHealPercent}% desse valor.`;
+    return `Every drop of life an ally steals rings back through Reyskarone. Whenever an ally restores HP through LifeSteal, he restores ${this.lifeStealHealPercent}% of that amount.`;
   },
 
   hookScope: {
@@ -17,11 +16,11 @@ export default {
   onAfterHealing({ healSrc, amount, owner, context, isLifesteal }) {
     if (!isLifesteal) return;
 
-    // validações básicas
+    // Basic validations.
     if (!healSrc || !owner) return;
-    // não triggar em inimigos
+    // Never triggers on enemies.
     if (healSrc.team !== owner.team) return;
-    // ignorar self (se quiser manter essa regra)
+    // Ignore self-healing.
     if (healSrc === owner) return;
 
     const heal = Math.floor(amount * (this.lifeStealHealPercent / 100));
@@ -30,14 +29,14 @@ export default {
     owner.heal(heal, context);
 
     return {
-      log: `↳ [PASSIVA — Ecos de Vitalidade] ${formatChampionName(owner)} absorveu ecos vitais de ${formatChampionName(healSrc)} (+${heal} HP).`,
+      log: `↳ [PASSIVE — ${this.name}] ${formatChampionName(owner)} drinks in the vital echo of ${formatChampionName(healSrc)} (+${heal} HP).`,
     };
   },
 
   /* ------------------
-  // APENAS PARA TESTES //
+  // TESTING ONLY //
   * -------------------*/
-  onAfterDmgTaking({ attacker, defender, owner, context }) {
+  onAfterDmgTaking({ owner }) {
     owner.portrait = "/assets/portraits/reyskarone_bombado.webp";
   },
 };

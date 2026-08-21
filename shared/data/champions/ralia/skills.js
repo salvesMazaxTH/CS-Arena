@@ -4,16 +4,16 @@ import totalBlock from "../totalBlock.js";
 
 const raliaSkills = [
   // ========================
-  // Total block (global)
+  // Total Block (global)
   // ========================
   totalBlock,
   // ========================
-  // Habilidades Especiais
+  // Special Abilities
   // ========================
 
   {
-    key: "juramento_de_ferro",
-    name: "Juramento de Ferro",
+    key: "iron_oath",
+    name: "Iron Oath",
     bf: 60,
     damageMode: "standard",
     selfDamage: 10,
@@ -24,7 +24,7 @@ const raliaSkills = [
 
     priority: 0,
     description() {
-      return `Ralia perde ${this.defLoss} de Defesa e ${this.selfDamage} de HP para ganhar +${this.atkBuff} de Ataque por ${this.buffDuration} turnos. Em seguida, ataca um inimigo.`;
+      return `Rália swears an oath in iron and blood, giving up ${this.defLoss} Defense and ${this.selfDamage} HP to gain +${this.atkBuff} Attack for ${this.buffDuration} turn(s). She then falls upon the chosen target, dealing physical damage.`;
     },
     targetSpec: ["self", "enemy"],
     resolve({ user, targets, context = {} }) {
@@ -37,8 +37,6 @@ const raliaSkills = [
 
       user.modifyHP(-this.selfDamage, { context });
 
-      // console.log("BEFORE SELF ATK BUFF:", user.Attack);
-
       user.modifyStat({
         statName: "Attack",
         amount: this.atkBuff,
@@ -46,15 +44,11 @@ const raliaSkills = [
         context,
       });
 
-      // console.log("AFTER SELF ATK BUFF:", user.Attack);
-
-      // Ataque básico imediato
+      // Immediate follow-up attack.
       const enemy = targets.find((t) => t.id !== user.id);
 
-      // console.log("ATTACK BEFORE DAMAGE:", user.Attack);
-
       const userName = formatChampionName(user);
-      const selfLog = `${userName} executou Juramento de Ferro, perdendo ${this.selfDamage} HP e ${this.defLoss} de Defesa, mas ganhando +${this.atkBuff} de Ataque por ${this.buffDuration} turnos.`;
+      const selfLog = `${userName} swears the Iron Oath, giving up ${this.selfDamage} HP and ${this.defLoss} Defense for +${this.atkBuff} Attack over ${this.buffDuration} turn(s).`;
 
       if (!enemy) {
         return { log: selfLog };
@@ -79,8 +73,8 @@ const raliaSkills = [
   },
 
   {
-    key: "sentença_de_campo",
-    name: "Sentença de Campo",
+    key: "verdict_of_the_field",
+    name: "Verdict of the Field",
     bf: 90,
     damageMode: "standard",
     healPercent: 60,
@@ -89,7 +83,7 @@ const raliaSkills = [
 
     priority: 0,
     description() {
-      return `Ralia se cura em ${this.healPercent}% do dano efetivo causado (arredondado para o múltiplo de 5 mais próximo). Cura mínima: ${this.minHeal}.`;
+      return `Rália passes judgement with her blade, dealing physical damage to the chosen target and taking the sentence back as her own strength: she restores HP equal to ${this.healPercent}% of the effective damage dealt, never less than ${this.minHeal}.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -110,20 +104,19 @@ const raliaSkills = [
         effectiveDamage * (this.healPercent / 100),
       );
 
-      user.heal(healingAmount, context); // Cura o usuário
+      user.heal(healingAmount, context);
 
-      // 5️⃣ Estende o log da engine (não substitui)
+      // Extend the engine's log instead of replacing it.
       const userName = formatChampionName(user);
-      result.log += `\n${userName} se curou em ${healingAmount} HP.`;
+      result.log += `\n${userName} restores ${healingAmount} HP.`;
 
-      // 6️⃣ Retorna o objeto COMPLETO
       return result;
     },
   },
 
   {
-    key: "decreto_do_bastiao",
-    name: "Decreto do Bastião",
+    key: "decree_of_the_bastion",
+    name: "Decree of the Bastion",
     bf: 50,
     damageMode: "piercing",
     piercingPercentage: 75,
@@ -138,14 +131,15 @@ const raliaSkills = [
 
     priority: 0,
     description() {
-      return `Ralia finca sua lâmina no chão e impõe sua lei ao campo. Por ${this.debuffDuration} turnos, inimigos ativos sofrem −${this.atkDebuff} de Ataque. Em seguida, Ralia causa dano perfurante (${this.piercingPercentage}% de perfuração) contra todos os inimigos vivos. Também aplica ${this.bleedStacks} stacks de Sangramento.`;
+      return `Rália drives her blade into the ground and lays down her law over the battlefield. For ${this.debuffDuration} turn(s), every active enemy suffers −${this.atkDebuff} Attack.
+
+      She then sweeps the field, dealing piercing physical damage (${this.piercingPercentage}% piercing) to all living enemies and leaving ${this.bleedStacks} stacks of Bleeding in the wake of her edge.`;
     },
     targetSpec: ["all:enemy"],
     resolve({ user, targets, context = {} }) {
-      // Os alvos já são os inimigos
       const enemies = targets;
 
-      // Aplica o debuff de Ataque antes do dano
+      // The Attack debuff lands before the damage.
       for (const enemy of enemies) {
         enemy.modifyStat({
           statName: "Attack",
@@ -158,7 +152,6 @@ const raliaSkills = [
       const baseDamage = (user.Attack * this.bf) / 100;
       const results = [];
 
-      // Aplicar dano e bleed em cada inimigo
       for (const enemy of enemies) {
         const rawResult = new DamageEvent({
           baseDamage,

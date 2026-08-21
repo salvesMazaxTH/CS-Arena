@@ -1,6 +1,7 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
+  key: "the_lightning_strikes_twice",
   name: "The Lightning Strikes Twice",
   initialChance: 1,
   chanceIncreasePerTurn: 5,

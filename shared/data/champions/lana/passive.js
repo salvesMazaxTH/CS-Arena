@@ -9,22 +9,22 @@ function clearLanaSpellShield(owner) {
 }
 
 export default {
-  key: "amigo_imaginario",
-  name: "Amigo Imaginário",
+  key: "imaginary_friend",
+  name: "Imaginary Friend",
 
-  hpThreshold: 0.35, // 35% do HP
+  hpThreshold: 0.35, // 35% of Max HP
 
   description() {
-    return `Enquanto Tutu estiver vivo, Lana recebe um Escudo de Feitiço no início de cada turno.
-    Quando Lana cair abaixo de ${this.hpThreshold * 100}% de HP, ela é substituída por Tutu. Quando Tutu morre, Lana volta 
-    para a batalha com o HP que estava antes. Esta habilidade só pode ser ativada uma vez por batalha.`;
+    return `Tutu is always watching over Lana. While he is alive, she receives a Spell Shield at the start of every turn.
+
+    When Lana drops below ${this.hpThreshold * 100}% of her Max HP, Tutu takes her place on the field. When Tutu falls, Lana returns to the battle with the HP she left it with. This can only happen once per battle.`;
   },
 
   hookScope: {
     onAfterDmgTaking: "defender",
   },
 
-  onAfterDmgTaking({ owner, defender, context }) {
+  onAfterDmgTaking({ owner, context }) {
     owner.runtime.lana ??= {
       triggered: false,
     };
@@ -42,11 +42,11 @@ export default {
 
     if (!context)
       throw new Error(
-        `ERRO: context é undefined ao tentar registrar replaceRequest em ${owner.name}`,
+        `ERROR: context is undefined while registering the replace request for ${owner.name}`,
       );
 
-    // Registra intenção de swap (Lana → Tutu)
-    // Estado completo de Lana será preservado em inactiveChampions
+    // Register the swap intent (Lana → Tutu).
+    // Lana's full state is preserved in inactiveChampions.
     context.requestChampionMutation?.({
       targetId: owner.id,
       newChampionKey: "lana_dino",
@@ -54,7 +54,7 @@ export default {
     });
 
     return {
-      log: `${owner.name} liberou seu Dinossauro de Pelúcia!`,
+      log: `${owner.name} lets her Plush Dinosaur loose!`,
     };
   },
 
@@ -70,7 +70,7 @@ export default {
     owner.addShield(1, 0, context, "spell");
 
     return {
-      log: `${formatChampionName(owner)} recebeu um Escudo de Feitiço.`,
+      log: `${formatChampionName(owner)} receives a Spell Shield.`,
     };
   },
 };

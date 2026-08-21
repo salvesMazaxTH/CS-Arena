@@ -4,42 +4,43 @@ import totalBlock from "../totalBlock.js";
 
 const lanaSkills = [
   // ========================
-  // Total block (global)
+  // Total Block (global)
   // ========================
   totalBlock,
   // ========================
-  // Habilidades Especiais
+  // Special Abilities
   // ========================
   {
-    key: "nao_faz_isso",
-    name: "Não Faz Isso!",
+    key: "dont_you_dare",
+    name: "Don't You Dare!",
 
     priority: 3,
 
     description() {
-      return `Lana bloqueia a próxima habilidade ativa do alvo. Falha se já foi usada no turno anterior.`;
+      return `Lana shouts the chosen target down, and their next action simply refuses to happen. Fails if Don't You Dare! was already used on the previous turn.`;
     },
     targetSpec: ["enemy"],
 
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
 
-      const lastUsed = user.runtime.lastUsedNaoFazIsso ?? -Infinity; // Valor inicial para garantir que a habilidade possa ser usada no primeiro turno
+      // Default keeps the skill usable on the very first turn.
+      const lastUsed = user.runtime.lastUsedDontYouDare ?? -Infinity;
 
       if (context.currentTurn - lastUsed <= 1) {
         return {
-          message: `${formatChampionName(user)} tentou usar "Não Faz Isso!" novamente, mas falhou por ter sido usado no turno anterior!`,
+          message: `${formatChampionName(user)} tries to shout again, but <b>Don't You Dare!</b> was already used last turn!`,
         };
       }
 
-      user.runtime.lastUsedNaoFazIsso = context.currentTurn;
+      user.runtime.lastUsedDontYouDare = context.currentTurn;
 
-      // Inicializar hookEffects se não existir
+      // Initialize hookEffects if missing.
       enemy.runtime.hookEffects ??= [];
 
-      const hookKey = `nao_faz_isso_${user.id}`;
+      const hookKey = `dont_you_dare_${user.id}`;
 
-      // Adicionar hook que bloqueia a próxima ação
+      // Register the hook that blocks the next action.
       enemy.runtime.hookEffects.push({
         key: hookKey,
         group: "skill_effect",
@@ -50,33 +51,33 @@ const lanaSkills = [
         },
 
         onValidateAction({ actionSource }) {
-          // Remove o hook após bloquear a ação
+          // Remove the hook once the action has been blocked.
           actionSource.runtime.hookEffects =
             actionSource.runtime.hookEffects.filter((h) => h.key !== hookKey);
 
           return {
             deny: true,
-            message: `${formatChampionName(actionSource)} não consegue agir! Sua ação foi bloqueada!`,
+            message: `${formatChampionName(actionSource)} freezes up! Their action is blocked!`,
           };
         },
       });
 
       return {
-        message: `${formatChampionName(enemy)} teve sua próxima ação bloqueada!`,
+        message: `${formatChampionName(enemy)} will not be able to act next!`,
       };
     },
   },
 
   {
-    key: "arremesso_telecinetico",
-    name: "Arremesso Telecinético",
+    key: "kinetic_hurl",
+    name: "Kinetic Hurl",
 
     bf: 95,
     damageMode: "standard",
     contact: false,
 
     description() {
-      return `Lana arremessa o alvo com força psíquica.`;
+      return `Lana closes her fist and the chosen target is torn off the ground and thrown, taking magical damage.`;
     },
     targetSpec: ["enemy"],
 
@@ -97,8 +98,8 @@ const lanaSkills = [
   },
 
   {
-    key: "surto_psiquico",
-    name: "Surto Psíquico",
+    key: "psychic_surge",
+    name: "Psychic Surge",
 
     bf: 110,
     damageMode: "standard",
@@ -106,9 +107,13 @@ const lanaSkills = [
     isUltimate: true,
     momentumCost: 55,
 
+    griefBonusPercent: 15,
+
     priority: 0,
     description() {
-      return `Lana libera um surto psíquico, causando dano massivo a todos os inimigos. O dano aumenta baseado em quanto de HP Lana perdeu. Se Tutu já morreu, o dano é aumentado em 15%.`;
+      return `Everything Lana has been holding in comes out at once, striking all enemies with massive magical damage.
+
+      The damage grows with the HP she has already lost, and if Tutu has fallen, grief drives it ${this.griefBonusPercent}% higher.`;
     },
     targetSpec: ["all:enemy"],
     resolve({ user, targets, context = {} }) {
@@ -120,9 +125,9 @@ const lanaSkills = [
       let baseDamage =
         ((user.Attack * this.bf) / 100) * (1 + percentLost * 0.6);
 
-      // Se Tutu já morreu (Lana.runtime.lana.triggered === true e Lana está em campo), aumenta dano em 15%
+      // Tutu has already fallen (the swap happened and Lana is back on the field).
       if (user.runtime?.lana?.triggered) {
-        baseDamage *= 1.15;
+        baseDamage *= 1 + this.griefBonusPercent / 100;
       }
 
       const results = [];

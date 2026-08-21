@@ -1,16 +1,16 @@
-// Centralização do Golpe Básico (melee global)
+// Centralized Basic Strike (global melee)
 import { DamageEvent } from "../../engine/combat/DamageEvent.js";
 
 const basicStrike = {
-  key: "golpe_basico",
-  name: "Golpe Básico",
+  key: "basic_strike",
+  name: "Basic Strike",
   bf: 20,
   bonusFlat: 20,
   contact: true,
   damageMode: "standard",
   priority: 0,
   description() {
-    return `\n Golpe básico genérico, físico e faz contato (BF ${this.bf} + ${this.bonusFlat} bônus flat).`;
+    return `\n A plain physical blow that makes contact (BF ${this.bf} + ${this.bonusFlat} flat bonus).`;
   },
   targetSpec: ["enemy"],
   resolve({ user, targets, context = {} }) {

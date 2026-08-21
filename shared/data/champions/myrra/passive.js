@@ -1,24 +1,24 @@
 export default {
-  key: "olhar_que_encontra_a_falha",
-  name: "Olhar que Encontra a Falha",
+  key: "flawseeking_sight",
+  name: "Flawseeking Sight",
 
-  // Scaling de crítico
+  // Critical scaling.
   critPerHit: 3,
 
-  // Conversão de excesso em dano
+  // Overflow-to-damage conversion.
   critConversionThreshold: 55,
   critOverflowToDamage: 1.2,
 
-  // Bônus fixo em acertos críticos
+  // Flat bonus on critical hits.
   critBonusFlat: 35,
 
   description() {
     return `
-    Cada ataque aumenta permanentemente a chance de crítico em +${this.critPerHit}%.
+    Myrra reads every guard she strikes, and each attack permanently sharpens her Critical chance by +${this.critPerHit}%.
 
-    Quando ultrapassa ${this.critConversionThreshold}%, o excesso é convertido em dano adicional (${this.critOverflowToDamage * 100}% do excesso).
+    Once her Critical rises past ${this.critConversionThreshold}%, there is nothing left to learn: the excess becomes bonus damage instead (${this.critOverflowToDamage * 100}% of the overflow).
 
-    Acertos críticos recebem +${this.critBonusFlat} de dano adicional.
+    Her critical hits carry +${this.critBonusFlat} bonus damage.
     `;
   },
 
@@ -39,13 +39,13 @@ export default {
   onBeforeDmgDealing({ owner, damage, crit }) {
     let bonusDamage = 0;
 
-    // Conversão de excesso de crítico em dano adicional
+    // Convert excess Critical into bonus damage.
     if (owner.Critical > this.critConversionThreshold) {
       const overflow = owner.Critical - this.critConversionThreshold;
       bonusDamage += overflow * this.critOverflowToDamage;
     }
 
-    // Bônus fixo ao critar
+    // Flat bonus when the hit crits.
     if (crit?.didCrit) {
       bonusDamage += this.critBonusFlat;
     }

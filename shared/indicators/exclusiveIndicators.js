@@ -24,7 +24,9 @@ export function getExclusiveIndicator(key) {
 
 // ── Registro de indicators exclusivos ──────────────────────────
 
-registerExclusiveIndicator("tributo", {
+// Reyskarone's Blood Tithe: the hookEffect key is "tithe".
+// The asset file is still named tributo_indicator.png.
+registerExclusiveIndicator("tithe", {
   type: "image",
   value: "/assets/indicators/tributo_indicator.png",
   background: "",

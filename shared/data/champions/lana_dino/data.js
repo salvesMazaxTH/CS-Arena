@@ -9,6 +9,6 @@ export default {
   classKey: "tank",
   species: ["animal", "plush", "spirit"],
 
-  // Minion: entra no jogo via efeito, não por seleção.
+  // Minion: enters play through an effect, never through selection.
   entityType: "minion",
 };

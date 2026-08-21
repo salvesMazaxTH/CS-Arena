@@ -42,7 +42,7 @@ export async function animateSkill(skillKey, opts = {}) {
   let factory = skillAnimationRegistry.get(skillKey);
 
   if (!factory && shouldUseDefaultLightningAnimation(opts.skill)) {
-    factory = skillAnimationRegistry.get("relampagos_gemeos");
+    factory = skillAnimationRegistry.get("default_lightning");
   }
 
   if (!factory) return;
@@ -353,11 +353,11 @@ class MeleePunchEffect {
 }
 
 // ============================================================
-//  Register: gancho_rapido
+//  Register: quick_hook / blazing_fist_barrage
 // ============================================================
 
-["gancho_rapido", "barragem_de_socos_incandescentes"].forEach((skillName) => {
-  registerSkillAnimation(skillName, async ({ targetEl, userEl }) => {
+["quick_hook", "blazing_fist_barrage"].forEach((skillKey) => {
+  registerSkillAnimation(skillKey, async ({ targetEl, userEl }) => {
     const container = document.getElementById("webgl-container");
     if (!container || !targetEl) return;
 
@@ -434,7 +434,7 @@ class MeleePunchEffect {
   });
 });
 
-registerSkillAnimation("relampagos_gemeos", async ({ userEl, targetEl }) => {
+registerSkillAnimation("default_lightning", async ({ userEl, targetEl }) => {
   if (!targetEl) return;
 
   const canvas = document.createElement("canvas");

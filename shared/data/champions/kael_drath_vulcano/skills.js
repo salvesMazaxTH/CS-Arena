@@ -1,31 +1,30 @@
-import { formatChampionName } from "../../../ui/formatters.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import totalBlock from "../totalBlock.js";
 
 const kaeldrathVulcanoSkills = [
   // ========================
-  // Total block (global)
+  // Total Block (global)
   // ========================
   totalBlock,
 
   // ========================
-  // Habilidades Especiais
+  // Special Abilities
   // ========================
 
   // ========================
-  // H1- Pancada Vulcânica
+  // H1 — Volcanic Slam
   // ========================
 
   {
-    key: "pancada_vulcanica",
-    name: "Pancada Vulcânica",
+    key: "volcanic_slam",
+    name: "Volcanic Slam",
     bf: 60,
     contact: true,
     damageMode: "standard",
     priority: 0,
 
     description() {
-      return `Causa dano normal ao inimigo.`;
+      return `Kael'Drath brings a molten fist down on the chosen target, dealing physical damage.`;
     },
 
     targetSpec: ["enemy"],
@@ -49,11 +48,11 @@ const kaeldrathVulcanoSkills = [
   },
 
   // ========================
-  // H2 - Bola de Magma
+  // H2 — Magma Bomb
   // ========================
   {
-    key: "bola_de_magma",
-    name: "Bola de Magma",
+    key: "magma_bomb",
+    name: "Magma Bomb",
     bf: 70,
     burnDuration: 2,
     contact: false,
@@ -63,7 +62,9 @@ const kaeldrathVulcanoSkills = [
     element: "fire",
 
     description() {
-      return `Causa dano ao inimigo, aplicando Queimando por ${this.burnDuration} turnos. A explosão também acerta o inimigo à direita do alvo, caso exista, causando metade do dano EFETIVAMENTE causado ao alvo principal.`;
+      return `Kael'Drath hurls a knot of molten rock at the chosen target, dealing Fire magical damage and leaving them Burning for ${this.burnDuration} turn(s).
+
+      The blast splashes onto the enemy standing to their right, if there is one, dealing half of the damage effectively dealt to the main target.`;
     },
 
     targetSpec: ["enemy"],
@@ -102,19 +103,10 @@ const kaeldrathVulcanoSkills = [
         side: "right",
       });
 
-      console.log(
-        "[BOLA DE MAGMA] Alvos adjacentes encontrados:",
-        secondaryTarget,
-      );
-
       if (!secondaryTarget) return results;
 
-      console.log(
-        `[BOLA DE MAGMA] Dano causado ao alvo principal: ${mainPrimaryDamage?.totalDamage}`,
-      );
-
+      // The splash is half of the damage actually dealt to the main target.
       const splashDamage = (mainPrimaryDamage?.totalDamage ?? 0) / 2;
-      // dano secundário é igual à metade do dano causado no alvo principal
 
       const secondaryResult = new DamageEvent({
         baseDamage: splashDamage || 0,
@@ -136,11 +128,11 @@ const kaeldrathVulcanoSkills = [
   },
 
   // ========================
-  // Ultimate — Destruição Vulcânica
+  // Ultimate — Volcanic Destruction
   // ========================
   {
-    key: "destruicao_vulcanica",
-    name: "Destruição Vulcânica",
+    key: "volcanic_destruction",
+    name: "Volcanic Destruction",
     bf: 95,
     reductedDamagePercent: 30,
 
@@ -155,7 +147,9 @@ const kaeldrathVulcanoSkills = [
     element: "fire",
 
     description() {
-      return `Causa dano a TODOS os personagens; aqueles com 'Afinidade: Fogo', 'Água' ou 'Terra' recebem apenas ${this.reductedDamagePercent}% do dano.`;
+      return `The ground splits open and Kael'Drath lets the mountain speak, dealing Fire magical damage to EVERY champion on the field, allies included.
+
+      Those attuned to Fire, Water or Earth stand within their own element and take only ${this.reductedDamagePercent}% of the damage.`;
     },
 
     targetSpec: ["all"],
@@ -176,8 +170,8 @@ const kaeldrathVulcanoSkills = [
 
         if (!target?.alive) continue;
 
+        // Only Fire, Water or Earth affinities reduce the damage taken.
         const affinities = target.elementalAffinities || [];
-        // só os aliados que possuem afinidade com fogo, água ou terra recebem dano reduzido
 
         let finalBaseDamage = baseDamage;
 

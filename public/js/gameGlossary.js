@@ -1,57 +1,57 @@
 export const GAME_GLOSSARY = {
-  absoluto: {
-    title: "Dano Absoluto",
+  absolute: {
+    title: "Absolute Damage",
     description:
-      "Ignora Defesa, escudos e reduções. Não pode critar nem ser modificado.",
+      "Ignores Defense, shields, and reductions. Cannot crit or be modified.",
   },
-  atordoado: {
-    title: "Atordoado",
-    description: "O campeão fica temporariamente incapacitado de agir.",
+  stunned: {
+    title: "Stunned",
+    description: "The champion is temporarily unable to act.",
   },
-  condutor: {
-    title: "Condutor",
-    description: "Amplifica habilidades de raio.",
+  conductor: {
+    title: "Conductor",
+    description: "Amplifies lightning abilities.",
   },
-  congelado: {
-    title: "Congelado",
+  frozen: {
+    title: "Frozen",
     description:
-      "O campeão fica temporariamente incapacitado de agir. Velocidade e Ataque são zerados.",
+      "The champion is temporarily unable to act. Speed and Attack are set to zero.",
   },
-  enraizado: {
-    title: "Enraizado",
+  rooted: {
+    title: "Rooted",
     description:
-      "O campeão fica preso no lugar, sendo incapacitado de agir com habilidades que façam contato.",
+      "The champion is rooted in place, unable to act with abilities that require contact.",
   },
-  envenenado: {
-    title: "Envenenado",
+  poisoned: {
+    title: "Poisoned",
     description:
-      "No início do turno, causa dano mágico contínuo equivalente a 5% do HP máximo por stack e remove 1 stack. Quando o último stack é consumido, o efeito expira. Novas aplicações apenas somam stacks no mesmo status ativo.",
+      "At the start of the turn, deals continuous magic damage equal to 5% of maximum HP per stack and removes 1 stack. When the last stack is consumed, the effect expires. New applications only add stacks to the same active status.",
   },
-  escudo_de_feitiço: {
-    title: "Escudo de Feitiço",
+  spell_shield: {
+    title: "Spell Shield",
     description:
-      "O campeão recebe um escudo que absorve o próximo dano que seja mágico.",
+      "The champion receives a shield that absorbs the next magic damage.",
   },
-  gelado: {
-    title: "Gelado",
-    description: "O campeão tem sua velocidade e ataque reduzidos.",
+  chilled: {
+    title: "Chilled",
+    description: "The champion's speed and attack are reduced.",
   },
-  imunidade_absoluta: {
-    title: "Imunidade Absoluta",
+  absolute_immunity: {
+    title: "Absolute Immunity",
     description:
-      "O campeão é imune a todos os tipos de efeitos negativos (dano inclusive).",
+      "The champion is immune to all types of negative effects (including damage).",
   },
-  inerte: {
-    title: "Inerte",
-    description: "O campeão fica impedido de agir (geralmente auto-provocado).",
+  inert: {
+    title: "Inert",
+    description: "The champion is unable to act (usually self-provoked).",
   },
-  invisivel: {
-    title: "Invisível",
+  invisible: {
+    title: "Invisible",
     description:
-      "O campeão não pode ser alvo direto de inimigos, só é afetada indiretamente e por efeitos em área.",
+      "The champion cannot be directly targeted by enemies, only affected indirectly and by area effects.",
   },
-  obliterar: {
-    title: "Obliterar",
+  obliterate: {
+    title: "Obliterate",
     aliases: [
       "obliterado",
       "obliterados",
@@ -60,26 +60,26 @@ export const GAME_GLOSSARY = {
       "obliteração",
     ],
     description:
-      "O campeão é instantaneamente derrotado ao chegar abaixo de certa quantidade de HP e/ou ao cumprir alguma outra condição.",
+      "The champion is instantly defeated upon dropping below a certain amount of HP and/or meeting some other condition.",
   },
-  paralisado: {
-    title: "Paralisado",
+  paralyzed: {
+    title: "Paralyzed",
     description:
-      "O campeão tem sua VEL zerada e fica com 40% de chance de não agir.",
+      "The champion's SPD is set to zero and has a 40% chance of not acting.",
   },
-  perfurante: {
-    title: "Dano Perfurante",
+  piercing: {
+    title: "Piercing",
     description:
-      "Ignora um percentual da Defesa, mas ainda pode critar e sofrer bônus ou reduções.",
+      "Ignores a percentage of Defense, but can still crit and be affected by bonuses or reductions.",
   },
-  queimando: {
-    title: "Queimando",
+  burning: {
+    title: "Burning",
     description:
-      "O campeão sofre dano contínuo (geralmente 20) por um certo número de turnos (geralmente 1).",
+      "The champion takes continuous damage (usually 20) for a certain number of turns (usually 1).",
   },
-  sangramento: {
-    title: "Sangramento",
+  bleeding: {
+    title: "Bleeding",
     description:
-      "No início do turno, causa dano físico contínuo equivalente a 5% do HP máximo por stack e remove 1 stack. Quando o último stack é consumido, o efeito expira. Novas aplicações apenas somam stacks no mesmo status ativo.",
+      "At the start of the turn, deals continuous physical damage equal to 5% of maximum HP per stack and removes 1 stack. When the last stack is consumed, the effect expires. New applications only add stacks to the same active status.",
   },
 };

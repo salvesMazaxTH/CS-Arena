@@ -5,15 +5,15 @@ const myrraSkills = [
   totalBlock,
 
   {
-    key: "corte_preciso",
-    name: "Corte Preciso",
+    key: "precision_cut",
+    name: "Precision Cut",
     bf: 65,
     contact: true,
     damageMode: "standard",
     priority: 0,
 
     description() {
-      return `Causa dano que ignora reduções de dano do alvo.`;
+      return `Myrra slips her blade past the guard of the chosen target, dealing physical damage that ignores their damage reduction entirely.`;
     },
 
     targetSpec: ["enemy"],
@@ -37,8 +37,8 @@ const myrraSkills = [
   },
 
   {
-    key: "danca_das_laminas",
-    name: "Dança das Lâminas",
+    key: "bladedance",
+    name: "Bladedance",
     hits: 2,
     bfPerHit: 40,
     contact: true,
@@ -46,7 +46,7 @@ const myrraSkills = [
     priority: 0,
 
     description() {
-      return `Ataca duas vezes. Cada golpe ativa sua passiva.`;
+      return `Myrra spins through the chosen target in two flowing cuts, dealing physical damage with each. Every hit feeds her passive.`;
     },
 
     targetSpec: ["enemy"],
@@ -74,8 +74,8 @@ const myrraSkills = [
   },
 
   {
-    key: "execucao_silenciosa",
-    name: "Execução Silenciosa",
+    key: "silent_execution",
+    name: "Silent Execution",
     bf: 120,
     missingHpScaling: 0.5,
     contact: true,
@@ -85,7 +85,7 @@ const myrraSkills = [
     priority: 0,
 
     description() {
-      return `Causa dano aumentado com base na vida perdida do alvo. Ignora redução de dano.`;
+      return `Myrra steps in without a sound and finishes what the battle started, dealing physical damage to the chosen target that grows with the HP they have already lost. Ignores damage reduction.`;
     },
 
     targetSpec: ["enemy"],

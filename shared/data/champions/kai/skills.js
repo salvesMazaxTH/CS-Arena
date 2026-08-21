@@ -5,14 +5,14 @@ import basicStrike from "../basicStrike.js";
 const kaiSkills = [
   basicStrike,
   {
-    key: "gancho_rapido",
-    name: "Gancho Rápido",
+    key: "quick_hook",
+    name: "Quick Hook",
     bf: 60,
     contact: true,
     damageMode: "standard",
     priority: 1,
     description() {
-      return `Ataque rápido de contato. Causa dano físico ao inimigo.`;
+      return `Kai snaps a short hook into the chosen target before they can set their guard, dealing physical damage.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -27,25 +27,29 @@ const kaiSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
-      // Ensure targetId is set for animation targeting
+      // Ensure targetId is set for animation targeting.
       return { ...result, targetId: enemy.id };
     },
   },
 
   {
-    key: "postura_da_brasa_viva",
-    name: "Postura da Brasa Viva",
+    key: "living_ember_stance",
+    name: "Living Ember Stance",
     contact: false,
     damageReduction: 25,
     counterAtkDmg: 15,
     flamingFistsBonus: 35,
+    stanceDuration: 2,
+    burnDuration: 2,
     priority: 2,
     element: "fire",
 
     description() {
-      return `Durante este turno e o próximo, Kai assume uma postura incandescente, recebendo ${this.damageReduction}% de redução de dano. 
-      Se sofrer ataque de contato, contra-ataca com ${this.counterAtkDmg} de dano perfurante e aplica Queimadura. 
-      Ao causar dano, ativa Brasa Viva por 2 turnos: seus ataques causam +${this.flamingFistsBonus} de dano e sempre aplicam Queimadura.`;
+      return `Kai settles into a stance that glows from the inside out, taking ${this.damageReduction}% less damage during this turn and the next.
+
+      Anyone who strikes him in contact is answered on the spot with ${this.counterAtkDmg} piercing damage and left Burning.
+
+      The moment Kai deals damage, the stance catches: Living Ember burns for ${this.stanceDuration} turn(s), his attacks deal +${this.flamingFistsBonus} bonus damage and always apply Burning.`;
     },
 
     targetSpec: ["self"],
@@ -54,27 +58,23 @@ const kaiSkills = [
       user.runtime.hookEffects ??= [];
 
       const counterAtkDmg = this.counterAtkDmg;
+      const stanceDuration = this.stanceDuration;
+      const burnDuration = this.burnDuration;
 
-      user.runtime.fireStance = "postura"; // Sinaliza para o sistema de VFX que a postura está ativa
+      // Signals to the VFX system that the stance is active.
+      user.runtime.fireStance = "emberStance";
 
       const effect = {
-        key: "postura_da_brasa_viva",
-        state: "postura", // "postura" → "brasa_viva"
-        expiresAtTurn: context.currentTurn + 2,
+        key: "living_ember_stance",
+        state: "emberStance", // "emberStance" → "livingEmber"
+        expiresAtTurn: context.currentTurn + stanceDuration,
 
-        // 🔥 CONTRA-ATAQUE
-        onAfterDmgTaking({
-          attacker,
-          defender,
-          skill,
-          damage,
-          owner,
-          context,
-        }) {
+        // 🔥 COUNTERATTACK
+        onAfterDmgTaking({ attacker, defender, skill, damage, owner, context }) {
           if (defender !== owner) return;
           if (!skill?.contact) return;
           if (damage <= 0) return;
-          if (skill?.key === "postura_da_brasa_viva_counter") return;
+          if (skill?.key === "living_ember_stance_counter") return;
           if (!attacker?.alive) return;
 
           context.extraDamageQueue ??= [];
@@ -87,23 +87,23 @@ const kaiSkills = [
             defender: attacker,
             type: "physical",
             skill: {
-              key: "postura_da_brasa_viva_counter",
-              name: "Contra-ataque Brasa Viva",
+              key: "living_ember_stance_counter",
+              name: "Living Ember Counter",
               contact: true,
             },
 
             dialog: {
-              message: `${formatChampionName(owner)} contra-ataca com a Postura da Brasa Viva!`,
+              message: `${formatChampionName(owner)} answers with the Living Ember Stance!`,
               duration: 1000,
             },
           });
 
-          attacker.applyStatusEffect("burning", 2, context, {
+          attacker.applyStatusEffect("burning", burnDuration, context, {
             source: owner,
           });
 
           return {
-            log: `${formatChampionName(attacker)} é queimado ao atingir ${formatChampionName(owner)} em contato!`,
+            log: `${formatChampionName(attacker)} is burned for striking ${formatChampionName(owner)} in contact!`,
           };
         },
 
@@ -111,45 +111,46 @@ const kaiSkills = [
           if (attacker !== owner) return;
           if (damage <= 0) return;
 
-          // 🔥 TRANSIÇÃO
+          // 🔥 TRANSITION
           if (
-            this.state === "postura" &&
-            owner.runtime.fireStance !== "brasa_viva"
+            this.state === "emberStance" &&
+            owner.runtime.fireStance !== "livingEmber"
           ) {
-            this.state = "brasa_viva";
-            owner.runtime.fireStance = "brasa_viva";
-            this.expiresAtTurn = context.currentTurn + 2;
+            this.state = "livingEmber";
+            owner.runtime.fireStance = "livingEmber";
+            this.expiresAtTurn = context.currentTurn + stanceDuration;
 
             return {
-              log: "🔥 Brasa Viva é ativada!",
+              log: "🔥 Living Ember flares to life!",
             };
           }
 
-          // 🔥 EFEITO ATIVO
-          if (this.state === "brasa_viva") {
+          // 🔥 ACTIVE EFFECT
+          if (this.state === "livingEmber") {
             if (!defender?.applyStatusEffect) return;
 
-            defender.applyStatusEffect("burning", 2, context, {
+            defender.applyStatusEffect("burning", burnDuration, context, {
               source: owner,
             });
 
             return {
-              log: `${formatChampionName(defender)} está Queimando (Brasa Viva)!`,
+              log: `${formatChampionName(defender)} is Burning (Living Ember)!`,
             };
           }
         },
 
-        // 🔥 REMOÇÃO AUTOMÁTICA
+        // 🔥 AUTOMATIC REMOVAL
         onTurnStart({ owner, context }) {
           if (context.currentTurn >= this.expiresAtTurn) {
-            owner.runtime.fireStance = null; // Sinaliza para o sistema de VFX que a postura foi removida
+            // Signals to the VFX system that the stance is gone.
+            owner.runtime.fireStance = null;
           }
         },
       };
 
       user.runtime.hookEffects.push(effect);
 
-      // Redução de dano da postura
+      // Damage reduction granted by the stance.
       user.applyDamageReduction({
         amount: this.damageReduction,
         duration: 1,
@@ -157,13 +158,13 @@ const kaiSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} assume a Postura da Brasa Viva!`,
+        log: `${formatChampionName(user)} takes the Living Ember Stance!`,
       };
     },
   },
   {
-    key: "barragem_de_socos_incandescentes",
-    name: "Barragem de Socos Incandescentes",
+    key: "blazing_fist_barrage",
+    name: "Blazing Fist Barrage",
     bf: 0,
     damagePerHit: 40,
     damageMode: "standard",
@@ -176,19 +177,18 @@ const kaiSkills = [
     isUltimate: true,
     momentumCost: 33,
     description() {
-      return `Kai desfere uma série de socos flamejantes distribuídos aleatoriamente entre todos os inimigos, cada um causando ${this.damagePerHit} de dano. Alvos já queimando recebem dano adicional de ${this.burningBonus}.`;
+      return `Kai throws himself forward and lets go of everything at once: ${this.hits} blazing punches scatter at random across all enemies, each one dealing ${this.damagePerHit} physical damage.
+
+      Targets already Burning take ${this.burningBonus} bonus damage per punch as the fire finds its way in.`;
     },
     targetSpec: ["all:enemy"],
     resolve({ user, targets, context = {} }) {
-      // Busca todos os inimigos vivos do contexto (garante que não dependa de targets)
       const enemies = targets.filter((c) => c.team !== user.team && c.alive);
       const results = [];
       if (!enemies.length) return results;
 
       for (let i = 0; i < this.hits; i++) {
         const target = enemies[Math.floor(Math.random() * enemies.length)];
-
-        // console.log("[KAI] HIT", i, target.name, target.alive);
 
         const directBonus = target.hasStatusEffect("burning")
           ? this.burningBonus

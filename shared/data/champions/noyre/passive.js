@@ -14,13 +14,13 @@ function _processEntropy(owner, context, resolver, stacksCap = 7) {
     for (const enemy of enemies) {
       if (!enemy.alive) continue;
 
-      // 🔹 checar se tinha ult suficiente pra ultar (ANTES de drenar)
+      // Check whether they could afford their ultimate BEFORE draining.
       const canUseMomentumSkill =
         enemy.skills?.some((s) => s.isUltimate) &&
         enemy.momentum >=
           enemy.getSkillCost?.(enemy.skills.find((s) => s.isUltimate));
 
-      // 🔹 drenar 1 unidade
+      // Drain one unit.
       let drained = 0;
 
       if (resolver?.applyResourceChange) {
@@ -40,16 +40,16 @@ function _processEntropy(owner, context, resolver, stacksCap = 7) {
         drained = Math.abs(applied || 0);
       }
 
-      // Dialog animado ao consumir stacks (imitando Blyskartri, com prefixo padrão)
+      // Animated dialog when the stacks are spent.
       if (drained > 0 && context?.registerDialog) {
         context.registerDialog({
-          message: `<b>[Passiva — Entropia]</b> ${formatChampionName(owner)} drenou o Momentum de ${formatChampionName(enemy)}!`,
+          message: `<b>[Passive — Entropy]</b> ${formatChampionName(owner)} drained the Momentum of ${formatChampionName(enemy)}!`,
           sourceId: owner.id,
           targetId: enemy.id,
         });
       }
 
-      // 🔥 punição
+      // Punishment.
       if (canUseMomentumSkill) {
         const dmg = Math.floor(enemy.maxHP * 0.15);
 
@@ -82,18 +82,19 @@ function _accumulateEntropy(owner) {
 }
 
 export default {
-  key: "entropia_noyre",
-  name: "Entropia Entrópica",
+  key: "entropy",
+  name: "Entropy",
   stacksCap: 7,
+  drainPunishPercent: 15,
 
   description(champion) {
     const stacks = champion.runtime.entropyStacks || 0;
 
-    return `Sempre que um inimigo ganha ou consome Momentum, Noyre acumula 1 Entropia.
+    return `Nothing gathered near Noyre stays gathered. Whenever an enemy gains or spends Momentum, he accumulates 1 Entropy.
 
-    <b>Acúmulos atuais: ${stacks}</b>
+    <b>Current stacks: ${stacks}</b>
 
-    A cada ${this.stacksCap} acúmulos, remove 1 unidade de Momentum de todos os inimigos. Inimigos que tinham Momentum suficiente para usar sua ultimate sofrem 15% do HP máximo como Dano Perfurante.`;
+    Every ${this.stacksCap} stacks, the accumulation comes undone: 1 unit of Momentum is stripped from every enemy, and those who held enough to unleash their ultimate are punished for it, taking ${this.drainPunishPercent}% of their Max HP as piercing damage.`;
   },
 
   hookScope: {
@@ -117,9 +118,9 @@ export default {
     if (procs > 0) {
       return [
         {
-          log: `<b>[PASSIVA — Entropia]</b> ${formatChampionName(
+          log: `<b>[PASSIVE — Entropy]</b> ${formatChampionName(
             owner,
-          )} desencadeou Entropia ${procs}x.`,
+          )} unleashed Entropy ${procs}x.`,
         },
         ...results,
       ];
@@ -142,9 +143,9 @@ export default {
     if (procs > 0) {
       return [
         {
-          log: `<b>[PASSIVA — Entropia]</b> ${formatChampionName(
+          log: `<b>[PASSIVE — Entropy]</b> ${formatChampionName(
             owner,
-          )} desencadeou Entropia ${procs}x.`,
+          )} unleashed Entropy ${procs}x.`,
         },
         ...results,
       ];

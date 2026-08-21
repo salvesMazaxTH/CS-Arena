@@ -4,21 +4,21 @@ import totalBlock from "../totalBlock.js";
 
 const sengokuSkills = [
   // ========================
-  // Total block (global)
+  // Total Block (global)
   // ========================
   totalBlock,
   // ========================
-  // Habilidades Especiais
+  // Special Abilities
   // ========================
   {
-    key: "golpe_furioso",
-    name: "Golpe Furioso",
+    key: "ravening_strike",
+    name: "Ravening Strike",
     bf: 70,
     damageMode: "standard",
     contact: true,
     priority: 0,
     description() {
-      return `Sengoku desfere um golpe furioso, causando dano ao inimigo.`;
+      return `Sengoku brings down a blow heavy with old fury, dealing physical damage to the chosen target.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context }) {
@@ -37,8 +37,8 @@ const sengokuSkills = [
   },
 
   {
-    key: "bola_de_fogo",
-    name: "Bola de Fogo",
+    key: "dragonfire_bolt",
+    name: "Dragonfire Bolt",
     bf: 45,
     contact: false,
     damageMode: "piercing",
@@ -47,7 +47,7 @@ const sengokuSkills = [
     element: "fire",
 
     description() {
-      return `Sengoku lança uma bola de fogo, causando dano perfurante ao inimigo (${this.piercingPercentage}% de perfuração).`;
+      return `Sengoku fires from his hand a bolt of dragonfire that burns straight through armor, dealing Fire magical damage to the chosen target with ${this.piercingPercentage}% piercing.`;
     },
 
     targetSpec: ["enemy"],
@@ -69,18 +69,18 @@ const sengokuSkills = [
   },
 
   {
-    key: "forma_primordial",
-    name: "Forma Primordial",
+    key: "primordial_awakening",
+    name: "Primordial Awakening",
     duration: 3,
     transformInto: "sengoku_primordial",
     isUltimate: true,
     momentumCost: 55,
     priority: 0,
     description() {
-      return `Sengoku assume sua forma primordial dracônica por ${this.duration} turnos, alterando suas skills, passiva e atributos.`;
+      return `Sengoku sheds the centuries and unfolds into his primordial draconic shape for ${this.duration} turn(s), replacing his skills, his passive and his stats.`;
     },
     targetSpec: ["self"],
-    resolve({ user, targets, context = {} }) {
+    resolve({ user, context = {} }) {
       context.requestChampionMutation?.({
         mode: "transform",
         targetId: user.id,
@@ -91,7 +91,7 @@ const sengokuSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} despertou sua <b>Forma Primordial</b> por ${this.duration} turnos!`,
+        log: `${formatChampionName(user)} awakens his <b>Primordial Form</b> for ${this.duration} turn(s)!`,
       };
     },
   },

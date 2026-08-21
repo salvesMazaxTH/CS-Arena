@@ -41,9 +41,9 @@ export default {
   },
 
   description() {
-    return `Against targets at or below 30% of their Max HP, Bruno's attacks are always Critical Hits.
+    return `Bruno waits for the moment the cold has already done the work. Against targets at or below ${this.lowLifeThresholdRatio * 100}% of their Max HP, his attacks are always a critical hit.
 
-    Whenever an enemy champion becomes Frozen, Bruno deals ${this.passiveDamage} Absolute Damage to them.`;
+    And whenever an enemy champion becomes Frozen, the ice closes on them at his word for ${this.passiveDamage} Absolute Damage.`;
   },
 
   onStatusEffectIncoming({ target, statusEffect, context, owner }) {

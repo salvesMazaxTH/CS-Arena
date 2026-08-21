@@ -4,25 +4,31 @@ import totalBlock from "../totalBlock.js";
 
 const torrenSkills = [
   // ========================
-  // Total block (global)
+  // Total Block (global)
   // ========================
   totalBlock,
+
   // ========================
   // Special Skills
   // ========================
+
   {
-    key: "thundering_sword",
-    name: "Thundering Sword",
+    key: "resounding_sword",
+    name: "Resounding Sword",
     bf: 50,
     contact: true,
     damageMode: "standard",
     priority: 0,
+
     description() {
-      return `Deals damage to the chosen enemy and stuns another random enemy.`;
+      return `Torren swings his sword with crushing force, the resounding blow striking the chosen enemy and stunning another at random.`;
     },
+
     targetSpec: ["enemy"],
+
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
+
       const baseDamage = (user.Attack * this.bf) / 100;
 
       const damageEvent = new DamageEvent({
@@ -56,6 +62,7 @@ const torrenSkills = [
 
       const randomEnemy =
         otherEnemies[Math.floor(Math.random() * otherEnemies.length)];
+
       randomEnemy.applyStatusEffect("stunned", 1, context, {
         source: {
           type: "skill",
@@ -71,19 +78,16 @@ const torrenSkills = [
   {
     key: "scorn_the_weak",
     name: "Scorn the Weak",
-
     bf: 40,
     contact: true,
     damageMode: "piercing",
     piercingPercentage: 100,
     thresholdMultiplier: 1.35,
     priority: 2,
-
     tauntDuration: 2,
 
     description() {
-      return `Deals piercing damage (${this.piercingPercentage}% pierce) to the most fragile enemy.
-      If their fragility is significantly greater than Torren's, they are taunted for ${this.tauntDuration} turn(s) and deal less damage to other targets.`;
+      return `Torren singles out the most fragile enemy, striking through their defenses with a piercing blow. If their fragility is significantly greater than his, they are Taunted for ${this.tauntDuration} turn(s) and deal 30% less damage to other targets.`;
     },
 
     targetSpec: ["all:enemy"],
@@ -98,12 +102,12 @@ const torrenSkills = [
         return { t, score };
       });
 
-      // 🔹 always picks the most fragile (even if threshold isn't met)
+      // Always picks the most fragile, even if the threshold isn't met.
       const best = scoredTargets.reduce((best, curr) => {
         return !best || curr.score > best.score ? curr : best;
       }, null);
 
-      if (!best) return null; // safety
+      if (!best) return null;
 
       const target = best.t;
       const targetScore = best.score;
@@ -120,7 +124,7 @@ const torrenSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      // 🔥 actual weakness condition
+      // Actual weakness condition.
       const isWeakEnough =
         targetScore >= torrenScore * this.thresholdMultiplier;
 
@@ -128,13 +132,16 @@ const torrenSkills = [
 
       if (isWeakEnough) {
         tauntLog = target.applyTaunt(user.id, this.tauntDuration, context);
+
         target.addDamageModifier({
           key: "scorned",
           expiresAtTurn: context.currentTurn + this.tauntDuration,
+
           apply: ({ damage, defender }) => {
             if (!defender || defender.id !== user.id) {
               return damage * 0.7;
             }
+
             return damage;
           },
         });
@@ -147,24 +154,23 @@ const torrenSkills = [
   {
     key: "juggernaut",
     name: "Juggernaut",
-
     bf: 115,
     contact: true,
     damageMode: "standard",
-
     isUltimate: true,
     momentumCost: 55,
-
     stunDuration: 2,
-
     priority: 0,
+
     description() {
-      return `Deals piercing damage (${this.piercingPercentage}% pierce) to the most fragile enemy.
-      If their fragility is significantly greater than Torren's, they are taunted for ${this.tauntDuration} turn(s).`;
+      return `Torren advances with unstoppable force, crushing the chosen enemy beneath a devastating blow and Stunning them for ${this.stunDuration} turn(s).`;
     },
+
     targetSpec: ["enemy"],
+
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
+
       const baseDamage = (user.Attack * this.bf) / 100;
 
       const damageEvent = new DamageEvent({

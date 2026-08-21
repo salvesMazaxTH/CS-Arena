@@ -18,13 +18,14 @@ const gryskarchuSkills = [
     name: "Earthroot",
     bf: 75,
     damageMode: "standard",
+    element: "earth",
     rootDuration: 2,
     contact: false,
 
     priority: 0,
 
     description() {
-      return `Deals damage to the chosen target and applies Rooted for ${this.rootDuration} turns.`;
+      return `Gryskarchu calls the roots up through the ground beneath the chosen target, dealing Earth magical damage and holding them Rooted for ${this.rootDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -45,11 +46,7 @@ const gryskarchuSkills = [
 
       // Status effect only applies if the damage connects.
       if (!result?.evaded && !result?.immune) {
-        const rooted = enemy.applyStatusEffect(
-          "rooted",
-          this.rootDuration,
-          context,
-        );
+        enemy.applyStatusEffect("rooted", this.rootDuration, context);
       }
 
       return result;
@@ -65,7 +62,7 @@ const gryskarchuSkills = [
     priority: 0,
 
     description() {
-      return `Gryskarchu restores ${this.healAmount} HP to himself and all active allies.`;
+      return `Green light opens across the field like something in bloom, restoring ${this.healAmount} HP to Gryskarchu and every active ally.`;
     },
 
     targetSpec: ["all:ally"],
@@ -90,8 +87,6 @@ const gryskarchuSkills = [
   },
 
   {
-    // 30% Max HP restored, +25% Defense, 2-turn duration
-    // Grants the effect to an ally.
     key: "mother_earths_protection",
     name: "Mother Earth's Protection",
 
@@ -106,7 +101,9 @@ const gryskarchuSkills = [
     priority: 5,
 
     description() {
-      return `Grants a chosen ally +${this.defBuff}% Defense for ${this.buffDuration} turns, restores ${this.healPercent}% of their Max HP, and grants them bonus damage equal to +${this.defDamageBonus}% of their Defense for ${this.buffDuration} turns.`;
+      return `Gryskarchu lays Mother Earth's own protection over the chosen ally, restoring ${this.healPercent}% of their Max HP.
+
+      For ${this.buffDuration} turn(s), they gain +${this.defBuff}% Defense, and the ground itself carries their blows: their attacks deal bonus damage equal to ${this.defDamageBonus}% of their Defense.`;
     },
 
     targetSpec: ["select:ally"],
@@ -136,9 +133,8 @@ const gryskarchuSkills = [
         expiresAtTurn:
           context.currentTurn + this.buffDuration,
 
-        apply({ baseDamage, user }) {
-          const total = baseDamage + bonus;
-          return total;
+        apply({ baseDamage }) {
+          return baseDamage + bonus;
         },
       });
 
@@ -146,8 +142,8 @@ const gryskarchuSkills = [
         log:
           `${formatChampionName(user)} grants ${formatChampionName(
             ally,
-          )} ${healAmount} HP restored, +${this.defBuff}% Defense, ` +
-          `and bonus damage for ${this.buffDuration} turns!`,
+          )} ${healAmount} restored HP, +${this.defBuff}% Defense ` +
+          `and bonus damage for ${this.buffDuration} turn(s)!`,
       };
     },
   },

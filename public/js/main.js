@@ -3215,14 +3215,23 @@ function initActionBar() {
     .map((c) => c.id);
 
   currentActionBarSlot = 0;
-  showActionBarSlot();
+  // A rebuild is never allowed to end the turn on the player's behalf: every
+  // state refresh re-runs this, and the previous turn's acted flags are still
+  // set while the resolution is being animated, which would silently confirm
+  // the end of the turn (or pop the summon reminder) with nobody clicking.
+  showActionBarSlot({ playerAdvanced: false });
 }
 
-function showActionBarSlot() {
+/**
+ * @param {{ playerAdvanced?: boolean }} options - playerAdvanced is true only
+ *   when the bar moved on because the player locked in or skipped a slot, which
+ *   is the only situation where running out of slots may end the turn.
+ */
+function showActionBarSlot({ playerAdvanced = true } = {}) {
   removeActionBar();
   if (currentActionBarSlot >= actionBarSlotOrder.length) {
     if (actionBarSlotOrder.length > 0) {
-      requestEndTurn();
+      if (playerAdvanced) requestEndTurn();
       // Kept available while the turn is still open, so a dismissed summon
       // reminder always has a way back to ending the turn.
       setEndTurnButtonVisible(!hasConfirmedEndTurn);
@@ -3235,7 +3244,7 @@ function showActionBarSlot() {
 
   if (isChampionAutoSkippedInActionBar(champion)) {
     currentActionBarSlot++;
-    showActionBarSlot();
+    showActionBarSlot({ playerAdvanced });
     return;
   }
 

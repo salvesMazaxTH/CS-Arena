@@ -4,29 +4,31 @@ import totalBlock from "../totalBlock.js";
 
 const reyskaroneSkills = [
   // =========================
-  // Total block (global)
+  // Total Block (global)
   // =========================
   totalBlock,
   // =========================
-  // Habilidades Especiais
+  // Special Abilities
 
   // =========================
-  // H1 — Corte Tributário
+  // H1 — Blood Tithe
   // =========================
   {
-    key: "tributoDeSangue",
-    name: "Tributo de Sangue",
+    key: "blood_tithe",
+    name: "Blood Tithe",
     bf: 45,
     damageMode: "standard",
     hpSacrificePercent: 15,
-    tributeDuration: 2,
-    tributeHeal: 15,
-    tributeBonusDamage: 10,
+    titheDuration: 2,
+    titheHeal: 15,
+    titheBonusDamage: 10,
     contact: false,
 
     priority: 1,
     description() {
-      return `Sacrifica ${this.hpSacrificePercent}% do HP máximo e marca o alvo com Tributo por ${this.tributeDuration} turnos (a marca é bloqueada por Imunidade Absoluta, Escudo Supremo ou Escudo de Feitiço). Aliados que o atacarem curam ${this.tributeHeal} HP e causam +${this.tributeBonusDamage} de dano. Em seguida, ataca o alvo.`;
+      return `Reyskarone spills ${this.hpSacrificePercent}% of his own Max HP to brand the chosen target with the Tithe for ${this.titheDuration} turn(s), then strikes them for magical damage.
+
+      While the brand holds, every ally who strikes the marked target restores ${this.titheHeal} HP and deals +${this.titheBonusDamage} bonus damage. The brand cannot take hold through Absolute Immunity, Supreme Shield or Spell Shield — it burns one of those shields away instead.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -49,51 +51,41 @@ const reyskaroneSkills = [
         (shield) => shield?.type === "spell" && shield?.amount > 0,
       );
 
-      const tributoBlocked =
+      const titheBlocked =
         hasAbsoluteImmunity || supremeShieldIdx !== -1 || spellShieldIdx !== -1;
 
-      if (!tributoBlocked) {
+      if (!titheBlocked) {
         // =========================
-        // HOOK TEMPORÁRIO: TRIBUTO
+        // TEMPORARY HOOK: TITHE
         // =========================
         enemy.runtime.hookEffects.push({
-          key: "tributo",
+          key: "tithe",
           group: "skill",
 
-          expiresAtTurn: context.currentTurn + this.tributeDuration,
+          expiresAtTurn: context.currentTurn + this.titheDuration,
 
           hookScope: {
             onAfterDmgDealing: "defender",
           },
 
-          onBeforeDmgDealing: ({
-            attacker,
-            defender,
-            skill,
-            damage,
-            owner,
-            context,
-          }) => {
+          onBeforeDmgDealing: ({ defender, damage }) => {
             if (defender !== enemy) return;
 
-            // bônus de dano
-            const bonusDamage = this.tributeBonusDamage;
-
             return {
-              damage: damage + bonusDamage,
+              damage: damage + this.titheBonusDamage,
             };
           },
 
           onAfterDmgDealing: ({ attacker, defender, owner, context }) => {
             if (defender !== enemy) return;
 
-            // cura o atacante
-            attacker.heal(this.tributeHeal, context, owner);
+            // The attacker drinks from the brand.
+            attacker.heal(this.titheHeal, context, owner);
           },
         });
 
         context.registerDialog({
-          message: `${formatChampionName(enemy)} foi marcado com <b>Tributo</b>!`,
+          message: `${formatChampionName(enemy)} is branded with the <b>Tithe</b>!`,
           sourceId: user.id,
           targetId: enemy.id,
           duration: 1000,
@@ -106,7 +98,7 @@ const reyskaroneSkills = [
         }
       }
 
-      // ataque imediato
+      // Immediate follow-up attack.
       const result = new DamageEvent({
         baseDamage: (user.Attack * this.bf) / 100,
         attacker: user,
@@ -117,10 +109,8 @@ const reyskaroneSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      if (!tributoBlocked) {
-        if (result?.log) {
-          result.log += `\n${formatChampionName(enemy)} foi marcado com Tributo.`;
-        }
+      if (!titheBlocked && result?.log) {
+        result.log += `\n${formatChampionName(enemy)} is branded with the Tithe.`;
       }
 
       return result;
@@ -128,11 +118,11 @@ const reyskaroneSkills = [
   },
 
   // =========================
-  // H2 — Transfusão Marcial
+  // H2 — Martial Transfusion
   // =========================
   {
-    key: "transfusao_marcial",
-    name: "Transfusão Marcial",
+    key: "martial_transfusion",
+    name: "Martial Transfusion",
     atkBuff: 20,
     lifeStealBuff: 15,
     buffDuration: 2,
@@ -140,7 +130,7 @@ const reyskaroneSkills = [
 
     priority: 4,
     description() {
-      return `Concede a um aliado: +${this.atkBuff} ATQ, +${this.lifeStealBuff}% LifeSteal por ${this.buffDuration} turnos.`;
+      return `Reyskarone pours his own blood into the chosen ally, granting them +${this.atkBuff} Attack and +${this.lifeStealBuff}% LifeSteal for ${this.buffDuration} turn(s).`;
     },
     targetSpec: ["select:ally"],
     resolve({ user, targets, context = {} }) {
@@ -165,29 +155,28 @@ const reyskaroneSkills = [
       return {
         log:
           user === ally
-            ? `${formatChampionName(user)} fortaleceu-se com Transfusão Marcial.`
-            : `${formatChampionName(user)} fortaleceu ${formatChampionName(ally)} com Transfusão Marcial.`,
+            ? `${formatChampionName(user)} strengthens himself with Martial Transfusion.`
+            : `${formatChampionName(user)} strengthens ${formatChampionName(ally)} with Martial Transfusion.`,
       };
     },
   },
 
   // =========================
-  // ULT — Pacto Carmesim
+  // ULT — Crimson Pact
   // =========================
   {
-    key: "pacto_carmesim",
-    name: "Pacto Carmesim",
+    key: "crimson_pact",
+    name: "Crimson Pact",
     atkBuffPercent: 18,
     lifeStealBuff: 30,
     buffDuration: 2,
-    pactDuration: 3,
     contact: false,
     isUltimate: true,
     momentumCost: 55,
 
     priority: 5,
     description() {
-      return `Seleciona um aliado: ele recebe +${this.atkBuffPercent}% ATQ e +${this.lifeStealBuff}% LifeSteal por ${this.buffDuration} turnos.`;
+      return `Reyskarone seals a pact in blood with the chosen ally: for ${this.buffDuration} turn(s), they gain +${this.atkBuffPercent}% Attack and +${this.lifeStealBuff}% LifeSteal.`;
     },
     targetSpec: ["select:ally"],
     resolve({ user, targets, context = {} }) {
@@ -211,7 +200,7 @@ const reyskaroneSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} selou um Pacto Carmesim com ${formatChampionName(ally)}.`,
+        log: `${formatChampionName(user)} seals a Crimson Pact with ${formatChampionName(ally)}.`,
       };
     },
   },

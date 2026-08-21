@@ -7,8 +7,8 @@ const tutuSkills = [
   totalBlock,
   basicStrike,
   {
-    key: "investida_protetora",
-    name: "Investida Protetora",
+    key: "guardian_charge",
+    name: "Guardian Charge",
     bf: 85,
     contact: true,
 
@@ -18,7 +18,7 @@ const tutuSkills = [
     damageMode: "standard",
 
     description() {
-      return `Tutu avança, causando dano ao inimigo e protegendo o aliado com menor HP com um Escudo de ${this.shieldAmount} pontos.`;
+      return `Tutu barrels into the chosen target, dealing physical damage, then plants himself in front of whichever ally is worst off, granting them a ${this.shieldAmount} point Shield.`;
     },
 
     targetSpec: ["enemy"],
@@ -55,15 +55,15 @@ const tutuSkills = [
   },
 
   {
-    key: "provocacao_instintiva",
-    name: "Provocação Instintiva",
+    key: "instinctive_taunt",
+    name: "Instinctive Taunt",
 
     tauntDuration: 1,
 
     priority: 3,
 
     description() {
-      return `Tutu avança, provocando o inimigo por ${this.tauntDuration} turno(s).`;
+      return `Tutu plants himself in the way and makes far too much noise, Taunting the chosen target for ${this.tauntDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -75,7 +75,7 @@ const tutuSkills = [
 
       const logs = [tauntLog].filter(Boolean);
       logs.unshift({
-        log: `${formatChampionName(user)} executou <b>Provocação Instintiva</b>. ${formatChampionName(enemy)} foi provocado por ${this.tauntDuration} turno(s).`,
+        log: `${formatChampionName(user)} uses <b>Instinctive Taunt</b>. ${formatChampionName(enemy)} is Taunted for ${this.tauntDuration} turn(s).`,
       });
       return logs;
     },

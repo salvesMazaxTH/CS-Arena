@@ -9,7 +9,9 @@ export default {
   conductorDuration: 2,
   conductorBonusPercent: 15,
   description() {
-    return `Whenever Voltexz deals damage with a skill, she takes ${this.recoilPercent}% of the damage actually dealt as recoil (absolute damage). Additionally, when dealing damage, she marks the target with "Conductor". When attacking a target with "Conductor", Voltexz deals ${this.conductorBonusPercent}% bonus damage (consumes the status) (Min. bonus damage: 15).`;
+    return `Voltexz is not something that carries lightning — she is the lightning, a storm wearing the shape of a goddess, her hair drifting like thunderheads about to break. Every skill she throws is torn out of her own substance: she takes ${this.recoilPercent}% of the damage actually dealt as Absolute Damage.
+
+    Everything she touches keeps the charge: the target is marked as a Conductor for ${this.conductorDuration} turn(s), and her next strike against a Conductor deals ${this.conductorBonusPercent}% bonus damage, consuming the mark.`;
   },
   hookScope: {
     onAfterDmgDealing: "attacker",
@@ -63,22 +65,7 @@ export default {
     return { log };
   },
 
-  onBeforeDmgDealing({
-    attacker,
-    defender,
-    owner,
-    crit,
-    damage,
-    context,
-    skill,
-  }) {
-    // console.log("🔥 onBeforeDmgDealing TRIGGER:", formatChampionName(attacker));
-
-    // console.log("OWNER:", owner?.name);
-    // console.log("DMG SRC:", attacker?.name);
-    // console.log("ALVO:", defender?.name);
-    // console.log("HAS CONDUTOR?", defender?.hasStatusEffect?.("conductor"));
-
+  onBeforeDmgDealing({ attacker, defender, damage, context }) {
     if (!defender.hasStatusEffect?.("conductor")) return;
 
     const bonusDamage = (damage * this.conductorBonusPercent) / 100;
@@ -93,11 +80,9 @@ export default {
       timing: "post",
     });
 
-    let log = `⚡ HIT! ${formatChampionName(attacker)} exploited "Conductor" on ${formatChampionName(defender)} (+${this.conductorBonusPercent}% damage)!`;
-
     return {
       damage: damage + bonusDamage,
-      log,
+      log: `⚡ HIT! ${formatChampionName(attacker)} discharges through the Conductor on ${formatChampionName(defender)} (+${this.conductorBonusPercent}% damage)!`,
     };
   },
 };

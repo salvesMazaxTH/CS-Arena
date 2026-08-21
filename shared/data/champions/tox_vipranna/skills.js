@@ -4,15 +4,20 @@ import basicStrike from "../basicStrike.js";
 
 const toxViprannaSkills = [
   // ========================
-  // Ataque Básico
+  // Basic Attack
   // ========================
   basicStrike,
+
   // ========================
-  // H1 — Linguada Venenosa
+  // Special Skills
+  // ========================
+
+  // ========================
+  // H1 — Venomous Tongue
   // ========================
   {
-    key: "linguada_venenosa",
-    name: "Linguada Venenosa",
+    key: "venomous_tongue",
+    name: "Venomous Tongue",
 
     bf: 30,
     contact: true,
@@ -22,13 +27,16 @@ const toxViprannaSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Causa dano leve ao alvo.\n\nAplica Envenenado:\n\n• 4 stacks se o alvo não estiver envenenado\n• 2 stacks se já estiver`;
+      return `Tox Vipranna lashes out with her venomous tongue, dealing light damage to the chosen enemy and inflicting Poisoned.
+
+      • 4 stacks if the target is not Poisoned
+      • 2 stacks if the target is already Poisoned`;
     },
 
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
-      const baseDamage = (user.Attack * this.bf) / 100;
 
+      const baseDamage = (user.Attack * this.bf) / 100;
       const results = [];
 
       const damageResult = new DamageEvent({
@@ -57,7 +65,13 @@ const toxViprannaSkills = [
         const alreadyPoisoned = enemy.hasStatusEffect("poisoned");
         const stacks = alreadyPoisoned ? 2 : 4;
 
-        enemy.applyStatusEffect("poisoned", undefined, context, {}, stacks);
+        enemy.applyStatusEffect(
+          "poisoned",
+          undefined,
+          context,
+          {},
+          stacks,
+        );
       }
 
       return results;
@@ -65,11 +79,11 @@ const toxViprannaSkills = [
   },
 
   // ========================
-  // H2 — Revestimento Tóxico
+  // H2 — Toxic Coating
   // ========================
   {
-    key: "revestimento_toxico",
-    name: "Revestimento Tóxico",
+    key: "toxic_coating",
+    name: "Toxic Coating",
 
     contact: false,
     priority: 3,
@@ -81,7 +95,9 @@ const toxViprannaSkills = [
     targetSpec: ["self"],
 
     description() {
-      return `Por ${this.auraDuration} turno(s):\n\n• Tox Vipranna recebe +${this.defenseBuff} de Defesa\n• Inimigos que realizarem ações de contato contra Tox Vipranna recebem ${this.poisonedStacks} stacks de Envenenado`;
+      return `Tox Vipranna cloaks herself in a toxic coating for ${this.auraDuration} turn(s), gaining +${this.defenseBuff} Defense.
+
+      Enemies that make contact attacks against her are afflicted with ${this.poisonedStacks} stacks of Poisoned.`;
     },
 
     resolve({ user, context = {} }) {
@@ -97,13 +113,13 @@ const toxViprannaSkills = [
 
       user.runtime.hookEffects ??= [];
 
-      // --- inimigos que atacarem por contato recebem Poisoned ---
+      // --- Enemies that attack by contact are afflicted with Poisoned ---
       user.runtime.hookEffects = user.runtime.hookEffects.filter(
-        (e) => e.key !== "revestimento_toxico_retaliation",
+        (e) => e.key !== "toxic_coating_retaliation",
       );
 
       user.runtime.hookEffects.push({
-        key: "revestimento_toxico_retaliation",
+        key: "toxic_coating_retaliation",
         expiresAtTurn: activatedTurn + this.auraDuration,
         poisonedStacks: this.poisonedStacks,
 
@@ -124,46 +140,60 @@ const toxViprannaSkills = [
           );
 
           return {
-            log: `<b>[${this.name}]</b> ${formatChampionName(attacker)} recebeu ${this.poisonedStacks} stacks de <b>Envenenado</b> ao atacar ${formatChampionName(owner)}!`,
+            log: `<b>[${this.name}]</b> ${formatChampionName(
+              attacker,
+            )} is afflicted with ${this.poisonedStacks} stacks of <b>Poisoned</b> after attacking ${formatChampionName(
+              owner,
+            )}.`,
           };
         },
       });
 
       context.registerDialog?.({
-        message: `${formatChampionName(user)} ativa <b>Revestimento Tóxico</b>!`,
+        message: `${formatChampionName(
+          user,
+        )} activates <b>Toxic Coating</b>!`,
         sourceId: user.id,
       });
 
       return {
-        log: `${formatChampionName(user)} ativa <b>Revestimento Tóxico</b>!`,
+        log: `${formatChampionName(
+          user,
+        )} activates <b>Toxic Coating</b>!`,
       };
     },
   },
 
   // ========================
-  // ULT — Mandato da Rainha Peçonhenta
+  // Ultimate — Venomous Queen's Decree
   // ========================
   {
-    key: "mandato_rainha_peconhenta",
-    name: "Mandato da Rainha Peçonhenta",
+    key: "venomous_queen_decree",
+    name: "Venomous Queen's Decree",
 
     contact: false,
     isUltimate: true,
     momentumCost: 55,
+
     damageRatioPerStack: 0.125,
+
     priority: 1,
 
     targetSpec: ["enemy"],
 
     description() {
-      return `Dobra os stacks de Envenenado do alvo e os consome.\n\nCausa dano absoluto equivalente a:\n\n<b>stacks consumidos × ${this.damageRatioPerStack * 100}% da vida perdida do alvo</b>`;
+      return `Tox Vipranna forces the venom within the chosen enemy to surge, doubling their Poisoned stacks before consuming them.
+
+      Deals Absolute Damage equal to:
+
+      <b>Consumed stacks × ${this.damageRatioPerStack * 100}% of the target's lost HP</b>`;
     },
 
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
 
       if (!enemy?.hasStatusEffect("poisoned")) {
-        const failMessage = "Mas falhou.";
+        const failMessage = "But it failed.";
 
         context.registerDialog?.({
           message: failMessage,
@@ -181,6 +211,7 @@ const toxViprannaSkills = [
 
       if (poisonInstance) {
         const doubledStacks = Math.max(1, stacks * 2);
+
         poisonInstance.stacks = doubledStacks;
         poisonInstance.stackCount = doubledStacks;
         poisonInstance.metadata = {
@@ -188,10 +219,12 @@ const toxViprannaSkills = [
           stacks: doubledStacks,
           stackCount: doubledStacks,
         };
+
         enemy.removeStatusEffect("poisoned");
       }
 
       const lostHP = Math.max(0, enemy.maxHP - enemy.HP);
+
       const baseDamage =
         Math.max(1, Number(poisonInstance.stacks) || 1) *
         this.damageRatioPerStack *

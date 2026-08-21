@@ -1,12 +1,11 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
-import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../basicStrike.js";
 
 const nytheraSkills = [
   basicStrike,
   {
-    key: "lamina_boreal",
-    name: "Lâmina Boreal",
+    key: "boreal_edge",
+    name: "Boreal Edge",
     bf: 75,
 
     chillDuration: 2,
@@ -18,7 +17,9 @@ const nytheraSkills = [
 
     element: "ice",
     description() {
-      return `Causa dano e deixa o alvo Gelado por ${this.chillDuration} turno(s). Se o alvo já estiver Gelado, aplica Congelado por ${this.freezeDuration} turno(s) e causa dano adicional igual a ${this.bonusIfFrozen} de dano (Perfurante).`;
+      return `Nythera draws an edge of northern wind across the chosen target, dealing Ice magical damage and leaving them Chilled for ${this.chillDuration} turn(s).
+
+      If the target is already Chilled, the cold seizes them instead: they become Frozen for ${this.freezeDuration} turn(s) and take +${this.bonusIfFrozen}% bonus damage.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -28,7 +29,7 @@ const nytheraSkills = [
 
       const isFrozen = target.hasStatusEffect("frozen");
 
-      // Bônus de dano pré-calculado se alvo já estiver congelado
+      // Bonus damage precomputed when the target is already Frozen.
       if (isFrozen) {
         totalDamage += (baseDamage * this.bonusIfFrozen) / 100;
       }
@@ -43,7 +44,7 @@ const nytheraSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      // Status-effect só se aplica se o dano chegou (não esquivado, não imune)
+      // Status effects only land if the damage connected (not evaded, not immune).
       if (!result?.evaded && !result?.immune) {
         if (isFrozen) {
           target.applyStatusEffect("frozen", this.freezeDuration, context);
@@ -57,8 +58,8 @@ const nytheraSkills = [
   },
 
   {
-    key: "camara_de_estase",
-    name: "Câmara de Estase",
+    key: "stasis_chamber",
+    name: "Stasis Chamber",
     effectDuration: 2,
     contact: false,
 
@@ -68,7 +69,9 @@ const nytheraSkills = [
     priority: 3,
     element: "ice",
     description() {
-      return `Por ${this.effectDuration} turno(s), recebe ${this.dmgReduct}% de redução de dano. Quem causar dano a Nythera durante esse período fica Congelado por ${this.freezeDuration} turno(s).`;
+      return `Nythera seals herself inside a chamber of standing ice for ${this.effectDuration} turn(s), gaining ${this.dmgReduct}% damage reduction.
+
+      Anyone who deals damage to her while the chamber holds is caught by the stillness and becomes Frozen for ${this.freezeDuration} turn(s).`;
     },
     targetSpec: ["self"],
 
@@ -76,7 +79,7 @@ const nytheraSkills = [
       user.applyDamageReduction({
         amount: this.dmgReduct,
         duration: this.effectDuration,
-        source: "Câmara de Estase",
+        source: "Stasis Chamber",
         type: "percent",
         context,
       });
@@ -86,17 +89,17 @@ const nytheraSkills = [
       user.runtime.hookEffects ??= [];
 
       if (!user.runtime.hookEffects)
-        throw new Error("NYTHERA: HookEffects não inicializado corretamente.");
+        throw new Error("NYTHERA: hookEffects was not properly initialized.");
 
       const effect = {
-        key: "camara_de_estase",
+        key: "stasis_chamber",
         expiresAtTurn: context?.currentTurn + this.effectDuration,
 
         hookScope: {
           onAfterDmgTaking: "defender",
         },
 
-        onAfterDmgTaking({ attacker, defender, damage, context }) {
+        onAfterDmgTaking({ attacker, context }) {
           attacker.applyStatusEffect("frozen", freezeDuration, context);
         },
       };
@@ -106,8 +109,8 @@ const nytheraSkills = [
   },
 
   {
-    key: "trono_da_noite_branca",
-    name: "Trono da Noite Branca",
+    key: "throne_of_the_white_night",
+    name: "Throne of the White Night",
     bf: 70,
 
     chillDuration: 2,
@@ -123,8 +126,9 @@ const nytheraSkills = [
 
     element: "ice",
     description() {
-      return `Se o alvo estiver Gelado ou Congelado, o BF aumenta para ${this.bfIfCold} e aplica Congelado por ${this.freezeDuration} turno(s). Se já estiver Congelado, causa também ${this.bonusIfFrozen} de dano adicional.
-      Caso contrário, aplica Gelado por ${this.chillDuration} turno(s).`;
+      return `Nythera takes her throne and the white night falls over the chosen target, dealing Ice magical damage and leaving them Chilled for ${this.chillDuration} turn(s).
+
+      Against a target already touched by the cold, the throne answers in full: base force rises to ${this.bfIfCold} and the target is Frozen for ${this.freezeDuration} turn(s). If they were already Frozen, the ice also splits them for ${this.bonusIfFrozen} bonus damage.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -135,14 +139,14 @@ const nytheraSkills = [
 
       let baseDamage;
 
-      // BF base
+      // Base force.
       if (isChilled || isFrozen) {
         baseDamage = (user.Attack * this.bfIfCold) / 100;
       } else {
         baseDamage = (user.Attack * this.bf) / 100;
       }
 
-      // bônus adicional se já estiver congelado
+      // Extra bonus if the target is already Frozen.
       if (isFrozen) {
         baseDamage += this.bonusIfFrozen;
       }
@@ -157,7 +161,7 @@ const nytheraSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      // Status-effect só se aplica se o dano chegou (não esquivado, não imune)
+      // Status effects only land if the damage connected (not evaded, not immune).
       if (!result?.evaded && !result?.immune) {
         if (!isChilled && !isFrozen) {
           target.applyStatusEffect("chilled", this.chillDuration, context);

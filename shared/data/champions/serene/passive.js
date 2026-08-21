@@ -1,10 +1,11 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
-  name: "Calmaria Protetora",
+  key: "grace_of_the_quietude",
+  name: "Grace of the Quietude",
   healPercent: 15,
   description() {
-    return `Sempre que Serene terminar um turno sem ter seu HP reduzido, ela cura ${this.healPercent}% do seu HP máximo no início do próximo turno.`;
+    return `When nothing reaches Serene, the Quietude reaches her. Whenever she ends a turn without having her HP reduced, she slips for a moment into that far, still place, and returns at the start of the next turn restored by ${this.healPercent}% of her Max HP.`;
   },
 
   hookScope: {
@@ -12,8 +13,8 @@ export default {
     onActionResolved: "actionSource",
   },
 
-  // Marca dano recebido no turno
-  onAfterDmgTaking({ attacker, defender, owner, context }) {
+  // Marks the turn in which damage was taken.
+  onAfterDmgTaking({ owner, context }) {
     owner.runtime = owner.runtime || {};
     owner.runtime.sereneDamagedTurn = context.currentTurn;
   },
@@ -30,21 +31,21 @@ export default {
     );
   },
 
-  // Executa no início do turno
+  // Runs at the start of the turn.
   onTurnStart({ owner, context }) {
     const lastDamaged = owner.runtime.sereneDamagedTurn;
 
-    // Se NÃO tomou dano no turno anterior
+    // Did she take damage during the previous turn?
     if (lastDamaged === context.currentTurn - 1) return;
 
-    const heal = owner.maxHP * 0.15;
+    const heal = owner.maxHP * (this.healPercent / 100);
     if (heal <= 0 || owner.HP >= owner.maxHP) return;
 
     const before = owner.HP;
     owner.heal(heal, context);
 
     return {
-      log: `[PASSIVA — Calmaria Protetora] ${formatChampionName(owner)} recuperou ${heal} HP (${before} → ${owner.HP}).`,
+      log: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} restores ${heal} HP (${before} → ${owner.HP}).`,
     };
   },
 };
