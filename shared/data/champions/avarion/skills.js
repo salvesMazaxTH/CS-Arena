@@ -124,17 +124,27 @@ const avarionSkills = [
             if (!owner?.alive) return;
             if (!actionSource || actionSource.team === owner.team) return;
 
-            // The Claim has already scored by the time this hook runs, and
-            // nothing in between changes its value, so recomputing it gives
-            // exactly the number of points that were just awarded.
-            const claimedPoints = getClaimPoints(
-              actionSource,
-              context?.currentTurn,
+            // The Claim has already scored by the time this hook runs.
+            // `preActionClaimPoints` is the number the resolver actually
+            // awarded; recomputing it is only a fallback for contexts that do
+            // not publish it.
+            const claimedPoints = Number(
+              context?.preActionClaimPoints ??
+                getClaimPoints(actionSource, context?.currentTurn),
             );
 
-            const collected = Math.min(tollPoints, claimedPoints);
+            // A toll can never take back more than the Claim brought in, even
+            // if several tolls land on the same Claim, so what previous tolls
+            // already took is tracked on the action's own context.
+            const alreadyTolled = Number(context?.misersTollCollected ?? 0);
+            const collected = Math.min(
+              tollPoints,
+              claimedPoints - alreadyTolled,
+            );
 
-            if (collected <= 0) return;
+            if (!(collected > 0)) return;
+
+            if (context) context.misersTollCollected = alreadyTolled + collected;
 
             owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
               (he) => he.key !== MISERS_TOLL_HOOK_KEY,

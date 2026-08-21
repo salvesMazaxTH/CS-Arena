@@ -4,7 +4,7 @@ import { formatChampionName } from "../../../ui/formatters.js";
 import {
   AVARIK_NAME,
   EDICT_DAMAGE,
-  EDICT_THRESHOLD,
+  EDICT_ATTACK_THRESHOLD,
   isEdictInForce,
   isHollow,
   isIndirectDamage,
@@ -14,7 +14,7 @@ export default {
   key: "edict_of_hollow_might",
   name: "Edict of Hollow Might",
 
-  threshold: EDICT_THRESHOLD,
+  threshold: EDICT_ATTACK_THRESHOLD,
   edictDamage: EDICT_DAMAGE,
 
   description() {
@@ -42,7 +42,7 @@ export default {
 
     if (!isEdictInForce(owner, context, AVARIK_NAME)) return;
 
-    if (!isHollow(attacker, "Attack")) return;
+    if (!isHollow(attacker, "Attack", this.threshold)) return;
 
     return {
       damage: this.edictDamage,

@@ -421,6 +421,11 @@ export class TurnResolver {
     try {
       const claimPoints = getClaimPoints(user, this.combat.currentTurn);
 
+      // Publishes the authoritative number of points this CLAIM scored, so
+      // hooks reacting to it (Aren's Abyssal Depths, Avarion's Miser's Toll)
+      // read the value that was actually awarded instead of recomputing it.
+      context.preActionClaimPoints = claimPoints;
+
       this.registerSkillUsageInTurn(user, claimSkill, {});
 
       const scoringSlot = user.team - 1;

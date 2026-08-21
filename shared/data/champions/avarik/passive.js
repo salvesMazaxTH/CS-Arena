@@ -4,7 +4,7 @@ import { formatChampionName } from "../../../ui/formatters.js";
 import {
   AVARION_NAME,
   EDICT_DAMAGE,
-  EDICT_THRESHOLD,
+  EDICT_HP_THRESHOLD,
   isEdictInForce,
   isHollow,
   isIndirectDamage,
@@ -14,7 +14,7 @@ export default {
   key: "edict_of_hollow_flesh",
   name: "Edict of Hollow Flesh",
 
-  threshold: EDICT_THRESHOLD,
+  threshold: EDICT_HP_THRESHOLD,
   edictDamage: EDICT_DAMAGE,
 
   description() {
@@ -42,7 +42,7 @@ export default {
 
     if (!isEdictInForce(owner, context, AVARION_NAME)) return;
 
-    if (!isHollow(attacker, "HP")) return;
+    if (!isHollow(attacker, "HP", this.threshold)) return;
 
     return {
       damage: this.edictDamage,

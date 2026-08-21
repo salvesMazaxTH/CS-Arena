@@ -11,8 +11,14 @@
 export const AVARIK_NAME = "Avarik";
 export const AVARION_NAME = "Avarion";
 
-// Below this value on the measured stat, a champion is considered Hollow.
-export const EDICT_THRESHOLD = 200;
+// Below these values on the measured stat, a champion is considered Hollow.
+// The two Edicts sit at different thresholds because HP and Attack are not
+// distributed the same way across the roster: HP is a pool that drains over
+// the match, so Avarik's line is drawn high enough to be reachable in play,
+// while Attack is mostly static, so Avarion's line is drawn low enough not to
+// disqualify half the roster from the opening turn.
+export const EDICT_HP_THRESHOLD = 225;
+export const EDICT_ATTACK_THRESHOLD = 180;
 
 // What a Hollow champion is allowed to deal per instance of damage.
 export const EDICT_DAMAGE = 1;
@@ -63,14 +69,14 @@ export function isEdictInForce(owner, context, brotherName) {
 }
 
 /**
- * A champion is Hollow when the stat the Edict measures has fallen below the
- * threshold. Current values are used, so buffs and debuffs move a champion in
- * and out of the Edict's reach.
+ * A champion is Hollow when the stat the Edict measures has fallen below that
+ * Edict's threshold. Current values are used, so buffs and debuffs move a
+ * champion in and out of the Edict's reach.
  */
-export function isHollow(champion, statName) {
+export function isHollow(champion, statName, threshold) {
   if (!champion) return false;
 
   const value = Number(champion[statName]);
 
-  return Number.isFinite(value) && value < EDICT_THRESHOLD;
+  return Number.isFinite(value) && value < threshold;
 }
