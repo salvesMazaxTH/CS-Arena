@@ -221,17 +221,22 @@ O servidor gerencia toda a sessão por meio de uma instância de `GameMatch` (ve
 ### 4.2 Seleção de Campeões
 
 1. Quando ambos os jogadores conectam, servidor emite `allPlayersConnected` seguido de `startChampionSelection`.
-2. Cliente exibe grade. Jogador monta equipe de **3 campeões** (drag & drop para ordenar).
-3. Ao confirmar, cliente emite `selectTeam` com `{ team, champions: string[3] }`.
-4. Servidor valida. Quando **ambos** confirmam, emite `allTeamsSelected` + `gameStateUpdate`.
+2. Cliente exibe grade. Jogador monta uma lineup de **8 campeões** e, opcionalmente, escolhe até **2 Emblems**.
+3. Ao confirmar, cliente emite `selectTeam` com `{ team, champions: string[8] }`.
+4. Servidor valida (incluindo a elegibilidade dos Emblems para a lineup). Quando **ambos** confirmam, emite `allTeamsSelected` + `gameStateUpdate`.
 
 > Timer de seleção: **120 segundos**. Ao expirar, campeões aleatórios preenchem os slots vazios.
+>
+> A validação de elegibilidade de Emblems vive em `shared/data/emblems/eligibility.js`
+> (`evaluateEmblemEligibilityForRoster(emblem, rosterKeys, championDB)`), reexportada por
+> `shared/data/emblems/index.js`. O `server.js` apenas a chama, tanto no draft (`updatePlayerEmblems`)
+> quanto na confirmação (`selectTeam`).
 
 ### 4.3 Início de Partida
 
-1. Servidor instancia os 3 campeões de cada equipe via `assignChampionsToTeam()` — slots 0, 1 e 2.
-2. Não há fila de reserva no modo atual.
-3. Partida começa com `match.startCombat()`.
+1. Após ambos confirmarem, cada time tem sua fila de reserva populada com o roster de 8 (`combat.reserveQueues`).
+2. Inicia-se a fase de escolha do **primeiro campeão** (1v1): cada jogador escolhe um da sua lineup. Timer de **45 s**; ao expirar, o servidor escolhe um **aleatório** do roster.
+3. `finalizeFirstChampionChoices(spawnChampion)` instancia o primeiro campeão de cada time em campo; os demais entram depois via `summonFromLineup` (limite de 3 campeões ativos por time).
 
 ### 4.4 Turno
 

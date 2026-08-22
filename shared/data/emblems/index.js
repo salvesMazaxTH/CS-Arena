@@ -13,6 +13,8 @@ import { humanitysDefiance } from "./humanitys_defiance.js";
 import { divineMandate } from "./divine_mandate.js";
 import { stormFist } from "./storm_fist.js";
 
+export { evaluateEmblemEligibilityForRoster } from "./eligibility.js";
+
 export const EMBLEMS = [
   firelord,
   thunderRoar,
