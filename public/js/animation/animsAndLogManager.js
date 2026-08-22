@@ -49,6 +49,23 @@ const TIMING = {
   DEATH_CLAIM_EFFECT: 5600,
 };
 
+// Snapshot fields copied verbatim onto the champion (no side effects).
+// Fields with extra logic (HP/alive, entityType, name) are handled apart.
+const SNAPSHOT_PASSTHROUGH_KEYS = [
+  "maxHP",
+  "Attack",
+  "Defense",
+  "Speed",
+  "Evasion",
+  "Critical",
+  "LifeSteal",
+  "momentum",
+  "passive",
+  "statModifiers",
+  "damageModifiersCount",
+  "damageReductionModifiersCount",
+];
+
 // ============================================================
 //  DAMAGE TIER CLASSIFICATION (maps to CSS .damage-tier-N)
 // ============================================================
@@ -452,6 +469,35 @@ export function createCombatAnimationManager(deps) {
   }
 
   // ============================================================
+  //  ANIMATION HELPERS
+  // ============================================================
+
+  // Resolves a champion's display name from its id, or a neutral fallback.
+  function championName(championId) {
+    const champion = deps.activeChampions.get(championId);
+    return champion ? formatChampionName(champion) : "Target";
+  }
+
+  // Resolves the DOM + model handles for a target and scrolls it into view.
+  // Returns null when the champion element is absent so callers can bail early.
+  function resolveTargetVisual(targetId) {
+    const championEl = getChampionElement(targetId);
+    if (!championEl) return null;
+
+    const portraitWrapper = championEl.querySelector(".portrait-wrapper");
+    const portrait = portraitWrapper?.querySelector(".portrait");
+    if (portrait) scrollIfNeeded(portrait, { threshold: 0.85 });
+
+    const champion = deps.activeChampions.get(targetId);
+    return {
+      championEl,
+      portraitWrapper,
+      champion,
+      name: champion ? formatChampionName(champion) : "Target",
+    };
+  }
+
+  // ============================================================
   //  DAMAGE ANIMATION
   //
   //  CSS mapping:
@@ -465,36 +511,26 @@ export function createCombatAnimationManager(deps) {
       targetId,
       userId,
       sourceId,
-      amount,
       rawAmount,
       absorbedByShield,
       remainingShield,
       isCritical,
       isDot,
-      obliterate,
       finishing,
       finishingType,
       skillKey,
     } = effect;
 
-    const casterId = userId || sourceId || null;
+    const target = resolveTargetVisual(targetId);
+    if (!target) return;
+    const { championEl, portraitWrapper, champion, name: targetName } = target;
 
-    const champion = deps.activeChampions.get(targetId);
-    const championEl = getChampionElement(targetId);
+    const casterId = userId || sourceId || null;
     const userEl = casterId ? getChampionElement(casterId) : null;
     const userChampion = casterId ? deps.activeChampions.get(casterId) : null;
     const skill = userChampion?.skills?.find((s) => s?.key === skillKey);
 
-    if (!championEl) return Promise.resolve();
-
-    const portraitWrapper = championEl.querySelector(".portrait-wrapper");
-    const actualPortrait = portraitWrapper?.querySelector(".portrait");
-
-    if (actualPortrait) {
-      scrollIfNeeded(actualPortrait, { threshold: 0.85 });
-    }
-
-    // 🔥 Skill animation (if registered) — now per DamageEvent
+    // Skill animation (if registered) — per DamageEvent
     if (skillKey) {
       await animateSkill(skillKey, { targetEl: championEl, userEl, skill });
     }
@@ -521,8 +557,6 @@ export function createCombatAnimationManager(deps) {
     if (effect.immune) return await animateImmune(effect);
     if (effect.shieldBlocked) return await animateShieldBlock(effect);
     if (!hasFinishing && !hasHpDamage && !hasShieldAbsorption) return;
-
-    const targetName = champion ? formatChampionName(champion) : "Target";
 
     // ========================
     // PRE-DAMAGE (DOT)
@@ -660,60 +694,32 @@ export function createCombatAnimationManager(deps) {
 
   async function animateHeal(effect) {
     const { targetId, amount } = effect;
+    const target = resolveTargetVisual(targetId);
+    if (!target) return;
+    const { championEl, portraitWrapper, name } = target;
 
-    const championEl = getChampionElement(targetId);
-
-    if (!championEl) return;
-
-    const portraitWrapper = championEl.querySelector(".portrait-wrapper");
-    const actualPortrait = portraitWrapper.querySelector(".portrait");
-    scrollIfNeeded(actualPortrait, { threshold: 0.85 });
-
-    const champion = deps.activeChampions.get(targetId);
-
-    const targetName = champion ? formatChampionName(champion) : "Target";
-
-    await showDialog(`${targetName} restored health.`);
-
-    // Play healing SFX
+    await showDialog(`${name} restored health.`);
     audioManager.play("heal");
 
-    // Apply .heal class to .champion element
     championEl.classList.add("heal");
-
-    // Create floating heal number inside .portrait-wrapper
-    if (portraitWrapper) {
-      createFloatElement(portraitWrapper, `+${amount}`, "heal-float");
-    }
-
-    // Update HP bar incrementally
+    createFloatElement(portraitWrapper, `+${amount}`, "heal-float");
     updateVisualHP(targetId, amount);
 
-    // 🔥 Wait for the CSS animation to actually finish
     await waitForAnimation(championEl, 600);
-
     championEl.classList.remove("heal");
   }
 
   async function animateLifesteal(effect) {
     const { targetId, amount, fromTargetId } = effect;
+    const target = resolveTargetVisual(targetId);
+    if (!target) return;
+    const { championEl, portraitWrapper, name } = target;
 
-    const championEl = getChampionElement(targetId);
-    if (!championEl) return;
-
-    const portraitWrapper = championEl.querySelector(".portrait-wrapper");
-    const actualPortrait = portraitWrapper?.querySelector(".portrait");
-    if (actualPortrait) {
-      scrollIfNeeded(actualPortrait, { threshold: 0.85 });
-    }
-
-    const champion = deps.activeChampions.get(targetId);
-    const targetName = champion ? formatChampionName(champion) : "Target";
     const drainedEl = fromTargetId ? getChampionElement(fromTargetId) : null;
 
-    await showDialog(`${targetName} drained life from the target.`);
+    await showDialog(`${name} drained life from the target.`);
 
-    // Reutilizes the healing SFX with its own visual signature for lifesteal.
+    // Reuses the healing SFX with its own visual signature for lifesteal.
     audioManager.play("heal");
 
     if (drainedEl) {
@@ -757,15 +763,9 @@ export function createCombatAnimationManager(deps) {
 
   async function animateEvasion(effect) {
     const { targetId, evaded } = effect;
-    const championEl = getChampionElement(targetId);
-    if (!championEl) return;
-
-    const portraitWrapper = championEl.querySelector(".portrait-wrapper");
-    const actualPortrait = portraitWrapper.querySelector(".portrait");
-    scrollIfNeeded(actualPortrait, { threshold: 0.85 });
-
-    const champion = deps.activeChampions.get(targetId);
-    const name = champion ? formatChampionName(champion) : "Target";
+    const target = resolveTargetVisual(targetId);
+    if (!target) return;
+    const { championEl, name } = target;
 
     await showDialog(`${name} tried to evade the attack...`);
 
@@ -791,23 +791,12 @@ export function createCombatAnimationManager(deps) {
 
   async function animateShield(effect) {
     const { targetId, amount } = effect;
-    const championEl = getChampionElement(targetId);
-    if (!championEl) return;
+    const target = resolveTargetVisual(targetId);
+    if (!target) return;
 
-    const portraitWrapper = championEl.querySelector(".portrait-wrapper");
-    const actualPortrait = portraitWrapper.querySelector(".portrait");
-    scrollIfNeeded(actualPortrait, { threshold: 0.85 });
+    await showDialog(`${target.name} gained a shield.`);
 
-    const champion = deps.activeChampions.get(targetId);
-
-    const name = champion ? formatChampionName(champion) : "Target";
-
-    await showDialog(`${name} gained a shield.`);
-
-    // Create floating shield number inside .portrait-wrapper
-    if (portraitWrapper) {
-      createFloatElement(portraitWrapper, `🛡️ ${amount}`, "shield-float");
-    }
+    createFloatElement(target.portraitWrapper, `🛡️ ${amount}`, "shield-float");
 
     updateVisualHP(targetId, 0, null, {
       shieldDelta: Number(amount) || 0,
@@ -824,40 +813,29 @@ export function createCombatAnimationManager(deps) {
   function animateResourceChange(effect, direction = null) {
     const { targetId, amount } = effect || {};
     const normalizedAmount = Math.abs(Number(amount) || 0);
-
     if (!targetId || normalizedAmount <= 0) return;
 
-    const championEl = getChampionElement(targetId);
-    if (!championEl) return;
-
-    const portraitWrapper = championEl.querySelector(".portrait-wrapper");
-    const actualPortrait = portraitWrapper.querySelector(".portrait");
-    scrollIfNeeded(actualPortrait, { threshold: 0.85 });
+    const target = resolveTargetVisual(targetId);
+    if (!target) return;
 
     const eventDirection =
       direction ?? (effect?.type === "resourceSpend" ? -1 : 1);
-
     const sign = eventDirection >= 0 ? "+" : "-";
-    const momentumDelta = normalizedAmount.toFixed(0);
+    const floatClass =
+      eventDirection >= 0
+        ? "resource-float-momentum-gain"
+        : "resource-float-momentum-spend";
 
-    if (portraitWrapper) {
-      const floatClass =
-        eventDirection >= 0
-          ? "resource-float-momentum-gain"
-          : "resource-float-momentum-spend";
-
-      createFloatElement(
-        portraitWrapper,
-        `${sign}${momentumDelta} Momentum`,
-        "resource-float",
-        floatClass,
-      );
-    }
+    createFloatElement(
+      target.portraitWrapper,
+      `${sign}${normalizedAmount.toFixed(0)} Momentum`,
+      "resource-float",
+      floatClass,
+    );
 
     updateVisualResource(
       targetId,
       eventDirection >= 0 ? normalizedAmount : -normalizedAmount,
-      "momentum",
     );
   }
 
@@ -867,9 +845,7 @@ export function createCombatAnimationManager(deps) {
 
   async function animateImmune(effect) {
     const { targetId, immuneMessage } = effect;
-    const champion = deps.activeChampions.get(targetId);
-    const name = champion ? formatChampionName(champion) : "Target";
-    const message = immuneMessage || `${name} is <b>Immune!</b>`;
+    const message = immuneMessage || `${championName(targetId)} is <b>Immune!</b>`;
     await showDialog(message);
   }
 
@@ -878,11 +854,9 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   async function animateShieldBlock(effect) {
-    const { targetId } = effect;
-    const champion = deps.activeChampions.get(targetId);
-    const name = champion ? formatChampionName(champion) : "Target";
-
-    await showDialog(`${name}'s shield blocked the attack!`);
+    await showDialog(
+      `${championName(effect.targetId)}'s shield blocked the attack!`,
+    );
   }
 
   // ============================================================
@@ -891,33 +865,21 @@ export function createCombatAnimationManager(deps) {
 
   async function animateBuff(effect) {
     const { sourceId, targetId, sourceName, targetName } = effect || {};
-
-    const targetChampion = deps.activeChampions.get(targetId);
+    const target = resolveTargetVisual(targetId);
+    if (!target) return;
+    const { championEl, portraitWrapper, champion: targetChampion } = target;
 
     const resolvedTargetName = targetChampion
       ? formatChampionName(targetChampion)
       : targetName || "Target";
 
     const sourceChampion = deps.activeChampions.get(sourceId);
-
     const resolvedSourceName = sourceChampion
       ? formatChampionName(sourceChampion)
       : sourceName || null;
 
-    const championEl = getChampionElement(targetId);
-
-    if (!championEl) return;
-
-    // Ensure the target is visible before starting the animation
-    const portraiWrapper = championEl.querySelector(".portrait-wrapper");
-    const actualPortrait = portraiWrapper.querySelector(".portrait");
-    scrollIfNeeded(actualPortrait, { threshold: 0.85 });
-
-    const portraitWrapper = championEl?.querySelector(".portrait-wrapper");
-
-    // Universal: if there is no sourceId, or sourceId === targetId, it's a self-buff
+    // Self-buff when there is no source, or source === target.
     let text;
-
     if (!sourceId || sourceId === targetId) {
       text = `${resolvedTargetName} buffed themselves.`;
     } else if (resolvedSourceName) {
@@ -928,17 +890,10 @@ export function createCombatAnimationManager(deps) {
 
     await showDialog(text);
 
-    if (championEl) {
-      championEl.classList.add("buff");
-    }
+    championEl.classList.add("buff");
+    createFloatElement(portraitWrapper, "+BUFF", "buff-float");
 
-    if (portraitWrapper) {
-      createFloatElement(portraitWrapper, "+BUFF", "buff-float");
-    }
-
-    // 🔥 Wait for the CSS animation to actually finish
     await waitForAnimation(championEl, 600);
-
     championEl.classList.remove("buff");
   }
 
@@ -947,29 +902,20 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   async function animateTauntRedirection(effect) {
-    const { attackerId, newTargetId, taunterId } = effect;
-    const champion = deps.activeChampions.get(attackerId);
-    const name = champion ? formatChampionName(champion) : "Target";
+    const { attackerId } = effect;
     const championEl = getChampionElement(attackerId);
     const portraitWrapper = championEl?.querySelector(".portrait-wrapper");
 
-    // Show taunt dialog
-
     await showDialog(
-      `${name} was <b>taunted</b> and had their target redirected!`,
+      `${championName(attackerId)} was <b>taunted</b> and had their target redirected!`,
     );
 
-    if (championEl) {
-      championEl.classList.add("taunt");
-    }
-    if (portraitWrapper) {
-      createFloatElement(portraitWrapper, "TAUNTED", "taunt-float");
-    }
+    championEl.classList.add("taunt");
+    createFloatElement(portraitWrapper, "TAUNTED", "taunt-float");
 
     await waitForAnimation(championEl, 400);
     championEl.classList.remove("taunt");
   }
-  // ============================================================
 
   // ============================================================
   //  GAME OVER HANDLING
@@ -1130,21 +1076,15 @@ export function createCombatAnimationManager(deps) {
     const fill = el.querySelector(".momentum-fill");
     if (!fill) return;
 
-    // 🔹 Fixed Cap of the system
+    // Momentum is a fixed 0-100 bar; the dataset holds the trusted UI value.
     const MAX_UNITS = 100;
+    const currentUnits = Math.max(
+      0,
+      Math.min(MAX_UNITS, Number(el.dataset.momentumUnits || 0) + deltaUnits),
+    );
 
-    // 🔹 Get current value from the dataset (trusted source from the UI)
-    let currentUnits = Number(el.dataset.momentumUnits || 0);
-
-    // 🔹 Apply delta
-    currentUnits = Math.max(0, Math.min(MAX_UNITS, currentUnits + deltaUnits));
-
-    // 🔹 Save again
     el.dataset.momentumUnits = currentUnits;
-
-    // 🔹 Update continuous visual bar
-    const percent = (currentUnits / MAX_UNITS) * 100;
-    fill.style.width = `${percent}%`;
+    fill.style.width = `${(currentUnits / MAX_UNITS) * 100}%`;
   }
 
   // ============================================================
@@ -1266,41 +1206,26 @@ export function createCombatAnimationManager(deps) {
     const dialogText = deps.combatDialogText;
     if (!dialog || !dialogText) return;
 
-    if (duration) {
-      // Non-blocking dialog: auto-close after duration, but allow skip
-      const dialogController = createDialogController();
-      activeDialogController = dialogController;
-      dialogText.innerHTML = text;
-      dialog.classList.remove("hidden", "leaving");
-      dialog.classList.add("active");
-      await wait(20); // allow DOM update
-      // Wait for either duration or skip
-      let finished = false;
-      const timer = wait(duration).then(() => {
-        finished = true;
-        dialogController.requestSkip();
-      });
-      await dialogController.waitWithOptionalSkip(duration + 100); // allow skip at any time
-      dialog.classList.add("leaving");
-      await wait(TIMING.DIALOG_LEAVE);
-      dialog.classList.remove("active", "leaving");
-      dialog.classList.add("hidden");
-      if (activeDialogController === dialogController) {
-        activeDialogController = null;
-      }
-      dialogController.dispose();
-      return;
-    }
-
-    // Blocking dialog: waits for skip/user
     const dialogController = createDialogController();
     activeDialogController = dialogController;
     dialogText.innerHTML = text;
     dialog.classList.remove("hidden", "leaving");
     dialog.classList.add("active");
-    await dialogController.waitWithOptionalSkip(TIMING.DIALOG_DISPLAY);
-    dialog.classList.add("leaving");
-    await dialogController.waitWithOptionalSkip(TIMING.DIALOG_LEAVE);
+
+    if (duration) {
+      // Non-blocking: auto-close after duration, but allow skip at any time.
+      await wait(20); // allow the DOM update to paint first
+      wait(duration).then(() => dialogController.requestSkip());
+      await dialogController.waitWithOptionalSkip(duration + 100);
+      dialog.classList.add("leaving");
+      await wait(TIMING.DIALOG_LEAVE);
+    } else {
+      // Blocking: wait for skip/user.
+      await dialogController.waitWithOptionalSkip(TIMING.DIALOG_DISPLAY);
+      dialog.classList.add("leaving");
+      await dialogController.waitWithOptionalSkip(TIMING.DIALOG_LEAVE);
+    }
+
     dialog.classList.remove("active", "leaving");
     dialog.classList.add("hidden");
     if (activeDialogController === dialogController) {
@@ -1362,32 +1287,20 @@ export function createCombatAnimationManager(deps) {
         }
       }
 
-      // Apply UI updates with appropriate delay
-      if (delayMs > 0) {
-        setTimeout(() => {
-          champion.updateUI({
-            freeCostSkills: editMode?.freeCostSkills === true,
-          });
-          StatusIndicator.updateChampionIndicators(champion);
-        }, delayMs);
-      } else {
-        champion.updateUI({
-          freeCostSkills: editMode?.freeCostSkills === true,
-        });
+      // Shield changes need a buffer so the bubble doesn't pop before the
+      // damage animation reads; other updates run immediately.
+      const runAfterDelay = (fn) =>
+        delayMs > 0 ? setTimeout(fn, delayMs) : fn();
+
+      runAfterDelay(() => {
+        champion.updateUI({ freeCostSkills: editMode?.freeCostSkills === true });
         StatusIndicator.updateChampionIndicators(champion);
-      }
+      });
 
       const shouldSyncVfxNow =
         currentPhase !== "combat" && !hasPendingCombatAction();
 
-      if (shouldSyncVfxNow && delayMs > 0) {
-        // 🛡️ Sync VFX with same delay as UI when shields changed
-        setTimeout(() => {
-          syncChampionVFX(champion);
-        }, delayMs);
-      } else if (shouldSyncVfxNow) {
-        syncChampionVFX(champion);
-      }
+      if (shouldSyncVfxNow) runAfterDelay(() => syncChampionVFX(champion));
     }
   }
 
@@ -1408,16 +1321,9 @@ export function createCombatAnimationManager(deps) {
       champion.currentHp = snap.HP; // In order to keep currentHp in sync with the real HP from the snapshot
     }
 
-    if (snap.maxHP !== undefined) champion.maxHP = snap.maxHP;
-    if (snap.Attack !== undefined) champion.Attack = snap.Attack;
-    if (snap.Defense !== undefined) champion.Defense = snap.Defense;
-    if (snap.Speed !== undefined) champion.Speed = snap.Speed;
-    if (snap.Evasion !== undefined) champion.Evasion = snap.Evasion;
-    if (snap.Critical !== undefined) champion.Critical = snap.Critical;
-    if (snap.LifeSteal !== undefined) champion.LifeSteal = snap.LifeSteal;
-
-    // Resource (momentum)
-    if (snap.momentum !== undefined) champion.momentum = snap.momentum;
+    for (const key of SNAPSHOT_PASSTHROUGH_KEYS) {
+      if (snap[key] !== undefined) champion[key] = snap[key];
+    }
 
     // Runtime shields
     if (snap.runtime) {
@@ -1464,21 +1370,6 @@ export function createCombatAnimationManager(deps) {
       }
     }
 
-    if (snap.passive !== undefined) {
-      champion.passive = snap.passive;
-    }
-
-    // Modifier data for UI indicators (buff/debuff arrows)
-    if (snap.statModifiers !== undefined) {
-      champion.statModifiers = snap.statModifiers;
-    }
-    if (snap.damageModifiersCount !== undefined) {
-      champion.damageModifiersCount = snap.damageModifiersCount;
-    }
-    if (snap.damageReductionModifiersCount !== undefined) {
-      champion.damageReductionModifiersCount =
-        snap.damageReductionModifiersCount;
-    }
   }
 
   // ============================================================
