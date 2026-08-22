@@ -79,11 +79,16 @@ Cada jogador seleciona **3 campeões**. Os **3 ficam em campo simultaneamente** 
 │   ├── js/
 │   │   ├── main.js                 # Entrada do cliente; UI e socket
 │   │   ├── gameGlossary.js         # Glossário interativo de termos de jogo
-│   │   └── animation/
-│   │       ├── animsAndLogManager.js  # Sistema de fila de animações
-│   │       └── skillAnimations.js     # Animações WebGL one-shot de skills (Three.js)
-│   ├── utils/
-│   │   └── AudioManager.js            # SFX + música (singleton, client-only)
+│   │   ├── animation/
+│   │   │   ├── animsAndLogManager.js  # Fila de animações + log de combate
+│   │   │   └── skillAnimations.js     # Animações WebGL one-shot de skills (Three.js)
+│   │   ├── ui/                        # UI do cliente extraída do main.js (factories createX(deps))
+│   │   │   ├── overlays.js         # Tooltips de skill, overlay de retrato, quick-stats
+│   │   │   ├── targeting.js        # Seleção de alvos client-side
+│   │   │   ├── matchStats.js       # Painel de estatísticas de fim de partida
+│   │   │   └── scoreboard.js       # Placar animado dos times
+│   │   └── utils/
+│   │       └── AudioManager.js     # SFX + música (singleton, client-only)
 │   ├── styles/
 │   │   ├── base.css                # Resets e defaults globais
 │   │   ├── layout.css              # Grid e containers
@@ -325,7 +330,6 @@ O servidor gerencia toda a sessão por meio de uma instância de `GameMatch` (ve
 | `playerConfirmedEndTurn`    | `playerSlot: number`            | Um jogador confirmou fim de turno            |
 | `playerCanceledEndTurn`     | `playerSlot: number`            | Jogador cancelou confirmação de turno        |
 | `waitingForOpponentEndTurn` | `string`                        | Aguardando adversário                        |
-| `scoreUpdate`               | `{ player1, player2 }`          | Placar atualizado                            |
 | `switchesUpdate`            | —                               | **Desativado por tempo indeterminado**       |
 | `switchQueued`              | —                               | **Desativado por tempo indeterminado**       |
 | `switchDenied`              | —                               | **Desativado por tempo indeterminado**       |
@@ -1585,7 +1589,7 @@ O sistema de **Switch/troca/reserva** está **temporariamente desabilitado por t
 
 **Arquivo**: `public/js/animation/animsAndLogManager.js`
 
-Factory `createCombatAnimationManager(deps)` instanciada em `main.js`.
+Factory `createCombatAnimationManager(deps)` instanciada em `main.js`. Painéis de UI autocontidos foram extraídos para `public/js/ui/` e injetados internamente: `matchStats.js` (painel de estatísticas de fim de partida) e `scoreboard.js` (placar animado). O placar é atualizado pelo `scorePayload` que vem dentro do envelope `combatAction`.
 
 ### Filosofia: Fila Determinística
 
@@ -1601,7 +1605,6 @@ combatAnimations.handleCombatLog(text); // enqueue "combatLog"
 combatAnimations.handleGameStateUpdate(gameState); // enqueue "gameStateUpdate"
 combatAnimations.handleTurnUpdate(turn); // enqueue "turnUpdate"
 combatAnimations.handleChampionRemoved(championId); // enqueue "championRemoved"
-// combatAnimations.handleChampionSwitchedOut(champId); // desativado no modo atual
 combatAnimations.handleCombatPhaseComplete(); // enqueue "combatPhaseComplete"
 combatAnimations.handleGameOver(data); // enqueue "gameOver"
 combatAnimations.appendToLog(text);
@@ -1616,8 +1619,7 @@ combatAnimations.reset();
 | `gameStateUpdate`     | `processGameStateUpdate(gameState)`                              |
 | `turnUpdate`          | `processTurnUpdate(turn)`                                        |
 | `championRemoved`     | `processChampionRemoved(id)` — animação de morte                 |
-| `championSwitchedOut` | Desativado no modo atual                                         |
-| `combatLog`           | `processCombatLog(text)` — dialog se relevante                   |
+| `combatLog`           | `appendToLog(text)` — anexa a linha ao log de combate            |
 | `combatPhaseComplete` | Marca `currentPhase = "combat"` → dispara onQueueEmpty ao drenar |
 | `gameOver`            | `handleGameOver(data)` — overlay final                           |
 
