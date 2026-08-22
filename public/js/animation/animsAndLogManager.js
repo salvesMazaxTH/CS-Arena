@@ -134,7 +134,6 @@ function scrollIfNeeded(
  * @param {Function} deps.createNewChampion
  * @param {Function} deps.getCurrentTurn
  * @param {Function} deps.setCurrentTurn
- * @param {Function} deps.updateTurnDisplay
  * @param {Function} deps.applyTurnUpdate
  * @param {Function} deps.syncStatusIndicatorRotation
  * @param {Element}  deps.combatDialog
@@ -1983,10 +1982,91 @@ export function createCombatAnimationManager(deps) {
   }
 
   // ============================================================
+  //  TURN TRANSITION (banner animation + turn display)
+  // ============================================================
+
+  let turnTransitionTimer = null;
+  let turnTransitionSequence = 0;
+  let isFirstTurnUpdate = true;
+  let lastDisplayedTurn = null;
+
+  function showTurnTransition(turn) {
+    const overlay = document.getElementById("turnTransitionOverlay");
+    const number = document.getElementById("turnTransitionNumber");
+
+    if (!overlay || !number) return;
+
+    const sequence = ++turnTransitionSequence;
+
+    clearTimeout(turnTransitionTimer);
+
+    const turnLabel = turn === 20 ? "LAST TURN" : `TURN ${turn}`;
+
+    // Ensure the overlay starts showing the new turn.
+    number.textContent = turnLabel;
+
+    // Reset the text animation.
+    number.classList.remove("is-changing");
+
+    // Force the browser to acknowledge the initial state.
+    void number.offsetWidth;
+
+    // Overlay entrance.
+    overlay.classList.add("is-visible");
+
+    // Keep the banner visible for a moment.
+    turnTransitionTimer = setTimeout(() => {
+      if (sequence !== turnTransitionSequence) return;
+
+      // Fade/blur the current turn.
+      number.classList.add("is-changing");
+
+      setTimeout(() => {
+        if (sequence !== turnTransitionSequence) return;
+
+        number.textContent = turnLabel;
+
+        // Force reflow to restart the entrance.
+        void number.offsetWidth;
+
+        number.classList.remove("is-changing");
+
+        // After showing the new turn, close the overlay.
+        turnTransitionTimer = setTimeout(() => {
+          if (sequence !== turnTransitionSequence) return;
+
+          overlay.classList.remove("is-visible");
+        }, 700);
+      }, 230);
+    }, 700);
+  }
+
+  function updateTurnDisplay(turn) {
+    const turnDisplay = document.querySelector(".turn-display");
+    const turnText = turnDisplay?.querySelector("p");
+
+    if (turnText) {
+      turnText.textContent = turn === 20 ? "Last Turn" : `Turn ${turn}`;
+    }
+
+    if (isFirstTurnUpdate) {
+      isFirstTurnUpdate = false;
+      lastDisplayedTurn = turn;
+      return;
+    }
+
+    if (turn !== lastDisplayedTurn) {
+      lastDisplayedTurn = turn;
+      showTurnTransition(turn);
+    }
+  }
+
+  // ============================================================
   //  PUBLIC API
   // ============================================================
 
   return {
+    updateTurnDisplay,
     handleCombatAction(envelope) {
       enqueue("combatAction", envelope);
     },

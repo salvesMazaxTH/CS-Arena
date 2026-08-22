@@ -212,7 +212,6 @@ const combatAnimations = createCombatAnimationManager({
   setCurrentTurn: (turn) => {
     currentTurn = turn;
   },
-  updateTurnDisplay,
   applyTurnUpdate,
   syncStatusIndicatorRotation: () => StatusIndicator.syncRotationLoopState(),
   combatDialog,
@@ -2135,7 +2134,7 @@ socket.on("actionsCanceled", () => {
 /** Applies the turn transition on the client: resets actions and updates the UI. */
 function applyTurnUpdate(turn) {
   currentTurn = turn;
-  updateTurnDisplay(currentTurn);
+  combatAnimations.updateTurnDisplay(currentTurn);
   hasConfirmedEndTurn = false;
   pendingSummonChampionKey = null;
   closeSummonReminder();
@@ -2158,83 +2157,6 @@ function applyTurnUpdate(turn) {
   if (playerTeam !== null) initActionBar();
 
   logCombat(`Start of Turn ${currentTurn}`);
-}
-
-let turnTransitionTimer = null;
-let turnTransitionSequence = 0;
-let isFirstTurnUpdate = true;
-
-function showTurnTransition(turn) {
-  const overlay = document.getElementById("turnTransitionOverlay");
-  const number = document.getElementById("turnTransitionNumber");
-
-  if (!overlay || !number) return;
-
-  const sequence = ++turnTransitionSequence;
-
-  clearTimeout(turnTransitionTimer);
-
-  const turnLabel = turn === 20 ? "LAST TURN" : `TURN ${turn}`;
-
-  // Garante que o overlay comece mostrando o novo turno
-  number.textContent = turnLabel;
-
-  // Reset da animação do texto
-  number.classList.remove("is-changing");
-
-  // Força o browser a reconhecer o estado inicial
-  void number.offsetWidth;
-
-  // Entrada do overlay
-  overlay.classList.add("is-visible");
-
-  // Mantém o banner visível por um instante
-  turnTransitionTimer = setTimeout(() => {
-    if (sequence !== turnTransitionSequence) return;
-
-    // Fade/blur do turno atual
-    number.classList.add("is-changing");
-
-    setTimeout(() => {
-      if (sequence !== turnTransitionSequence) return;
-
-      number.textContent = turnLabel;
-
-      // Força reflow para reiniciar a entrada
-      void number.offsetWidth;
-
-      number.classList.remove("is-changing");
-
-      // Depois de mostrar o novo turno, fecha o overlay
-      turnTransitionTimer = setTimeout(() => {
-        if (sequence !== turnTransitionSequence) return;
-
-        overlay.classList.remove("is-visible");
-      }, 700);
-    }, 230);
-  }, 700);
-}
-
-let lastDisplayedTurn = null;
-
-function updateTurnDisplay(turn) {
-  const turnDisplay = document.querySelector(".turn-display");
-  const turnText = turnDisplay?.querySelector("p");
-
-  if (turnText) {
-    turnText.textContent = turn === 20 ? "Last Turn" : `Turn ${turn}`;
-  }
-
-  if (isFirstTurnUpdate) {
-    isFirstTurnUpdate = false;
-    lastDisplayedTurn = turn;
-    return;
-  }
-
-  if (turn !== lastDisplayedTurn) {
-    lastDisplayedTurn = turn;
-    showTurnTransition(turn);
-  }
 }
 
 function endTurn() {
