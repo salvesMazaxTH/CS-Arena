@@ -2082,10 +2082,6 @@ socket.on("gameStateUpdate", (gameState) => {
   }
 });
 
-socket.on("scoreUpdate", (score) => {
-  updateScoreDisplay(score);
-});
-
 socket.on("actionFailed", (message) => {
   console.warn("[ActionFailed]", message);
   pendingSummonChampionKey = null;

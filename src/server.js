@@ -314,7 +314,6 @@ function emitChampionDeath(deathResult) {
   if (champ?.runtime) delete champ.runtime.currentContext;
 
   if (deathResult.scoreAwarded && deathResult.scorePayload) {
-    io.emit("scoreUpdate", deathResult.scorePayload);
     io.emit("combatAction", {
       action: null,
       scorePayload: deathResult.scorePayload,
