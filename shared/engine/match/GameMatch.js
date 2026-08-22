@@ -1,4 +1,13 @@
 import { getClaimMaxPoints } from "../combat/claim.js";
+import { championDB } from "../../data/championDB.js";
+import { Champion } from "../../core/Champion.js";
+import { generateId } from "../../utils/id.js";
+import { emitCombatEvent } from "../combat/combatEvents.js";
+import { formatChampionName } from "../../ui/formatters.js";
+import {
+  applyChampionTransformation,
+  revertChampionTransformation,
+} from "./championTransformation.js";
 
 // Sanity ceiling for the minion slot search. Minions have no rule-level cap;
 // this only keeps the lookup from running away if something goes wrong.
@@ -363,6 +372,191 @@ class CombatState {
     this.activeChampions.delete(championId);
     this.deadChampions.set(championId, champion);
     return champion;
+  }
+
+  /**
+   * Creates and registers a champion from its DB key, honoring the field cap and
+   * relocating off a taken explicit slot. Fires the onChampionAdded hooks. Returns
+   * the instance, or null when the team is full, no slot is free or the key is
+   * invalid. Server-only concerns (portrait skin, state broadcast) stay in the
+   * server wrapper — this method never touches sockets.
+   */
+  spawnChampion({
+    championKey,
+    team,
+    combatSlot = null,
+    trackSnapshot = true,
+    maxPerTeam = 3,
+    spawnProtection = true,
+  } = {}) {
+    const baseData = championDB[championKey];
+    if (!baseData) {
+      console.warn(`[SPAWN] Aborted: "${championKey}" is not in the championDB.`);
+      return null;
+    }
+
+    const entityType = baseData.entityType ?? "champion";
+
+    // The field cap counts champions only; minions go straight through.
+    if (!this.canSpawnOnTeam(team, maxPerTeam, { entityType })) {
+      console.warn(
+        `[SPAWN] Aborted: team ${team} already fields ${maxPerTeam} champions (attempted: ${championKey}).`,
+      );
+      return null;
+    }
+
+    if (!Number.isInteger(combatSlot)) {
+      combatSlot = this.getNextAvailableSlot(team, maxPerTeam, { entityType });
+      if (combatSlot === null) {
+        console.warn(
+          `[SPAWN] Aborted: no free slot on team ${team} (attempted: ${championKey}).`,
+        );
+        return null;
+      }
+    } else if (this.getChampionAtSlot(team, combatSlot)) {
+      // The explicit slot (e.g. a revival) is taken — relocate rather than stack.
+      const fallbackSlot = this.getNextAvailableSlot(team, maxPerTeam, {
+        entityType,
+      });
+      console.warn(
+        `[SPAWN] Slot ${combatSlot} on team ${team} is taken; relocating ${championKey} to ${fallbackSlot}.`,
+      );
+      if (fallbackSlot === null) return null;
+      combatSlot = fallbackSlot;
+    }
+
+    const id = generateId(championKey);
+    const newChampion = Champion.fromBaseData(baseData, id, team, { combatSlot });
+    newChampion.championKey = championKey;
+
+    this.registerChampion(newChampion, { trackSnapshot });
+
+    emitCombatEvent(
+      "onChampionAdded",
+      {
+        // Must NOT be named "owner": emitCombatEvent overwrites that key with the
+        // hook's own owner, so emblem hooks could never see the added champion.
+        champion: newChampion,
+        context: {
+          currentTurn: this.currentTurn,
+          allChampions: this.activeChampions,
+          spawnProtection,
+        },
+        spawnProtection,
+      },
+      [newChampion],
+      { players: this.match.players },
+    );
+
+    if (!trackSnapshot) {
+      // Initial setup — manual snapshot.
+      this.combatSnapshot.push({
+        championKey,
+        id,
+        team,
+        combatSlot: newChampion.combatSlot,
+      });
+    }
+
+    return newChampion;
+  }
+
+  /**
+   * Applies a champion mutation request (restore / transform / revertTransform /
+   * swap) and returns { champion, log? }, or null when it cannot be applied.
+   * On transform, schedules the matching revert. Sockets are the server's job.
+   */
+  mutateChampion(
+    {
+      targetId,
+      newChampionKey,
+      mode = "swap",
+      duration = 0,
+      hpMode = "preserveRatio",
+      statMode = "deltaFromBase",
+      expectedToken = null,
+    } = {},
+    options = {},
+  ) {
+    const mutationContext = options?.context ?? null;
+
+    if (mode === "restore") {
+      const restored = this.restoreInactive(targetId);
+      return restored ? { champion: restored } : null;
+    }
+
+    if (mode === "transform") {
+      const transformed = applyChampionTransformation({
+        combat: this,
+        targetId,
+        newChampionKey,
+        currentTurn: this.currentTurn,
+        duration,
+        hpMode,
+        statMode,
+      });
+      if (!transformed) return null;
+
+      const transformation = transformed.runtime?.transformation;
+      if (transformation?.revertAtTurn && transformation?.token) {
+        const scheduleFn = mutationContext?.schedule;
+        const scheduledEffect = {
+          type: "championMutation",
+          turnToHappen: transformation.revertAtTurn,
+          payload: {
+            mode: "revertTransform",
+            targetId: transformed.id,
+            expectedToken: transformation.token,
+          },
+        };
+
+        if (typeof scheduleFn === "function") {
+          scheduleFn.call(mutationContext, scheduledEffect);
+        } else {
+          this.scheduledEffects.push(scheduledEffect);
+        }
+      }
+
+      return { champion: transformed };
+    }
+
+    if (mode === "revertTransform") {
+      const reverted = revertChampionTransformation({
+        combat: this,
+        targetId,
+        expectedToken,
+      });
+      if (!reverted) return null;
+
+      return {
+        champion: reverted,
+        log: `${formatChampionName(reverted)} returned to its original form.`,
+      };
+    }
+
+    const old = this.getChampion(targetId);
+    if (!old) return null;
+
+    const swappedOut = this.swapOut(targetId);
+    if (!swappedOut) return null;
+
+    const baseData = championDB[newChampionKey];
+    if (!baseData)
+      throw new Error(`ERROR: "${newChampionKey}" not found in championDB.`);
+
+    // Fresh champion with a new ID (never reuse targetId).
+    const newId = generateId(newChampionKey);
+    const newChampion = Champion.fromBaseData(baseData, newId, old.team, {
+      combatSlot: old.combatSlot,
+    });
+    newChampion.championKey = newChampionKey;
+
+    // Which champion this one replaced — read by the replacement's on-death passive.
+    newChampion.runtime.swappedFrom = targetId;
+
+    this.registerChampion(newChampion, { trackSnapshot: true });
+
+    return { champion: newChampion };
   }
 
   /**

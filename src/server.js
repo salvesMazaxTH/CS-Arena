@@ -18,12 +18,12 @@ import { Player } from "../shared/engine/match/Player.js";
 
 import { championDB } from "../shared/data/championDB.js";
 import { Champion } from "../shared/core/Champion.js";
-import { generateId } from "../shared/utils/id.js";
 import { formatChampionName } from "../shared/ui/formatters.js";
 
 import { emitCombatEvent } from "../shared/engine/combat/combatEvents.js";
 import { Action } from "../shared/engine/combat/Action.js";
 import { TurnResolver } from "../shared/engine/combat/TurnResolver.js";
+import { CombatEnvelopeBuilder } from "../shared/engine/combat/CombatEnvelopeBuilder.js";
 
 import {
   CLAIM_ACTION_KEY,
@@ -33,10 +33,6 @@ import {
 import { DamageEvent } from "../shared/engine/combat/DamageEvent.js";
 import { getHardCCActionDenial } from "../shared/core/championStatus.js";
 import { decayShields } from "../shared/core/championCombat.js";
-import {
-  applyChampionTransformation,
-  revertChampionTransformation,
-} from "../shared/engine/match/championTransformation.js";
 
 import {
   EMBLEMS,
@@ -90,6 +86,7 @@ app.get("/", (_req, res) => {
 // ============================================================
 
 const match = new GameMatch();
+const envelopeBuilder = new CombatEnvelopeBuilder(match.combat);
 let waitingForAnimations = false;
 
 // ============================================================
@@ -257,237 +254,44 @@ function fillRandomChampionSelection(currentSelection = [], fillAll = false) {
   return nextSelection.slice(0, TEAM_SIZE);
 }
 
-function processChampionMutationRequest(
-  {
-    targetId,
-    newChampionKey,
-    mode = "swap",
-    duration = 0,
-    hpMode = "preserveRatio",
-    statMode = "deltaFromBase",
-    expectedToken = null,
-  } = {},
-  options = {},
-) {
-  const mutationContext = options?.context ?? null;
+/** Cosmetic winter portrait swap, applied on spawn when the asset exists on disk. */
+function applySeasonalSkin(champion) {
+  if (Math.random() > 0.675) return;
 
-  if (mode === "restore") {
-    const restored = match.combat.restoreInactive(targetId);
-    return restored ? { champion: restored } : null;
+  const fileName = champion.portrait.split("/").pop();
+  if (!fileName) return;
+
+  const baseName = fileName.replace(".webp", "");
+  const absolutePath = path.join(
+    process.cwd(),
+    "public",
+    "assets",
+    "portraits",
+    `${baseName}_curtindo_o_inverno.webp`,
+  );
+
+  if (fs.existsSync(absolutePath)) {
+    champion.portrait = `/assets/portraits/${baseName}_curtindo_o_inverno.webp`;
   }
-
-  if (mode === "transform") {
-    const transformed = applyChampionTransformation({
-      combat: match.combat,
-      targetId,
-      newChampionKey,
-      currentTurn: match.combat.currentTurn,
-      duration,
-      hpMode,
-      statMode,
-    });
-
-    if (!transformed) return null;
-
-    const transformation = transformed.runtime?.transformation;
-    if (transformation?.revertAtTurn && transformation?.token) {
-      const scheduleFn = mutationContext?.schedule;
-      const scheduledEffect = {
-        type: "championMutation",
-        turnToHappen: transformation.revertAtTurn,
-        payload: {
-          mode: "revertTransform",
-          targetId: transformed.id,
-          expectedToken: transformation.token,
-        },
-      };
-
-      if (typeof scheduleFn === "function") {
-        scheduleFn.call(mutationContext, scheduledEffect);
-      } else {
-        match.combat.scheduledEffects.push(scheduledEffect);
-      }
-    }
-
-    return { champion: transformed };
-  }
-
-  if (mode === "revertTransform") {
-    const reverted = revertChampionTransformation({
-      combat: match.combat,
-      targetId,
-      expectedToken,
-    });
-
-    if (!reverted) return null;
-
-    return {
-      champion: reverted,
-      log: `${formatChampionName(reverted)} returned to its original form.`,
-    };
-  }
-
-  const old = match.combat.getChampion(targetId);
-  if (!old) return null;
-
-  const swappedOut = match.combat.swapOut(targetId);
-  if (!swappedOut) return null;
-
-  const baseData = championDB[newChampionKey];
-  if (!baseData)
-    throw new Error(`ERROR: "${newChampionKey}" not found in championDB.`);
-
-  // Fresh champion with a new ID (never reuse targetId).
-  const newId = generateId(newChampionKey);
-  const newChampion = Champion.fromBaseData(baseData, newId, old.team, {
-    combatSlot: old.combatSlot,
-  });
-  newChampion.championKey = newChampionKey;
-
-  // Which champion this one replaced — read by the replacement's on-death passive.
-  newChampion.runtime.swappedFrom = targetId;
-
-  match.combat.registerChampion(newChampion, { trackSnapshot: true });
-
-  return { champion: newChampion };
 }
 
 /**
- * Creates, registers and (when emitState) broadcasts a new champion.
- * combatSlot defaults to the next free one; trackSnapshot is false during initial
- * setup. Returns the instance, or null when the team is full or the key is invalid.
+ * Spawns a champion through the combat model (which enforces the field cap and
+ * fires onChampionAdded), applies the server-only seasonal skin, and — when
+ * emitState — broadcasts the new state. Returns the instance, or null when it
+ * could not be spawned.
  */
-function spawnChampion({
-  championKey,
-  team,
-  combatSlot = null,
-  trackSnapshot = true,
-  emitState = true,
-  spawnProtection = true,
-} = {}) {
-  const baseData = championDB[championKey];
-  if (!baseData) {
-    console.warn(`[SPAWN] Aborted: "${championKey}" is not in the championDB.`);
-    return null;
-  }
-
-  const entityType = baseData.entityType ?? "champion";
-
-  // --- Check whether the team can take one more living champion ---
-  // Minions go straight through: the field cap only counts champions.
-  if (!match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM, { entityType })) {
-    console.warn(
-      `[SPAWN] Aborted: team ${team} already fields ${ACTIVE_PER_TEAM} champions (attempted: ${championKey}).`,
-    );
-    return null;
-  }
-
-  // --- Resolve combatSlot ---
-  if (!Number.isInteger(combatSlot)) {
-    combatSlot = match.combat.getNextAvailableSlot(team, ACTIVE_PER_TEAM, {
-      entityType,
-    });
-
-    if (combatSlot === null) {
-      console.warn(
-        `[SPAWN] Aborted: no free slot on team ${team} (attempted: ${championKey}).`,
-      );
-      return null; // no free slot
-    }
-  } else if (match.combat.getChampionAtSlot(team, combatSlot)) {
-    // The explicit slot (e.g. Jeff's revival) is already taken by another
-    // entity — relocate instead of stacking two entities on the same spot.
-    const fallbackSlot = match.combat.getNextAvailableSlot(
-      team,
-      ACTIVE_PER_TEAM,
-      { entityType },
-    );
-
-    console.warn(
-      `[SPAWN] Slot ${combatSlot} on team ${team} is taken; relocating ${championKey} to ${fallbackSlot}.`,
-    );
-
-    if (fallbackSlot === null) return null;
-    combatSlot = fallbackSlot;
-  }
-
-  const id = generateId(championKey);
-
-  const newChampion = Champion.fromBaseData(baseData, id, team, {
-    combatSlot,
+function spawnChampion({ emitState = true, ...spawnOpts } = {}) {
+  const champion = match.combat.spawnChampion({
+    ...spawnOpts,
+    maxPerTeam: ACTIVE_PER_TEAM,
   });
+  if (!champion) return null;
 
-  function applySeasonalSkin(champion) {
-    const chance = 0.675;
-    const roll = Math.random();
+  applySeasonalSkin(champion);
+  if (emitState) broadcastGameState();
 
-    if (roll > chance) return;
-
-    const basePath = champion.portrait;
-
-    const fileName = basePath.split("/").pop();
-    if (!fileName) return;
-
-    const baseName = fileName.replace(".webp", "");
-
-    const winterPath = `/assets/portraits/${baseName}_curtindo_o_inverno.webp`;
-
-    // Physical path on disk (adjust if needed).
-    const absolutePath = path.join(
-      process.cwd(),
-      "public",
-      "assets",
-      "portraits",
-      `${baseName}_curtindo_o_inverno.webp`,
-    );
-
-    // 👇 only applied when the file actually exists
-    if (fs.existsSync(absolutePath)) {
-      champion.portrait = winterPath;
-    }
-  }
-
-  applySeasonalSkin(newChampion);
-
-  newChampion.championKey = championKey;
-
-  match.combat.registerChampion(newChampion, { trackSnapshot });
-
-  emitCombatEvent(
-    "onChampionAdded",
-    {
-      // Must NOT be named "owner": emitCombatEvent overwrites that key with the
-      // hook's own owner (the champion on the champion path, the Player on the
-      // emblem path), so emblem hooks could never see the champion being added.
-      champion: newChampion,
-      context: {
-        currentTurn: match.combat.currentTurn,
-        allChampions: match.combat.activeChampions,
-        spawnProtection,
-      },
-      spawnProtection,
-    },
-    [newChampion],
-    {
-      players: match.players,
-    },
-  );
-
-  if (!trackSnapshot) {
-    // Initial setup — manual snapshot.
-    match.combat.combatSnapshot.push({
-      championKey,
-      id,
-      team,
-      combatSlot: newChampion.combatSlot,
-    });
-  }
-
-  if (emitState) {
-    broadcastGameState();
-  }
-
-  return newChampion;
+  return champion;
 }
 
 /** Whether both players have selected their teams; notifies the clients when so. */
@@ -582,208 +386,16 @@ function applyGlobalMomentumRegen(champion, context, resolver) {
 //  COMBAT ACTION EMISSION (v2)
 // ============================================================
 
-/** Builds the target id/name shown alongside an action, from the real target ids. */
-function buildEmitTargetInfo(realTargetIds) {
-  let targetName = null;
-
-  if (realTargetIds.length === 1) {
-    const champ = match.combat.getChampion(realTargetIds[0]);
-    targetName = champ ? formatChampionName(champ) : null;
-  } else if (realTargetIds.length > 1) {
-    const names = realTargetIds.map((id) => {
-      const champ = match.combat.getChampion(id);
-      return champ ? formatChampionName(champ) : "Unknown";
-    });
-
-    const last = names.pop();
-    targetName = `${names.join(", ")} and ${last}`;
-  }
-
-  return {
-    targetId: realTargetIds[0] ?? null,
-    targetName,
-  };
-}
-
-function emitCombatEnvelopesFromContext({
-  user,
-  skill,
-  context,
-  scorePayload = null,
-  claimPoints = null,
-  log = null,
-}) {
-  const mainEnvelope = buildMainEnvelopeFromContext({ user, skill, context });
-  if (!mainEnvelope) return;
-
-  const {
-    damageEvents = [],
-    healEvents = [],
-    lifestealEvents = [],
-    shieldEvents = [],
-    buffEvents = [],
-    resourceEvents = [],
-    globalDialogs = [],
-    redirectionEvents = [],
-  } = mainEnvelope;
-
-  const hasVisualChanges =
-    damageEvents.length ||
-    healEvents.length ||
-    lifestealEvents.length ||
-    shieldEvents.length ||
-    buffEvents.length ||
-    resourceEvents.length ||
-    redirectionEvents.length ||
-    globalDialogs.length;
-
-  if (mainEnvelope.action || hasVisualChanges || !!scorePayload) {
-    emitCombatAction({
-      ...mainEnvelope,
-      ...(log ? { log } : null),
-      scorePayload,
-      claimPoints,
-    });
-  }
-}
-
-function buildMainEnvelopeFromContext({ user, skill, context }) {
-  const {
-    damageEvents = [],
-    healEvents = [],
-    lifestealEvents = [],
-    shieldEvents = [],
-    buffEvents = [],
-    resourceEvents = [],
-    globalDialogs = [],
-    redirectionEvents = [],
-  } = context.visual || {};
-
-  const userId = user?.id ?? null;
-  const userName = user?.name ?? null;
-
-  const mainDamage = damageEvents.filter((d) => (d.damageDepth ?? 0) === 0);
-  const mainHeal = healEvents.filter((h) => (h.damageDepth ?? 0) === 0);
-  const mainLifesteal = lifestealEvents.filter(
-    (ls) => (ls.damageDepth ?? 0) === 0,
-  );
-  const mainShield = shieldEvents.filter((s) => (s.damageDepth ?? 0) === 0);
-  const mainBuff = buffEvents.filter((b) => (b.damageDepth ?? 0) === 0);
-  const mainResource = resourceEvents.filter((r) => (r.damageDepth ?? 0) === 0);
-
-  // All affected targets (damage, heal, buff, shield), deduped, excluding the user.
-  const uniqueTargetIds = [
-    ...new Set(
-      [...mainDamage, ...mainHeal, ...mainShield, ...mainBuff]
-        .map((e) => e.targetId)
-        .filter((id) => id && id !== userId),
-    ),
-  ];
-
-  // Split into enemies and allies.
-  const userTeam = user?.team;
-  const enemies = uniqueTargetIds.filter((id) => {
-    const champ = match.combat.getChampion(id);
-    return champ && userTeam !== undefined && champ.team !== userTeam;
-  });
-  const allies = uniqueTargetIds.filter((id) => {
-    const champ = match.combat.getChampion(id);
-    return champ && userTeam !== undefined && champ.team === userTeam;
-  });
-
-  // Show enemies if any were hit; otherwise show allies.
-  const realTargetIds = enemies.length > 0 ? enemies : allies;
-
-  const { targetId, targetName } = buildEmitTargetInfo(realTargetIds);
-
-  // Every damageEvent carries skillKey so the client can animate per hit.
-  const skillKey = skill?.key;
-  const patchedDamage = mainDamage.map((ev) => ({ ...ev, skillKey }));
-
-  return {
-    action: user
-      ? {
-          userId,
-          userName,
-          skillKey: skillKey,
-          skillName: skill?.name,
-          targetId,
-          targetName,
-        }
-      : null,
-    damageEvents: patchedDamage,
-    healEvents: mainHeal,
-    lifestealEvents: mainLifesteal,
-    shieldEvents: mainShield,
-    buffEvents: mainBuff,
-    resourceEvents: mainResource,
-    redirectionEvents,
-
-    globalDialogs,
-
-    state: context._intermediateSnapshot,
-  };
-}
-
-/** Broadcasts one combat-action envelope (action + effect events + log + state) to all clients. */
-function emitCombatAction(envelope) {
-  if (!envelope) return;
-
-  io.emit("combatAction", envelope);
-}
-
-function collectCombatLogs(value, logs = [], visited = new Set()) {
-  if (value == null) return logs;
-
-  if (typeof value === "string") {
-    if (value.trim()) logs.push(value);
-    return logs;
-  }
-
-  if (Array.isArray(value)) {
-    for (const entry of value) {
-      collectCombatLogs(entry, logs, visited);
-    }
-    return logs;
-  }
-
-  if (typeof value !== "object") return logs;
-  if (visited.has(value)) return logs;
-
-  visited.add(value);
-
-  if (typeof value.log === "string" && value.log.trim()) {
-    logs.push(value.log);
-  }
-
-  if (typeof value.logMessage === "string" && value.logMessage.trim()) {
-    logs.push(value.logMessage);
-  }
-
-  const nestedLogCollections = [
-    "results",
-    "beforeLogs",
-    "afterLogs",
-    "passiveLogs",
-    "extraResults",
-    "globalDialogs",
-    "dialogs",
-  ];
-
-  for (const key of nestedLogCollections) {
-    const nestedValue = value[key];
-    if (Array.isArray(nestedValue)) {
-      collectCombatLogs(nestedValue, logs, visited);
-    }
-  }
-
-  return logs;
+/** Builds the action envelope via CombatEnvelopeBuilder and emits it if it has content. */
+function emitCombatEnvelopesFromContext(params) {
+  const envelope = envelopeBuilder.buildActionEnvelope(params);
+  if (envelope) io.emit("combatAction", envelope);
 }
 
 function emitCombatLogsFromResults(results = []) {
   if (!Array.isArray(results) || results.length === 0) return;
 
-  for (const log of collectCombatLogs(results)) {
+  for (const log of envelopeBuilder.collectLogs(results)) {
     io.emit("combatLog", log);
   }
 }
@@ -819,9 +431,7 @@ function handleEndTurn() {
   // Resolve every action through the TurnResolver.
   const resolver = new TurnResolver(match, editMode, {
     mutationHandler: (request, meta = {}) =>
-      processChampionMutationRequest(request, {
-        context: meta.context ?? null,
-      }),
+      match.combat.mutateChampion(request, { context: meta.context ?? null }),
   });
   const { actionResults, deathResults } = resolver.resolveTurn();
 
@@ -831,7 +441,7 @@ function handleEndTurn() {
 
   for (const result of actionResults) {
     if (result.executed) {
-      const actionLog = collectCombatLogs(result.results).join("\n");
+      const actionLog = envelopeBuilder.collectLogs(result.results).join("\n");
 
       emitCombatEnvelopesFromContext({
         user: result.user,
@@ -870,7 +480,7 @@ function handleEndTurn() {
   // creature is not registered as dead.
   if (allChampionMutationRequests.length > 0) {
     for (const req of allChampionMutationRequests) {
-      processChampionMutationRequest(req);
+      match.combat.mutateChampion(req);
     }
 
     broadcastGameState();
@@ -1021,7 +631,7 @@ function handleScheduledEffect(effect, context) {
     }
 
     case "championMutation": {
-      const result = processChampionMutationRequest(effect.payload);
+      const result = match.combat.mutateChampion(effect.payload);
       if (result?.log && context?.registerDialog) {
         context.registerDialog({
           message: result.log,
