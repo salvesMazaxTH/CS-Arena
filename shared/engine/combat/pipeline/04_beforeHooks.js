@@ -115,6 +115,20 @@ function _processHook(event, eventName, payload) {
     preMitigationDamage: undefined,
   };
 
+  // Every hook in this phase computes its `damage` result independently
+  // from the SAME starting value (`payload.damage`), since they all read
+  // the same payload snapshot rather than seeing each other's output. If
+  // more than one hook touches `damage` on the same instance (e.g. Avarik's
+  // Edict clamping a Hollow attacker's hit AND the defender's own damage
+  // passive reducing it), a flat "last result wins" overwrite would silently
+  // discard every earlier result, including hard caps. Composing the results
+  // as ratios against that shared starting value keeps every hook's effect
+  // instead of only the last one to run.
+  const startingDamage = Number(payload.damage) || 0;
+  let damageRatio = 1;
+  let sawDamageOverride = false;
+  let smallestRequestedDamage = Infinity;
+
   for (const r of results) {
     if (!r) continue;
 
@@ -126,7 +140,15 @@ function _processHook(event, eventName, payload) {
 
     // Mutação de estado do evento
     if (r.damage !== undefined) {
-      event.damage = r.damage;
+      const requestedDamage = Number(r.damage);
+      sawDamageOverride = true;
+      smallestRequestedDamage = Math.min(
+        smallestRequestedDamage,
+        requestedDamage,
+      );
+      if (startingDamage > 0) {
+        damageRatio *= requestedDamage / startingDamage;
+      }
     }
     if (r.baseDamage !== undefined) {
       event.baseDamage = Number(r.baseDamage);
@@ -157,6 +179,17 @@ function _processHook(event, eventName, payload) {
       }
     });
   }
+
+  if (sawDamageOverride) {
+    // Normal case: at least one hook had a non-zero starting damage to
+    // express its change as a ratio against — apply every hook's effect
+    // together instead of only the last one.
+    event.damage =
+      startingDamage > 0
+        ? startingDamage * damageRatio
+        : smallestRequestedDamage;
+  }
+
   return summary;
 }
 
