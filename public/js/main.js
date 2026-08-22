@@ -575,14 +575,11 @@ const editMode = {
 //  ESTADO DO JOGO
 // ============================================================
 
-// --- Identidade do jogador ---
+// --- Player identity ---
 let playerId = null;
 let playerTeam = null;
 let username = null;
-const playerNames = new Map(); // slot → nome de usuário
-
-// Reserva/switch desativados.
-// const teamReserveQueue = new Map(); // team → string[]
+const playerNames = new Map(); // slot → username
 
 // --- Turn & Combat ---
 let currentTurn = 1;
@@ -598,7 +595,6 @@ let selectedChampions = Array(TEAM_SIZE).fill(null);
 let championSelectionTimer = null;
 let championSelectionTimeLeft = 0;
 let playerTeamConfirmed = false;
-/* let allAvailableChampionKeys = []; */
 let draggedChampionKey = null;
 let draggedFromSlotIndex = -1; // -1 = available grid, >= 0 = selected slot
 
@@ -665,14 +661,6 @@ const musicToggle = document.getElementById("music-toggle");
 const musicVolumeSlider = document.getElementById("music-volume");
 const sfxToggle = document.getElementById("sfx-toggle");
 const sfxVolumeSlider = document.getElementById("sfx-volume");
-
-// --- Campeões de retaguarda (reserva) desativados ---
-// const backChampionDisplayTeam1 = document.getElementById(
-//   "backChampionDisplayTeam1",
-// );
-// const backChampionDisplayTeam2 = document.getElementById(
-//   "backChampionDisplayTeam2",
-// );
 
 // ============================================================
 //  GLOBAL EXPORTS (used by AnimsAndLogManager and others)
@@ -818,9 +806,6 @@ socket.on("playerAssigned", (data) => {
     arena?.classList.remove("arena--mirrored");
     document.body.classList.remove("perspective-team2");
   }
-
-  // rebuildReserveDisplay(1);
-  // rebuildReserveDisplay(2);
 });
 
 socket.on("playerEmblemsUpdated", ({ emblems } = {}) => {
@@ -2029,11 +2014,6 @@ function requestEndTurn() {
   if (hasConfirmedEndTurn || isSummonReminderOpen()) return;
 
   const summonable = getSummonableLineupChampions();
-  console.log("[END TURN] Line-up summon availability:", {
-    canSummon: lineupSummonState?.canSummon === true,
-    champions: summonable,
-  });
-
   if (!summonable.length) {
     endTurn();
     return;
@@ -2348,7 +2328,7 @@ function sortTeamContainersByCombatSlot() {
     }
   }
 }
-/*   */
+
 // Quick stats overlay (hover/touch on the portrait)
 let quickStatsOverlay = null;
 
@@ -2532,14 +2512,6 @@ async function handleSkillUsage(button) {
 
   const cost = user.getSkillCost(skill);
 
-  console.log(
-    "CLIENT CHECK: ",
-    user.name,
-    "trying to use",
-    skill.name,
-    `(Cost: ${cost}, Momentum: ${user.momentum})`,
-  );
-
   if (!editMode.freeCostSkills && cost > user.momentum) {
     alert(`Not enough Momentum.`);
     user.updateUI(currentTurn);
@@ -2556,9 +2528,6 @@ socket.on("skillDenied", (message) => {
 });
 
 socket.on("skillApproved", async ({ userId, skillKey }) => {
-  console.log(
-    `[SkillApproved] Resolving targets for ${userId} using ${skillKey}`,
-  );
   const user = activeChampions.get(userId);
   if (!user) return;
 
@@ -2583,7 +2552,6 @@ socket.on("skillApproved", async ({ userId, skillKey }) => {
 
   // Collects targets on the client
   const targets = await collectClientTargets(user, skill);
-  console.log("[SkillApproved] Collected targets:", targets);
   if (!targets) return;
 
   const targetIds = {};
@@ -2639,12 +2607,10 @@ async function collectClientTargets(user, skill) {
       spec.unique === true,
     );
 
-    console.log(`[collectClientTargets] Role: ${spec.type}, Target:`, target);
-
-    // cancelamento manual
+    // Manual cancel.
     if (target === null) return null;
 
-    // slot ignorado
+    // Skipped slot.
     if (target === undefined) continue;
 
     Object.assign(targets, target);
@@ -2677,8 +2643,6 @@ async function selectTargetForRole(
     [...list].sort((a, b) => (a.combatSlot ?? 0) - (b.combatSlot ?? 0));
 
   const role = spec.type;
-
-  console.log(`[selectTargetForRole] Selecting target for role: ${role}`);
 
   // SELF (automatic)
   if (role === "self") {
@@ -2736,21 +2700,11 @@ async function selectTargetForRole(
       index === 1 ? "Select the ENEMY" : `Select the ENEMY ${index}`,
     );
 
-    console.log(
-      `[selectTargetForRole] Candidates for enemy ${index}:`,
-      candidates,
-    );
-
     if (target === null) return null;
     if (target === undefined) return undefined;
 
     chosenTargets.add(target.id);
     const key = index === 1 ? "enemy" : `enemy${index}`;
-    console.log(
-      `[selectTargetForRole] Selected target for ${key}:`,
-      target,
-      chosenTargets,
-    );
 
     return { [key]: target };
   }
@@ -2759,17 +2713,14 @@ async function selectTargetForRole(
   return undefined;
 }
 
-// --- Overlay de seleção de alvo ---
+// --- Target selection overlay ---
 
 function createTargetSelectionOverlay(candidates, title) {
   // Remove skill overlay if open (fixes mobile bug)
   removeSkillOverlay && removeSkillOverlay();
   return new Promise((resolve) => {
-    // if there are no candidates, avoid opening the empty selection UI
+    // If there are no candidates, avoid opening the empty selection UI.
     if (!Array.isArray(candidates) || candidates.length === 0) {
-      console.log(
-        `[createTargetSelectionOverlay] No candidates available for "${title}". Skipping selection. Resolving undefined.`,
-      );
       resolve(undefined);
       return;
     }
@@ -3108,11 +3059,10 @@ socket.on("waitingForOpponentEndTurn", (message) => {
 });
 
 // ============================================================
-//  LOG DE COMBATE
+//  COMBAT LOG
 // ============================================================
 
 socket.on("combatAction", (envelope) => {
-  console.log("RECEBIDO NO CLIENT:", envelope);
   combatAnimations.handleCombatAction(envelope);
 });
 
@@ -3130,54 +3080,6 @@ function logCombat(text) {
   if (typeof text !== "string" || !text) return;
   combatAnimations.handleCombatLog(text);
 }
-
-// ============================================================
-//  EXIBIÇÃO DO CAMPEÃO DE RETAGUARDA (DESATIVADA)
-// ============================================================
-
-// const remainingSwitchesPerTeam = new Map([
-//   [1, 0],
-//   [2, 0],
-// ]);
-
-// socket.on("switchesUpdate", ({ team1, team2 }) => {
-//   remainingSwitchesPerTeam.set(1, team1);
-//   remainingSwitchesPerTeam.set(2, team2);
-//   rebuildReserveDisplay(1);
-//   rebuildReserveDisplay(2);
-// });
-
-// socket.on("backChampionUpdate", ({ team, queue }) => {
-//   teamReserveQueue.set(team, queue ?? []);
-//   rebuildReserveDisplay(team);
-// });
-
-// function getReserveDisplayElement(team) {
-//   if (playerTeam === 1 || playerTeam === 2) {
-//     return team === playerTeam
-//       ? backChampionDisplayTeam1
-//       : backChampionDisplayTeam2;
-//   }
-//
-//   return team === 1 ? backChampionDisplayTeam1 : backChampionDisplayTeam2;
-// }
-
-function rebuildReserveDisplay(_team) {
-  // Reserva/switch UI desativados.
-}
-
-// socket.on("championSwitchedOut", (championId) => {
-//   combatAnimations.handleChampionSwitchedOut(championId);
-// });
-
-// socket.on("switchQueued", ({ championId }) => {
-//   document.getElementById("undo-actions-btn").disabled = false;
-//   advanceActionBarSlot(championId);
-// });
-
-// socket.on("switchDenied", (message) => {
-//   alert(message);
-// });
 
 // ============================================================
 //  ACTION BAR (slot-by-slot action selection)
@@ -3325,24 +3227,20 @@ function showActionBarSlot({ playerAdvanced = true } = {}) {
   teamContainer.appendChild(actionBarEl);
 
   if (skipSlotBtn) skipSlotBtn.disabled = false;
-
-  // Update reserve display disabled.
-  // rebuildReserveDisplay(playerTeam);
 }
 
 function advanceActionBarSlot(champId) {
   if (actionBarSlotOrder[currentActionBarSlot] === champId) {
     currentActionBarSlot++;
     showActionBarSlot();
-    // Habilita o undo sempre que avança slot (há ação pendente)
+    // Enable undo whenever a slot advances (there is a pending action).
     document.getElementById("undo-actions-btn").disabled = false;
-    // rebuildReserveDisplay(playerTeam);
   }
 }
 
 async function handleClaimUsage(champion) {
   if (window.gameEnded) {
-    alert("O jogo já terminou. Nenhuma ação pode ser realizada.");
+    alert("The game has already ended. No action can be taken.");
     return;
   }
 
@@ -3389,17 +3287,10 @@ function removeActionBar() {
   }
   if (skipSlotBtn) skipSlotBtn.disabled = true;
   setEndTurnButtonVisible(false);
-  // Rebuild reserve display disabled.
-  // if (playerTeam !== null) rebuildReserveDisplay(playerTeam);
 }
 
-/* function handleSwitchViaReserveCard(reserveKey) {
-  // Lógica de switch/reserva desativada.
-  void reserveKey;
-} */
-
 // ============================================================
-//  SURRENDER (Render-se)
+//  SURRENDER
 // ============================================================
 
 function openSurrenderDialog() {
