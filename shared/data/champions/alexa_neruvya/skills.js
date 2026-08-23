@@ -12,8 +12,8 @@ const alexaNeruvyaSkills = [
   // ========================
 
   {
-    key: "tidecall_benediction",
-    name: "Tidecall Benediction",
+    key: "the_tide_bows",
+    name: "The Tide Bows",
 
     healAmount: 60,
     contact: false,
@@ -21,7 +21,7 @@ const alexaNeruvyaSkills = [
     element: "water",
 
     description() {
-      return `Alexa Neruvya lifts two fingers and the sea lifts with them, because it has never once been asked twice. The water comes up around the chosen ally in slow coils and closes over everything it finds open, restoring ${this.healAmount} HP.`;
+      return `The Exiled One lifts two fingers and the sea lifts with them, because it has never once been asked twice. The water comes up around the chosen ally in slow coils and closes over everything it finds open, restoring ${this.healAmount} HP.`;
     },
 
     targetSpec: ["select:ally"],
@@ -52,7 +52,7 @@ const alexaNeruvyaSkills = [
     element: "water",
 
     description() {
-      return `The Queen of every water outside the body speaks over the chosen ally, and what does not belong to them is named aloud and dismissed. The tide runs through and comes out carrying it, restoring ${this.healAmount} HP and lifting away every negative status effect they are under.`;
+      return `The Sovereign of every water outside the body speaks over the chosen ally, and what does not belong to them is named aloud and dismissed. The tide runs through and comes out carrying it, restoring ${this.healAmount} HP and lifting away every negative status effect they are under.`;
     },
 
     targetSpec: ["select:ally"],

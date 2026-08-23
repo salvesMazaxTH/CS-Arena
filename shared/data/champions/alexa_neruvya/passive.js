@@ -3,17 +3,17 @@ import { formatChampionName } from "../../../ui/formatters.js";
 const MAX_CRIT_CHANCE = 95;
 
 export default {
-  key: "mercy_of_the_fallen_queen",
-  name: "Mercy of the Fallen Queen",
+  key: "the_grace_that_remains",
+  name: "The Grace That Remains",
 
   healCritBonus: 55,
   allyCritBuff: 10,
   allyCritDuration: 2,
 
   description() {
-    return `Alexa Neruvya wore a crown once and lost it, and the edge she kept from that life she has spent every century refusing to use: any critical hit she would land is unmade before it arrives.
+    return `Alexa Neruvya was celestial once, and was condemned for a crime immortality could not absolve. What was taken from her was never extinguished, only turned around: the edge that made her blows divine now refuses to land, and any critical hit she would deal is unmade before it arrives.
 
-    The precision is not gone, only turned around. Whenever she restores HP, her Critical is rolled as the chance for that mending to be a critical hit, restoring ${this.healCritBonus}% bonus HP and sharpening the ally with the highest Critical by +${this.allyCritBuff} Critical for ${this.allyCritDuration} turn(s).`;
+    Whenever she restores HP, her Critical is rolled as the chance for that mending to be a critical hit, restoring ${this.healCritBonus}% bonus HP and sharpening the ally with the highest Critical by +${this.allyCritBuff} Critical for ${this.allyCritDuration} turn(s).`;
   },
 
   hookScope: {
