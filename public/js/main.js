@@ -12,6 +12,16 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+// Overlay visibility: shown by swapping .hidden → .active; hidden the reverse.
+function showOverlay(el) {
+  el?.classList.remove("hidden");
+  el?.classList.add("active");
+}
+function hideOverlay(el) {
+  el?.classList.remove("active");
+  el?.classList.add("hidden");
+}
+
 // ============================================================
 //  IMPORTS
 // ============================================================
@@ -85,7 +95,7 @@ const editMode = {
 };
 
 // ============================================================
-//  ESTADO DO JOGO
+//  GAME STATE
 // ============================================================
 
 // --- Player identity ---
@@ -243,7 +253,7 @@ audioManager.preloadAll();
 
 function openSettings() {
   settingsOverlay.classList.remove("hidden");
-  // Pequeno delay para a animação CSS
+  // Small delay for the CSS animation
   setTimeout(() => settingsOverlay.classList.add("active"), 10);
 }
 
@@ -355,9 +365,8 @@ socket.on("serverFull", (message) => {
 });
 
 socket.on("allPlayersConnected", () => {
-  // Transição: login → main content
-  loginScreen.classList.remove("active");
-  loginScreen.classList.add("hidden");
+  // Transition: login → main content
+  hideOverlay(loginScreen);
   mainContent.classList.remove("hidden");
   mainContent.classList.add("visible");
 
@@ -407,11 +416,10 @@ socket.on("allPlayersConnected", () => {
 socket.on("forceLogout", (message) => {
   alert(message);
 
-  // Volta para a tela de login
+  // Back to the login screen
   mainContent.classList.remove("visible");
   mainContent.classList.add("hidden");
-  loginScreen.classList.remove("hidden");
-  loginScreen.classList.add("active");
+  showOverlay(loginScreen);
 
   // Clear all game state
   activeChampions.clear();
@@ -497,8 +505,8 @@ window.addEventListener("beforeunload", function (e) {
   ) {
     const confirmationMessage =
       "Are you sure you want to leave? You may lose your progress in the match.";
-    (e || window.event).returnValue = confirmationMessage; // Para navegadores antigos
-    return confirmationMessage; // Para navegadores modernos
+    (e || window.event).returnValue = confirmationMessage; // For old browsers
+    return confirmationMessage; // For modern browsers
   }
 });
 
@@ -511,8 +519,7 @@ window.addEventListener("beforeunload", function (e) {
 // ============================================================
 
 socket.on("startChampionSelection", ({ timeLeft }) => {
-  championSelectionScreen.classList.remove("hidden");
-  championSelectionScreen.classList.add("active");
+  showOverlay(championSelectionScreen);
   mainContent.classList.remove("visible");
   mainContent.classList.add("hidden");
 
@@ -547,8 +554,7 @@ socket.on("startChampionSelection", ({ timeLeft }) => {
 });
 
 socket.on("allTeamsSelected", () => {
-  championSelectionScreen.classList.remove("active");
-  championSelectionScreen.classList.add("hidden");
+  hideOverlay(championSelectionScreen);
   mainContent.classList.remove("hidden");
   mainContent.classList.add("visible");
 
@@ -1067,7 +1073,7 @@ function renderLineupChipContent(champion, slotIndex) {
 
   return `
     <span class="lineup-chip-inner">
-      <img class="lineup-chip-portrait" src="${escapeHtml(champion.portrait || "/assets/portraits/placeholder.webp")}" alt="${escapeHtml(champion.name || "Campeão")}">
+      <img class="lineup-chip-portrait" src="${escapeHtml(champion.portrait || "/assets/portraits/placeholder.webp")}" alt="${escapeHtml(champion.name || "Champion")}">
       <span class="lineup-chip-identity-row">
         ${renderChampionIdentityBadgesMarkup(champion)}
       </span>
@@ -1077,7 +1083,7 @@ function renderLineupChipContent(champion, slotIndex) {
 
 function attachChampionCardInteractions(card, championKey, fromSlotIndex = -1) {
   card.title =
-    "Tap no botao para species | long press ou clique direito para flip";
+    "Tap the button for species | long press or right-click to flip";
 
   const flipCard = () => {
     card.classList.toggle("is-flipped");
@@ -1158,24 +1164,26 @@ function attachChampionCardInteractions(card, championKey, fromSlotIndex = -1) {
   });
 }
 
+/** Whether a champion may be picked during draft (released/enabled, not a minion). */
+function isDraftSelectable(champion) {
+  if (!champion || (champion.entityType ?? "champion") !== "champion") {
+    return false;
+  }
+  if (champion.selectable === false) return false;
+  if (
+    (champion.unreleased === true || champion.disabled === true) &&
+    !editMode.unavailableChampions
+  ) {
+    return false;
+  }
+  return true;
+}
+
 function renderAvailableChampions() {
   availableChampionsGrid.innerHTML = "";
 
-  // Filter valid champions
-  let allAvailableChampionKeys = Object.keys(championDB).filter((key) => {
-    const champion = championDB[key];
-    const isChampion = (champion.entityType ?? "champion") === "champion";
-    const isSelectable = champion.selectable !== false;
-    const isunavailable = champion.unreleased || champion.disabled;
-    if (!isChampion) return false;
-    if (!isSelectable) return false;
-    if (isunavailable && !editMode.unavailableChampions) return false;
-    return true;
-  });
-
-  // Sort alphabetically
-  allAvailableChampionKeys = sortChampionKeysAlphabetically(
-    allAvailableChampionKeys,
+  const allAvailableChampionKeys = sortChampionKeysAlphabetically(
+    Object.keys(championDB).filter((key) => isDraftSelectable(championDB[key])),
   );
 
   allAvailableChampionKeys.forEach((key) => {
@@ -1197,21 +1205,9 @@ function renderAvailableChampions() {
 // --- Click on champion card ---
 
 function getDraftSelectableChampionKeys(excludeKeys = []) {
-  return Object.keys(championDB).filter((key) => {
-    const champion = championDB[key];
-    if (!champion || (champion.entityType ?? "champion") !== "champion") {
-      return false;
-    }
-    if (champion.selectable === false) return false;
-    if (excludeKeys.includes(key)) return false;
-    if (
-      (champion.unreleased === true || champion.disabled === true) &&
-      !editMode.unavailableChampions
-    ) {
-      return false;
-    }
-    return true;
-  });
+  return Object.keys(championDB).filter(
+    (key) => !excludeKeys.includes(key) && isDraftSelectable(championDB[key]),
+  );
 }
 
 function getRandomChampionKeyForDraft(excludeKeys = []) {
@@ -1658,13 +1654,7 @@ socket.on("requestFirstChampionSelection", ({ roster, team }) => {
   openFirstChoiceOverlay();
 });
 
-socket.on("firstChampionChosenAck", ({ championKey }) => {
-  // mark chosen locally; UI already updated when emitting
-  // keep overlay visible showing waiting state
-});
-
-socket.on("firstChampionChoicesFinalized", ({ firstChampions }) => {
-  // firstChampions: [team1Key, team2Key]
+socket.on("firstChampionChoicesFinalized", () => {
   firstChoicePending = false;
   firstChoiceResolved = true;
   closeFirstChoiceOverlay();
@@ -1744,7 +1734,7 @@ function updateChampionSelectionTimerUI() {
 }
 
 // ============================================================
-//  GERENCIAMENTO DE CAMPEÕES
+//  CHAMPION MANAGEMENT
 // ============================================================
 
 socket.on("championRemoved", (championId) => {
@@ -2036,7 +2026,7 @@ function renderLineupBanners(lineupsByTeam = {}) {
 }
 
 // ============================================================
-//  GERENCIAMENTO DE TURNOS
+//  TURN MANAGEMENT
 // ============================================================
 
 socket.on("gameStateUpdate", (gameState) => {
@@ -2284,7 +2274,7 @@ function showActionBarSlot({ playerAdvanced = true } = {}) {
 
   const header = document.createElement("div");
   header.className = "action-bar-header";
-  header.textContent = `Escolha sua ação para o Slot ${slotNumber} (${champion.name})`;
+  header.textContent = `Choose your action for Slot ${slotNumber} (${champion.name})`;
   actionBarEl.appendChild(header);
 
   const skillsBar = document.createElement("div");
@@ -2298,7 +2288,7 @@ function showActionBarSlot({ playerAdvanced = true } = {}) {
   const claimBtn = document.createElement("button");
   claimBtn.className = "action-bar-skill-btn claim";
   claimBtn.textContent = "CLAIM";
-  claimBtn.title = "Marca pontos com base no seu Momentum atual.";
+  claimBtn.title = "Scores points based on your current Momentum.";
 
   claimBtn.addEventListener("mouseenter", () =>
     showSkillOverlay(claimBtn, claimSkill, champion),
@@ -2336,7 +2326,7 @@ function showActionBarSlot({ playerAdvanced = true } = {}) {
       champion.statusEffects.has("rooted");
     if (skill.contact && hasRooted) {
       btn.disabled = true;
-      btn.title = "Não pode usar habilidades de contato enquanto Enraizado.";
+      btn.title = "Cannot use contact skills while Rooted.";
     }
 
     if (isUlt) {
@@ -2372,17 +2362,17 @@ async function handleClaimUsage(champion) {
   if (!champion) return;
 
   if (champion.team !== playerTeam) {
-    alert("Você só pode agir com campeões do seu time.");
+    alert("You can only act with champions on your team.");
     return;
   }
 
   if (!editMode.actMultipleTimesPerTurn && champion.hasActedThisTurn) {
-    alert(`${champion.name} já agiu neste turno.`);
+    alert(`${champion.name} has already acted this turn.`);
     return;
   }
 
   if (!editMode.freeCostSkills && CLAIM_MIN_MOMENTUM > champion.momentum) {
-    alert("Momentum insuficiente para CLAIM.");
+    alert("Not enough Momentum for CLAIM.");
     champion.updateUI(currentTurn);
     return;
   }
@@ -2421,16 +2411,13 @@ function removeActionBar() {
 function openSurrenderDialog() {
   if (gameEnded || !playerTeam) return;
   if (settingsOverlay && settingsOverlay.classList.contains("active")) {
-    settingsOverlay.classList.remove("active");
-    settingsOverlay.classList.add("hidden");
+    hideOverlay(settingsOverlay);
   }
-  surrenderOverlay.classList.remove("hidden");
-  surrenderOverlay.classList.add("active");
+  showOverlay(surrenderOverlay);
 }
 
 function closeSurrenderDialog() {
-  surrenderOverlay.classList.remove("active");
-  surrenderOverlay.classList.add("hidden");
+  hideOverlay(surrenderOverlay);
 }
 
 function confirmSurrender() {
