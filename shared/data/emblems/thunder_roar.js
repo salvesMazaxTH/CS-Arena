@@ -5,7 +5,7 @@ export const thunderRoar = {
   requirements: {
     elementalAffinity: {
       element: "lightning",
-      count: 2,
+      count: 3,
     },
   },
 

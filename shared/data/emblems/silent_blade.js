@@ -23,7 +23,7 @@ export const silentBlade = {
   requirements: {
     classKey: {
       key: "assassin",
-      count: 4,
+      count: 3,
     },
   },
 

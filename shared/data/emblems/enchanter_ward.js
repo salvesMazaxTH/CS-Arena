@@ -23,7 +23,7 @@ export const enchanterWard = {
   requirements: {
     classKey: {
       key: "enchanter",
-      count: 4,
+      count: 3,
     },
   },
 

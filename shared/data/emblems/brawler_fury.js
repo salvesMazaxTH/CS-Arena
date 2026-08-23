@@ -23,7 +23,7 @@ export const brawlerFury = {
   requirements: {
     classKey: {
       key: "brawler",
-      count: 4,
+      count: 3,
     },
   },
 

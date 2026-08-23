@@ -23,7 +23,7 @@ export const marksmanPrecision = {
   requirements: {
     classKey: {
       key: "marksman",
-      count: 4,
+      count: 3,
     },
   },
 

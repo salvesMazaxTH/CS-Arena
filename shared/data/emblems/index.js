@@ -2,6 +2,7 @@ import { firelord } from "./fire_lord.js";
 import { thunderRoar } from "./thunder_roar.js";
 import { ironclad } from "./ironclad.js";
 import { earthshaker } from "./earthshaker.js";
+import { earthenWard } from "./earthen_ward.js";
 import { oceanGrace } from "./ocean_grace.js";
 import { brawlerFury } from "./brawler_fury.js";
 import { tankBulwark } from "./tank_bulwark.js";
@@ -20,6 +21,7 @@ export const EMBLEMS = [
   thunderRoar,
   ironclad,
   earthshaker,
+  earthenWard,
   oceanGrace,
   brawlerFury,
   tankBulwark,
