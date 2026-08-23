@@ -14,6 +14,7 @@ const nodeSparckina07Skills = [
     bf: 70,
     contact: true,
     damageMode: "standard",
+    hitVfx: "slash",
     priority: 0,
     element: "lightning",
     description() {

@@ -12,6 +12,7 @@ const drexSkills = [
     bf: 35,
     contact: true,
     damageMode: "standard",
+    hitVfx: "slash",
 
     bleedingStacks: 2,
 

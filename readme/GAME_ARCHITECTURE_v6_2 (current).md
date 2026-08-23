@@ -86,7 +86,8 @@ Cada jogador seleciona **3 campeões**. Os **3 ficam em campo simultaneamente** 
 │   │   │   ├── meleePunchAnimation.js # Soco corpo-a-corpo do Kai (Three.js + bloom)
 │   │   │   ├── lightningAnimation.js  # Relâmpago genérico (Canvas 2D)
 │   │   │   ├── fireballAnimation.js   # Bola de fogo genérica (Canvas 2D)
-│   │   │   └── waterAnimation.js      # Projétil de água genérico (Canvas 2D)
+│   │   │   ├── waterAnimation.js      # Projétil de água genérico (Canvas 2D)
+│   │   │   └── slashAnimation.js      # Corte genérico, opt-in via hitVfx (Canvas 2D)
 │   │   ├── ui/                        # UI do cliente extraída do main.js (factories createX(deps))
 │   │   │   ├── overlays.js         # Tooltips de skill, overlay de retrato, quick-stats
 │   │   │   ├── targeting.js        # Seleção de alvos client-side
@@ -1737,8 +1738,11 @@ await animateSkill(skillKey, { targetEl, userEl, skill });
 | `default_fire`                       | Bola de fogo em Canvas 2D (`fireballAnimation.js`): trilha em arco, impacto com brasas, shockwave e flash `.fire-hit`.         |
 | `default_fire_big`                   | Mesma classe `FireballEffect` com `scale: 1.85` — usada por ultimates de fogo e pelas exceções de `BIG_FIREBALL_SKILLS`.        |
 | `default_water`                      | Projétil de água em Canvas 2D (`waterAnimation.js`): trilha em arco, splash com dois anéis, gotículas que se separam em duas levas e caem com gravidade, flash `.water-hit`. |
+| `default_slash`                      | Corte em Canvas 2D (`slashAnimation.js`): três lâminas escalonadas varrem o alvo, faíscas, e a ferida se abre em duas bordas. Flash `.slash-hit`. |
 
 **Fallbacks por elemento**: skills sem animação própria caem em `DEFAULT_ELEMENT_ANIMATIONS` quando são ofensivas (`damageMode` definido) e não fazem contato (`contact: false`) — `lightning` → `default_lightning`, `fire` → `default_fire`, `water` → `default_water`. Skills de fogo com `isUltimate: true`, mais as chaves listadas em `BIG_FIREBALL_SKILLS` (hoje `magma_bomb`), sobem para `default_fire_big`.
+
+**Motivo autoral — `hitVfx`**: uma skill pode declarar `hitVfx: "slash"` para pedir uma animação pelo *gesto* em vez do elemento. Isso é consultado **antes** do gate de `contact`, porque um corte normalmente é `contact: true`, e vence o fallback de elemento. A chave resolvida é `default_${hitVfx}`.
 
 ### 20.3 VFX WebGL One-Shot — deathClaim (Jeff)
 

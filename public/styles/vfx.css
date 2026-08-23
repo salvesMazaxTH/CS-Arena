@@ -285,3 +285,21 @@
     filter: brightness(1);
   }
 }
+
+/* Slash hit effect (applied to champion portrait when a cut lands) */
+
+.slash-hit {
+  animation: slashFlash 0.38s ease-out;
+}
+
+@keyframes slashFlash {
+  0% {
+    filter: brightness(1);
+  }
+  15% {
+    filter: brightness(2.4) contrast(1.3) saturate(0.4);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}

@@ -128,6 +128,7 @@ const isarelisSkills = [
 
     bf: 85,
     damageMode: "standard",
+    hitVfx: "slash",
     contact: true,
     isUltimate: true,
     momentumCost: 55,

@@ -12,6 +12,7 @@
 import { createFireballAnimation } from "./fireballAnimation.js";
 import { playLightningBolt } from "./lightningAnimation.js";
 import { playMeleePunch } from "./meleePunchAnimation.js";
+import { playSlash } from "./slashAnimation.js";
 import { playWaterBolt } from "./waterAnimation.js";
 
 const skillAnimationRegistry = new Map();
@@ -37,6 +38,11 @@ const BIG_FIREBALL_SKILLS = new Set(["magma_bomb"]);
 
 function resolveDefaultAnimationKey(skill) {
   if (!skill || typeof skill !== "object") return null;
+
+  // Authorial motif declared on the skill itself. It wins over the element
+  // fallback and applies to melee too, since a cut is usually contact-based.
+  if (skill.hitVfx) return `default_${skill.hitVfx}`;
+
   if (skill.contact !== false) return null;
 
   // Restrict to damaging skills only.
@@ -78,3 +84,4 @@ registerSkillAnimation("default_lightning", playLightningBolt);
 registerSkillAnimation("default_fire", createFireballAnimation(1));
 registerSkillAnimation("default_fire_big", createFireballAnimation(1.85));
 registerSkillAnimation("default_water", playWaterBolt);
+registerSkillAnimation("default_slash", playSlash);

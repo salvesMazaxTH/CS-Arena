@@ -13,6 +13,7 @@ const akaneSkills = [
     bf: 65,
     contact: true,
     damageMode: "standard",
+    hitVfx: "slash",
     priority: 0,
 
     description() {

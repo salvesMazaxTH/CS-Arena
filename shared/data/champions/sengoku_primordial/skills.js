@@ -8,6 +8,7 @@ const sengokuPrimordialSkills = [
     name: "Primordial Talon",
     bf: 95,
     damageMode: "standard",
+    hitVfx: "slash",
     contact: true,
     priority: 0,
     description() {

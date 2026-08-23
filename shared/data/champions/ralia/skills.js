@@ -77,6 +77,7 @@ const raliaSkills = [
     name: "Verdict of the Field",
     bf: 90,
     damageMode: "standard",
+    hitVfx: "slash",
     healPercent: 60,
     minHeal: 25,
     contact: true,
@@ -119,6 +120,7 @@ const raliaSkills = [
     name: "Decree of the Bastion",
     bf: 50,
     damageMode: "piercing",
+    hitVfx: "slash",
     piercingPercentage: 75,
 
     atkDebuff: 20,
