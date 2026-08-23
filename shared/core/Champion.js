@@ -600,8 +600,10 @@ export class Champion {
     return takeDamage(this, amount, context);
   }
 
-  heal(amount, context, options = {}) {
-    return heal(this, amount, context, this, options);
+  // `source` is who caused the healing, not who receives it — hooks such as
+  // Alexa Neruvya's Font key off it.
+  heal(amount, context, source = this, options = {}) {
+    return heal(this, amount, context, source, options);
   }
 
   addDamageModifier(mod) {
