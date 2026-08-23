@@ -42,6 +42,7 @@ import dlorafya from "./dlorafya/index.js";
 import avarik from "./avarik/index.js";
 import avarion from "./avarion/index.js";
 import zyrelle from "./zyrelle/index.js";
+import alexa_neruvya from "./alexa_neruvya/index.js";
 
 const championDB = {
   ralia,
@@ -88,6 +89,7 @@ const championDB = {
   avarik,
   avarion,
   zyrelle,
+  alexa_neruvya,
 };
 
 export default championDB;
