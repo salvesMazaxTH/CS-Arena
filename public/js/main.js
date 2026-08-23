@@ -1758,8 +1758,8 @@ function createNewChampion(championData) {
   champion.baseAttack = baseData.Attack;
   champion.baseDefense = baseData.Defense;
   champion.baseSpeed = baseData.Speed;
-  champion.baseCritical = baseData.Critical;
-  champion.baseLifeSteal = baseData.LifeSteal;
+  champion.baseCritical = baseData.Critical ?? 0;
+  champion.baseLifeSteal = baseData.LifeSteal ?? 0;
 
   activeChampions.set(champion.id, champion);
 
