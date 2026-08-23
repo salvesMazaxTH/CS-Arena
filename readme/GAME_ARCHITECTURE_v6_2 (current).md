@@ -1744,6 +1744,8 @@ await animateSkill(skillKey, { targetEl, userEl, skill });
 
 **Motivo autoral — `hitVfx`**: uma skill pode declarar `hitVfx: "slash"` para pedir uma animação pelo *gesto* em vez do elemento. Isso é consultado **antes** do gate de `contact`, porque um corte normalmente é `contact: true`, e vence o fallback de elemento. A chave resolvida é `default_${hitVfx}`.
 
+**Cor do corte — `hitVfxPalette`**: a paleta do `default_slash` resolve em três níveis, `hitVfxPalette` → `element` → `steel`. As matizes seguem `shared/ui/identityPalette.js` para o corte ler como o mesmo elemento do badge, mas com valores mais claros: blending aditivo lava os tons abafados de badge, e uma lâmina precisa de núcleo quase branco. Além das chaves de elemento existem paletas autorais (`violet` para Akane, `crimson` para o Drex). Os sprites são pré-renderizados uma vez por paleta e cacheados.
+
 ### 20.3 VFX WebGL One-Shot — deathClaim (Jeff)
 
 **Arquivo**: `shared/vfx/deathClaim.js`

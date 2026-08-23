@@ -28,11 +28,34 @@ function makeGlowSprite(color) {
   return sprite;
 }
 
-const SPARK_SPRITES = [
-  makeGlowSprite("rgba(255,255,255,1)"),
-  makeGlowSprite("rgba(214,240,255,1)"),
-  makeGlowSprite("rgba(150,200,255,1)"),
-];
+// Hues follow shared/ui/identityPalette.js so a cut reads as the same element
+// as its badge, but the values are brighter: additive blending washes out the
+// muted badge tones, and a blade needs a near-white core to look sharp.
+// The element keys resolve automatically; the rest are authorial overrides
+// picked with `hitVfxPalette`.
+const PALETTES = Object.freeze({
+  steel: { core: "#ffffff", mid: "#d6f0ff", deep: "#78beff" },
+  fire: { core: "#fff6df", mid: "#ffb347", deep: "#ff4d12" },
+  water: { core: "#f0feff", mid: "#7fd4ff", deep: "#2e92f6" },
+  ice: { core: "#f4ffff", mid: "#b6f2ff", deep: "#56b2ce" },
+  lightning: { core: "#fffce0", mid: "#ffe66b", deep: "#e0a915" },
+  earth: { core: "#fff4e2", mid: "#d2a878", deep: "#8a5a2b" },
+  violet: { core: "#fbf0ff", mid: "#c98bff", deep: "#7b2fd6" },
+  crimson: { core: "#fff0f0", mid: "#ff6b6b", deep: "#b3121b" },
+});
+
+// Sprites are pre-rendered once per palette and reused from then on.
+const spriteCache = new Map();
+
+function getSprites(paletteKey) {
+  let sprites = spriteCache.get(paletteKey);
+  if (!sprites) {
+    const { core, mid, deep } = PALETTES[paletteKey];
+    sprites = [core, mid, deep].map(makeGlowSprite);
+    spriteCache.set(paletteKey, sprites);
+  }
+  return sprites;
+}
 
 // Each blade sweeps fast, then its wound lingers and opens.
 const SWEEP_DURATION = 0.14;
@@ -42,12 +65,14 @@ const STAGGER = 0.07;
 const SPLIT_DELAY = 0.1;
 
 export class SlashEffect {
-  constructor(ctx, center, size, baseAngle) {
+  constructor(ctx, center, size, baseAngle, paletteKey) {
     this.ctx = ctx;
     this.center = center;
     this.size = size;
     this.age = 0;
     this.sparks = [];
+    this.colors = PALETTES[paletteKey];
+    this.sprites = getSprites(paletteKey);
 
     // Three crossing blades fanned around the attack direction, so the cut
     // reads as a combo rather than a single stroke.
@@ -80,7 +105,7 @@ export class SlashEffect {
         life: 0.16 + Math.random() * 0.3,
         maxLife: 0.46,
         size: 5 + Math.random() * 11,
-        sprite: SPARK_SPRITES[i % SPARK_SPRITES.length],
+        sprite: this.sprites[i % this.sprites.length],
       });
     }
   }
@@ -129,10 +154,11 @@ export class SlashEffect {
     };
     const tail = { x: center.x + dirX * tailAt, y: center.y + dirY * tailAt };
 
+    const { core, mid, deep } = this.colors;
     const grad = ctx.createLinearGradient(tail.x, tail.y, head.x, head.y);
-    grad.addColorStop(0, "rgba(120,190,255,0)");
-    grad.addColorStop(0.6, "rgba(190,225,255,0.55)");
-    grad.addColorStop(1, "rgba(255,255,255,1)");
+    grad.addColorStop(0, `${deep}00`);
+    grad.addColorStop(0.6, `${mid}8c`);
+    grad.addColorStop(1, core);
 
     ctx.lineCap = "round";
     ctx.strokeStyle = grad;
@@ -154,7 +180,7 @@ export class SlashEffect {
     const flare = blade.width * 6;
     ctx.globalAlpha = 0.85;
     ctx.drawImage(
-      SPARK_SPRITES[0],
+      this.sprites[0],
       head.x - flare / 2,
       head.y - flare / 2,
       flare,
@@ -176,7 +202,7 @@ export class SlashEffect {
     const gap =
       e < SPLIT_DELAY ? 0 : (e - SPLIT_DELAY) * this.size * 0.16;
 
-    ctx.strokeStyle = "#ffffff";
+    ctx.strokeStyle = this.colors.core;
     ctx.lineCap = "round";
     for (const side of [1, -1]) {
       const offX = -dirY * gap * side;
@@ -215,8 +241,13 @@ export class SlashEffect {
   }
 }
 
-export async function playSlash({ userEl, targetEl }) {
+export async function playSlash({ userEl, targetEl, skill }) {
   if (!targetEl) return;
+
+  // Authorial override first, then the element, then plain steel for the
+  // physical cuts that carry no element at all.
+  const requested = skill?.hitVfxPalette || skill?.element;
+  const paletteKey = requested in PALETTES ? requested : "steel";
 
   const canvas = document.createElement("canvas");
   // Capped ratio: the effect is all soft glows, so extra pixels buy nothing.
@@ -245,6 +276,7 @@ export async function playSlash({ userEl, targetEl }) {
     center,
     Math.max(rect.width, rect.height),
     baseAngle,
+    paletteKey,
   );
   let last = performance.now();
 

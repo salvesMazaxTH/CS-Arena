@@ -14,6 +14,7 @@ const akaneSkills = [
     contact: true,
     damageMode: "standard",
     hitVfx: "slash",
+    hitVfxPalette: "violet",
     priority: 0,
 
     description() {
