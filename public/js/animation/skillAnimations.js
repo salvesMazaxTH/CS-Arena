@@ -36,6 +36,9 @@ const DEFAULT_ELEMENT_ANIMATIONS = {
   fire: "default_fire",
 };
 
+// Non-ultimate fire skills that still deserve the big blast.
+const BIG_FIREBALL_SKILLS = new Set(["magma_bomb"]);
+
 function resolveDefaultAnimationKey(skill) {
   if (!skill || typeof skill !== "object") return null;
   if (skill.contact !== false) return null;
@@ -44,7 +47,14 @@ function resolveDefaultAnimationKey(skill) {
   // In this codebase, offensive skills consistently define damageMode.
   if (typeof skill.damageMode !== "string" || !skill.damageMode) return null;
 
-  return DEFAULT_ELEMENT_ANIMATIONS[skill.element] || null;
+  const key = DEFAULT_ELEMENT_ANIMATIONS[skill.element] || null;
+  if (
+    key === "default_fire" &&
+    (skill.isUltimate === true || BIG_FIREBALL_SKILLS.has(skill.key))
+  ) {
+    return "default_fire_big";
+  }
+  return key;
 }
 
 export async function animateSkill(skillKey, opts = {}) {
@@ -556,52 +566,57 @@ registerSkillAnimation("default_lightning", async ({ userEl, targetEl }) => {
   canvas.remove();
 });
 
-registerSkillAnimation("default_fire", async ({ userEl, targetEl }) => {
-  if (!targetEl) return;
+function createFireballAnimation(scale) {
+  return async ({ userEl, targetEl }) => {
+    if (!targetEl) return;
 
-  const canvas = document.createElement("canvas");
-  // Capped ratio: the effect is all soft glows, so extra pixels buy nothing.
-  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-  canvas.width = window.innerWidth * dpr;
-  canvas.height = window.innerHeight * dpr;
-  canvas.style.cssText =
-    "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999";
-  document.body.appendChild(canvas);
+    const canvas = document.createElement("canvas");
+    // Capped ratio: the effect is all soft glows, so extra pixels buy nothing.
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    canvas.style.cssText =
+      "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999";
+    document.body.appendChild(canvas);
 
-  const ctx = canvas.getContext("2d");
-  ctx.scale(dpr, dpr);
+    const ctx = canvas.getContext("2d");
+    ctx.scale(dpr, dpr);
 
-  const targetCenter = getElementCenter(targetEl);
-  const start = userEl
-    ? getElementCenter(userEl)
-    : { x: targetCenter.x - 260, y: targetCenter.y - 160 };
+    const targetCenter = getElementCenter(targetEl);
+    const start = userEl
+      ? getElementCenter(userEl)
+      : { x: targetCenter.x - 260, y: targetCenter.y - 160 };
 
-  const effect = new FireballEffect(ctx, start, targetCenter);
-  let last = performance.now();
-  let hitFlashed = false;
+    const effect = new FireballEffect(ctx, start, targetCenter, scale);
+    let last = performance.now();
+    let hitFlashed = false;
 
-  await new Promise((resolve) => {
-    function frame(now) {
-      const dt = Math.min((now - last) / 1000, 1 / 30);
-      last = now;
+    await new Promise((resolve) => {
+      function frame(now) {
+        const dt = Math.min((now - last) / 1000, 1 / 30);
+        last = now;
 
-      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-      const alive = effect.step(dt);
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        const alive = effect.step(dt);
 
-      if (effect.impacted && !hitFlashed) {
-        hitFlashed = true;
-        targetEl.classList.add("fire-hit");
-        setTimeout(() => targetEl.classList.remove("fire-hit"), 320);
+        if (effect.impacted && !hitFlashed) {
+          hitFlashed = true;
+          targetEl.classList.add("fire-hit");
+          setTimeout(() => targetEl.classList.remove("fire-hit"), 320);
+        }
+
+        if (!alive) {
+          canvas.remove();
+          resolve();
+          return;
+        }
+        requestAnimationFrame(frame);
       }
 
-      if (!alive) {
-        canvas.remove();
-        resolve();
-        return;
-      }
       requestAnimationFrame(frame);
-    }
+    });
+  };
+}
 
-    requestAnimationFrame(frame);
-  });
-});
+registerSkillAnimation("default_fire", createFireballAnimation(1));
+registerSkillAnimation("default_fire_big", createFireballAnimation(1.85));

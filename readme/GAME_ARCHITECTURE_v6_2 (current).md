@@ -1726,8 +1726,9 @@ await animateSkill(skillKey, { targetEl, userEl });
 | `quick_hook`, `blazing_fist_barrage` | Swipe trail + fist impact (procedural texture) + smoke particles. Direção calculada de `userEl` → `targetEl`. Lifetime: 1,1s. |
 | `default_lightning`                  | Relâmpago em Canvas 2D com ramificações e flash `.lightning-hit` no alvo.                                                    |
 | `default_fire`                       | Bola de fogo em Canvas 2D (`fireballAnimation.js`): trilha em arco, impacto com brasas, shockwave e flash `.fire-hit`.         |
+| `default_fire_big`                   | Mesma classe `FireballEffect` com `scale: 1.85` — usada por ultimates de fogo e pelas exceções de `BIG_FIREBALL_SKILLS`.        |
 
-**Fallbacks por elemento**: skills sem animação própria caem em `DEFAULT_ELEMENT_ANIMATIONS` quando são ofensivas (`damageMode` definido) e não fazem contato (`contact: false`) — `lightning` → `default_lightning`, `fire` → `default_fire`.
+**Fallbacks por elemento**: skills sem animação própria caem em `DEFAULT_ELEMENT_ANIMATIONS` quando são ofensivas (`damageMode` definido) e não fazem contato (`contact: false`) — `lightning` → `default_lightning`, `fire` → `default_fire`. Skills de fogo com `isUltimate: true`, mais as chaves listadas em `BIG_FIREBALL_SKILLS` (hoje `magma_bomb`), sobem para `default_fire_big`.
 
 ### 20.3 VFX WebGL One-Shot — deathClaim (Jeff)
 

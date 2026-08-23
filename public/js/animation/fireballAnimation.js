@@ -39,8 +39,11 @@ const IMPACT_DURATION = 0.46;
 const MAX_TRAIL = 110;
 
 export class FireballEffect {
-  constructor(ctx, from, to) {
+  // `scale` multiplies every visual radius; particle counts stay fixed so the
+  // bigger variant costs the same to render.
+  constructor(ctx, from, to, scale = 1) {
     this.ctx = ctx;
+    this.scale = scale;
     this.from = from;
     this.to = to;
     this.age = 0;
@@ -70,11 +73,11 @@ export class FireballEffect {
       this.embers.push({
         x: this.to.x,
         y: this.to.y,
-        vx: Math.cos(theta) * speed + Math.cos(this.angle) * 90,
-        vy: Math.sin(theta) * speed + Math.sin(this.angle) * 90,
+        vx: (Math.cos(theta) * speed + Math.cos(this.angle) * 90) * this.scale,
+        vy: (Math.sin(theta) * speed + Math.sin(this.angle) * 90) * this.scale,
         life: 0.25 + Math.random() * 0.35,
         maxLife: 0.6,
-        size: 10 + Math.random() * 26,
+        size: (10 + Math.random() * 26) * this.scale,
         sprite: SPRITES[1 + (i % 3)],
       });
     }
@@ -95,13 +98,13 @@ export class FireballEffect {
       const spawns = Math.min(Math.ceil(dt * 140), MAX_TRAIL - this.trail.length);
       for (let i = 0; i < spawns; i++) {
         this.trail.push({
-          x: this.pos.x + (Math.random() - 0.5) * 18,
-          y: this.pos.y + (Math.random() - 0.5) * 18,
-          vx: (Math.random() - 0.5) * 90,
-          vy: (Math.random() - 0.5) * 90 - 60,
+          x: this.pos.x + (Math.random() - 0.5) * 18 * this.scale,
+          y: this.pos.y + (Math.random() - 0.5) * 18 * this.scale,
+          vx: (Math.random() - 0.5) * 90 * this.scale,
+          vy: ((Math.random() - 0.5) * 90 - 60) * this.scale,
           life: 0.18 + Math.random() * 0.28,
           maxLife: 0.46,
-          size: 16 + Math.random() * 26,
+          size: (16 + Math.random() * 26) * this.scale,
           sprite: SPRITES[1 + (i % 3)],
         });
       }
@@ -158,7 +161,7 @@ export class FireballEffect {
       [SPRITES[1], 46, 0.85],
       [SPRITES[0], 22, 1],
     ]) {
-      const size = radius * pulse;
+      const size = radius * pulse * this.scale;
       ctx.globalAlpha = alpha;
       ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
     }
@@ -171,13 +174,13 @@ export class FireballEffect {
     const e = (this.age - TRAVEL_DURATION) / IMPACT_DURATION;
     const fade = 1 - e;
 
-    const flash = 340 * (1 - e * e);
+    const flash = 340 * (1 - e * e) * this.scale;
     ctx.globalAlpha = fade * 0.8;
     ctx.drawImage(SPRITES[2], to.x - flash / 2, to.y - flash / 2, flash, flash);
 
-    const ring = 20 + 300 * Math.sqrt(e);
+    const ring = (20 + 300 * Math.sqrt(e)) * this.scale;
     ctx.globalAlpha = fade * fade;
-    ctx.lineWidth = 14 * fade;
+    ctx.lineWidth = 14 * fade * this.scale;
     ctx.strokeStyle = "#ffb347";
     ctx.beginPath();
     ctx.arc(to.x, to.y, ring, 0, Math.PI * 2);
