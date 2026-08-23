@@ -508,8 +508,9 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
       if (typeof row.base === "number" && typeof row.value === "number") {
         if (row.value > row.base) color = "#00ff66";
         else if (row.value < row.base) color = "#ff2a2a";
-
-        if (row.percent) displayValue = `${row.value}%`;
+      }
+      if (row.percent && typeof row.value === "number") {
+        displayValue = `${row.value}%`;
       }
 
       html += `
