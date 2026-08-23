@@ -1,7 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../totalBlock.js";
-import { MAX_AMMO, fireBullets } from "./ammo.js";
+import { MAX_AMMO, getAmmo, fireBullets } from "./ammo.js";
 
 const zyrelleSkills = [
   // ========================
@@ -36,9 +36,15 @@ const zyrelleSkills = [
       const fired = fireBullets(user, 2, context);
 
       if (fired === 0) {
-        return {
-          log: `${formatChampionName(user)}'s cylinder is empty — Double Action fires nothing!`,
-        };
+        const failMessage = `${formatChampionName(user)}'s cylinder is empty — Double Action fires nothing!`;
+
+        context.registerDialog?.({
+          message: failMessage,
+          sourceId: user.id,
+          targetId: user.id,
+        });
+
+        return { log: failMessage };
       }
 
       const baseDamage = (user.Attack * this.bfPerHit) / 100;
@@ -58,7 +64,19 @@ const zyrelleSkills = [
         : [firstResult];
       results.push(...firstArray);
 
-      if (fired < 2) return results;
+      if (fired < 2) {
+        const outOfAmmoMessage = `${formatChampionName(user)} is out of rounds — Double Action only gets one shot off!`;
+
+        context.registerDialog?.({
+          message: outOfAmmoMessage,
+          sourceId: user.id,
+          targetId: user.id,
+        });
+
+        results.push({ log: outOfAmmoMessage });
+
+        return results;
+      }
 
       const firstCrit = firstArray[0]?.crit?.didCrit;
       const targetIsLow = enemy.HP <= enemy.maxHP * (this.executeThreshold / 100);
@@ -165,6 +183,18 @@ const zyrelleSkills = [
       const [enemy] = targets;
       const results = [];
       const baseDamage = (user.Attack * this.bfPerBullet) / 100;
+
+      if (getAmmo(user) === 0) {
+        const failMessage = `${formatChampionName(user)}'s cylinder is already empty — Empty the Cylinder fires nothing!`;
+
+        context.registerDialog?.({
+          message: failMessage,
+          sourceId: user.id,
+          targetId: user.id,
+        });
+
+        return { log: failMessage };
+      }
 
       while (fireBullets(user, 1, context) > 0) {
         const result = new DamageEvent({

@@ -12,7 +12,7 @@ export default {
 
     Every critical hit she lands sharpens her aim: +${this.aimBonus}% Critical on her very next shot. An already-guaranteed crit doesn't spend the charge.
 
-    Rounds loaded: <b>${champion.runtime?.zyrelleAmmo ?? MAX_AMMO}/${MAX_AMMO}</b>`;
+    Ammo: <b>${champion.runtime?.zyrelleAmmo ?? MAX_AMMO}/${MAX_AMMO}</b>`;
   },
 
   hookScope: {
