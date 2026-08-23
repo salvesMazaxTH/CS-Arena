@@ -81,7 +81,8 @@ Cada jogador seleciona **3 campeões**. Os **3 ficam em campo simultaneamente** 
 │   │   ├── gameGlossary.js         # Glossário interativo de termos de jogo
 │   │   ├── animation/
 │   │   │   ├── animsAndLogManager.js  # Fila de animações + log de combate
-│   │   │   └── skillAnimations.js     # Animações WebGL one-shot de skills (Three.js)
+│   │   │   ├── skillAnimations.js     # Animações WebGL one-shot de skills (Three.js)
+│   │   │   └── fireballAnimation.js   # Efeito genérico de bola de fogo (Canvas 2D)
 │   │   ├── ui/                        # UI do cliente extraída do main.js (factories createX(deps))
 │   │   │   ├── overlays.js         # Tooltips de skill, overlay de retrato, quick-stats
 │   │   │   ├── targeting.js        # Seleção de alvos client-side
@@ -1718,11 +1719,15 @@ await animateSkill(skillKey, { targetEl, userEl });
 
 **Integração**: chamado em `animsAndLogManager.js → processCombatAction()` logo após o dialog de ação, usando `action.skillKey`.
 
-**Animação registrada atualmente:**
+**Animações registradas atualmente:**
 
-| Skill           | Campeão | Efeito                                                                                                                      |
-| --------------- | ------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `gancho_rapido` | Kai     | Swipe trail + fist impact (procedural texture) + smoke particles. Direção calculada de `userEl` → `targetEl`. Lifetime: 2s. |
+| Chave                                | Efeito                                                                                                                        |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `quick_hook`, `blazing_fist_barrage` | Swipe trail + fist impact (procedural texture) + smoke particles. Direção calculada de `userEl` → `targetEl`. Lifetime: 1,1s. |
+| `default_lightning`                  | Relâmpago em Canvas 2D com ramificações e flash `.lightning-hit` no alvo.                                                    |
+| `default_fire`                       | Bola de fogo em Canvas 2D (`fireballAnimation.js`): trilha em arco, impacto com brasas, shockwave e flash `.fire-hit`.         |
+
+**Fallbacks por elemento**: skills sem animação própria caem em `DEFAULT_ELEMENT_ANIMATIONS` quando são ofensivas (`damageMode` definido) e não fazem contato (`contact: false`) — `lightning` → `default_lightning`, `fire` → `default_fire`.
 
 ### 20.3 VFX WebGL One-Shot — deathClaim (Jeff)
 

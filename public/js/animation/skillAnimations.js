@@ -10,6 +10,8 @@
 //    registerSkillAnimation("skill_key", async ({ targetEl, userEl }) => { ... });
 // ============================================================
 
+import { FireballEffect } from "./fireballAnimation.js";
+
 const skillAnimationRegistry = new Map();
 
 /**
@@ -28,21 +30,29 @@ export function registerSkillAnimation(skillKey, factory) {
  * @param {{ targetEl?: Element, userEl?: Element, skill?: object }} opts
  * @returns {Promise<void>}
  */
-function shouldUseDefaultLightningAnimation(skill) {
-  if (!skill || typeof skill !== "object") return false;
-  if (skill.element !== "lightning") return false;
-  if (skill.contact !== false) return false;
+// Generic fallbacks played by any ranged damaging skill of that element.
+const DEFAULT_ELEMENT_ANIMATIONS = {
+  lightning: "default_lightning",
+  fire: "default_fire",
+};
+
+function resolveDefaultAnimationKey(skill) {
+  if (!skill || typeof skill !== "object") return null;
+  if (skill.contact !== false) return null;
 
   // Restrict to damaging skills only.
   // In this codebase, offensive skills consistently define damageMode.
-  return typeof skill.damageMode === "string" && skill.damageMode.length > 0;
+  if (typeof skill.damageMode !== "string" || !skill.damageMode) return null;
+
+  return DEFAULT_ELEMENT_ANIMATIONS[skill.element] || null;
 }
 
 export async function animateSkill(skillKey, opts = {}) {
   let factory = skillAnimationRegistry.get(skillKey);
 
-  if (!factory && shouldUseDefaultLightningAnimation(opts.skill)) {
-    factory = skillAnimationRegistry.get("default_lightning");
+  if (!factory) {
+    const defaultKey = resolveDefaultAnimationKey(opts.skill);
+    if (defaultKey) factory = skillAnimationRegistry.get(defaultKey);
   }
 
   if (!factory) return;
@@ -129,7 +139,7 @@ const fistPrintFragmentShader = `
 
     vec4 texColor = texture2D(uTexture, uv);
     float shape = texColor.a;
-    float heatFade = max(0.0, 1.0 - (uAge / 2.0));
+    float heatFade = max(0.0, 1.0 - (uAge / 0.95));
     float glow = shape * 0.5;
 
     vec3 coreColor = vec3(1.0, 0.8, 0.2) * 3.0;
@@ -149,7 +159,7 @@ const smokeVertexShader = `
   void main() {
     vec3 pos = position + aVelocity * uTime;
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-    gl_PointSize = aSize * (1.0 - uTime / 2.0) * (50.0 / -mvPosition.z);
+    gl_PointSize = aSize * (1.0 - uTime / 1.1) * (50.0 / -mvPosition.z);
     gl_Position = projectionMatrix * mvPosition;
   }
 `;
@@ -165,10 +175,10 @@ const smokeFragmentShader = `
     vec3 smokeColor = vec3(0.05);
     vec3 fireColor = vec3(1.0, 0.3, 0.0);
 
-    float mixFactor = smoothstep(0.0, 0.4, uTime);
+    float mixFactor = smoothstep(0.0, 0.25, uTime);
     vec3 finalColor = mix(fireColor, smokeColor, mixFactor);
 
-    float globalAlpha = alpha * (1.0 - (uTime / 1.5));
+    float globalAlpha = alpha * (1.0 - (uTime / 0.95));
     gl_FragColor = vec4(finalColor, globalAlpha * 0.8);
   }
 `;
@@ -226,7 +236,7 @@ class MeleePunchEffect {
     const angle = Math.atan2(dy, dx);
 
     // --- Phase 1: Swipe trail (travels from user → target) ---
-    const swipeGeo = new THREE.PlaneGeometry(8, 2.5);
+    const swipeGeo = new THREE.PlaneGeometry(5, 1.55);
     this.swipeMat = new THREE.ShaderMaterial({
       vertexShader: basicVertexShader,
       fragmentShader: swipeFragmentShader,
@@ -242,7 +252,7 @@ class MeleePunchEffect {
     scene.add(this.swipe);
 
     // --- Phase 2: Fist print (impact mark at target) ---
-    const printGeo = new THREE.PlaneGeometry(5, 5);
+    const printGeo = new THREE.PlaneGeometry(3.1, 3.1);
     this.printMat = new THREE.ShaderMaterial({
       vertexShader: basicVertexShader,
       fragmentShader: fistPrintFragmentShader,
@@ -281,7 +291,7 @@ class MeleePunchEffect {
       pVel[i * 3 + 1] = (Math.sin(theta) * 0.5 + this.direction.y) * speed;
       pVel[i * 3 + 2] = (Math.random() - 0.5) * speed;
 
-      pSize[i] = Math.random() * 20 + 15;
+      pSize[i] = Math.random() * 12 + 9;
     }
     pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
     pGeo.setAttribute("aVelocity", new THREE.BufferAttribute(pVel, 3));
@@ -301,8 +311,7 @@ class MeleePunchEffect {
 
     // Timings
     this.TRAVEL_DUR = 0.15; // swipe travels from user to target
-    this.PRINT_DUR = 2.0;
-    this.LIFETIME = 2.0;
+    this.LIFETIME = 1.1;
   }
 
   update(dt) {
@@ -463,7 +472,7 @@ registerSkillAnimation("default_lightning", async ({ userEl, targetEl }) => {
     : { x: getCenter(targetEl).x - 120, y: getCenter(targetEl).y - 200 };
   const end = getCenter(targetEl);
 
-  // Gera array de pontos em zigzag para um segmento de relâmpago
+  // Builds the zigzag point list for one lightning segment
   function buildBoltPoints(from, to, segments, variance) {
     const pts = [from];
     for (let i = 1; i < segments; i++) {
@@ -477,7 +486,7 @@ registerSkillAnimation("default_lightning", async ({ userEl, targetEl }) => {
     return pts;
   }
 
-  // Desenha um traço de relâmpago a partir de pontos já gerados
+  // Strokes a lightning path from already generated points
   function strokeBolt(pts, width, color, alpha) {
     if (pts.length < 2) return;
     ctx.save();
@@ -506,18 +515,18 @@ registerSkillAnimation("default_lightning", async ({ userEl, targetEl }) => {
     ctx.restore();
   }
 
-  // Desenha relâmpago principal + camada de brilho + ramificações
+  // Draws the main bolt plus its glow layer and branches
   function drawLightning() {
     const mainPts = buildBoltPoints(start, end, 18, 45);
 
-    // Brilho externo (halo difuso)
+    // Outer diffuse halo
     strokeBolt(mainPts, 28, "#7df9ff", 0.15);
-    // Corpo principal
+    // Main body
     strokeBolt(mainPts, 10, "#7df9ff", 0.9);
-    // Núcleo branco
+    // White core
     strokeBolt(mainPts, 3, "#ffffff", 1.0);
 
-    // Ramificações em pontos aleatórios do bolt principal
+    // Branches sprouting from random points of the main bolt
     const branchCount = 2 + Math.floor(Math.random() * 2);
     for (let b = 0; b < branchCount; b++) {
       const idx = 3 + Math.floor(Math.random() * (mainPts.length - 6));
@@ -533,16 +542,66 @@ registerSkillAnimation("default_lightning", async ({ userEl, targetEl }) => {
     }
   }
 
-  // 5 quadros para dar mais presença visual
+  // 5 frames to give the bolt more presence
   for (let i = 0; i < 5; i++) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawLightning();
     await new Promise((r) => setTimeout(r, 40));
   }
 
-  // impacto visual no alvo
+  // Visual impact on the target
   targetEl.classList.add("lightning-hit");
   setTimeout(() => targetEl.classList.remove("lightning-hit"), 200);
 
   canvas.remove();
+});
+
+registerSkillAnimation("default_fire", async ({ userEl, targetEl }) => {
+  if (!targetEl) return;
+
+  const canvas = document.createElement("canvas");
+  // Capped ratio: the effect is all soft glows, so extra pixels buy nothing.
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.cssText =
+    "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999";
+  document.body.appendChild(canvas);
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+
+  const targetCenter = getElementCenter(targetEl);
+  const start = userEl
+    ? getElementCenter(userEl)
+    : { x: targetCenter.x - 260, y: targetCenter.y - 160 };
+
+  const effect = new FireballEffect(ctx, start, targetCenter);
+  let last = performance.now();
+  let hitFlashed = false;
+
+  await new Promise((resolve) => {
+    function frame(now) {
+      const dt = Math.min((now - last) / 1000, 1 / 30);
+      last = now;
+
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      const alive = effect.step(dt);
+
+      if (effect.impacted && !hitFlashed) {
+        hitFlashed = true;
+        targetEl.classList.add("fire-hit");
+        setTimeout(() => targetEl.classList.remove("fire-hit"), 320);
+      }
+
+      if (!alive) {
+        canvas.remove();
+        resolve();
+        return;
+      }
+      requestAnimationFrame(frame);
+    }
+
+    requestAnimationFrame(frame);
+  });
 });

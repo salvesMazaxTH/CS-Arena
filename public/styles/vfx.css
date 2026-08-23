@@ -249,3 +249,21 @@
     transform: scale(1.08);
   }
 } */
+
+/* Fire hit effect (applied to champion portrait on fireball impact) */
+
+.fire-hit {
+  animation: fireFlash 0.32s ease-out;
+}
+
+@keyframes fireFlash {
+  0% {
+    filter: brightness(1);
+  }
+  25% {
+    filter: brightness(2.2) saturate(1.8) sepia(0.55) hue-rotate(-18deg);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
