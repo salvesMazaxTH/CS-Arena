@@ -81,8 +81,12 @@ Cada jogador seleciona **3 campeões**. Os **3 ficam em campo simultaneamente** 
 │   │   ├── gameGlossary.js         # Glossário interativo de termos de jogo
 │   │   ├── animation/
 │   │   │   ├── animsAndLogManager.js  # Fila de animações + log de combate
-│   │   │   ├── skillAnimations.js     # Animações WebGL one-shot de skills (Three.js)
-│   │   │   └── fireballAnimation.js   # Efeito genérico de bola de fogo (Canvas 2D)
+│   │   │   ├── skillAnimations.js     # Registry de animações de skill + fallbacks por elemento
+│   │   │   ├── animationUtils.js      # Geometria compartilhada (getElementCenter)
+│   │   │   ├── meleePunchAnimation.js # Soco corpo-a-corpo do Kai (Three.js + bloom)
+│   │   │   ├── lightningAnimation.js  # Relâmpago genérico (Canvas 2D)
+│   │   │   ├── fireballAnimation.js   # Bola de fogo genérica (Canvas 2D)
+│   │   │   └── waterAnimation.js      # Projétil de água genérico (Canvas 2D)
 │   │   ├── ui/                        # UI do cliente extraída do main.js (factories createX(deps))
 │   │   │   ├── overlays.js         # Tooltips de skill, overlay de retrato, quick-stats
 │   │   │   ├── targeting.js        # Seleção de alvos client-side
@@ -1703,18 +1707,23 @@ VFX contínuos renderizados via canvas HTML5 sobre o retrato do campeão. `syncC
 | `waterBubble`      | `runtime.form === "bola_agua"`                               |
 | `finishing`        | `playFinishingEffect(el, { variant })` — chamado diretamente |
 
-### 20.2 Skill Animations — One-Shot WebGL
+### 20.2 Skill Animations — One-Shot
 
 **Arquivo**: `public/js/animation/skillAnimations.js`
 
-Sistema registry-based para animações one-shot de skills, renderizadas em `#webgl-container` overlay via Three.js (global).
+Registry puro: mapeia chaves de skill para factories e resolve os fallbacks por elemento. **Nenhuma animação é implementada aqui** — cada uma vive no seu próprio módulo em `public/js/animation/`, exporta sua função de play, e é registrada no fim deste arquivo.
+
+A direção dos imports importa: os módulos de animação **não** importam o registry para se auto-registrar, senão o `Map` do registry ainda estaria na temporal dead zone quando o corpo do módulo rodasse.
 
 ```js
-// Registrar nova animação:
-registerSkillAnimation("skill_key", async ({ targetEl, userEl }) => { ... });
+// Módulo da animação:
+export async function playX({ targetEl, userEl }) { ... }
+
+// skillAnimations.js:
+registerSkillAnimation("skill_key", playX);
 
 // Disparar (no-op se não registrada):
-await animateSkill(skillKey, { targetEl, userEl });
+await animateSkill(skillKey, { targetEl, userEl, skill });
 ```
 
 **Integração**: chamado em `animsAndLogManager.js → processCombatAction()` logo após o dialog de ação, usando `action.skillKey`.
@@ -1727,8 +1736,9 @@ await animateSkill(skillKey, { targetEl, userEl });
 | `default_lightning`                  | Relâmpago em Canvas 2D com ramificações e flash `.lightning-hit` no alvo.                                                    |
 | `default_fire`                       | Bola de fogo em Canvas 2D (`fireballAnimation.js`): trilha em arco, impacto com brasas, shockwave e flash `.fire-hit`.         |
 | `default_fire_big`                   | Mesma classe `FireballEffect` com `scale: 1.85` — usada por ultimates de fogo e pelas exceções de `BIG_FIREBALL_SKILLS`.        |
+| `default_water`                      | Projétil de água em Canvas 2D (`waterAnimation.js`): trilha em arco, splash com dois anéis, gotículas que se separam em duas levas e caem com gravidade, flash `.water-hit`. |
 
-**Fallbacks por elemento**: skills sem animação própria caem em `DEFAULT_ELEMENT_ANIMATIONS` quando são ofensivas (`damageMode` definido) e não fazem contato (`contact: false`) — `lightning` → `default_lightning`, `fire` → `default_fire`. Skills de fogo com `isUltimate: true`, mais as chaves listadas em `BIG_FIREBALL_SKILLS` (hoje `magma_bomb`), sobem para `default_fire_big`.
+**Fallbacks por elemento**: skills sem animação própria caem em `DEFAULT_ELEMENT_ANIMATIONS` quando são ofensivas (`damageMode` definido) e não fazem contato (`contact: false`) — `lightning` → `default_lightning`, `fire` → `default_fire`, `water` → `default_water`. Skills de fogo com `isUltimate: true`, mais as chaves listadas em `BIG_FIREBALL_SKILLS` (hoje `magma_bomb`), sobem para `default_fire_big`.
 
 ### 20.3 VFX WebGL One-Shot — deathClaim (Jeff)
 

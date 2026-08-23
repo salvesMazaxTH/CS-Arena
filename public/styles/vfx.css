@@ -267,3 +267,21 @@
     filter: brightness(1);
   }
 }
+
+/* Water hit effect (applied to champion portrait on water bolt impact) */
+
+.water-hit {
+  animation: waterFlash 0.32s ease-out;
+}
+
+@keyframes waterFlash {
+  0% {
+    filter: brightness(1);
+  }
+  25% {
+    filter: brightness(1.9) saturate(1.6) hue-rotate(25deg);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
