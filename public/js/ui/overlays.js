@@ -136,10 +136,9 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
     const isClaim = skill?.key === CLAIM_ACTION_KEY;
     const claimPoints = isClaim ? getClaimPointsPreview(champion) : null;
 
-    const momentumCost =
-      skill.isUltimate && Number.isInteger(skill.momentumCost)
-        ? skill.momentumCost
-        : null;
+    // Route through getSkillCost so a ramping ultimate shows its live per-use cost, not the base.
+    const skillCost = champion.getSkillCost(skill);
+    const momentumCost = skillCost > 0 ? skillCost : null;
 
     overlay.innerHTML = `
 

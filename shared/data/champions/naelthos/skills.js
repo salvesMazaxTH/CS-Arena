@@ -172,30 +172,42 @@ const naelthosSkills = [
     key: "overflow_of_the_primordial_sea",
     name: "Overflow of the Primordial Sea",
     hpFactor: 55,
-    healAmount: 50,
+    hpDecayPerUse: 0.8,
     effectDuration: 3,
-    hpPerStack: 30,
+    hpPerStack: 45,
     bonusPerStack: 20,
-    maxBonus: 500,
+    maxBonus: 400,
     damageMode: "standard",
     contact: false,
     isUltimate: true,
     momentumCost: 55,
+    momentumCostPerUse: 15,
+    momentumCostMax: 100,
 
     element: "water",
 
     priority: 0,
     description() {
-      return `Naelthos opens the depths of the Primordial Sea and lets them rise through him: his Max HP swells by ${this.hpFactor}% of his base HP and he restores ${this.healAmount} HP.
+      return `Naelthos opens the depths of the Primordial Sea and lets them rise through him: his Max HP swells by up to ${this.hpFactor}% of his base HP, and the same surge floods his current HP. Each invocation swells him less than the last.
 
       For ${this.effectDuration} turn(s), the Rising Sea carries every blow he lands: his attacks gain +${this.bonusPerStack} bonus damage for every ${this.hpPerStack} current HP, up to ${this.maxBonus}.`;
     },
     targetSpec: ["self"],
 
+    // Each use scales down: the more times the Sea has been invoked, the less it swells him.
+    getMomentumCost(champion) {
+      const uses = champion.runtime?.primordialSeaUses ?? 0;
+      return Math.min(
+        this.momentumCost + this.momentumCostPerUse * uses,
+        this.momentumCostMax,
+      );
+    },
+
     resolve({ user, context = {} }) {
       const { currentTurn } = context;
 
-      const factor = this.hpFactor / 100;
+      const uses = (user.runtime.primordialSeaUses ??= 0);
+      const factor = (this.hpFactor / 100) * this.hpDecayPerUse ** uses;
 
       const amount = user.baseHP * factor;
 
@@ -204,6 +216,8 @@ const naelthosSkills = [
         affectMax: true,
         isPermanent: true,
       });
+
+      user.runtime.primordialSeaUses = uses + 1;
 
       // Applies the damage modifier for the effect's duration (current turn included).
       user.addDamageModifier({

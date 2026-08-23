@@ -346,9 +346,13 @@ export class Champion {
   getSkillCost(skill) {
     if (!skill) return 0;
     if (skill.isUltimate !== true) return 0;
-    if (!Number.isInteger(skill.momentumCost) || skill.momentumCost <= 0)
-      return 0;
-    return skill.momentumCost;
+    // A skill may ramp its own cost per use; otherwise the flat momentumCost stands.
+    const cost =
+      typeof skill.getMomentumCost === "function"
+        ? skill.getMomentumCost(this)
+        : skill.momentumCost;
+    if (!Number.isInteger(cost) || cost <= 0) return 0;
+    return cost;
   }
 
   addMomentum(input) {
