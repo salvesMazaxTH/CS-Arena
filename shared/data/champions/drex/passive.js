@@ -133,8 +133,8 @@ export default {
     };
   },
 
-  onBeforeHealing({ owner, healTarget, amount, isLifesteal }) {
-    if (healTarget !== owner) return;
+  onBeforeHealing({ owner, target, amount, isLifesteal }) {
+    if (target !== owner) return;
     if (!isLifesteal) return;
     if (!owner?.runtime?.drexBloodAscension) return;
 
