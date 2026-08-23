@@ -1,48 +1,13 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import { MAX_AMMO, getAmmo, fireBullets } from "./ammo.js";
+import totalBlock from "../totalBlock.js";
+import { MAX_AMMO, fireBullets } from "./ammo.js";
 
 const zyrelleSkills = [
   // ========================
-  // Revolver Shot (global)
+  // Total Block (global)
   // ========================
-  {
-    key: "revolver_shot",
-    name: "Revolver Shot",
-
-    bf: 60,
-
-    contact: false,
-    damageMode: "standard",
-    priority: 0,
-
-    description() {
-      return `Zyrelle puts a single round through the chosen target, dealing physical damage. Spends 1 round.`;
-    },
-
-    targetSpec: ["enemy"],
-
-    resolve({ user, targets, context = {} }) {
-      const [enemy] = targets;
-      const fired = fireBullets(user, 1, context);
-
-      if (fired === 0) {
-        return {
-          log: `${formatChampionName(user)}'s hammer clicks on an empty chamber — no rounds left for Revolver Shot!`,
-        };
-      }
-
-      return new DamageEvent({
-        baseDamage: (user.Attack * this.bf) / 100,
-        attacker: user,
-        defender: enemy,
-        skill: this,
-        type: "physical",
-        context,
-        allChampions: context?.allChampions,
-      }).execute();
-    },
-  },
+  totalBlock,
 
   // ========================
   // Special Skills
@@ -147,12 +112,25 @@ const zyrelleSkills = [
         statModifierSrc: user,
       });
 
-      user.applyDamageReduction({
-        amount: -this.vulnerabilityPercent,
-        duration: this.duration,
-        type: "percent",
-        source: this.key,
-        context,
+      const vulnerabilityPercent = this.vulnerabilityPercent;
+
+      user.runtime.hookEffects ??= [];
+      user.runtime.hookEffects = user.runtime.hookEffects.filter(
+        (hook) => hook.key !== "reckless_reload_exposure",
+      );
+      user.runtime.hookEffects.push({
+        key: "reckless_reload_exposure",
+        name: "Reckless Reload",
+        expiresAtTurn: context.currentTurn + this.duration,
+
+        hookScope: {
+          onBeforeDmgTaking: "defender",
+        },
+
+        onBeforeDmgTaking({ defender, damage }) {
+          if (defender !== user) return;
+          return { damage: damage * (1 + vulnerabilityPercent / 100) };
+        },
       });
 
       return {
@@ -161,6 +139,9 @@ const zyrelleSkills = [
     },
   },
 
+  // ========================
+  // Ultimate
+  // ========================
   {
     key: "empty_the_cylinder",
     name: "Empty the Cylinder",
@@ -175,7 +156,7 @@ const zyrelleSkills = [
     priority: 0,
 
     description() {
-      return `Zyrelle unloads every round still in the cylinder into the chosen target, one shot per remaining round, each rolling for its own critical hit. An empty cylinder means an empty ultimate.`;
+      return `Zyrelle unloads every round still in the cylinder into the chosen target, one shot per remaining round, each rolling for its own critical hit. She reads each hit before firing the next — the moment the target falls, she stops, keeping any rounds still left.`;
     },
 
     targetSpec: ["enemy"],
@@ -183,10 +164,9 @@ const zyrelleSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const results = [];
-      const shots = fireBullets(user, getAmmo(user), context);
       const baseDamage = (user.Attack * this.bfPerBullet) / 100;
 
-      for (let i = 0; i < shots; i++) {
+      while (fireBullets(user, 1, context) > 0) {
         const result = new DamageEvent({
           baseDamage,
           attacker: user,
@@ -197,7 +177,10 @@ const zyrelleSkills = [
           allChampions: context?.allChampions,
         }).execute();
 
-        results.push(...(Array.isArray(result) ? result : [result]));
+        const array = Array.isArray(result) ? result : [result];
+        results.push(...array);
+
+        if (array.some((r) => r?.killed)) break;
       }
 
       return results;

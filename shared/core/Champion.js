@@ -148,6 +148,13 @@ export class Champion {
     champ.runtime ??= {};
     champ.runtime.hookEffects ??= [];
 
+    // Lets a champion definition seed runtime state that must exist from the
+    // very first turn (e.g. Zyrelle's starting ammo), rather than only
+    // appearing once some skill or onTurnStart hook first touches it.
+    if (baseData.initialRuntime) {
+      Object.assign(champ.runtime, baseData.initialRuntime);
+    }
+
     // INJETAR IMUNIDADE ELEMENTAL AUTOMÁTICA
     if (champ.elementalAffinities?.length) {
       champ.runtime.hookEffects.push({

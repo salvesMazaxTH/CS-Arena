@@ -3,7 +3,7 @@
 // lives here instead of being duplicated across files.
 
 export const MAX_AMMO = 6;
-export const IDLE_RELOAD = 4;
+export const IDLE_RELOAD = 3;
 
 export function getAmmo(champion) {
   return champion.runtime.zyrelleAmmo ?? MAX_AMMO;

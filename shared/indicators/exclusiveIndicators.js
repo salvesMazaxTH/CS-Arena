@@ -51,7 +51,7 @@ registerExclusiveIndicator("tithe", {
 registerRuntimeCounterIndicator("zyrelle_ammo", "zyrelleAmmo", {
   type: "image",
   value: "/assets/indicators/ammo_indicator.png",
-  background: "",
+  background: "rgba(100, 200, 255, 0.8)",
   label: "Rounds Loaded",
   showStackCount: true,
 });

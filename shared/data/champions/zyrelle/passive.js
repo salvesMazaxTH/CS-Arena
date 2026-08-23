@@ -8,9 +8,9 @@ export default {
   aimBonus: 25,
 
   description(champion) {
-    return `Zyrelle's revolver holds ${MAX_AMMO} rounds; every shot she fires — basic or special — spends one. If she ever runs dry, the cylinder stays empty until she reloads: a turn spent not firing (or Total Block) lets her thumb ${IDLE_RELOAD} rounds back in.
+    return `Zyrelle's revolver holds ${MAX_AMMO} rounds; every shot she fires spends one. If she ever runs dry, a turn spent not shooting lets her thumb ${IDLE_RELOAD} rounds back in.
 
-    Every critical hit she lands sharpens her aim: she gains +${this.aimBonus}% Critical for her very next shot, whichever it is. A shot that was already a guaranteed critical (forced by another effect) doesn't spend this charge — it stays banked for the next roll that actually needs it.
+    Every critical hit she lands sharpens her aim: +${this.aimBonus}% Critical on her very next shot. An already-guaranteed crit doesn't spend the charge.
 
     Rounds loaded: <b>${champion.runtime?.zyrelleAmmo ?? MAX_AMMO}/${MAX_AMMO}</b>`;
   },
@@ -18,10 +18,6 @@ export default {
   hookScope: {
     onCriticalHit: "attacker",
     onBeforeDmgDealing: "attacker",
-  },
-
-  onTurnStart({ owner }) {
-    owner.runtime.zyrelleAmmo ??= MAX_AMMO;
   },
 
   onTurnEnd({ owner, context }) {
