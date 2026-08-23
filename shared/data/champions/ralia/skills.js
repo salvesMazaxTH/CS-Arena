@@ -120,7 +120,7 @@ const raliaSkills = [
     name: "Decree of the Bastion",
     bf: 50,
     damageMode: "piercing",
-    hitVfx: "slash",
+    hitVfx: "multislash",
     piercingPercentage: 75,
 
     atkDebuff: 20,

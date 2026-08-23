@@ -110,7 +110,7 @@ const vaelSkills = [
     bf: 145,
     contact: true,
     damageMode: "standard",
-    hitVfx: "slash",
+    hitVfx: "multislash",
 
     isUltimate: true,
     momentumCost: 55,

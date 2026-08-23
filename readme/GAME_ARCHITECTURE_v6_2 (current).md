@@ -87,7 +87,8 @@ Cada jogador seleciona **3 campeões**. Os **3 ficam em campo simultaneamente** 
 │   │   │   ├── lightningAnimation.js  # Relâmpago genérico (Canvas 2D)
 │   │   │   ├── fireballAnimation.js   # Bola de fogo genérica (Canvas 2D)
 │   │   │   ├── waterAnimation.js      # Projétil de água genérico (Canvas 2D)
-│   │   │   └── slashAnimation.js      # Corte genérico, opt-in via hitVfx (Canvas 2D)
+│   │   │   ├── slashAnimation.js      # Corte único que rasga numa fenda (Canvas 2D)
+│   │   │   └── multislashAnimation.js # Combo de três lâminas, para ultimates (Canvas 2D)
 │   │   ├── ui/                        # UI do cliente extraída do main.js (factories createX(deps))
 │   │   │   ├── overlays.js         # Tooltips de skill, overlay de retrato, quick-stats
 │   │   │   ├── targeting.js        # Seleção de alvos client-side
@@ -1738,13 +1739,14 @@ await animateSkill(skillKey, { targetEl, userEl, skill });
 | `default_fire`                       | Bola de fogo em Canvas 2D (`fireballAnimation.js`): trilha em arco, impacto com brasas, shockwave e flash `.fire-hit`.         |
 | `default_fire_big`                   | Mesma classe `FireballEffect` com `scale: 1.85` — usada por ultimates de fogo e pelas exceções de `BIG_FIREBALL_SKILLS`.        |
 | `default_water`                      | Projétil de água em Canvas 2D (`waterAnimation.js`): trilha em arco, splash com dois anéis, gotículas que se separam em duas levas e caem com gravidade, flash `.water-hit`. |
-| `default_slash`                      | Corte em Canvas 2D (`slashAnimation.js`): três lâminas escalonadas varrem o alvo, faíscas, e a ferida se abre em duas bordas. Flash `.slash-hit`. |
+| `default_slash`                      | Corte único (`slashAnimation.js`): um fio é traçado rápido na diagonal, segura, e então rasga numa fenda larga de bordas luminosas e miolo vazio. Flash `.slash-hit`. |
+| `default_multislash`                 | Combo (`multislashAnimation.js`): três lâminas escalonadas em leque, faíscas, e cada ferida se abre em duas bordas. Reservado a ultimates de corte e skills que são vários golpes. |
 
 **Fallbacks por elemento**: skills sem animação própria caem em `DEFAULT_ELEMENT_ANIMATIONS` quando são ofensivas (`damageMode` definido) e não fazem contato (`contact: false`) — `lightning` → `default_lightning`, `fire` → `default_fire`, `water` → `default_water`. Skills de fogo com `isUltimate: true`, mais as chaves listadas em `BIG_FIREBALL_SKILLS` (hoje `magma_bomb`), sobem para `default_fire_big`.
 
-**Motivo autoral — `hitVfx`**: uma skill pode declarar `hitVfx: "slash"` para pedir uma animação pelo *gesto* em vez do elemento. Isso é consultado **antes** do gate de `contact`, porque um corte normalmente é `contact: true`, e vence o fallback de elemento. A chave resolvida é `default_${hitVfx}`.
+**Motivo autoral — `hitVfx`**: uma skill pode declarar `hitVfx: "slash"` ou `hitVfx: "multislash"` para pedir uma animação pelo *gesto* em vez do elemento. Isso é consultado **antes** do gate de `contact`, porque um corte normalmente é `contact: true`, e vence o fallback de elemento. A chave resolvida é `default_${hitVfx}`.
 
-**Cor do corte — `hitVfxPalette`**: a paleta do `default_slash` resolve em três níveis, `hitVfxPalette` → `element` → `steel`. As matizes seguem `shared/ui/identityPalette.js` para o corte ler como o mesmo elemento do badge, mas com valores mais claros: blending aditivo lava os tons abafados de badge, e uma lâmina precisa de núcleo quase branco. Além das chaves de elemento existem paletas autorais (`violet` para Akane, `crimson` para o Drex). Os sprites são pré-renderizados uma vez por paleta e cacheados.
+**Cor do corte — `hitVfxPalette`**: a paleta dos cortes resolve em três níveis, `hitVfxPalette` → `element` → `steel`. As matizes seguem `shared/ui/identityPalette.js` para o corte ler como o mesmo elemento do badge, mas com valores mais claros: blending aditivo lava os tons abafados de badge, e uma lâmina precisa de núcleo quase branco. Além das chaves de elemento existem paletas autorais (`violet` para Akane, `crimson` para o Drex). Os sprites são pré-renderizados uma vez por paleta e cacheados.
 
 ### 20.3 VFX WebGL One-Shot — deathClaim (Jeff)
 

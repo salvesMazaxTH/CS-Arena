@@ -44,7 +44,7 @@ const myrraSkills = [
     bfPerHit: 40,
     contact: true,
     damageMode: "standard",
-    hitVfx: "slash",
+    hitVfx: "multislash",
     priority: 0,
 
     description() {
@@ -82,7 +82,7 @@ const myrraSkills = [
     missingHpScaling: 0.5,
     contact: true,
     damageMode: "standard",
-    hitVfx: "slash",
+    hitVfx: "multislash",
     isUltimate: true,
     momentumCost: 55,
     priority: 0,

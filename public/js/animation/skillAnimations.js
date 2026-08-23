@@ -12,6 +12,7 @@
 import { createFireballAnimation } from "./fireballAnimation.js";
 import { playLightningBolt } from "./lightningAnimation.js";
 import { playMeleePunch } from "./meleePunchAnimation.js";
+import { playMultislash } from "./multislashAnimation.js";
 import { playSlash } from "./slashAnimation.js";
 import { playWaterBolt } from "./waterAnimation.js";
 
@@ -85,3 +86,4 @@ registerSkillAnimation("default_fire", createFireballAnimation(1));
 registerSkillAnimation("default_fire_big", createFireballAnimation(1.85));
 registerSkillAnimation("default_water", playWaterBolt);
 registerSkillAnimation("default_slash", playSlash);
+registerSkillAnimation("default_multislash", playMultislash);

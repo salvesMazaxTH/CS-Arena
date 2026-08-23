@@ -1,10 +1,10 @@
 // ============================================================
-//  Slash Animation
+//  Multislash Animation
 //
-//  Default cut motif, opted into with `hitVfx: "slash"`. A single
-//  stroke: a hairline is traced across the target almost too fast
-//  to see, holds, then tears open into a wide diagonal fissure.
-//  Skills that are genuinely several strokes use "multislash".
+//  Combo variant of the cut motif, opted into with
+//  `hitVfx: "multislash"`. Three staggered blades fan across the
+//  target and each wound opens on its own beat. Reserved for cut
+//  ultimates and skills that are explicitly several strokes.
 // ============================================================
 
 import { getElementCenter } from "./animationUtils.js";
@@ -57,52 +57,54 @@ function getSprites(paletteKey) {
   return sprites;
 }
 
-// Trace fast, hold on the hairline, then tear it open and fade.
-const TRACE_DURATION = 0.15;
-const HOLD_DURATION = 0.09;
-const OPEN_DURATION = 0.3;
-const FADE_DURATION = 0.3;
-const LIFETIME =
-  TRACE_DURATION + HOLD_DURATION + OPEN_DURATION + FADE_DURATION;
+// Each blade sweeps fast, then its wound lingers and opens.
+const SWEEP_DURATION = 0.14;
+const WOUND_DURATION = 0.5;
+const STAGGER = 0.07;
+// The wound only splits apart once the blade has fully passed through.
+const SPLIT_DELAY = 0.1;
 
-export class SlashEffect {
+export class MultislashEffect {
   constructor(ctx, center, size, baseAngle, paletteKey) {
     this.ctx = ctx;
     this.center = center;
+    this.size = size;
     this.age = 0;
     this.sparks = [];
-    this.torn = false;
     this.colors = PALETTES[paletteKey];
     this.sprites = getSprites(paletteKey);
 
-    // A steep diagonal, leaning away from whichever side the attacker is on
-    // so the stroke still reads as coming from them.
-    const lean = Math.cos(baseAngle) >= 0 ? 1 : -1;
-    this.angle = lean * (Math.PI / 3.4);
-    this.dirX = Math.cos(this.angle);
-    this.dirY = Math.sin(this.angle);
+    // Three crossing blades fanned around the attack direction, so the cut
+    // reads as a combo rather than a single stroke.
+    this.blades = [-0.5, 0.6, 0.08].map((spread, i) => ({
+      angle: baseAngle + Math.PI / 2 + spread,
+      delay: i * STAGGER,
+      length: size * (1.9 + Math.random() * 0.4),
+      width: 7 - i * 1.5,
+      sparked: false,
+    }));
 
-    this.length = size * 2.3;
-    this.maxWidth = size * 0.15;
+    this.lifetime =
+      (this.blades.length - 1) * STAGGER + SWEEP_DURATION + WOUND_DURATION;
   }
 
-  spawnSparks() {
-    // Thrown out of the fissure, perpendicular to it.
-    const perpX = -this.dirY;
-    const perpY = this.dirX;
+  spawnSparks(blade) {
+    const dirX = Math.cos(blade.angle);
+    const dirY = Math.sin(blade.angle);
 
-    for (let i = 0; i < 16; i++) {
-      const along = (Math.random() - 0.5) * this.length * 0.7;
-      const speed = 120 + Math.random() * 420;
-      const side = Math.random() < 0.5 ? 1 : -1;
+    for (let i = 0; i < 14; i++) {
+      // Scattered along the cut, thrown outwards along its own axis.
+      const along = (Math.random() - 0.5) * blade.length * 0.8;
+      const speed = 260 + Math.random() * 620;
+      const sign = Math.random() < 0.5 ? 1 : -1;
       this.sparks.push({
-        x: this.center.x + this.dirX * along,
-        y: this.center.y + this.dirY * along,
-        vx: perpX * speed * side + (Math.random() - 0.5) * 120,
-        vy: perpY * speed * side + (Math.random() - 0.5) * 120,
-        life: 0.2 + Math.random() * 0.34,
-        maxLife: 0.54,
-        size: 5 + Math.random() * 12,
+        x: this.center.x + dirX * along,
+        y: this.center.y + dirY * along,
+        vx: dirX * speed * sign + (Math.random() - 0.5) * 160,
+        vy: dirY * speed * sign + (Math.random() - 0.5) * 160,
+        life: 0.16 + Math.random() * 0.3,
+        maxLife: 0.46,
+        size: 5 + Math.random() * 11,
         sprite: this.sprites[i % this.sprites.length],
       });
     }
@@ -113,58 +115,70 @@ export class SlashEffect {
     const { ctx } = this;
 
     ctx.globalCompositeOperation = "lighter";
-    if (this.age < TRACE_DURATION) {
-      this.drawTrace(this.age / TRACE_DURATION);
-    } else {
-      const since = this.age - TRACE_DURATION - HOLD_DURATION;
-      if (since <= 0) {
-        this.drawFissure(0, 1);
+    for (const blade of this.blades) {
+      const t = this.age - blade.delay;
+      if (t < 0) continue;
+
+      if (t < SWEEP_DURATION) {
+        this.drawSweep(blade, t / SWEEP_DURATION);
       } else {
-        if (!this.torn) {
-          this.torn = true;
-          this.spawnSparks();
+        if (!blade.sparked) {
+          blade.sparked = true;
+          this.spawnSparks(blade);
         }
-        const open = Math.min(since / OPEN_DURATION, 1);
-        const fade =
-          since <= OPEN_DURATION
-            ? 1
-            : 1 - (since - OPEN_DURATION) / FADE_DURATION;
-        // Ease-out so the tear snaps open and then settles.
-        this.drawFissure(1 - Math.pow(1 - open, 3), Math.max(fade, 0));
+        this.drawWound(blade, (t - SWEEP_DURATION) / WOUND_DURATION);
       }
     }
     this.drawSparks(dt);
     ctx.globalCompositeOperation = "source-over";
 
-    return this.age < LIFETIME;
+    return this.age < this.lifetime;
   }
 
-  // The hairline being drawn: a bright point runs the length of the cut and
-  // leaves a one-pixel thread behind it.
-  drawTrace(p) {
+  // The blade is a bright head dragging a tapered tail, travelling from one
+  // side of the target to the other.
+  drawSweep(blade, p) {
     const { ctx, center } = this;
-    const half = this.length / 2;
-    const from = {
-      x: center.x - this.dirX * half,
-      y: center.y - this.dirY * half,
-    };
-    const headAt = -half + p * this.length;
+    const dirX = Math.cos(blade.angle);
+    const dirY = Math.sin(blade.angle);
+    const half = blade.length / 2;
+    const tailLen = blade.length * 0.55;
+
+    const headAt = -half + p * (blade.length + tailLen);
+    const tailAt = Math.max(headAt - tailLen, -half);
+    if (headAt <= -half) return;
+
     const head = {
-      x: center.x + this.dirX * headAt,
-      y: center.y + this.dirY * headAt,
+      x: center.x + dirX * Math.min(headAt, half),
+      y: center.y + dirY * Math.min(headAt, half),
     };
+    const tail = { x: center.x + dirX * tailAt, y: center.y + dirY * tailAt };
+
+    const { core, mid, deep } = this.colors;
+    const grad = ctx.createLinearGradient(tail.x, tail.y, head.x, head.y);
+    grad.addColorStop(0, `${deep}00`);
+    grad.addColorStop(0.6, `${mid}8c`);
+    grad.addColorStop(1, core);
 
     ctx.lineCap = "round";
-    ctx.strokeStyle = this.colors.core;
-    ctx.globalAlpha = 0.95;
-    ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    ctx.moveTo(from.x, from.y);
-    ctx.lineTo(head.x, head.y);
-    ctx.stroke();
+    ctx.strokeStyle = grad;
 
-    const flare = 26;
-    ctx.globalAlpha = 1;
+    // Wide halo first, then the razor core on top.
+    for (const [width, alpha] of [
+      [blade.width * 3.2, 0.35],
+      [blade.width, 0.9],
+      [blade.width * 0.32, 1],
+    ]) {
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(tail.x, tail.y);
+      ctx.lineTo(head.x, head.y);
+      ctx.stroke();
+    }
+
+    const flare = blade.width * 6;
+    ctx.globalAlpha = 0.85;
     ctx.drawImage(
       this.sprites[0],
       head.x - flare / 2,
@@ -175,69 +189,32 @@ export class SlashEffect {
     ctx.globalAlpha = 1;
   }
 
-  // The tear itself: a lens shape whose rims glow and whose middle stays
-  // empty, so it reads as an opening rather than a painted stripe.
-  drawFissure(open, fade) {
+  // Residual cut: one line that holds, then separates into two drifting
+  // edges — the beat that sells it as a wound instead of a light streak.
+  drawWound(blade, e) {
     const { ctx, center } = this;
-    const { core, mid, deep } = this.colors;
-    const half = this.length / 2;
-    const perpX = -this.dirY;
-    const perpY = this.dirX;
-    const width = this.maxWidth * open;
+    const fade = Math.pow(1 - e, 1.6);
+    if (fade <= 0.01) return;
 
-    const tipA = {
-      x: center.x - this.dirX * half,
-      y: center.y - this.dirY * half,
-    };
-    const tipB = {
-      x: center.x + this.dirX * half,
-      y: center.y + this.dirY * half,
-    };
+    const dirX = Math.cos(blade.angle);
+    const dirY = Math.sin(blade.angle);
+    const half = blade.length / 2;
+    const gap =
+      e < SPLIT_DELAY ? 0 : (e - SPLIT_DELAY) * this.size * 0.16;
 
-    if (width > 0.5) {
-      // Control points bulge the two arcs apart; 2x because a quadratic curve
-      // only reaches half of its control offset.
-      const bulge = width * 2;
-      ctx.globalAlpha = fade;
-      ctx.beginPath();
-      ctx.moveTo(tipA.x, tipA.y);
-      ctx.quadraticCurveTo(
-        center.x + perpX * bulge,
-        center.y + perpY * bulge,
-        tipB.x,
-        tipB.y,
-      );
-      ctx.quadraticCurveTo(
-        center.x - perpX * bulge,
-        center.y - perpY * bulge,
-        tipA.x,
-        tipA.y,
-      );
-
-      const grad = ctx.createLinearGradient(
-        center.x - perpX * width,
-        center.y - perpY * width,
-        center.x + perpX * width,
-        center.y + perpY * width,
-      );
-      grad.addColorStop(0, core);
-      grad.addColorStop(0.28, `${mid}66`);
-      grad.addColorStop(0.5, `${deep}14`);
-      grad.addColorStop(0.72, `${mid}66`);
-      grad.addColorStop(1, core);
-      ctx.fillStyle = grad;
-      ctx.fill();
-    }
-
-    // The thread stays visible along the middle the whole time.
+    ctx.strokeStyle = this.colors.core;
     ctx.lineCap = "round";
-    ctx.strokeStyle = core;
-    ctx.globalAlpha = fade * (1 - open * 0.55);
-    ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    ctx.moveTo(tipA.x, tipA.y);
-    ctx.lineTo(tipB.x, tipB.y);
-    ctx.stroke();
+    for (const side of [1, -1]) {
+      const offX = -dirY * gap * side;
+      const offY = dirX * gap * side;
+      ctx.globalAlpha = fade * 0.9;
+      ctx.lineWidth = blade.width * 0.45 * fade;
+      ctx.beginPath();
+      ctx.moveTo(center.x - dirX * half + offX, center.y - dirY * half + offY);
+      ctx.lineTo(center.x + dirX * half + offX, center.y + dirY * half + offY);
+      ctx.stroke();
+      if (gap === 0) break;
+    }
     ctx.globalAlpha = 1;
   }
 
@@ -250,8 +227,8 @@ export class SlashEffect {
         this.sparks.splice(i, 1);
         continue;
       }
-      p.vx *= 0.93;
-      p.vy = p.vy * 0.93 + 620 * dt;
+      p.vx *= 0.94;
+      p.vy = p.vy * 0.94 + 900 * dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
 
@@ -264,7 +241,7 @@ export class SlashEffect {
   }
 }
 
-export async function playSlash({ userEl, targetEl, skill }) {
+export async function playMultislash({ userEl, targetEl, skill }) {
   if (!targetEl) return;
 
   // Authorial override first, then the element, then plain steel for the
@@ -285,18 +262,16 @@ export async function playSlash({ userEl, targetEl, skill }) {
   ctx.scale(dpr, dpr);
 
   const rect = targetEl.getBoundingClientRect();
-  const center = {
-    x: rect.left + rect.width / 2,
-    y: rect.top + rect.height / 2,
-  };
+  const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 
+  // Blades fan around the attack direction, so the swing comes from the user.
   let baseAngle = 0;
   if (userEl) {
     const userCenter = getElementCenter(userEl);
     baseAngle = Math.atan2(center.y - userCenter.y, center.x - userCenter.x);
   }
 
-  const effect = new SlashEffect(
+  const effect = new MultislashEffect(
     ctx,
     center,
     Math.max(rect.width, rect.height),

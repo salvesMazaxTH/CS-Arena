@@ -5,7 +5,7 @@ const akaneSkills = [
   totalBlock,
 
   // ========================
-  // Skill 1 — ataque padrão
+  // Skill 1 — basic attack
   // ========================
   {
     key: "violet_slash",
@@ -18,7 +18,7 @@ const akaneSkills = [
     priority: 0,
 
     description() {
-      return `Deals damage to the chosen target.`;
+      return `Akane unsheathes a single katana and draws it across the chosen target in one clean violet arc, the blade back at her hip before the cut is even felt, dealing damage.`;
     },
 
     targetSpec: ["enemy"],
@@ -39,7 +39,7 @@ const akaneSkills = [
   },
 
   // ========================
-  // Skill 2 — lifesteal (forma correta)
+  // Skill 2 — lifesteal
   // ========================
   {
     key: "bloodbath",
@@ -76,12 +76,14 @@ const akaneSkills = [
     bf: 95,
     contact: true,
     damageMode: "standard",
+    hitVfx: "multislash",
+    hitVfxPalette: "violet",
     isUltimate: true,
     momentumCost: 55,
     priority: 0,
 
     description() {
-      return `Deals heavy damage to the chosen target.`;
+      return `Akane draws both katanas and falls upon the chosen target in a furious, perfectly synchronized cadence, every cut and thrust flowing into the next like steps of a dance too fast to follow, dealing heavy damage.`;
     },
 
     targetSpec: ["enemy"],
