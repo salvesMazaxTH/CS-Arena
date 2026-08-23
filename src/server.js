@@ -13,6 +13,16 @@ import livereload from "livereload";
 const liveReloadServer = livereload.createServer();
 liveReloadServer.watch("public");
 
+process.on("SIGINT", () => {
+  liveReloadServer.close();
+  process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+  liveReloadServer.close();
+  process.exit(0);
+});
+
 import { GameMatch } from "../shared/engine/match/GameMatch.js";
 import { Player } from "../shared/engine/match/Player.js";
 
@@ -724,6 +734,11 @@ function handleStartTurn() {
     if (effect.turnToHappen === currentTurn) {
       handleScheduledEffect(effect, turnStartContext);
       if (effect.dialog) {
+        // A scheduled dialog announces the effect itself, so it must land in
+        // globalDialogs instead of being glued to whatever event the effect
+        // registered last (a revive's own buffs, for instance) — those events
+        // may target a champion the client does not know about yet.
+        turnStartContext._lastEventRef = null;
         turnStartContext.registerDialog(effect.dialog);
       }
     } else {
