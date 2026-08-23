@@ -12,7 +12,7 @@ const poisoned = {
 
   onTurnStart({ owner, context }) {
     const stacks = this.stacks;
-    const dmgPerStack = Math.floor(owner.maxHP * 0.05);
+    const dmgPerStack = Math.floor(owner.maxHP * 0.04);
     context.isDot = true;
 
     const result = new DamageEvent({
