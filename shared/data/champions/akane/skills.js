@@ -8,8 +8,8 @@ const akaneSkills = [
   // Skill 1 — ataque padrão
   // ========================
   {
-    key: "crimson_slash",
-    name: "Crimson Slash",
+    key: "violet_slash",
+    name: "Violet Slash",
     bf: 65,
     contact: true,
     damageMode: "standard",
@@ -69,8 +69,8 @@ const akaneSkills = [
   // Ultimate
   // ========================
   {
-    key: "scarlet_onslaught",
-    name: "Scarlet Onslaught",
+    key: "violet_onslaught",
+    name: "Violet Onslaught",
     bf: 95,
     contact: true,
     damageMode: "standard",
