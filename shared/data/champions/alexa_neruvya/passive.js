@@ -6,7 +6,7 @@ export default {
   key: "the_grace_that_remains",
   name: "The Grace That Remains",
 
-  healCritBonus: 55,
+  healCritBonus: 65,
   allyCritBuff: 10,
   allyCritDuration: 2,
 

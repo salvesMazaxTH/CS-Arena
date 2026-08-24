@@ -8,8 +8,6 @@ export default {
   Speed: 60,
   Critical: 25,
 
-  unreleased: true,
-
   classKey: "enchanter",
   elementalAffinities: ["water"],
   species: ["primordial dragon", "dragon"],

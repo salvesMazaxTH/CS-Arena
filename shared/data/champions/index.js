@@ -43,6 +43,7 @@ import avarik from "./avarik/index.js";
 import avarion from "./avarion/index.js";
 import zyrelle from "./zyrelle/index.js";
 import alexa_neruvya from "./alexa_neruvya/index.js";
+import alexa_neruvya_primordial from "./alexa_neruvya_primordial/index.js";
 import lorena from "./lorena/index.js";
 import irina_lancachamas from "./irina_lancachamas/index.js";
 
@@ -92,6 +93,7 @@ const championDB = {
   avarion,
   zyrelle,
   alexa_neruvya,
+  alexa_neruvya_primordial,
   lorena,
   irina_lancachamas,
 };

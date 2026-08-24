@@ -85,22 +85,24 @@ const alexaNeruvyaSkills = [
     key: "advent_of_the_colossal_tide",
     name: "Advent of the Colossal Tide",
 
-    bf: 74,
+    bf: 45,
     damageMode: "piercing",
     piercingPercentage: 80,
     contact: false,
     element: "water",
 
     isUltimate: true,
-    momentumCost: 60,
-    priority: 0,
+    momentumCost: 70,
+    priority: 1,
 
-    rootDuration: 2,
+    healPercentOfDamage: 50,
+    transformInto: "alexa_neruvya_primordial",
+    transformDuration: 2,
 
     description() {
-      return `Alexa Neruvya stops holding the shape she has been wearing, and the thing that surfaces is a blue dragon with the whole ocean hanging off it. Every drop she has ever spent mending an ally is still hers, and she calls all of it home through the chosen target at once, dealing Water magical damage that ignores ${this.piercingPercentage}% of their Defense.
+      return `Alexa Neruvya answers one foe first, calling home through them every drop she has ever spent mending an ally, dealing Water magical damage that ignores ${this.piercingPercentage}% of their Defense. The tide that returns from that strike does not disperse: it carries ${this.healPercentOfDamage}% of the damage dealt back to her and every active ally, restoring HP.
 
-      Nothing walks out of a tide that size. The undertow closes over the target and leaves them Rooted for ${this.rootDuration} turn(s).`;
+      Only then does she stop holding the shape she has been wearing. What surfaces is a blue dragon with the whole ocean hanging off it, her <b>Primordial Form</b>, for ${this.transformDuration} turn(s), replacing her skills, her passive and her stats.`;
     },
 
     targetSpec: ["enemy"],
@@ -110,7 +112,7 @@ const alexaNeruvyaSkills = [
 
       const baseDamage = (user.Attack * this.bf) / 100;
 
-      const result = new DamageEvent({
+      const damageResult = new DamageEvent({
         baseDamage,
         mode: "piercing",
         piercingPercentage: this.piercingPercentage,
@@ -122,14 +124,43 @@ const alexaNeruvyaSkills = [
         allChampions: context.allChampions,
       }).execute();
 
-      if (!result?.evaded && !result?.immune) {
-        enemy.applyStatusEffect("rooted", this.rootDuration, context);
+      const results = Array.isArray(damageResult)
+        ? [...damageResult]
+        : [damageResult];
+      const [mainDamageResult] = results;
 
-        const rootLog = `The tide closes over ${formatChampionName(enemy)}, leaving them <b>Rooted</b>!`;
-        result.log = result.log ? `${result.log}\n${rootLog}` : rootLog;
+      const healAmount = Math.floor(
+        ((mainDamageResult?.totalDamage || 0) * this.healPercentOfDamage) /
+          100,
+      );
+
+      if (healAmount > 0) {
+        const allies = context.aliveChampions.filter(
+          (champ) => champ.team === user.team && champ.alive,
+        );
+
+        allies.forEach((ally) => {
+          const restored = ally.heal(healAmount, context, user);
+          results.push({
+            log: `The tide rolls back and restores ${restored} HP to ${formatChampionName(ally)}.`,
+          });
+        });
       }
 
-      return result;
+      context.requestChampionMutation({
+        mode: "transform",
+        targetId: user.id,
+        newChampionKey: this.transformInto,
+        duration: this.transformDuration,
+        hpMode: "preserveRatio",
+        statMode: "deltaFromBase",
+      });
+
+      results.push({
+        log: `${formatChampionName(user)} awakens her <b>Primordial Form</b> for ${this.transformDuration} turn(s)!`,
+      });
+
+      return results;
     },
   },
 ];
