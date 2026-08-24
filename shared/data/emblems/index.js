@@ -13,6 +13,7 @@ import { marksmanPrecision } from "./marksman_precision.js";
 import { humanitysDefiance } from "./humanitys_defiance.js";
 import { divineMandate } from "./divine_mandate.js";
 import { stormFist } from "./storm_fist.js";
+import { assassinsAmbush } from "./assassins_ambush.js";
 
 export { evaluateEmblemEligibilityForRoster } from "./eligibility.js";
 
@@ -32,5 +33,6 @@ export const EMBLEMS = [
   humanitysDefiance,
   divineMandate,
   stormFist,
+  assassinsAmbush,
 ];
 
