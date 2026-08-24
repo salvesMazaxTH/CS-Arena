@@ -8,5 +8,5 @@ export default {
   Critical: 25,
 
   classKey: "assassin",
-  species: ["human", "mutant", "Instability-infused", "Unstable", "Resonant", "enhanced"],
+  species: ["human"],
 };
