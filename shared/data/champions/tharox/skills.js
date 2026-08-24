@@ -151,7 +151,7 @@ const tharoxSkills = [
 
     damageMode: "standard",
     contact: false,
-    momentumCost: 55,
+    momentumCost: 58,
     isUltimate: true,
     priority: 2,
 
