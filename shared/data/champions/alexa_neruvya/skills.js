@@ -92,7 +92,7 @@ const alexaNeruvyaSkills = [
     element: "water",
 
     isUltimate: true,
-    momentumCost: 70,
+    momentumCost: 63,
     priority: 1,
 
     healPercentOfDamage: 50,
