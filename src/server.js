@@ -54,8 +54,8 @@ import {
 // ============================================================
 
 const editMode = {
-  enabled: true,
-  autoLogin: true,
+  enabled: false,
+  autoLogin: false,
   autoSelection: false, // Auto-pick champions (skip the selection screen)
   actMultipleTimesPerTurn: false,
   unavailableChampions: false,
@@ -63,7 +63,7 @@ const editMode = {
   alwaysCrit: false, // Force a crit on every attack. (SERVER-ONLY)
   alwaysEvade: false, // Force evasion on every attack. (SERVER-ONLY)
   executionOverride: null, // null = normal; number = forced threshold (1 = 100%, 0.5 = 50%)
-  freeCostSkills: true, // Skills cost no resource. (SERVER-ONLY)
+  freeCostSkills: false, // Skills cost no resource. (SERVER-ONLY)
 };
 
 const TEAM_SIZE = 8;
