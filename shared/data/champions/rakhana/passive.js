@@ -23,8 +23,8 @@ export default {
     onBeforeDmgDealing: "attacker",
   },
 
-  onAfterDmgDealing({ owner, damage }) {
-    if (damage <= 0) return;
+  onAfterDmgDealing({ owner, defender, damage }) {
+    if (damage <= 0 || defender.team === owner.team) return;
 
     owner.runtime ??= {};
 

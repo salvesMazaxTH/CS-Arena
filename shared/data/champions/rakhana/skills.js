@@ -26,9 +26,9 @@ const rakhanaSkills = [
     description() {
       return `Strikes an enemy with a powerful iron-infused palm.
 
-      If Rakhana has a Shield when this ability hits, she consumes the Shield to stun the target for ${this.stunDuration} turn and restores HP equal to ${this.shieldPercent}% of her Max HP.
+      If an Iron Lotus Shield is already on her when this ability hits, she consumes it to stun the target for ${this.stunDuration} turn and restore HP equal to ${this.shieldPercent}% of her Max HP.
 
-      Otherwise, she gains a Shield equal to ${this.shieldPercent}% of her Max HP after dealing damage.`;
+      Otherwise, she forms one equal to ${this.shieldPercent}% of her Max HP after dealing damage.`;
     },
 
     targetSpec: ["enemy"],
@@ -38,13 +38,12 @@ const rakhanaSkills = [
 
       const baseDamage = (user.Attack * this.bf) / 100;
 
-      // Initialize shields array if needed
       user.runtime ??= {};
       user.runtime.shields ??= [];
 
-      const hadShield =
-        Array.isArray(user.runtime.shields) &&
-        user.runtime.shields.length > 0;
+      const lotusShieldIndex = user.runtime.shields.findIndex(
+        (shield) => shield?.sourceId === "iron_lotus",
+      );
 
       const result = new DamageEvent({
         baseDamage,
@@ -58,19 +57,17 @@ const rakhanaSkills = [
 
       const results = Array.isArray(result) ? result : [result];
 
-      const hitSuccess = results.some(
-        (result) => !result?.evaded && !result?.immune,
-      );
+      // Reflects and counter-attacks ride along in `results` aimed back at her.
+      const mainResult = results.find((entry) => entry.targetId === enemy.id);
 
-      if (!hitSuccess) return results;
+      if (mainResult.evaded || mainResult.immune) return results;
 
       const value = Math.floor(
         user.maxHP * (this.shieldPercent / 100),
       );
 
-      if (hadShield) {
-        // Remove only the first shield
-        user.runtime.shields.splice(0, 1);
+      if (lotusShieldIndex !== -1) {
+        user.runtime.shields.splice(lotusShieldIndex, 1);
 
         user.heal(value, context, user);
 
@@ -90,7 +87,7 @@ const rakhanaSkills = [
           targetId: enemy.id,
         });
       } else {
-        user.addShield(value, 0, context);
+        user.addShield(value, 0, context, "regular", { sourceId: "iron_lotus" });
 
         context.registerDialog?.({
           message: `${formatChampionName(
