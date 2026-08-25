@@ -27,7 +27,7 @@ function buildStatusEffectApplyResult(
       : "";
 
   return {
-    log: `${formatChampionName(champion)} recebeu <b>${statusDisplayName}</b>${stackSuffix}.`,
+    log: `${formatChampionName(champion)} gained <b>${statusDisplayName}</b>${stackSuffix}.`,
     statusEffectKey,
     targetId: champion.id,
     type: "statusEffectApply",
@@ -64,25 +64,25 @@ function resolveStatusEffectSource(context, metadata = {}) {
 function assertStatusPreconditions(champion, statusEffectKey, context) {
   if (!(champion?.statusEffects instanceof Map)) {
     throw new TypeError(
-      `[STATUS ERROR] Champion inválido ao aplicar status "${statusEffectKey}".`,
+      `[STATUS ERROR] invalid champion while applying status "${statusEffectKey}".`,
     );
   }
 
   if (typeof statusEffectKey !== "string" || statusEffectKey.length === 0) {
     throw new TypeError(
-      `[STATUS ERROR] statusEffectKey inválido: ${statusEffectKey}`,
+      `[STATUS ERROR] invalid statusEffectKey: ${statusEffectKey}`,
     );
   }
 
   if (!context || typeof context !== "object") {
     throw new TypeError(
-      `[STATUS ERROR] Context inválido ao aplicar status "${statusEffectKey}".`,
+      `[STATUS ERROR] invalid context while applying status "${statusEffectKey}".`,
     );
   }
 
   if (!Number.isFinite(context.currentTurn)) {
     throw new Error(
-      `[STATUS ERROR] context.currentTurn inválido ao aplicar status "${statusEffectKey}".`,
+      `[STATUS ERROR] invalid context.currentTurn while applying status "${statusEffectKey}".`,
     );
   }
 
@@ -90,13 +90,13 @@ function assertStatusPreconditions(champion, statusEffectKey, context) {
 
   if (!definition) {
     throw new Error(
-      `[STATUS ERROR] StatusEffect "${statusEffectKey}" não existe no registry`,
+      `[STATUS ERROR] StatusEffect "${statusEffectKey}" is not in the registry.`,
     );
   }
 
   if (definition.key !== statusEffectKey) {
     throw new Error(
-      `[STATUS ERROR] Registry inconsistente: key "${statusEffectKey}" não corresponde ao definition.key.`,
+      `[STATUS ERROR] inconsistent registry: key "${statusEffectKey}" does not match definition.key.`,
     );
   }
 
@@ -140,7 +140,7 @@ function applyStatusEffectCore({
 
   if (typeof definition.createInstance !== "function") {
     throw new Error(
-      `[STATUS ERROR] StatusEffect "${statusEffectKey}" não implementa createInstance().`,
+      `[STATUS ERROR] StatusEffect "${statusEffectKey}" does not implement createInstance().`,
     );
   }
 
@@ -156,13 +156,13 @@ function applyStatusEffectCore({
 
   if (!effectInstance || typeof effectInstance !== "object") {
     throw new Error(
-      `[STATUS ERROR] createInstance() de "${statusEffectKey}" retornou instância inválida.`,
+      `[STATUS ERROR] createInstance() of "${statusEffectKey}" returned an invalid instance.`,
     );
   }
 
   if (effectInstance.key !== statusEffectKey) {
     throw new Error(
-      `[STATUS ERROR] Instância de status inválida: key "${effectInstance.key}" difere de "${statusEffectKey}".`,
+      `[STATUS ERROR] invalid status instance: key "${effectInstance.key}" differs from "${statusEffectKey}".`,
     );
   }
 
@@ -332,7 +332,7 @@ export function applyStatusEffect(
     context.registerDialog({
       message:
         validation.message ??
-        `${formatChampionName(champion)} não pode receber "${definition?.name || statusEffectKey}".`,
+        `${formatChampionName(champion)} cannot receive "${definition?.name || statusEffectKey}".`,
       sourceId: champion.id,
       targetId: champion.id,
     });
@@ -386,7 +386,7 @@ function _canApplyStatusEffect(
       allowed: false,
       message:
         cancelled.message ??
-        `${formatChampionName(champion)} é imune a ${definition.name}.`,
+        `${formatChampionName(champion)} is immune to ${definition.name}.`,
     };
   }
 
@@ -483,13 +483,13 @@ export function getHardCCActionDenial(champion) {
   if (blockingEffects.length === 0) return null;
 
   const primaryEffect = blockingEffects[0];
-  const effectName = primaryEffect?.name || "sob Controle Pesado";
+  const effectName = primaryEffect?.name || "under Hard CC";
 
   return {
     denied: true,
     reason: "hardCC",
     statusEffectKey: primaryEffect?.key ?? null,
-    message: `${formatChampionName(champion)} está ${effectName} e não pode agir!`,
+    message: `${formatChampionName(champion)} is ${effectName} and cannot act!`,
   };
 }
 
@@ -523,10 +523,6 @@ export function purgeExpiredStatusEffects(champion, currentTurn, context) {
     if (statusEffectData.expiresAtTurn <= currentTurn) {
       champion.statusEffects.delete(statusEffectName);
       removedStatusEffects.push(statusEffectName);
-      /* console.log(
-        `[STATUS EXPIRE] ${champion.name}: StatusEffect "${statusEffectName}" expirou.`,
-      );
-      */
       // No longer remove from runtime.hookEffects; status effect hooks are only in statusEffects Map now
     }
   }
