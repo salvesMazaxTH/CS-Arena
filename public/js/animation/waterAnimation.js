@@ -8,7 +8,11 @@
 //  few frames after the hit.
 // ============================================================
 
-import { getElementCenter } from "./animationUtils.js";
+import {
+  computeEffectBox,
+  getElementCenter,
+  runSoloEffect,
+} from "./animationUtils.js";
 
 const SPRITE_SIZE = 64;
 
@@ -236,52 +240,36 @@ export class WaterBoltEffect {
   }
 }
 
-export async function playWaterBolt({ userEl, targetEl }) {
+// Padding around the travel line big enough to hold the splash ring and
+// droplets at their farthest reach.
+const PADDING = 480;
+
+export async function playWaterBolt({ userEl, targetEl, canvasBatch }) {
   if (!targetEl) return;
-
-  const canvas = document.createElement("canvas");
-  // Capped ratio: the effect is all soft glows, so extra pixels buy nothing.
-  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-  canvas.width = window.innerWidth * dpr;
-  canvas.height = window.innerHeight * dpr;
-  canvas.style.cssText =
-    "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999";
-  document.body.appendChild(canvas);
-
-  const ctx = canvas.getContext("2d");
-  ctx.scale(dpr, dpr);
 
   const targetCenter = getElementCenter(targetEl);
   const start = userEl
     ? getElementCenter(userEl)
     : { x: targetCenter.x - 260, y: targetCenter.y - 160 };
 
-  const effect = new WaterBoltEffect(ctx, start, targetCenter);
-  let last = performance.now();
+  const buildEffect = (ctx) => new WaterBoltEffect(ctx, start, targetCenter);
+
   let hitFlashed = false;
-
-  await new Promise((resolve) => {
-    function frame(now) {
-      const dt = Math.min((now - last) / 1000, 1 / 30);
-      last = now;
-
-      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-      const alive = effect.step(dt);
-
-      if (effect.impacted && !hitFlashed) {
-        hitFlashed = true;
-        targetEl.classList.add("water-hit");
-        setTimeout(() => targetEl.classList.remove("water-hit"), 320);
-      }
-
-      if (!alive) {
-        canvas.remove();
-        resolve();
-        return;
-      }
-      requestAnimationFrame(frame);
+  const onFrame = (effect) => {
+    if (effect.impacted && !hitFlashed) {
+      hitFlashed = true;
+      targetEl.classList.add("water-hit");
+      setTimeout(() => targetEl.classList.remove("water-hit"), 320);
     }
+  };
 
-    requestAnimationFrame(frame);
-  });
+  if (canvasBatch) {
+    await canvasBatch.run([start, targetCenter], PADDING, buildEffect, onFrame);
+  } else {
+    await runSoloEffect(
+      computeEffectBox([start, targetCenter], PADDING),
+      buildEffect,
+      onFrame,
+    );
+  }
 }

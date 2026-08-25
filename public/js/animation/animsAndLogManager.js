@@ -8,6 +8,7 @@ import { playDeathClaimEffect } from "../../../shared/vfx/deathClaim.js";
 import { CLAIM_ACTION_KEY } from "../../../shared/engine/combat/claim.js";
 import { audioManager } from "../utils/AudioManager.js";
 import { animateSkill } from "./skillAnimations.js";
+import { EffectCanvasBatch } from "./effectCanvasBatch.js";
 import { createMatchStatsPanel } from "../ui/matchStats.js";
 import { createScoreboard } from "../ui/scoreboard.js";
 
@@ -280,13 +281,17 @@ export function createCombatAnimationManager(deps) {
     }
 
     // Plays a whole wave at once: dialogs stay sequential (they share the
-    // single dialog bubble), while the animations themselves overlap.
+    // single dialog bubble), while the animations themselves overlap and
+    // share one canvas via canvasBatch instead of mounting one each.
     async function runBatch(batch, handler) {
       for (const event of batch) {
         if (event.preDialogs?.length) await runDialogs(event.preDialogs);
       }
 
-      await Promise.all(batch.map((event) => Promise.resolve(handler(event))));
+      const canvasBatch = new EffectCanvasBatch();
+      await Promise.all(
+        batch.map((event) => Promise.resolve(handler(event, canvasBatch))),
+      );
 
       for (const event of batch) {
         if (event.postDialogs?.length) await runDialogs(event.postDialogs);
@@ -506,7 +511,7 @@ export function createCombatAnimationManager(deps) {
   //    .damage-tier-{N}  → font size tier for the float
   // ============================================================
 
-  async function animateDamage(effect) {
+  async function animateDamage(effect, canvasBatch) {
     const {
       targetId,
       userId,
@@ -532,7 +537,12 @@ export function createCombatAnimationManager(deps) {
 
     // Skill animation (if registered) — per DamageEvent
     if (skillKey) {
-      await animateSkill(skillKey, { targetEl: championEl, userEl, skill });
+      await animateSkill(skillKey, {
+        targetEl: championEl,
+        userEl,
+        skill,
+        canvasBatch,
+      });
     }
 
     // ========================
