@@ -73,15 +73,17 @@ export function preChecks(event) {
         flags: { evaded: true },
       });
 
-      emitCombatEvent(
-        "onEvade",
-        {
-          attacker: event.attacker,
-          defender: event.defender,
-          damage: event.damage,
-          context: event.context,
-        },
-        event.allChampions,
+      event.context.registerHookLogs(
+        emitCombatEvent(
+          "onEvade",
+          {
+            attacker: event.attacker,
+            defender: event.defender,
+            damage: event.damage,
+            context: event.context,
+          },
+          event.allChampions,
+        ),
       );
 
       return {

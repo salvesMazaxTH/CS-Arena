@@ -1364,16 +1364,18 @@ export class TurnResolver {
           this._lastEventRef = null; // negative changes don't generate a visual event, so clear the reference to avoid wrong dialog associations
         }
 
-        emitCombatEvent(
-          "onBuffingStat",
-          {
-            buffSrc: sourceChamp || null,
-            buffTarget: target,
-            statName,
-            amount: value,
-            context: this,
-          },
-          this.allChampions,
+        this.registerHookLogs(
+          emitCombatEvent(
+            "onBuffingStat",
+            {
+              buffSrc: sourceChamp || null,
+              buffTarget: target,
+              statName,
+              amount: value,
+              context: this,
+            },
+            this.allChampions,
+          ),
         );
       },
 
