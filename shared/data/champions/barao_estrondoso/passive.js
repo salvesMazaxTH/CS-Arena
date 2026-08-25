@@ -3,8 +3,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
 
-// With Reinforced Plating, stores ${this.storageShieldPercent}% instead.
-
 export default {
   key: "cataclysmic_reactor",
   name: "Cataclysmic Reactor",
@@ -21,7 +19,7 @@ export default {
 
     He takes +${this.damageTakenBonusPercent}% bonus damage (does not apply to absolute damage and DoT).
 
-    ${this.storageBasePercent}% of the damage taken is stored (Max.: ${this.storageCap}).
+    ${this.storageBasePercent}% of the damage taken is stored (Max.: ${this.storageCap}). While Reinforced Plating holds, that rate rises to ${this.storageShieldPercent}%.
 
     Stored Damage: <b>${stored > 0 ? stored : 0}</b>
 
@@ -48,37 +46,23 @@ export default {
     };
   },
 
-  // 🔴 Stores damage taken (30% or 40% while shielded)
   onAfterDmgTaking({ attacker, defender, owner, damage, context }) {
     if (!damage || damage <= 0) return;
 
-    /* console.log(
-      `[${owner.name} - Cataclysmic Reactor] Damage taken: ${damage}`,
-    );
-    */
+    const platingHolds =
+      (owner.runtime.reinforcedPlatingUntilTurn ?? 0) > context.currentTurn;
 
-    const storageRate =
-      /* owner.hasStatusEffect?.("reinforced_plating")
+    const storageRate = platingHolds
       ? this.storageShieldPercent / 100
-      : */ this.storageBasePercent / 100;
+      : this.storageBasePercent / 100;
 
     const stored = damage * storageRate;
-
-    /* console.log(
-      `[${owner.name} - Cataclysmic Reactor] Stored Damage: ${stored} (Rate: ${storageRate * 100}%)`,
-    );
-    */
 
     owner.runtime = owner.runtime || {};
     owner.runtime.storedDamage = Math.min(
       this.storageCap,
       (owner.runtime.storedDamage || 0) + stored,
     );
-
-    /* console.log(
-      `[${owner.name} - Cataclysmic Reactor] Total Stored Damage: ${owner.runtime.storedDamage}`,
-    );
-    */
   },
 
   hookScope: {
@@ -87,7 +71,7 @@ export default {
   },
 
   // Actions that never overload the reactor: the Basic Attack and the CLAIM.
-  overloadExemptSkillKeys: ["basic_attack", CLAIM_ACTION_KEY],
+  overloadExemptSkillKeys: ["basic_strike", CLAIM_ACTION_KEY],
 
   // 🔴 After using any ability (except Basic Attack and CLAIM), becomes Stunned on the
   // NEXT turn. The Stun must not be applied here: actions resolve at the end of
