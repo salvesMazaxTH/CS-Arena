@@ -14,6 +14,14 @@ const totalBlock = {
     user.runtime.hookEffects ??= [];
     user.runtime.totalBlockStreak ??= 0;
 
+    // The streak only holds across consecutive turns. It is checked here, on
+    // use, rather than from the effect's own end-of-turn hook: by then the
+    // effect is gone, either consumed by the hit it blocked or purged at the
+    // start of the turn, so the hook would never fire to reset anything.
+    if (user.runtime.lastTotalBlockTurn !== context.currentTurn - 1) {
+      user.runtime.totalBlockStreak = 0;
+    }
+
     // Geometric progression, base 2: 100%, 50%, 25%, 12.5%, ...
     console.log(
       `[totalBlock debug] ${formatChampionName(user)} has a current streak of ${user.runtime.totalBlockStreak}.`,
@@ -73,15 +81,6 @@ const totalBlock = {
           cancel: true,
           message: `${formatChampionName(target)} blocks a negative effect with <b>Total Block</b>!`,
         };
-      },
-
-      onTurnEnd({ owner, context }) {
-        if (context.currentTurn !== owner.runtime.lastTotalBlockTurn) {
-          owner.runtime.totalBlockStreak = 0;
-          console.log(
-            `[totalBlock debug] ${owner.name} did not use Total Block this turn. Streak reset.`,
-          );
-        }
       },
     };
 
