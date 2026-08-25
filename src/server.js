@@ -749,14 +749,6 @@ function handleStartTurn() {
 
   const deathResults = resolver.processChampionDeaths(turnStartContext);
 
-  for (const death of deathResults) {
-    emitChampionDeath(death);
-  }
-
-  // Start-of-turn hooks (e.g. Jeff's Inevitabilidade da Morte) can kill the
-  // last real champion outside the regular end-turn action flow.
-  emitGameOverIfNeeded();
-
   // Purge expired effects.
   match.combat.activeChampions.forEach((champion) => {
     champion.purgeExpiredStatModifiers(match.combat.currentTurn);
@@ -782,6 +774,16 @@ function handleStartTurn() {
     skill: { key: "turn_start", name: "Turn Start" },
     context: turnStartContext,
   });
+
+  // The removal must reach the client after the envelope, or the champion
+  // leaves the DOM before its own damage animation gets to play.
+  for (const death of deathResults) {
+    emitChampionDeath(death);
+  }
+
+  // Start-of-turn hooks (e.g. Jeff's Inevitabilidade da Morte) can kill the
+  // last real champion outside the regular end-turn action flow.
+  emitGameOverIfNeeded();
 
   io.emit("turnUpdate", match.combat.currentTurn);
   broadcastGameState();
