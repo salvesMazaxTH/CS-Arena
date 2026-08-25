@@ -166,6 +166,10 @@ const tharoxSkills = [
       const userName = formatChampionName(user);
       const expiresAtTurn = context.currentTurn + this.effectDuration;
 
+      // `this` inside a hookEffect is the hook, not the skill.
+      const defBonusWhileShielded = this.defBonusWhileShielded;
+      const healingUponShieldBreakPercent = this.healingUponShieldBreakPercent;
+
       // Remove any previous SupremeShield of the Apotheosis.
       if (Array.isArray(user.runtime?.shields)) {
         user.runtime.shields = user.runtime.shields.filter(
@@ -235,7 +239,7 @@ const tharoxSkills = [
 
           if (!supremeShield) return;
 
-          const defenseBonus = this.defBonusWhileShielded;
+          const defenseBonus = defBonusWhileShielded;
 
           return {
             // Explicitly makes the bonus available for effects that
@@ -271,7 +275,7 @@ const tharoxSkills = [
 
           const healingAmount =
             Math.max(0, defender.Defense - defender.baseDefense) *
-            (this.healingUponShieldBreakPercent / 100);
+            (healingUponShieldBreakPercent / 100);
 
           if (healingAmount > 0) {
             defender.heal(healingAmount, context, defender);
@@ -298,7 +302,8 @@ const tharoxSkills = [
 
           // If it was not broken by damage, the healing occurs at the start of the turn, right after the natural expiration.
           if (!state?.brokenByDamage) {
-            const healingAmount = this.defBonusWhileShielded * 0.25;
+            const healingAmount =
+              defBonusWhileShielded * (healingUponShieldBreakPercent / 100);
 
             if (healingAmount > 0) {
               owner.heal(healingAmount, context, owner);
