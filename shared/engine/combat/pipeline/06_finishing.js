@@ -9,7 +9,8 @@ export function processFinishing(event) {
 
   if (!event.actualDmg || event.actualDmg <= 0) return;
 
-  if (event.defender.runtime?.preventFinishing) return;
+  const preventUntil = event.defender.runtime?.preventFinishingUntilTurn ?? 0;
+  if (preventUntil > (event.context?.currentTurn ?? 0)) return;
 
   let threshold =
     typeof rule === "function" ? rule.call(event.skill, event) : rule;
