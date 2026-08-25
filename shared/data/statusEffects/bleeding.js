@@ -13,13 +13,13 @@ const bleeding = {
   onTurnStart({ owner, context }) {
     const stacks = this.stacks;
     const dmgPerStack = Math.floor(owner.maxHP * 0.04);
-    context.isDot = true;
+    const dotContext = { ...context, isDot: true };
 
     const result = new DamageEvent({
       attacker: null,
       defender: owner,
       skill: { name: "Bleeding", key: "bleeding_tick" },
-      context,
+      context: dotContext,
       type: "physical",
       baseDamage: dmgPerStack * stacks,
       mode: DamageEvent.Modes.ABSOLUTE,

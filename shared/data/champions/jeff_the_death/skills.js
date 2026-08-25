@@ -146,7 +146,7 @@ const jeffTheDeathSkills = [
             return;
           }
 
-          context.isDot = true;
+          const dotContext = { ...context, isDot: true };
 
           const result = new DamageEvent({
             baseDamage: punishDamage,
@@ -159,7 +159,7 @@ const jeffTheDeathSkills = [
               damageMode: "absolute",
             },
             type: "magical",
-            context,
+            context: dotContext,
             allChampions: context?.allChampions,
           }).execute();
 

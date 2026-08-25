@@ -22,13 +22,13 @@ const burning = {
   onTurnStart({ owner, context }) {
     const damage = 15 + Math.floor(owner.maxHP * 0.04);
 
-    context.isDot = true;
+    const dotContext = { ...context, isDot: true };
 
     const dmgEvent = new DamageEvent({
       attacker: null,
       defender: owner,
       skill: { name: "Burn", key: "burning_tick" },
-      context,
+      context: dotContext,
       type: "magical",
       baseDamage: damage,
       mode: DamageEvent.Modes.ABSOLUTE,

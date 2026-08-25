@@ -13,13 +13,13 @@ const poisoned = {
   onTurnStart({ owner, context }) {
     const stacks = this.stacks;
     const dmgPerStack = Math.floor(owner.maxHP * 0.04);
-    context.isDot = true;
+    const dotContext = { ...context, isDot: true };
 
     const result = new DamageEvent({
       attacker: null,
       defender: owner,
       skill: { name: "Poison", key: "poisoned_tick" },
-      context,
+      context: dotContext,
       type: "magical",
       baseDamage: dmgPerStack * stacks,
       mode: DamageEvent.Modes.ABSOLUTE,
