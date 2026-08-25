@@ -107,6 +107,10 @@ export class DamageEvent {
     this.critOptions = params.critOptions ?? params.context?.critOptions ?? [];
     this.flags = params.flags ?? {};
 
+    // Belongs to this hit alone, never to the action's shared context: a
+    // reflect or counter-attack spawned by it must not inherit the pierce.
+    this.ignoreDamageReduction = params.ignoreDamageReduction ?? false;
+
     this.damageDepth = this.context.damageDepth ?? 0;
 
     this.hookPolicy = DEFAULT_HOOK_POLICY;

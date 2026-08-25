@@ -22,15 +22,13 @@ const myrraSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
 
-      context = context || {};
-      context.ignoreDamageReduction = true;
-
       return new DamageEvent({
         baseDamage: (user.Attack * this.bf) / 100,
         attacker: user,
         defender: enemy,
         skill: this,
         type: "physical",
+        ignoreDamageReduction: true,
         context,
         allChampions: context?.allChampions,
       }).execute();
@@ -99,15 +97,13 @@ const myrraSkills = [
       const missingHP = enemy.maxHP - enemy.HP;
       const bonus = missingHP * this.missingHpScaling;
 
-      context = context || {};
-      context.ignoreDamageReduction = true;
-
       return new DamageEvent({
         baseDamage: (user.Attack * this.bf) / 100 + bonus,
         attacker: user,
         defender: enemy,
         skill: this,
         type: "physical",
+        ignoreDamageReduction: true,
         context,
         allChampions: context?.allChampions,
       }).execute();
