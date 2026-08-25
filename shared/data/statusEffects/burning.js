@@ -1,12 +1,23 @@
 import { DamageEvent } from "../../engine/combat/DamageEvent.js";
 import { StatusEffect } from "../../core/StatusEffect.js";
 import { formatChampionName } from "../../ui/formatters.js";
+import { ElementalInteractions } from "../../engine/combat/ElementalInteractions.js";
 
 const burning = {
   key: "burning",
   name: "Burning",
   type: "debuff",
   subtypes: ["dot", "fire"],
+
+  hookScope: {
+    onAfterDmgTaking: "defender",
+  },
+
+  onAfterDmgTaking({ defender, damage, element, context }) {
+    if (damage <= 0 || element !== "water") return;
+
+    return ElementalInteractions.onBurningDoused({ target: defender, context });
+  },
 
   onTurnStart({ owner, context }) {
     const damage = 15 + Math.floor(owner.maxHP * 0.04);
@@ -48,7 +59,9 @@ const burning = {
         name: this.name,
         type: this.type,
         subtypes: this.subtypes,
+        hookScope: this.hookScope,
         onTurnStart: this.onTurnStart,
+        onAfterDmgTaking: this.onAfterDmgTaking,
       },
     });
   },

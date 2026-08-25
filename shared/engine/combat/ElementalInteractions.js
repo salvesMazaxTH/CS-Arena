@@ -45,6 +45,12 @@ export class ElementalInteractions {
     return true;
   }
 
+  static onBurningDoused({ target, context }) {
+    target.removeStatusEffect("burning");
+
+    return this.vaporize({ target, context });
+  }
+
   /** Water on a Conductor closes the circuit. */
   static onConductorSoaked({ target, context }) {
     return this._react({
@@ -64,7 +70,7 @@ export class ElementalInteractions {
       percent: this.VAPORIZE_MAXHP_PERCENT,
       key: "vaporize",
       name: "Vaporize",
-      dialog: `Fire meets ice — ${formatChampionName(target)} is swallowed by scalding steam!`,
+      dialog: `${formatChampionName(target)} is swallowed by scalding steam!`,
     });
   }
 
