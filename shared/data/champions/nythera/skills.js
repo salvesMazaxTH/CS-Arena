@@ -100,15 +100,9 @@ const nytheraSkills = [
 
           attacker.applyStatusEffect("frozen", freezeDuration, context);
 
-          const caught = `${formatChampionName(attacker)} is caught by the stillness of the <b>Stasis Chamber</b>!`;
-
-          context.registerDialog({
-            message: caught,
-            sourceId: user.id,
-            targetId: attacker.id,
-          });
-
-          return { log: caught };
+          return {
+            log: `${formatChampionName(attacker)} is caught by the stillness of the <b>Stasis Chamber</b>!`,
+          };
         },
       };
 
