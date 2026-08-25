@@ -87,8 +87,16 @@ const totalBlock = {
     user.runtime.hookEffects.push(effect);
     user.runtime.lastTotalBlockTurn = context.currentTurn;
 
+    const successMessage = `${formatChampionName(user)} uses <b>Total Block</b> and is protected against the next attack!`;
+
+    context.registerDialog?.({
+      message: successMessage,
+      sourceId: user.id,
+      targetId: user.id,
+    });
+
     return {
-      message: `${formatChampionName(user)} uses <b>Total Block</b> and is protected against the next attack!`,
+      log: successMessage,
     };
   },
 };
