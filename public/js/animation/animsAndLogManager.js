@@ -8,6 +8,8 @@ import { playDeathClaimEffect } from "../../../shared/vfx/deathClaim.js";
 import { CLAIM_ACTION_KEY } from "../../../shared/engine/combat/claim.js";
 import { audioManager } from "../utils/AudioManager.js";
 import { animateSkill } from "./skillAnimations.js";
+import { createMatchStatsPanel } from "../ui/matchStats.js";
+import { createScoreboard } from "../ui/scoreboard.js";
 
 // ============================================================
 //  AnimsAndLogManager.js — Combat Animation & Log System (v2)
@@ -46,6 +48,23 @@ const TIMING = {
 
   DEATH_CLAIM_EFFECT: 5600,
 };
+
+// Snapshot fields copied verbatim onto the champion (no side effects).
+// Fields with extra logic (HP/alive, entityType, name) are handled apart.
+const SNAPSHOT_PASSTHROUGH_KEYS = [
+  "maxHP",
+  "Attack",
+  "Defense",
+  "Speed",
+  "Evasion",
+  "Critical",
+  "LifeSteal",
+  "momentum",
+  "passive",
+  "statModifiers",
+  "damageModifiersCount",
+  "damageReductionModifiersCount",
+];
 
 // ============================================================
 //  DAMAGE TIER CLASSIFICATION (maps to CSS .damage-tier-N)
@@ -87,15 +106,10 @@ function getChampionElement(championId) {
   return document.querySelector(`.champion[data-champion-id="${championId}"]`);
 }
 
-function toNumber(value) {
-  const num = Number(value);
-  return Number.isFinite(num) ? num : 0;
-}
-
 function scrollIfNeeded(
   el,
   {
-    threshold = 0.6, // quanto do elemento precisa estar visível (0 a 1)
+    threshold = 0.6, // fraction of the element that must be visible (0 to 1)
     behavior = "smooth",
   } = {},
 ) {
@@ -134,7 +148,6 @@ function scrollIfNeeded(
  * @param {Function} deps.createNewChampion
  * @param {Function} deps.getCurrentTurn
  * @param {Function} deps.setCurrentTurn
- * @param {Function} deps.updateTurnDisplay
  * @param {Function} deps.applyTurnUpdate
  * @param {Function} deps.syncStatusIndicatorRotation
  * @param {Element}  deps.combatDialog
@@ -153,156 +166,10 @@ export function createCombatAnimationManager(deps) {
   let activeDialogController = null;
   let lastDamageAnimationTime = 0; // 🛡️ Track when damage was last animated
   const editMode = deps.editMode || { freeCostSkills: false };
-  const statsTabKeys = [
-    "damage",
-    "healingReceived",
-    "healingDone",
-    "rawTaken",
-    "damageMitigated",
-  ];
-
-  function getSnapshotStatsEntry(champion) {
-    if (!champion) return null;
-
-    const backendStats = champion.matchStats || {};
-
-    return {
-      championId: champion.id,
-      name: champion.name || `ID ${champion.id}`,
-      portrait: champion.portrait || "",
-      team: champion.team,
-      damage: Math.max(0, toNumber(backendStats.damage)),
-      healingReceived: Math.max(0, toNumber(backendStats.healingReceived)),
-      healingDone: Math.max(0, toNumber(backendStats.healingDone)),
-      rawTaken: Math.max(0, toNumber(backendStats.rawTaken)),
-      damageMitigated: Math.max(0, toNumber(backendStats.damageMitigated)),
-    };
-  }
-
-  function sortEntriesBy(metricKey) {
-    const entries = Array.from(deps.activeChampions.values())
-      .map(getSnapshotStatsEntry)
-      .filter(Boolean);
-
-    return entries.sort((a, b) => {
-      const valueDiff = (b[metricKey] || 0) - (a[metricKey] || 0);
-      if (valueDiff !== 0) return valueDiff;
-
-      const teamA = typeof a.team === "number" ? a.team : 99;
-      const teamB = typeof b.team === "number" ? b.team : 99;
-      if (teamA !== teamB) return teamA - teamB;
-
-      return String(a.championId || "").localeCompare(
-        String(b.championId || ""),
-      );
-    });
-  }
-
-  function renderStatsRows(tbodyId, metricKey) {
-    const tbody = document.getElementById(tbodyId);
-    if (!tbody) return;
-
-    const entries = sortEntriesBy(metricKey);
-
-    if (!entries.length) {
-      tbody.innerHTML =
-        '<tr><td colspan="3" class="match-stats-empty">Sem dados de combate.</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = entries
-      .map((entry, index) => {
-        const safePortrait = String(entry.portrait || "")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;");
-        const safeName = String(entry.name || `ID ${entry.championId}`)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;");
-        const localTeam = Number(window.playerTeam);
-        const relationClass =
-          Number.isFinite(localTeam) && typeof entry.team === "number"
-            ? entry.team === localTeam
-              ? "ally"
-              : "enemy"
-            : "neutral";
-        const value = Math.round(Math.max(0, toNumber(entry[metricKey])));
-        return `
-          <tr>
-            <td>${index + 1}</td>
-            <td>
-              <span class="match-stats-avatar-wrap ${relationClass}" title="${safeName}">
-                <img class="match-stats-portrait" src="${safePortrait}" alt="${safeName}">
-              </span>
-            </td>
-            <td>${value}</td>
-          </tr>
-        `;
-      })
-      .join("");
-  }
-
-  function setStatsTab(tabKey) {
-    const panel = document.getElementById("matchStatsPanel");
-    if (!panel) return;
-
-    panel.querySelectorAll(".match-stats-tab").forEach((btn) => {
-      btn.classList.toggle("active", btn.dataset.tab === tabKey);
-    });
-
-    panel.querySelectorAll(".match-stats-tab-panel").forEach((panelEl) => {
-      panelEl.classList.toggle("active", panelEl.dataset.tabPanel === tabKey);
-    });
-  }
-
-  function bindStatsPanelTabs() {
-    const panel = document.getElementById("matchStatsPanel");
-    if (!panel || panel.dataset.bound === "true") return;
-
-    panel.dataset.bound = "true";
-
-    panel.querySelectorAll(".match-stats-tab").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const tabKey = btn.dataset.tab;
-        if (statsTabKeys.includes(tabKey)) {
-          setStatsTab(tabKey);
-        }
-      });
-    });
-  }
-
-  function renderMatchStatsPanel() {
-    bindStatsPanelTabs();
-
-    renderStatsRows("matchStatsDamageBody", "damage");
-    renderStatsRows("matchStatsHealingReceivedBody", "healingReceived");
-    renderStatsRows("matchStatsHealingDoneBody", "healingDone");
-    renderStatsRows("matchStatsRawTakenBody", "rawTaken");
-    renderStatsRows("matchStatsDamageMitigatedBody", "damageMitigated");
-    setStatsTab("damage");
-  }
-
-  function showMatchStatsPanel() {
-    const panel = document.getElementById("matchStatsPanel");
-    if (!panel) return;
-    renderMatchStatsPanel();
-    panel.classList.remove("hidden");
-    panel.classList.add("active");
-  }
-
-  function hideMatchStatsPanel() {
-    const panel = document.getElementById("matchStatsPanel");
-    if (!panel) return;
-    panel.classList.remove("active");
-    panel.classList.add("hidden");
-  }
-
-  function resetMatchStats() {
-    hideMatchStatsPanel();
-  }
+  const matchStats = createMatchStatsPanel({
+    activeChampions: deps.activeChampions,
+  });
+  const scoreboard = createScoreboard();
 
   // Double-click in any area of the screen accelerates only the current dialog.
   document.addEventListener("click", () => {
@@ -345,97 +212,14 @@ export function createCombatAnimationManager(deps) {
     }
   }
 
-  function updateScoreDisplay(score) {
-    const player1ScoreDisplay = document.getElementById(
-      "player1-score-display",
-    );
-    const player2ScoreDisplay = document.getElementById(
-      "player2-score-display",
-    );
-
-    updateScoreValue(player1ScoreDisplay, score?.player1 ?? 0);
-    updateScoreValue(player2ScoreDisplay, score?.player2 ?? 0);
-  }
-
-  function processScoreUpdate(score) {
-    if (!score) return;
-
-    updateScoreDisplay(score);
-  }
-
-  async function animateClaimScore(score, claimPoints = null) {
-    if (!score) return;
-
-    // Small delay for the CLAIM balloon to appear before the scoreboard reacts.
-    await wait(220);
-
-    processScoreUpdate(score);
-
-    // Keeps the CLAIM block active until the visual animation of the scoreboard is legible.
-    await wait(900);
-  }
-
-  function updateScoreValue(element, newValue) {
-    if (!element) return;
-
-    const oldValue = Number(element.textContent) || 0;
-    const nextValue = Number(newValue) || 0;
-
-    if (oldValue === nextValue) return;
-
-    const increasing = nextValue > oldValue;
-    const delta = Math.abs(nextValue - oldValue);
-
-    // Reset the animation in case the score changes again quickly.
-    element.classList.remove(
-      "score-changing",
-      "score-increased",
-      "score-decreased",
-    );
-
-    element.dataset.scoreDelta = `${increasing ? "+" : "-"}${delta}`;
-
-    // Force the browser to recognize the removal before adding again.
-    void element.offsetWidth;
-
-    element.textContent = String(nextValue);
-
-    element.classList.add(
-      "score-changing",
-      increasing ? "score-increased" : "score-decreased",
-    );
-
-    element.addEventListener(
-      "animationend",
-      () => {
-        delete element.dataset.scoreDelta;
-        element.classList.remove(
-          "score-changing",
-          "score-increased",
-          "score-decreased",
-        );
-      },
-      { once: true },
-    );
-  }
-
   async function dispatchQueueItem(item) {
-    console.log("📦 DISPATCH:", item.type);
-
     switch (item.type) {
       case "combatAction":
-        console.log("⚔️ START combatAction");
         await processCombatAction(item.data);
-        console.log("✅ END combatAction");
         await wait(TIMING.BETWEEN_ACTIONS);
         break;
 
-      case "scoreUpdate":
-        processScoreUpdate(item.data);
-        break;
-
       case "gameStateUpdate":
-        console.log("🧠 APPLY gameStateUpdate");
         processGameStateUpdate(item.data);
         break;
 
@@ -447,12 +231,8 @@ export function createCombatAnimationManager(deps) {
         await processChampionRemoved(item.data);
         break;
 
-      // case "championSwitchedOut":
-      //   await processChampionSwitchedOut(item.data);
-      //   break;
-
       case "combatLog":
-        await processCombatLog(item.data);
+        appendToLog(item.data);
         break;
 
       case "actionDialog":
@@ -468,45 +248,8 @@ export function createCombatAnimationManager(deps) {
         break;
 
       default:
-        console.log("❓ OTHER:", item.type);
         console.warn("[AnimManager] Unknown queue type:", item.type);
     }
-  }
-
-  async function processCombatLog(text) {
-    console.log("[DEBUG] processCombatLog called with:", text);
-    if (shouldShowLogDialog(text)) {
-      const dialogText = stripHtmlTags(text);
-      // showNonBlockingDialog removido
-      console.log(
-        `[AnimManager] dialogText:`,
-        dialogText,
-        "não fazer nada, trecho legado para possível futura reativação",
-      );
-    }
-    appendToLog(text);
-  }
-
-  function shouldShowLogDialog(text) {
-    if (typeof text !== "string") return false;
-
-    const normalized = text.toLowerCase();
-
-    return (
-      normalized.includes("waiting for the other player") ||
-      normalized.includes("waiting for your confirmation") ||
-      normalized.includes("waiting for you") ||
-      normalized.includes("waiting for the opponent") ||
-      normalized.includes("waiting for opponent") ||
-      normalized.includes("confirmed end of turn") ||
-      normalized.includes("tried to act") ||
-      normalized.includes("pending action")
-    );
-  }
-
-  function stripHtmlTags(value) {
-    if (typeof value !== "string") return "";
-    return value.replace(/<[^>]*>/g, "").trim();
   }
 
   // ============================================================
@@ -697,15 +440,11 @@ export function createCombatAnimationManager(deps) {
 
     if (envelope.scorePayload) {
       if (isClaim) {
-        await animateClaimScore(envelope.scorePayload, envelope.claimPoints);
+        await scoreboard.animateClaim(envelope.scorePayload);
       } else {
-        processScoreUpdate(envelope.scorePayload);
+        scoreboard.update(envelope.scorePayload);
       }
     }
-
-    // (Skill animation now handled per DamageEvent in animateDamage)
-
-    /* console.log("[DEBUG] [JEFF REVIVAL DIALOG] CLIENT RECEIVED ENVELOPE:", envelope); */
 
     // GLOBAL dialogs (ALWAYS runs)
     if (envelope.globalDialogs?.length) {
@@ -730,6 +469,35 @@ export function createCombatAnimationManager(deps) {
   }
 
   // ============================================================
+  //  ANIMATION HELPERS
+  // ============================================================
+
+  // Resolves a champion's display name from its id, or a neutral fallback.
+  function championName(championId) {
+    const champion = deps.activeChampions.get(championId);
+    return champion ? formatChampionName(champion) : "Target";
+  }
+
+  // Resolves the DOM + model handles for a target and scrolls it into view.
+  // Returns null when the champion element is absent so callers can bail early.
+  function resolveTargetVisual(targetId) {
+    const championEl = getChampionElement(targetId);
+    if (!championEl) return null;
+
+    const portraitWrapper = championEl.querySelector(".portrait-wrapper");
+    const portrait = portraitWrapper?.querySelector(".portrait");
+    if (portrait) scrollIfNeeded(portrait, { threshold: 0.85 });
+
+    const champion = deps.activeChampions.get(targetId);
+    return {
+      championEl,
+      portraitWrapper,
+      champion,
+      name: champion ? formatChampionName(champion) : "Target",
+    };
+  }
+
+  // ============================================================
   //  DAMAGE ANIMATION
   //
   //  CSS mapping:
@@ -743,42 +511,32 @@ export function createCombatAnimationManager(deps) {
       targetId,
       userId,
       sourceId,
-      amount,
       rawAmount,
       absorbedByShield,
       remainingShield,
       isCritical,
       isDot,
-      obliterate,
       finishing,
       finishingType,
       skillKey,
     } = effect;
 
-    const casterId = userId || sourceId || null;
+    const target = resolveTargetVisual(targetId);
+    if (!target) return;
+    const { championEl, portraitWrapper, champion, name: targetName } = target;
 
-    const champion = deps.activeChampions.get(targetId);
-    const championEl = getChampionElement(targetId);
+    const casterId = userId || sourceId || null;
     const userEl = casterId ? getChampionElement(casterId) : null;
     const userChampion = casterId ? deps.activeChampions.get(casterId) : null;
     const skill = userChampion?.skills?.find((s) => s?.key === skillKey);
 
-    if (!championEl) return Promise.resolve();
-
-    const portraitWrapper = championEl.querySelector(".portrait-wrapper");
-    const actualPortrait = portraitWrapper?.querySelector(".portrait");
-
-    if (actualPortrait) {
-      scrollIfNeeded(actualPortrait, { threshold: 0.85 });
-    }
-
-    // 🔥 Skill animation (if registered) — now per DamageEvent
+    // Skill animation (if registered) — per DamageEvent
     if (skillKey) {
       await animateSkill(skillKey, { targetEl: championEl, userEl, skill });
     }
 
     // ========================
-    // INTERRUPÇÕES
+    // INTERRUPTIONS
     // ========================
 
     if (effect.evaded !== undefined) {
@@ -800,14 +558,12 @@ export function createCombatAnimationManager(deps) {
     if (effect.shieldBlocked) return await animateShieldBlock(effect);
     if (!hasFinishing && !hasHpDamage && !hasShieldAbsorption) return;
 
-    const targetName = champion ? formatChampionName(champion) : "Alvo";
-
     // ========================
     // PRE-DAMAGE (DOT)
     // ========================
 
     if (isDot) {
-      await showDialog(`${targetName} sofreu dano.`);
+      await showDialog(`${targetName} took damage.`);
     }
 
     // ========================
@@ -938,60 +694,32 @@ export function createCombatAnimationManager(deps) {
 
   async function animateHeal(effect) {
     const { targetId, amount } = effect;
+    const target = resolveTargetVisual(targetId);
+    if (!target) return;
+    const { championEl, portraitWrapper, name } = target;
 
-    const championEl = getChampionElement(targetId);
-
-    if (!championEl) return;
-
-    const portraitWrapper = championEl.querySelector(".portrait-wrapper");
-    const actualPortrait = portraitWrapper.querySelector(".portrait");
-    scrollIfNeeded(actualPortrait, { threshold: 0.85 });
-
-    const champion = deps.activeChampions.get(targetId);
-
-    const targetName = champion ? formatChampionName(champion) : "Target";
-
-    await showDialog(`${targetName} restored health.`);
-
-    // Play healing SFX
+    await showDialog(`${name} restored health.`);
     audioManager.play("heal");
 
-    // Apply .heal class to .champion element
     championEl.classList.add("heal");
-
-    // Create floating heal number inside .portrait-wrapper
-    if (portraitWrapper) {
-      createFloatElement(portraitWrapper, `+${amount}`, "heal-float");
-    }
-
-    // Update HP bar incrementally
+    createFloatElement(portraitWrapper, `+${amount}`, "heal-float");
     updateVisualHP(targetId, amount);
 
-    // 🔥 Wait for the CSS animation to actually finish
     await waitForAnimation(championEl, 600);
-
     championEl.classList.remove("heal");
   }
 
   async function animateLifesteal(effect) {
     const { targetId, amount, fromTargetId } = effect;
+    const target = resolveTargetVisual(targetId);
+    if (!target) return;
+    const { championEl, portraitWrapper, name } = target;
 
-    const championEl = getChampionElement(targetId);
-    if (!championEl) return;
-
-    const portraitWrapper = championEl.querySelector(".portrait-wrapper");
-    const actualPortrait = portraitWrapper?.querySelector(".portrait");
-    if (actualPortrait) {
-      scrollIfNeeded(actualPortrait, { threshold: 0.85 });
-    }
-
-    const champion = deps.activeChampions.get(targetId);
-    const targetName = champion ? formatChampionName(champion) : "Target";
     const drainedEl = fromTargetId ? getChampionElement(fromTargetId) : null;
 
-    await showDialog(`${targetName} drained life from the target.`);
+    await showDialog(`${name} drained life from the target.`);
 
-    // Reutilizes the healing SFX with its own visual signature for lifesteal.
+    // Reuses the healing SFX with its own visual signature for lifesteal.
     audioManager.play("heal");
 
     if (drainedEl) {
@@ -1035,37 +763,19 @@ export function createCombatAnimationManager(deps) {
 
   async function animateEvasion(effect) {
     const { targetId, evaded } = effect;
-    const championEl = getChampionElement(targetId);
-    if (!championEl) return;
-
-    const portraitWrapper = championEl.querySelector(".portrait-wrapper");
-    const actualPortrait = portraitWrapper.querySelector(".portrait");
-    scrollIfNeeded(actualPortrait, { threshold: 0.85 });
-
-    const champion = deps.activeChampions.get(targetId);
-    const name = champion ? formatChampionName(champion) : "Target";
+    const target = resolveTargetVisual(targetId);
+    if (!target) return;
+    const { championEl, name } = target;
 
     await showDialog(`${name} tried to evade the attack...`);
 
     if (evaded) {
-      // 🔥 INICIA A ANIMAÇÃO
       championEl.classList.add("evasion");
 
-      // 🔥 Espera a animação CSS terminar de verdade
       await waitForAnimation(championEl, 600);
 
       championEl.classList.remove("evasion");
       await showDialog(`${name} SUCCESSFULLY evaded the attack!!`);
-      // meme/trollagem
-      /* await showDialog(`e conseguiu!`);
-      const randomTrollMessage = Math.random();
-      if (randomTrollMessage < 0.5) {
-        await showDialog(`e conseguiu!!`);
-        await showDialog(`e conseguiu!!! 🤗`);
-        await showDialog(`e conseguiu!!! 🥳`);
-      } else {
-        await showDialog(`...mas foi tão ruim que tropeçou e caiu no chão.`);
-      } */
     } else {
       await showDialog(`...but failed to evade.`);
     }
@@ -1081,23 +791,12 @@ export function createCombatAnimationManager(deps) {
 
   async function animateShield(effect) {
     const { targetId, amount } = effect;
-    const championEl = getChampionElement(targetId);
-    if (!championEl) return;
+    const target = resolveTargetVisual(targetId);
+    if (!target) return;
 
-    const portraitWrapper = championEl.querySelector(".portrait-wrapper");
-    const actualPortrait = portraitWrapper.querySelector(".portrait");
-    scrollIfNeeded(actualPortrait, { threshold: 0.85 });
+    await showDialog(`${target.name} gained a shield.`);
 
-    const champion = deps.activeChampions.get(targetId);
-
-    const name = champion ? formatChampionName(champion) : "Target";
-
-    await showDialog(`${name} gained a shield.`);
-
-    // Create floating shield number inside .portrait-wrapper
-    if (portraitWrapper) {
-      createFloatElement(portraitWrapper, `🛡️ ${amount}`, "shield-float");
-    }
+    createFloatElement(target.portraitWrapper, `🛡️ ${amount}`, "shield-float");
 
     updateVisualHP(targetId, 0, null, {
       shieldDelta: Number(amount) || 0,
@@ -1114,40 +813,29 @@ export function createCombatAnimationManager(deps) {
   function animateResourceChange(effect, direction = null) {
     const { targetId, amount } = effect || {};
     const normalizedAmount = Math.abs(Number(amount) || 0);
-
     if (!targetId || normalizedAmount <= 0) return;
 
-    const championEl = getChampionElement(targetId);
-    if (!championEl) return;
-
-    const portraitWrapper = championEl.querySelector(".portrait-wrapper");
-    const actualPortrait = portraitWrapper.querySelector(".portrait");
-    scrollIfNeeded(actualPortrait, { threshold: 0.85 });
+    const target = resolveTargetVisual(targetId);
+    if (!target) return;
 
     const eventDirection =
       direction ?? (effect?.type === "resourceSpend" ? -1 : 1);
-
     const sign = eventDirection >= 0 ? "+" : "-";
-    const momentumDelta = normalizedAmount.toFixed(0);
+    const floatClass =
+      eventDirection >= 0
+        ? "resource-float-momentum-gain"
+        : "resource-float-momentum-spend";
 
-    if (portraitWrapper) {
-      const floatClass =
-        eventDirection >= 0
-          ? "resource-float-momentum-gain"
-          : "resource-float-momentum-spend";
-
-      createFloatElement(
-        portraitWrapper,
-        `${sign}${momentumDelta} Momentum`,
-        "resource-float",
-        floatClass,
-      );
-    }
+    createFloatElement(
+      target.portraitWrapper,
+      `${sign}${normalizedAmount.toFixed(0)} Momentum`,
+      "resource-float",
+      floatClass,
+    );
 
     updateVisualResource(
       targetId,
       eventDirection >= 0 ? normalizedAmount : -normalizedAmount,
-      "momentum",
     );
   }
 
@@ -1157,9 +845,7 @@ export function createCombatAnimationManager(deps) {
 
   async function animateImmune(effect) {
     const { targetId, immuneMessage } = effect;
-    const champion = deps.activeChampions.get(targetId);
-    const name = champion ? formatChampionName(champion) : "Target";
-    const message = immuneMessage || `${name} is <b>Immune!</b>`;
+    const message = immuneMessage || `${championName(targetId)} is <b>Immune!</b>`;
     await showDialog(message);
   }
 
@@ -1168,11 +854,9 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   async function animateShieldBlock(effect) {
-    const { targetId } = effect;
-    const champion = deps.activeChampions.get(targetId);
-    const name = champion ? formatChampionName(champion) : "Target";
-
-    await showDialog(`${name}'s shield blocked the attack!`);
+    await showDialog(
+      `${championName(effect.targetId)}'s shield blocked the attack!`,
+    );
   }
 
   // ============================================================
@@ -1181,33 +865,21 @@ export function createCombatAnimationManager(deps) {
 
   async function animateBuff(effect) {
     const { sourceId, targetId, sourceName, targetName } = effect || {};
-
-    const targetChampion = deps.activeChampions.get(targetId);
+    const target = resolveTargetVisual(targetId);
+    if (!target) return;
+    const { championEl, portraitWrapper, champion: targetChampion } = target;
 
     const resolvedTargetName = targetChampion
       ? formatChampionName(targetChampion)
       : targetName || "Target";
 
     const sourceChampion = deps.activeChampions.get(sourceId);
-
     const resolvedSourceName = sourceChampion
       ? formatChampionName(sourceChampion)
       : sourceName || null;
 
-    const championEl = getChampionElement(targetId);
-
-    if (!championEl) return;
-
-    // Ensure the target is visible before starting the animation
-    const portraiWrapper = championEl.querySelector(".portrait-wrapper");
-    const actualPortrait = portraiWrapper.querySelector(".portrait");
-    scrollIfNeeded(actualPortrait, { threshold: 0.85 });
-
-    const portraitWrapper = championEl?.querySelector(".portrait-wrapper");
-
-    // Universal: if there is no sourceId, or sourceId === targetId, it's a self-buff
+    // Self-buff when there is no source, or source === target.
     let text;
-
     if (!sourceId || sourceId === targetId) {
       text = `${resolvedTargetName} buffed themselves.`;
     } else if (resolvedSourceName) {
@@ -1218,17 +890,10 @@ export function createCombatAnimationManager(deps) {
 
     await showDialog(text);
 
-    if (championEl) {
-      championEl.classList.add("buff");
-    }
+    championEl.classList.add("buff");
+    createFloatElement(portraitWrapper, "+BUFF", "buff-float");
 
-    if (portraitWrapper) {
-      createFloatElement(portraitWrapper, "+BUFF", "buff-float");
-    }
-
-    // 🔥 Wait for the CSS animation to actually finish
     await waitForAnimation(championEl, 600);
-
     championEl.classList.remove("buff");
   }
 
@@ -1237,36 +902,26 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   async function animateTauntRedirection(effect) {
-    const { attackerId, newTargetId, taunterId } = effect;
-    const champion = deps.activeChampions.get(attackerId);
-    const name = champion ? formatChampionName(champion) : "Target";
+    const { attackerId } = effect;
     const championEl = getChampionElement(attackerId);
     const portraitWrapper = championEl?.querySelector(".portrait-wrapper");
 
-    // Show taunt dialog
-
     await showDialog(
-      `${name} was <b>taunted</b> and had their target redirected!`,
+      `${championName(attackerId)} was <b>taunted</b> and had their target redirected!`,
     );
 
-    if (championEl) {
-      championEl.classList.add("taunt");
-    }
-    if (portraitWrapper) {
-      createFloatElement(portraitWrapper, "TAUNTED", "taunt-float");
-    }
+    championEl.classList.add("taunt");
+    createFloatElement(portraitWrapper, "TAUNTED", "taunt-float");
 
     await waitForAnimation(championEl, 400);
     championEl.classList.remove("taunt");
   }
-  // ============================================================
 
   // ============================================================
   //  GAME OVER HANDLING
   // ============================================================
 
   async function handleGameOver(effect) {
-    console.log("Game over effect received:", effect);
     const winnerTeam = Number(effect?.winnerTeam);
     const hasWinner = winnerTeam === 1 || winnerTeam === 2;
     const isDraw = !hasWinner;
@@ -1328,7 +983,7 @@ export function createCombatAnimationManager(deps) {
       timerOverlay.classList.remove("hidden");
       timerOverlay.classList.add("active");
 
-      showMatchStatsPanel();
+      matchStats.show();
 
       let timeLeft = 120;
       countdownEl.textContent = `Returning to login in ${timeLeft}s...`;
@@ -1371,10 +1026,6 @@ export function createCombatAnimationManager(deps) {
     const shieldOverride = Number.isFinite(options?.shieldOverride)
       ? Math.max(0, Number(options.shieldOverride))
       : null;
-
-    console.log(
-      `Updating visual HP for champion ${championId}: delta=${delta}, currentVisualHP=${currentVisualHP}`,
-    );
 
     const el = getChampionElement(championId);
     if (!el) return;
@@ -1425,21 +1076,15 @@ export function createCombatAnimationManager(deps) {
     const fill = el.querySelector(".momentum-fill");
     if (!fill) return;
 
-    // 🔹 Fixed Cap of the system
+    // Momentum is a fixed 0-100 bar; the dataset holds the trusted UI value.
     const MAX_UNITS = 100;
+    const currentUnits = Math.max(
+      0,
+      Math.min(MAX_UNITS, Number(el.dataset.momentumUnits || 0) + deltaUnits),
+    );
 
-    // 🔹 Get current value from the dataset (trusted source from the UI)
-    let currentUnits = Number(el.dataset.momentumUnits || 0);
-
-    // 🔹 Apply delta
-    currentUnits = Math.max(0, Math.min(MAX_UNITS, currentUnits + deltaUnits));
-
-    // 🔹 Save again
     el.dataset.momentumUnits = currentUnits;
-
-    // 🔹 Update continuous visual bar
-    const percent = (currentUnits / MAX_UNITS) * 100;
-    fill.style.width = `${percent}%`;
+    fill.style.width = `${(currentUnits / MAX_UNITS) * 100}%`;
   }
 
   // ============================================================
@@ -1489,7 +1134,7 @@ export function createCombatAnimationManager(deps) {
       ? `<b>${typeof skillName === "object" ? skillName.name : skillName}</b>`
       : "<b>a skill</b>";
 
-    // 🔹 CONFIA 100% NO SERVER
+    // Fully trust the server-provided target.
     const hasValidTarget = targetId && targetId !== userId && targetName;
 
     const dialogText = hasValidTarget
@@ -1561,41 +1206,26 @@ export function createCombatAnimationManager(deps) {
     const dialogText = deps.combatDialogText;
     if (!dialog || !dialogText) return;
 
-    if (duration) {
-      // Non-blocking dialog: auto-close after duration, but allow skip
-      const dialogController = createDialogController();
-      activeDialogController = dialogController;
-      dialogText.innerHTML = text;
-      dialog.classList.remove("hidden", "leaving");
-      dialog.classList.add("active");
-      await wait(20); // allow DOM update
-      // Wait for either duration or skip
-      let finished = false;
-      const timer = wait(duration).then(() => {
-        finished = true;
-        dialogController.requestSkip();
-      });
-      await dialogController.waitWithOptionalSkip(duration + 100); // allow skip at any time
-      dialog.classList.add("leaving");
-      await wait(TIMING.DIALOG_LEAVE);
-      dialog.classList.remove("active", "leaving");
-      dialog.classList.add("hidden");
-      if (activeDialogController === dialogController) {
-        activeDialogController = null;
-      }
-      dialogController.dispose();
-      return;
-    }
-
-    // Blocking dialog: waits for skip/user
     const dialogController = createDialogController();
     activeDialogController = dialogController;
     dialogText.innerHTML = text;
     dialog.classList.remove("hidden", "leaving");
     dialog.classList.add("active");
-    await dialogController.waitWithOptionalSkip(TIMING.DIALOG_DISPLAY);
-    dialog.classList.add("leaving");
-    await dialogController.waitWithOptionalSkip(TIMING.DIALOG_LEAVE);
+
+    if (duration) {
+      // Non-blocking: auto-close after duration, but allow skip at any time.
+      await wait(20); // allow the DOM update to paint first
+      wait(duration).then(() => dialogController.requestSkip());
+      await dialogController.waitWithOptionalSkip(duration + 100);
+      dialog.classList.add("leaving");
+      await wait(TIMING.DIALOG_LEAVE);
+    } else {
+      // Blocking: wait for skip/user.
+      await dialogController.waitWithOptionalSkip(TIMING.DIALOG_DISPLAY);
+      dialog.classList.add("leaving");
+      await dialogController.waitWithOptionalSkip(TIMING.DIALOG_LEAVE);
+    }
+
     dialog.classList.remove("active", "leaving");
     dialog.classList.add("hidden");
     if (activeDialogController === dialogController) {
@@ -1657,32 +1287,20 @@ export function createCombatAnimationManager(deps) {
         }
       }
 
-      // Apply UI updates with appropriate delay
-      if (delayMs > 0) {
-        setTimeout(() => {
-          champion.updateUI({
-            freeCostSkills: editMode?.freeCostSkills === true,
-          });
-          StatusIndicator.updateChampionIndicators(champion);
-        }, delayMs);
-      } else {
-        champion.updateUI({
-          freeCostSkills: editMode?.freeCostSkills === true,
-        });
+      // Shield changes need a buffer so the bubble doesn't pop before the
+      // damage animation reads; other updates run immediately.
+      const runAfterDelay = (fn) =>
+        delayMs > 0 ? setTimeout(fn, delayMs) : fn();
+
+      runAfterDelay(() => {
+        champion.updateUI({ freeCostSkills: editMode?.freeCostSkills === true });
         StatusIndicator.updateChampionIndicators(champion);
-      }
+      });
 
       const shouldSyncVfxNow =
         currentPhase !== "combat" && !hasPendingCombatAction();
 
-      if (shouldSyncVfxNow && delayMs > 0) {
-        // 🛡️ Sync VFX with same delay as UI when shields changed
-        setTimeout(() => {
-          syncChampionVFX(champion);
-        }, delayMs);
-      } else if (shouldSyncVfxNow) {
-        syncChampionVFX(champion);
-      }
+      if (shouldSyncVfxNow) runAfterDelay(() => syncChampionVFX(champion));
     }
   }
 
@@ -1703,16 +1321,9 @@ export function createCombatAnimationManager(deps) {
       champion.currentHp = snap.HP; // In order to keep currentHp in sync with the real HP from the snapshot
     }
 
-    if (snap.maxHP !== undefined) champion.maxHP = snap.maxHP;
-    if (snap.Attack !== undefined) champion.Attack = snap.Attack;
-    if (snap.Defense !== undefined) champion.Defense = snap.Defense;
-    if (snap.Speed !== undefined) champion.Speed = snap.Speed;
-    if (snap.Evasion !== undefined) champion.Evasion = snap.Evasion;
-    if (snap.Critical !== undefined) champion.Critical = snap.Critical;
-    if (snap.LifeSteal !== undefined) champion.LifeSteal = snap.LifeSteal;
-
-    // Resource (momentum)
-    if (snap.momentum !== undefined) champion.momentum = snap.momentum;
+    for (const key of SNAPSHOT_PASSTHROUGH_KEYS) {
+      if (snap[key] !== undefined) champion[key] = snap[key];
+    }
 
     // Runtime shields
     if (snap.runtime) {
@@ -1759,21 +1370,6 @@ export function createCombatAnimationManager(deps) {
       }
     }
 
-    if (snap.passive !== undefined) {
-      champion.passive = snap.passive;
-    }
-
-    // Modifier data for UI indicators (buff/debuff arrows)
-    if (snap.statModifiers !== undefined) {
-      champion.statModifiers = snap.statModifiers;
-    }
-    if (snap.damageModifiersCount !== undefined) {
-      champion.damageModifiersCount = snap.damageModifiersCount;
-    }
-    if (snap.damageReductionModifiersCount !== undefined) {
-      champion.damageReductionModifiersCount =
-        snap.damageReductionModifiersCount;
-    }
   }
 
   // ============================================================
@@ -1785,8 +1381,6 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   function processGameStateUpdate(gameState) {
-    console.log("🚨 GAME STATE UPDATE RECEIVED", gameState);
-
     if (!gameState) return;
 
     const { champions, currentTurn } = gameState;
@@ -1802,7 +1396,7 @@ export function createCombatAnimationManager(deps) {
       champions.map((c) => c?.id).filter((id) => id),
     );
 
-    // 1. SYNC EXISTING CHAMPIONS E CRIAR NOVOS
+    // 1. SYNC EXISTING CHAMPIONS AND CREATE NEW ONES
     // With the new swap system (inactiveChampions), Lana and Tutu have different IDs,
     // so a "championKey mismatch" never occurs for the same ID.
     // The else-if block below is reserved for FUTURE TRANSFORMATIONS (e.g., Lana → Lana_Evolved)
@@ -1822,9 +1416,6 @@ export function createCombatAnimationManager(deps) {
       ) {
         // TRANSFORMATION (future): same ID, type changed — destroy and recreate
         // Ex: Lana (id=X) → Lana_Evolved (id=X)
-        console.log(
-          `[REPLACE DEBUG] Transformation detected: ${champion.name} (id=${champData.id}) changed type from ${champion.championKey} → ${champData.championKey}`,
-        );
         champion.destroy();
         deps.activeChampions.delete(champData.id);
         champion = deps.createNewChampion(champData);
@@ -1846,9 +1437,6 @@ export function createCombatAnimationManager(deps) {
     // Ex: Lana swaps to inactiveChampions → her ID is no longer in the gameState → remove from the frontend.
     for (const [champId, champion] of deps.activeChampions) {
       if (!newChampionIds.has(champId)) {
-        console.log(
-          `[REPLACE DEBUG] Removing ${champion.name} (id=${champId}) from rendering — was swapped out to inactiveChampions on the server.`,
-        );
         champion.destroy();
         deps.activeChampions.delete(champId);
       }
@@ -1869,19 +1457,6 @@ export function createCombatAnimationManager(deps) {
   }
 
   // ============================================================
-  //  CHAMPION SWITCHED OUT (DESATIVADO)
-  // ============================================================
-
-  // async function processChampionSwitchedOut(championId) {
-  //   const champion = deps.activeChampions.get(championId);
-  //   if (!champion) return;
-  //
-  //   champion.el?.remove();
-  //   champion.el = null;
-  //   deps.activeChampions.delete(championId);
-  // }
-
-  // ============================================================
   //  CHAMPION REMOVED (death animation)
   //
   //  CSS class: .champion.dying → collapse animation (950ms)
@@ -1893,13 +1468,7 @@ export function createCombatAnimationManager(deps) {
     if (!champion) return;
 
     const el = champion.el;
-
-    if (!el) {
-      console.log(
-        `[AnimManager] Champion ${championId} removed but no element found.`,
-      );
-      return;
-    }
+    if (!el) return;
 
     if (champion.runtime?.deathClaimTriggered) {
       // special vfx + dialog for Jeff_The_Death claim/special execution
@@ -1935,17 +1504,10 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   function appendToLog(text) {
-    console.log("[DEBUG] appendToLog called with:", text);
-    if (!text) {
-      console.warn("[DEBUG] appendToLog: text is falsy");
-      return;
-    }
+    if (!text) return;
 
     const log = document.getElementById("combat-log");
-    if (!log) {
-      console.warn("[DEBUG] appendToLog: #combat-log element not found");
-      return;
-    }
+    if (!log) return;
 
     const currentTurn = deps.getCurrentTurn();
 
@@ -1979,7 +1541,87 @@ export function createCombatAnimationManager(deps) {
     queue.length = 0;
     processing = false;
     lastLoggedTurn = null;
-    resetMatchStats();
+    matchStats.reset();
+  }
+
+  // ============================================================
+  //  TURN TRANSITION (banner animation + turn display)
+  // ============================================================
+
+  let turnTransitionTimer = null;
+  let turnTransitionSequence = 0;
+  let isFirstTurnUpdate = true;
+  let lastDisplayedTurn = null;
+
+  function showTurnTransition(turn) {
+    const overlay = document.getElementById("turnTransitionOverlay");
+    const number = document.getElementById("turnTransitionNumber");
+
+    if (!overlay || !number) return;
+
+    const sequence = ++turnTransitionSequence;
+
+    clearTimeout(turnTransitionTimer);
+
+    const turnLabel = turn === 20 ? "LAST TURN" : `TURN ${turn}`;
+
+    // Ensure the overlay starts showing the new turn.
+    number.textContent = turnLabel;
+
+    // Reset the text animation.
+    number.classList.remove("is-changing");
+
+    // Force the browser to acknowledge the initial state.
+    void number.offsetWidth;
+
+    // Overlay entrance.
+    overlay.classList.add("is-visible");
+
+    // Keep the banner visible for a moment.
+    turnTransitionTimer = setTimeout(() => {
+      if (sequence !== turnTransitionSequence) return;
+
+      // Fade/blur the current turn.
+      number.classList.add("is-changing");
+
+      setTimeout(() => {
+        if (sequence !== turnTransitionSequence) return;
+
+        number.textContent = turnLabel;
+
+        // Force reflow to restart the entrance.
+        void number.offsetWidth;
+
+        number.classList.remove("is-changing");
+
+        // After showing the new turn, close the overlay.
+        turnTransitionTimer = setTimeout(() => {
+          if (sequence !== turnTransitionSequence) return;
+
+          overlay.classList.remove("is-visible");
+        }, 700);
+      }, 230);
+    }, 700);
+  }
+
+  function updateTurnDisplay(turn) {
+    const turnDisplay = document.querySelector(".turn-display");
+    const turnText = turnDisplay?.querySelector("p");
+
+    if (turnText) {
+      turnText.textContent = turn === 20 ? "Last Turn" : `Turn ${turn}`;
+    }
+
+    if (isFirstTurnUpdate) {
+      isFirstTurnUpdate = false;
+      lastDisplayedTurn = turn;
+      return;
+    }
+
+    if (turn !== lastDisplayedTurn) {
+      lastDisplayedTurn = turn;
+      showTurnTransition(turn);
+    }
   }
 
   // ============================================================
@@ -1987,6 +1629,7 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   return {
+    updateTurnDisplay,
     handleCombatAction(envelope) {
       enqueue("combatAction", envelope);
     },
@@ -2005,9 +1648,6 @@ export function createCombatAnimationManager(deps) {
     handleChampionRemoved(championId) {
       enqueue("championRemoved", championId);
     },
-    // handleChampionSwitchedOut(championId) {
-    //   enqueue("championSwitchedOut", championId);
-    // },
     handleGameOver(data) {
       enqueue("gameOver", data);
     },

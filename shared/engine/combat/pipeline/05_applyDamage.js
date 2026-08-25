@@ -22,6 +22,15 @@ export function applyDamage(event) {
         .reduce((sum, s) => sum + (Number(s.amount) || 0), 0)
     : 0;
 
+  // Positive damage can never round down to 0 — a hit that connects always
+  // deals at least 1. Only hooks composing together (e.g. Avarik's Edict
+  // clamping to 1 alongside another champion's own percentage reduction)
+  // can land in the sub-1 range; this is the single point every DamageEvent
+  // funnels through before touching HP, so it's the right place to enforce it.
+  if (event.damage > 0 && event.damage < 1) {
+    event.damage = 1;
+  }
+
   const damageToApply = Math.floor(event.damage);
 
   console.log(`[DAMAGE COMPOSITION] damageToApply: ${damageToApply}`);

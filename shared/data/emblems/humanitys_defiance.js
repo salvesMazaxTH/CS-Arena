@@ -16,7 +16,7 @@ export const humanitysDefiance = {
   requirements: {
     species: {
       species: "human",
-      count: 8,
+      count: 7,
     },
   },
 

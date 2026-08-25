@@ -5,15 +5,7 @@ export function roundToFive(x) {
   return Math.round(x / 5) * 5;
 }
 
-/**
- * Apply a shield to the champion
- * @param {object} champion - The champion instance
- * @param {number} amount - Shield amount
- * @param {number} decayPerTurn - Decay per turn
- * @param {object} context - Combat context
- * @param {string} type - Shield type ("regular" | "spell" | "supreme")
- * @param {object} extra - Additional shield fields to persist on runtime
- */
+/** Push a shield onto the champion's runtime. type: "regular" | "spell" | "supreme". */
 export function addShield(
   champion,
   amount,
@@ -32,26 +24,11 @@ export function addShield(
   if (context?.registerShield) {
     context.registerShield({ target: champion, amount });
   }
-
-  /* console.log(
-    `[Champion] ${champion.name} ganhou um escudo de ${amount} HP (tipo: ${type}) com decaimento de ${decayPerTurn} por turno.`,
-  );
-  */
 }
 
-/**
- * Decays shields at the start of a turn.
- *
- * Two expiry modes are supported:
- *  - Gradual decay:     shield.decayPerTurn > 0  — amount reduced each turn until depleted.
- *  - Instant-at-end:   shield.expiresAtTurn set  — shield stays intact and is removed entirely
- *                       when currentTurn >= expiresAtTurn (checked before gradual decay).
- *
- * Shields with neither field set are permanent (removed only by absorbing damage).
- *
- * @param {object} champion    - The champion instance
- * @param {number} currentTurn - The turn number at the start of which decay is processed
- */
+// Decays shields at the start of a turn. Two expiry modes: gradual
+// (decayPerTurn > 0, reduced each turn) and instant-at-end (expiresAtTurn set,
+// dropped whole once reached, checked first). Shields with neither are permanent.
 export function decayShields(champion, currentTurn) {
   if (
     !Array.isArray(champion.runtime?.shields) ||
@@ -107,40 +84,26 @@ export function decayShields(champion, currentTurn) {
   return removed;
 }
 
-/**
- * Checks if shield blocks the current action
- * @param {object} champion - The champion instance
- * @param {object} context - Combat context
- * @param {string} damageType - Damage type for the current event
- * @returns {boolean}
- */
+/** Whether a shield blocks (and is consumed by) the current action. */
 export function _checkAndConsumeShieldBlock(champion, context, damageType) {
   if (!Array.isArray(champion.runtime?.shields)) return false;
 
-  // 🛡️ Escudo Supremo: bloqueia QUALQUER ação
+  // Supreme shield: blocks ANY action.
   const supremeIdx = champion.runtime.shields.findIndex(
     (s) => s.type === "supreme" && s.amount > 0,
   );
   if (supremeIdx !== -1) {
     champion.runtime.shields.splice(supremeIdx, 1);
-    /* console.log(
-      `[Champion] 🛡️ ${champion.name}: Escudo Supremo bloqueou a ação completamente e se dissipou!`,
-    );
-    */
     return true;
   }
 
-  // 🛡️ Escudo de Feitiço: bloqueia apenas dano mágico
+  // Spell shield: blocks magical damage only.
   if (damageType === "magical") {
     const spellIdx = champion.runtime.shields.findIndex(
       (s) => s.type === "spell" && s.amount > 0,
     );
     if (spellIdx !== -1) {
       champion.runtime.shields.splice(spellIdx, 1);
-      /* console.log(
-      `[Champion] 🛡️ ${champion.name}: Escudo de Feitiço bloqueou o dano mágico e se dissipou!`,
-      );
-      */
       return true;
     }
   }
@@ -148,13 +111,7 @@ export function _checkAndConsumeShieldBlock(champion, context, damageType) {
   return false;
 }
 
-/**
- * Apply taunted effect to champion
- * @param {object} champion - The champion instance
- * @param {string} taunterId - ID of the taunter
- * @param {number} duration - Duration in turns
- * @param {object} context - Combat context
- */
+/** Apply a taunt from taunterId to the champion, lasting `duration` turns. */
 export function applyTaunt(champion, taunterId, duration, context) {
   champion.tauntEffects.push({
     taunterId: taunterId,
@@ -167,7 +124,7 @@ export function applyTaunt(champion, taunterId, duration, context) {
     ? formatChampionName(tauntSource)
     : taunterId;
 
-  const logMsg = `${formatChampionName(champion)} foi provocado por <b>${tauntSourceName}</b>.`;
+  const logMsg = `${formatChampionName(champion)} was taunted by <b>${tauntSourceName}</b>.`;
 
   if (context?.registerDialog) {
     context.registerDialog({
@@ -184,26 +141,12 @@ export function applyTaunt(champion, taunterId, duration, context) {
   };
 }
 
-/**
- * Check if champion is taunted by specific champion
- * @param {object} champion - The champion instance
- * @param {string} taunterId - ID of the taunter
- * @returns {boolean}
- */
+/** Whether the champion is currently taunted by taunterId. */
 export function isTauntedBy(champion, taunterId) {
   return champion.tauntEffects.some((effect) => effect.taunterId === taunterId);
 }
 
-/**
- * Apply damage reduction to champion
- * @param {object} champion - The champion instance
- * @param {object} config - Configuration object
- * @param {number} config.amount - Reduction amount
- * @param {number} config.duration - Duration in turns
- * @param {string} config.type - Type ("flat" | "percent")
- * @param {string} config.source - Source description
- * @param {object} config.context - Combat context
- */
+/** Add a damage-reduction modifier. config.type: "flat" | "percent". Requires context. */
 export function applyDamageReduction(champion, config = {}) {
   const {
     amount = 0,
@@ -215,7 +158,7 @@ export function applyDamageReduction(champion, config = {}) {
 
   if (!context) {
     throw new Error(
-      `[applyDamageReduction] chamado sem context (champion: ${champion?.name})`,
+      `[applyDamageReduction] called without context (champion: ${champion?.name})`,
     );
   }
 
@@ -230,12 +173,7 @@ export function applyDamageReduction(champion, config = {}) {
   );
 }
 
-/**
- * Get total damage reduction (flat and percent)
- * @param {object} champion - The champion instance
- * @param {number} currentTurn - Optional: current turn number to check expiry
- * @returns {object} { flat, percent }
- */
+/** Sum active damage reduction as { flat, percent }; pass currentTurn to skip expired. */
 export function getTotalDamageReduction(champion, currentTurn) {
   let flat = 0;
   let percent = 0;
@@ -256,17 +194,17 @@ export function getTotalDamageReduction(champion, currentTurn) {
   return { flat, percent };
 }
 
-/**
- * Internal: apply stat modifier
- * @param {object} champion - The champion instance
- * @param {string} statName - Name of the stat
- * @param {number} amount - Amount to modify
- * @param {number} duration - Duration in turns
- * @param {object} context - Combat context
- * @param {boolean} isPermanent - Whether modification is permanent
- * @param {boolean} ignoreMinimum - Whether to ignore the stat minimum clamp
- * @returns {object} Result object
- */
+// Per-stat floor and ceiling. Both the clamp on the way in and the recompute
+// that runs when a modifier expires read this, so they can never disagree.
+const STAT_LIMITS = {
+  Critical: { min: 0, max: 95 },
+  Evasion: { min: 0, max: 75 },
+  default: { min: 10, max: 999 },
+};
+
+const statLimitsFor = (statName) => STAT_LIMITS[statName] || STAT_LIMITS.default;
+
+/** Core stat mutation: rounds, clamps to per-stat limits, records the modifier. */
 export function applyStatModifier(
   champion,
   {
@@ -280,12 +218,12 @@ export function applyStatModifier(
   } = {},
 ) {
   if (!(statName in champion)) {
-    throw new Error(`Tentativa de modificar stat inexistente: ${statName}`);
+    throw new Error(`Attempt to modify a non-existent stat: ${statName}`);
   }
 
   if (!Number.isFinite(amount)) {
     throw new Error(
-      `[applyStatModifier] amount inválido para ${statName}: ${amount}`,
+      `[applyStatModifier] invalid amount for ${statName}: ${amount}`,
     );
   }
 
@@ -299,13 +237,7 @@ export function applyStatModifier(
     amount = roundToFive(amount);
   }
 
-  const limits = {
-    Critical: { min: 0, max: 95 },
-    Evasion: { min: 0, max: 75 },
-    default: { min: 10, max: 999 },
-  };
-
-  const { min, max } = limits[statName] || limits.default;
+  const { min, max } = statLimitsFor(statName);
 
   const previous = champion[statName];
   const effectiveMin = ignoreMinimum ? 0 : min;
@@ -315,7 +247,7 @@ export function applyStatModifier(
   champion[statName] = clamped;
 
   const isCappedMax = amount > 0 && appliedAmount === 0;
-  const capLog = isCappedMax ? `O stat ${statName} já está no máximo.` : null;
+  const capLog = isCappedMax ? `Stat ${statName} is already at maximum.` : null;
 
   const currentTurn = context?.currentTurn ?? 0;
 
@@ -330,7 +262,7 @@ export function applyStatModifier(
   }
 
   if (appliedAmount !== 0 && context?.registerBuff) {
-    // fallback: se não passar statModifierSrc, assume o próprio champion
+    // Fallback: default statModifierSrc to the champion itself.
     const src = statModifierSrc !== undefined ? statModifierSrc : champion;
     const resolvedSourceId = _resolveStatModifierSrcId({
       champion,
@@ -347,13 +279,6 @@ export function applyStatModifier(
     });
   }
 
-  /* console.log(
-    `[Champion] ${champion.name} teve ${statName} alterado em ${appliedAmount}. ` +
-      (isPermanent
-        ? "A alteração é permanente e não será revertida."
-        : `A alteração será revertida no turno ${currentTurn + duration}.`),
-  );
-  */
   return {
     appliedAmount,
     isCappedMax,
@@ -361,45 +286,37 @@ export function applyStatModifier(
   };
 }
 
-/**
- * Buff a stat
- * @param {object} champion - The champion instance
- * @param {object} config - Configuration object
- * @returns {object} Result object
- */
-export function buffStat(
-  champion,
-  {
+// Shared body for buffStat/debuffStat: guards the stat, scales percent-based
+// amounts against the base value, and forwards to applyStatModifier. Buff and
+// debuff differ only in the sign of the incoming amount.
+function _applyStatChange(champion, config, rawAmount) {
+  const {
     statName,
-    amount,
     duration = 1,
     context,
     isPermanent = false,
     isPercent = false,
     ignoreMinimum = false,
     statModifierSrc = undefined,
-  } = {},
-) {
+  } = config;
+
   if (!(statName in champion)) {
-    console.warn(`Tentativa de modificar stat inexistente: ${statName}`);
+    console.warn(`Attempt to modify a non-existent stat: ${statName}`);
     return;
   }
 
-  const normalizedAmount = Math.abs(Number(amount) || 0);
-
-  let effectiveAmount = normalizedAmount;
+  let effectiveAmount = rawAmount;
 
   if (isPercent) {
     const usesBase = statName !== "HP" && statName !== "maxHP";
-    const baseKey = `base${statName}`;
-    const baseValue = usesBase ? champion[baseKey] : champion[statName];
+    const baseValue = usesBase ? champion[`base${statName}`] : champion[statName];
     const percentBase = Number.isFinite(baseValue)
       ? baseValue
       : Number.isFinite(champion[statName])
         ? champion[statName]
         : 0;
 
-    effectiveAmount = (percentBase * normalizedAmount) / 100;
+    effectiveAmount = (percentBase * rawAmount) / 100;
   }
 
   return applyStatModifier(champion, {
@@ -413,62 +330,21 @@ export function buffStat(
   });
 }
 
-/**
- * Debuff a stat
- * @param {object} champion - The champion instance
- * @param {object} config - Configuration object
- * @returns {object} Result object
- */
-export function debuffStat(
-  champion,
-  {
-    statName,
-    amount,
-    duration = 1,
-    context,
-    isPermanent = false,
-    isPercent = false,
-    ignoreMinimum = false,
-    statModifierSrc = undefined,
-  } = {},
-) {
-  if (!(statName in champion)) {
-    console.warn(`Tentativa de modificar stat inexistente: ${statName}`);
-    return;
-  }
-
-  let effectiveAmount = amount;
-
-  if (isPercent) {
-    const usesBase = statName !== "HP" && statName !== "maxHP";
-    const baseKey = `base${statName}`;
-    const baseValue = usesBase ? champion[baseKey] : champion[statName];
-    const percentBase = Number.isFinite(baseValue)
-      ? baseValue
-      : Number.isFinite(champion[statName])
-        ? champion[statName]
-        : 0;
-
-    effectiveAmount = (percentBase * amount) / 100;
-  }
-
-  return applyStatModifier(champion, {
-    statName,
-    amount: effectiveAmount,
-    duration,
-    context,
-    isPermanent,
-    ignoreMinimum,
-    statModifierSrc,
-  });
+/** Buff a stat; the amount is coerced positive. */
+export function buffStat(champion, config = {}) {
+  return _applyStatChange(
+    champion,
+    config,
+    Math.abs(Number(config.amount) || 0),
+  );
 }
 
-/**
- * Modify stat (buff or debuff based on amount sign)
- * @param {object} champion - The champion instance
- * @param {object} config - Configuration object
- * @returns {object} Result object
- */
+/** Debuff a stat; the amount is kept as given (typically negative). */
+export function debuffStat(champion, config = {}) {
+  return _applyStatChange(champion, config, config.amount);
+}
+
+/** Modify a stat, dispatching to buff or debuff based on the sign of amount. */
 export function modifyStat(
   champion,
   {
@@ -487,7 +363,7 @@ export function modifyStat(
   }
 
   if (amount > 0) {
-    // Para buffs, se statModifierSrc não for passado, assume o próprio campeão
+    // For buffs, default statModifierSrc to the champion itself.
     return buffStat(champion, {
       statName,
       amount,
@@ -501,10 +377,10 @@ export function modifyStat(
     });
   }
 
-  // Para debuffs, exige statModifierSrc explícito ou context.statModifierSrcId
+  // Debuffs require an explicit statModifierSrc or context.statModifierSrcId.
   if (!statModifierSrc && !context?.statModifierSrcId) {
     throw new Error(
-      `[modifyStat] Debuff em ${champion?.name ?? "unknown"} requer statModifierSrc explícito ou context.statModifierSrcId`,
+      `[modifyStat] Debuff on ${champion?.name ?? "unknown"} requires an explicit statModifierSrc or context.statModifierSrcId`,
     );
   }
 
@@ -546,17 +422,11 @@ function _resolveStatModifierSrcId({
   }
 
   throw new Error(
-    `[modifyStat] Debuff em ${champion?.name ?? "unknown"} requer statModifierSrc explícito ou context.statModifierSrcId`,
+    `[modifyStat] Debuff on ${champion?.name ?? "unknown"} requires an explicit statModifierSrc or context.statModifierSrcId`,
   );
 }
 
-/**
- * Modify HP (damage, heal, or structural changes)
- * @param {object} champion - The champion instance
- * @param {number} amount - Amount to modify
- * @param {object} config - Configuration object
- * @returns {object} Result object
- */
+/** Modify HP: current HP (damage/heal), or maxHP structurally via affectMax/maxHPOnly. */
 export function modifyHP(
   champion,
   amount,
@@ -574,7 +444,7 @@ export function modifyHP(
 
   amount = Math.floor(amount);
 
-  // 🔹 Alteração estrutural proporcional (buff real de vida)
+  // Proportional structural change (a true max-HP buff).
   if (affectMax) {
     const previousHP = champion.HP;
 
@@ -595,13 +465,13 @@ export function modifyHP(
             isPermanent,
           });
 
-    // Aplica o mesmo delta ao HP atual
+    // Apply the same delta to current HP.
     const nextHP = previousHP + result.appliedAmount;
     champion.HP = Math.max(0, Math.min(nextHP, champion.maxHP));
 
     return result;
   }
-  // 🔹 Apenas altera o teto, sem mexer proporcionalmente
+  // Change only the ceiling, without a proportional shift.
   if (maxHPOnly) {
     return amount > 0
       ? buffStat(champion, {
@@ -620,7 +490,7 @@ export function modifyHP(
         });
   }
 
-  // 🔹 HP atual (cura/dano)
+  // Current HP (heal/damage).
   if (amount > 0) {
     heal(champion, amount, context);
   } else {
@@ -636,19 +506,14 @@ export function modifyHP(
   };
 }
 
-/**
- * Take damage
- * @param {object} champion - The champion instance
- * @param {number} amount - Damage amount
- * @param {object} context - Combat context
- */
+/** Apply raw damage, letting regular shields absorb first, then reducing HP. */
 export function takeDamage(champion, amount, context) {
   if (!champion.alive) return;
 
   amount = Math.floor(amount);
 
   for (const shield of champion.runtime.shields) {
-    // Escudos de Feitiço e Supremo não absorvem HP — só bloqueiam ações
+    // Spell and Supreme shields don't absorb HP — they only block actions.
     if (shield.type && shield.type !== "regular") continue;
     if (amount <= 0) break;
 
@@ -665,15 +530,7 @@ export function takeDamage(champion, amount, context) {
   }
 }
 
-/**
- * Heal champion
- * @param {object} champion - The champion instance
- * @param {number} amount - Heal amount
- * @param {object} context - Combat context
- * @param {object} source - Heal source champion
- * @param {object} options - Heal options
- * @returns {number} Amount healed
- */
+/** Heal the champion, running onBeforeHealing hooks; returns the amount actually healed. */
 export function heal(
   champion,
   amount,
@@ -698,25 +555,25 @@ export function heal(
     fromTargetId: options?.fromTargetId ?? null,
   };
 
-  // 🔹 Normaliza valor inicial antes dos hooks
+  // Normalize the initial value before hooks run.
   if (payload.amount > 0) {
     payload.amount = Math.max(Math.floor(payload.amount), 1);
   }
 
-  // 🔹 Permite que hooks modifiquem a cura antes dela acontecer
+  // Let hooks modify the heal before it lands.
   const beforeResults =
     emitCombatEvent("onBeforeHealing", payload, ctx?.allChampions) || [];
 
   for (const result of beforeResults) {
     if (!result) continue;
 
-    // 🔹 Override explícito do valor final da cura
+    // Explicit override of the final heal value.
     if (typeof result.amount === "number") {
       payload.amount = result.amount;
     }
   }
 
-  // 🔹 Segurança pós-modificações
+  // Safety clamp after modifications.
   payload.amount = Math.max(0, Math.floor(payload.amount));
 
   amount = payload.amount;
@@ -749,12 +606,7 @@ export function heal(
   return healed;
 }
 
-/**
- * Purge expired stat modifiers
- * @param {object} champion - The champion instance
- * @param {number} currentTurn - Current turn number
- * @returns {array} List of reverted stats
- */
+/** Drop expired stat modifiers, recompute affected stats from base; returns reverted stats. */
 export function purgeExpiredStatModifiers(champion, currentTurn) {
   const revertedStats = [];
   const affectedStats = new Set();
@@ -776,21 +628,14 @@ export function purgeExpiredStatModifiers(champion, currentTurn) {
     const baseValue = champion[baseKey];
     if (baseValue === undefined) continue;
 
-    const limits = {
-      Critical: { min: 0, max: 95 },
-      Evasion: { min: 0, max: 95 },
-      default: { min: 10, max: 999 },
-    };
-    const { max } = limits[statName] || limits.default;
+    const { max } = statLimitsFor(statName);
 
     const previousValue = champion[statName];
     let newValue = baseValue;
 
     for (const mod of remaining) {
       if (mod.statName === statName) {
-        const effectiveMin = mod.ignoreMinimum
-          ? 0
-          : (limits[statName] || limits.default).min;
+        const effectiveMin = mod.ignoreMinimum ? 0 : statLimitsFor(statName).min;
         newValue = Math.max(effectiveMin, Math.min(newValue + mod.amount, max));
       }
     }
@@ -811,47 +656,23 @@ export function purgeExpiredStatModifiers(champion, currentTurn) {
     }
   }
 
-  champion.tauntEffects = champion.tauntEffects.filter((effect) => {
-    if (effect.expiresAtTurn <= currentTurn) {
-      /* console.log(
-        `[Champion] Taunt effect from ${effect.taunterId} on ${champion.name} expired.`,
-      );
-      */
-      return false;
-    }
-    return true;
-  });
+  champion.tauntEffects = champion.tauntEffects.filter(
+    (effect) => effect.expiresAtTurn > currentTurn,
+  );
 
   champion.damageReductionModifiers = champion.damageReductionModifiers.filter(
-    (modifier) => {
-      if (modifier.expiresAtTurn <= currentTurn) {
-        /* console.log(
-          `[Champion] Damage reduction of ${modifier.amount} from ${modifier.source} on ${champion.name} expired.`,
-        );
-        */
-        return false;
-      }
-      return true;
-    },
+    (modifier) => modifier.expiresAtTurn > currentTurn,
   );
 
   return revertedStats;
 }
 
-/**
- * Add damage modifier
- * @param {object} champion - The champion instance
- * @param {object} mod - Modifier object
- */
+/** Append a damage modifier to the champion. */
 export function addDamageModifier(champion, mod) {
   champion.damageModifiers.push(mod);
 }
 
-/**
- * Purge expired modifiers
- * @param {object} champion - The champion instance
- * @param {number} currentTurn - Current turn number
- */
+/** Drop expired (non-permanent) damage modifiers. */
 export function purgeExpiredModifiers(champion, currentTurn) {
   champion.damageModifiers = champion.damageModifiers.filter((m) => {
     if (m.permanent) return true;
@@ -859,11 +680,7 @@ export function purgeExpiredModifiers(champion, currentTurn) {
   });
 }
 
-/**
- * Purge expired runtime hook effects
- * @param {object} champion - The champion instance
- * @param {number} currentTurn - Current turn number
- */
+/** Drop expired runtime hook effects (those past their expiresAtTurn). */
 export function purgeExpiredHookEffects(champion, currentTurn) {
   if (!Array.isArray(champion.runtime?.hookEffects)) return;
 
@@ -873,11 +690,7 @@ export function purgeExpiredHookEffects(champion, currentTurn) {
   );
 }
 
-/**
- * Get all damage modifiers
- * @param {object} champion - The champion instance
- * @returns {array} Damage modifiers
- */
+/** All damage modifiers on the champion (empty array if none). */
 export function getDamageModifiers(champion) {
   return champion.damageModifiers || [];
 }

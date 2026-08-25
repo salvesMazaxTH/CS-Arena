@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { getClaimPoints } from "../../../engine/combat/claim.js";
 import totalBlock from "../totalBlock.js";
 
 const vaelSkills = [
@@ -16,6 +17,7 @@ const vaelSkills = [
     bf: 65,
     contact: true,
     damageMode: "standard",
+    hitVfx: "slash",
     priority: 0,
 
     description() {
@@ -109,6 +111,7 @@ const vaelSkills = [
     bf: 145,
     contact: true,
     damageMode: "standard",
+    hitVfx: "multislash",
 
     isUltimate: true,
     momentumCost: 55,
@@ -134,9 +137,12 @@ const vaelSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      const didKill = Array.isArray(result)
-        ? result.some((entry) => entry?.killed)
-        : result?.killed;
+      // Only the strike on the chosen target counts: `result` also carries
+      // reflect/thorns entries, which are aimed back at Vael.
+      const results = Array.isArray(result) ? result : [result];
+      const didKill = results.some(
+        (entry) => entry?.targetId === enemy.id && entry?.killed,
+      );
 
       if (didKill) {
         const claimPoints =

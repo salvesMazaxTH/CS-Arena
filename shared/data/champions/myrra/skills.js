@@ -10,6 +10,7 @@ const myrraSkills = [
     bf: 65,
     contact: true,
     damageMode: "standard",
+    hitVfx: "slash",
     priority: 0,
 
     description() {
@@ -21,15 +22,13 @@ const myrraSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
 
-      context = context || {};
-      context.ignoreDamageReduction = true;
-
       return new DamageEvent({
         baseDamage: (user.Attack * this.bf) / 100,
         attacker: user,
         defender: enemy,
         skill: this,
         type: "physical",
+        ignoreDamageReduction: true,
         context,
         allChampions: context?.allChampions,
       }).execute();
@@ -43,6 +42,7 @@ const myrraSkills = [
     bfPerHit: 40,
     contact: true,
     damageMode: "standard",
+    hitVfx: "multislash",
     priority: 0,
 
     description() {
@@ -80,6 +80,7 @@ const myrraSkills = [
     missingHpScaling: 0.5,
     contact: true,
     damageMode: "standard",
+    hitVfx: "multislash",
     isUltimate: true,
     momentumCost: 55,
     priority: 0,
@@ -96,15 +97,13 @@ const myrraSkills = [
       const missingHP = enemy.maxHP - enemy.HP;
       const bonus = missingHP * this.missingHpScaling;
 
-      context = context || {};
-      context.ignoreDamageReduction = true;
-
       return new DamageEvent({
         baseDamage: (user.Attack * this.bf) / 100 + bonus,
         attacker: user,
         defender: enemy,
         skill: this,
         type: "physical",
+        ignoreDamageReduction: true,
         context,
         allChampions: context?.allChampions,
       }).execute();

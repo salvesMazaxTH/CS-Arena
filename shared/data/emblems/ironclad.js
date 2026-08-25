@@ -1,6 +1,7 @@
 export const ironclad = {
   key: "ironclad",
   name: "Emblem of the Ironclad",
+  piercingResistPercent: 50,
 
   requirements: {
     elementalAffinity: {
@@ -10,11 +11,11 @@ export const ironclad = {
   },
 
   description() {
-    return "Your champions gain 15% damage reduction and are immune to indirect damage.";
+    return `Your champions gain 15% damage reduction and halve the effectiveness of Piercing damage against them.`;
   },
 
   hookScope: {
-    onDamageIncoming: "defender",
+    onBeforeDmgTaking: "defender",
   },
 
   onChampionAdded({ champion, owner, context }) {
@@ -39,15 +40,16 @@ export const ironclad = {
     });
   },
 
-  onDamageIncoming({ defender, damage, context, owner }) {
+  onBeforeDmgTaking({ defender, owner, mode, piercingPercentage }) {
     if (!defender || !owner || defender.team !== owner.team) return;
-    if (!Number.isFinite(Number(damage)) || Number(damage) <= 0) return;
-    if ((context?.damageDepth ?? 0) <= 0) return;
+    if (mode !== "piercing") return;
+
+    const resistedPiercing =
+      Number(piercingPercentage || 0) * (1 - this.piercingResistPercent / 100);
 
     return {
-      cancel: true,
-      immune: true,
-      message: `<b>[Emblem — Ironclad]</b> ${defender.name} is immune to indirect damage!`,
+      piercingPercentage: resistedPiercing,
+      log: `<b>[Emblem — Ironclad]</b> ${defender.name}'s steel resists the piercing strike, halving its effectiveness!`,
     };
   },
 };

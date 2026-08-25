@@ -39,6 +39,13 @@ import rakhana from "./rakhana/index.js";
 import tyren from "./tyren/index.js";
 import sabrina from "./sabrina/index.js";
 import dlorafya from "./dlorafya/index.js";
+import avarik from "./avarik/index.js";
+import avarion from "./avarion/index.js";
+import zyrelle from "./zyrelle/index.js";
+import alexa_neruvya from "./alexa_neruvya/index.js";
+import alexa_neruvya_primordial from "./alexa_neruvya_primordial/index.js";
+import lorena from "./lorena/index.js";
+import irina_lancachamas from "./irina_lancachamas/index.js";
 
 const championDB = {
   ralia,
@@ -82,6 +89,13 @@ const championDB = {
   tyren,
   sabrina,
   dlorafya,
+  avarik,
+  avarion,
+  zyrelle,
+  alexa_neruvya,
+  alexa_neruvya_primordial,
+  lorena,
+  irina_lancachamas,
 };
 
 export default championDB;

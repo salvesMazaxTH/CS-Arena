@@ -23,7 +23,7 @@ export const mageArcana = {
   requirements: {
     classKey: {
       key: "mage",
-      count: 4,
+      count: 5,
     },
   },
 

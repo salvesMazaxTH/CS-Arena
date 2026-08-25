@@ -65,7 +65,7 @@ const brunoSkills = [
     element: "ice",
 
     description() {
-      return `Bruno closes the distance behind a wall of advancing ice and drives it into the chosen target, dealing Ice magical damage.`;
+      return `Bruno closes the distance behind a wall of advancing ice and drives it into the chosen target, dealing Ice physical damage.`;
     },
 
     targetSpec: ["enemy"],
@@ -79,7 +79,7 @@ const brunoSkills = [
         attacker: user,
         defender: target,
         skill: this,
-        type: "magical",
+        type: "physical",
         context,
         allChampions: context?.allChampions,
       }).execute();

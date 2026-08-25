@@ -23,7 +23,7 @@ export const divineMandate = {
   requirements: {
     species: {
       species: "divinity",
-      count: 4,
+      count: 5,
     },
   },
 

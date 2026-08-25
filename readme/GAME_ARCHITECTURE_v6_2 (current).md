@@ -79,11 +79,23 @@ Cada jogador seleciona **3 campeões**. Os **3 ficam em campo simultaneamente** 
 │   ├── js/
 │   │   ├── main.js                 # Entrada do cliente; UI e socket
 │   │   ├── gameGlossary.js         # Glossário interativo de termos de jogo
-│   │   └── animation/
-│   │       ├── animsAndLogManager.js  # Sistema de fila de animações
-│   │       └── skillAnimations.js     # Animações WebGL one-shot de skills (Three.js)
-│   ├── utils/
-│   │   └── AudioManager.js            # SFX + música (singleton, client-only)
+│   │   ├── animation/
+│   │   │   ├── animsAndLogManager.js  # Fila de animações + log de combate
+│   │   │   ├── skillAnimations.js     # Registry de animações de skill + fallbacks por elemento
+│   │   │   ├── animationUtils.js      # Geometria compartilhada (getElementCenter)
+│   │   │   ├── meleePunchAnimation.js # Soco corpo-a-corpo do Kai (Three.js + bloom)
+│   │   │   ├── lightningAnimation.js  # Relâmpago genérico (Canvas 2D)
+│   │   │   ├── fireballAnimation.js   # Bola de fogo genérica (Canvas 2D)
+│   │   │   ├── waterAnimation.js      # Projétil de água genérico (Canvas 2D)
+│   │   │   ├── slashAnimation.js      # Corte único que rasga numa fenda (Canvas 2D)
+│   │   │   └── multislashAnimation.js # Combo de três lâminas, para ultimates (Canvas 2D)
+│   │   ├── ui/                        # UI do cliente extraída do main.js (factories createX(deps))
+│   │   │   ├── overlays.js         # Tooltips de skill, overlay de retrato, quick-stats
+│   │   │   ├── targeting.js        # Seleção de alvos client-side
+│   │   │   ├── matchStats.js       # Painel de estatísticas de fim de partida
+│   │   │   └── scoreboard.js       # Placar animado dos times
+│   │   └── utils/
+│   │       └── AudioManager.js     # SFX + música (singleton, client-only)
 │   ├── styles/
 │   │   ├── base.css                # Resets e defaults globais
 │   │   ├── layout.css              # Grid e containers
@@ -221,17 +233,22 @@ O servidor gerencia toda a sessão por meio de uma instância de `GameMatch` (ve
 ### 4.2 Seleção de Campeões
 
 1. Quando ambos os jogadores conectam, servidor emite `allPlayersConnected` seguido de `startChampionSelection`.
-2. Cliente exibe grade. Jogador monta equipe de **3 campeões** (drag & drop para ordenar).
-3. Ao confirmar, cliente emite `selectTeam` com `{ team, champions: string[3] }`.
-4. Servidor valida. Quando **ambos** confirmam, emite `allTeamsSelected` + `gameStateUpdate`.
+2. Cliente exibe grade. Jogador monta uma lineup de **8 campeões** e, opcionalmente, escolhe até **2 Emblems**.
+3. Ao confirmar, cliente emite `selectTeam` com `{ team, champions: string[8] }`.
+4. Servidor valida (incluindo a elegibilidade dos Emblems para a lineup). Quando **ambos** confirmam, emite `allTeamsSelected` + `gameStateUpdate`.
 
 > Timer de seleção: **120 segundos**. Ao expirar, campeões aleatórios preenchem os slots vazios.
+>
+> A validação de elegibilidade de Emblems vive em `shared/data/emblems/eligibility.js`
+> (`evaluateEmblemEligibilityForRoster(emblem, rosterKeys, championDB)`), reexportada por
+> `shared/data/emblems/index.js`. O `server.js` apenas a chama, tanto no draft (`updatePlayerEmblems`)
+> quanto na confirmação (`selectTeam`).
 
 ### 4.3 Início de Partida
 
-1. Servidor instancia os 3 campeões de cada equipe via `assignChampionsToTeam()` — slots 0, 1 e 2.
-2. Não há fila de reserva no modo atual.
-3. Partida começa com `match.startCombat()`.
+1. Após ambos confirmarem, cada time tem sua fila de reserva populada com o roster de 8 (`combat.reserveQueues`).
+2. Inicia-se a fase de escolha do **primeiro campeão** (1v1): cada jogador escolhe um da sua lineup. Timer de **45 s**; ao expirar, o servidor escolhe um **aleatório** do roster.
+3. `finalizeFirstChampionChoices(spawnChampion)` instancia o primeiro campeão de cada time em campo; os demais entram depois via `summonFromLineup` (limite de 3 campeões ativos por time).
 
 ### 4.4 Turno
 
@@ -320,7 +337,6 @@ O servidor gerencia toda a sessão por meio de uma instância de `GameMatch` (ve
 | `playerConfirmedEndTurn`    | `playerSlot: number`            | Um jogador confirmou fim de turno            |
 | `playerCanceledEndTurn`     | `playerSlot: number`            | Jogador cancelou confirmação de turno        |
 | `waitingForOpponentEndTurn` | `string`                        | Aguardando adversário                        |
-| `scoreUpdate`               | `{ player1, player2 }`          | Placar atualizado                            |
 | `switchesUpdate`            | —                               | **Desativado por tempo indeterminado**       |
 | `switchQueued`              | —                               | **Desativado por tempo indeterminado**       |
 | `switchDenied`              | —                               | **Desativado por tempo indeterminado**       |
@@ -1580,7 +1596,7 @@ O sistema de **Switch/troca/reserva** está **temporariamente desabilitado por t
 
 **Arquivo**: `public/js/animation/animsAndLogManager.js`
 
-Factory `createCombatAnimationManager(deps)` instanciada em `main.js`.
+Factory `createCombatAnimationManager(deps)` instanciada em `main.js`. Painéis de UI autocontidos foram extraídos para `public/js/ui/` e injetados internamente: `matchStats.js` (painel de estatísticas de fim de partida) e `scoreboard.js` (placar animado). O placar é atualizado pelo `scorePayload` que vem dentro do envelope `combatAction`.
 
 ### Filosofia: Fila Determinística
 
@@ -1596,7 +1612,6 @@ combatAnimations.handleCombatLog(text); // enqueue "combatLog"
 combatAnimations.handleGameStateUpdate(gameState); // enqueue "gameStateUpdate"
 combatAnimations.handleTurnUpdate(turn); // enqueue "turnUpdate"
 combatAnimations.handleChampionRemoved(championId); // enqueue "championRemoved"
-// combatAnimations.handleChampionSwitchedOut(champId); // desativado no modo atual
 combatAnimations.handleCombatPhaseComplete(); // enqueue "combatPhaseComplete"
 combatAnimations.handleGameOver(data); // enqueue "gameOver"
 combatAnimations.appendToLog(text);
@@ -1611,8 +1626,7 @@ combatAnimations.reset();
 | `gameStateUpdate`     | `processGameStateUpdate(gameState)`                              |
 | `turnUpdate`          | `processTurnUpdate(turn)`                                        |
 | `championRemoved`     | `processChampionRemoved(id)` — animação de morte                 |
-| `championSwitchedOut` | Desativado no modo atual                                         |
-| `combatLog`           | `processCombatLog(text)` — dialog se relevante                   |
+| `combatLog`           | `appendToLog(text)` — anexa a linha ao log de combate            |
 | `combatPhaseComplete` | Marca `currentPhase = "combat"` → dispara onQueueEmpty ao drenar |
 | `gameOver`            | `handleGameOver(data)` — overlay final                           |
 
@@ -1695,27 +1709,44 @@ VFX contínuos renderizados via canvas HTML5 sobre o retrato do campeão. `syncC
 | `waterBubble`      | `runtime.form === "bola_agua"`                               |
 | `finishing`        | `playFinishingEffect(el, { variant })` — chamado diretamente |
 
-### 20.2 Skill Animations — One-Shot WebGL
+### 20.2 Skill Animations — One-Shot
 
 **Arquivo**: `public/js/animation/skillAnimations.js`
 
-Sistema registry-based para animações one-shot de skills, renderizadas em `#webgl-container` overlay via Three.js (global).
+Registry puro: mapeia chaves de skill para factories e resolve os fallbacks por elemento. **Nenhuma animação é implementada aqui** — cada uma vive no seu próprio módulo em `public/js/animation/`, exporta sua função de play, e é registrada no fim deste arquivo.
+
+A direção dos imports importa: os módulos de animação **não** importam o registry para se auto-registrar, senão o `Map` do registry ainda estaria na temporal dead zone quando o corpo do módulo rodasse.
 
 ```js
-// Registrar nova animação:
-registerSkillAnimation("skill_key", async ({ targetEl, userEl }) => { ... });
+// Módulo da animação:
+export async function playX({ targetEl, userEl }) { ... }
+
+// skillAnimations.js:
+registerSkillAnimation("skill_key", playX);
 
 // Disparar (no-op se não registrada):
-await animateSkill(skillKey, { targetEl, userEl });
+await animateSkill(skillKey, { targetEl, userEl, skill });
 ```
 
 **Integração**: chamado em `animsAndLogManager.js → processCombatAction()` logo após o dialog de ação, usando `action.skillKey`.
 
-**Animação registrada atualmente:**
+**Animações registradas atualmente:**
 
-| Skill           | Campeão | Efeito                                                                                                                      |
-| --------------- | ------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `gancho_rapido` | Kai     | Swipe trail + fist impact (procedural texture) + smoke particles. Direção calculada de `userEl` → `targetEl`. Lifetime: 2s. |
+| Chave                                | Efeito                                                                                                                        |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `quick_hook`, `blazing_fist_barrage` | Swipe trail + fist impact (procedural texture) + smoke particles. Direção calculada de `userEl` → `targetEl`. Lifetime: 1,1s. |
+| `default_lightning`                  | Relâmpago em Canvas 2D com ramificações e flash `.lightning-hit` no alvo.                                                    |
+| `default_fire`                       | Bola de fogo em Canvas 2D (`fireballAnimation.js`): trilha em arco, impacto com brasas, shockwave e flash `.fire-hit`.         |
+| `default_fire_big`                   | Mesma classe `FireballEffect` com `scale: 1.85` — usada por ultimates de fogo e pelas exceções de `BIG_FIREBALL_SKILLS`.        |
+| `default_water`                      | Projétil de água em Canvas 2D (`waterAnimation.js`): trilha em arco, splash com dois anéis, gotículas que se separam em duas levas e caem com gravidade, flash `.water-hit`. |
+| `default_slash`                      | Corte único (`slashAnimation.js`): um fio é traçado rápido na diagonal, segura, e então rasga numa fenda larga de bordas luminosas e miolo vazio. Flash `.slash-hit`. |
+| `default_multislash`                 | Combo (`multislashAnimation.js`): três lâminas escalonadas em leque, faíscas, e cada ferida se abre em duas bordas. Reservado a ultimates de corte e skills que são vários golpes. |
+
+**Fallbacks por elemento**: skills sem animação própria caem em `DEFAULT_ELEMENT_ANIMATIONS` quando são ofensivas (`damageMode` definido) e não fazem contato (`contact: false`) — `lightning` → `default_lightning`, `fire` → `default_fire`, `water` → `default_water`. Skills de fogo com `isUltimate: true`, mais as chaves listadas em `BIG_FIREBALL_SKILLS` (hoje `magma_bomb`), sobem para `default_fire_big`.
+
+**Motivo autoral — `hitVfx`**: uma skill pode declarar `hitVfx: "slash"` ou `hitVfx: "multislash"` para pedir uma animação pelo *gesto* em vez do elemento. Isso é consultado **antes** do gate de `contact`, porque um corte normalmente é `contact: true`, e vence o fallback de elemento. A chave resolvida é `default_${hitVfx}`.
+
+**Cor do corte — `hitVfxPalette`**: a paleta dos cortes resolve em três níveis, `hitVfxPalette` → `element` → `steel`. As matizes seguem `shared/ui/identityPalette.js` para o corte ler como o mesmo elemento do badge, mas com valores mais claros: blending aditivo lava os tons abafados de badge, e uma lâmina precisa de núcleo quase branco. Além das chaves de elemento existem paletas autorais (`violet` para Akane, `crimson` para o Drex). Os sprites são pré-renderizados uma vez por paleta e cacheados.
 
 ### 20.3 VFX WebGL One-Shot — deathClaim (Jeff)
 

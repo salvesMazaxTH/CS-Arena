@@ -87,10 +87,10 @@ const baraoEstrondosoSkills = [
     priority: -999,
 
     isUltimate: true,
-    momentumCost: 100,
+    momentumCost: 90,
 
     description() {
-      return `Deals ABSURD damage to the target plus all Stored Damage. This attack is always a Critical Hit. After the attack, Stored Damage is reset to 0.`;
+      return `Deals ABSURD damage to the chosen target plus all Stored Damage. This attack is always a Critical Hit. After the attack, Stored Damage is reset to 0.`;
     },
 
     targetSpec: ["enemy"],

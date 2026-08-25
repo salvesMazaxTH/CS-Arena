@@ -5,7 +5,7 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import path, { format } from "path";
+import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 import livereload from "livereload";
@@ -13,20 +13,27 @@ import livereload from "livereload";
 const liveReloadServer = livereload.createServer();
 liveReloadServer.watch("public");
 
+process.on("SIGINT", () => {
+  liveReloadServer.close();
+  process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+  liveReloadServer.close();
+  process.exit(0);
+});
+
 import { GameMatch } from "../shared/engine/match/GameMatch.js";
 import { Player } from "../shared/engine/match/Player.js";
 
 import { championDB } from "../shared/data/championDB.js";
 import { Champion } from "../shared/core/Champion.js";
-import { generateId } from "../shared/utils/id.js";
-import {
-  formatChampionName,
-  formatPlayerName,
-} from "../shared/ui/formatters.js";
+import { formatChampionName } from "../shared/ui/formatters.js";
 
 import { emitCombatEvent } from "../shared/engine/combat/combatEvents.js";
 import { Action } from "../shared/engine/combat/Action.js";
 import { TurnResolver } from "../shared/engine/combat/TurnResolver.js";
+import { CombatEnvelopeBuilder } from "../shared/engine/combat/CombatEnvelopeBuilder.js";
 
 import {
   CLAIM_ACTION_KEY,
@@ -34,43 +41,40 @@ import {
 } from "../shared/engine/combat/claim.js";
 
 import { DamageEvent } from "../shared/engine/combat/DamageEvent.js";
-import { snapshotChampions } from "../shared/engine/combat/snapshotChampions.js";
 import { getHardCCActionDenial } from "../shared/core/championStatus.js";
 import { decayShields } from "../shared/core/championCombat.js";
-import {
-  applyChampionTransformation,
-  revertChampionTransformation,
-} from "../shared/engine/match/championTransformation.js";
 
-import { EMBLEMS } from "../shared/data/emblems/index.js";
+import {
+  EMBLEMS,
+  evaluateEmblemEligibilityForRoster,
+} from "../shared/data/emblems/index.js";
 
 // ============================================================
-//  CONFIGURAÇÃO
+//  CONFIGURATION
 // ============================================================
 
 const editMode = {
   enabled: false,
   autoLogin: false,
-  autoSelection: false, // Seleção automática de campeões (sem tela de seleção)
+  autoSelection: false, // Auto-pick champions (skip the selection screen)
   actMultipleTimesPerTurn: false,
   unavailableChampions: false,
-  damageOutput: null, // Valor fixo de dano para testes (ex: 999). null = desativado. (SERVER-ONLY)
-  alwaysCrit: false, // Força crítico em todo ataque. (SERVER-ONLY)
-  alwaysEvade: false, // Força evasão em todo ataque. (SERVER-ONLY)
-  executionOverride: null, // null = normal
-  // number = força threshold (ex: 1 = 100%, 0.5 = 50%)
-  freeCostSkills: false, // Habilidades não consomem recurso. (SERVER-ONLY)
+  damageOutput: null, // Fixed damage value for tests (e.g. 999). null = off. (SERVER-ONLY)
+  alwaysCrit: false, // Force a crit on every attack. (SERVER-ONLY)
+  alwaysEvade: false, // Force evasion on every attack. (SERVER-ONLY)
+  executionOverride: null, // null = normal; number = forced threshold (1 = 100%, 0.5 = 50%)
+  freeCostSkills: false, // Skills cost no resource. (SERVER-ONLY)
 };
 
 const TEAM_SIZE = 8;
-const ACTIVE_PER_TEAM = 3; // máximo de campeões simultâneos em campo por time (roster=8, active=3)
-const MAX_MATCH_TURNS = 20; // fim do jogo no final do turno 20
-const CHAMPION_SELECTION_TIME = 120; // Segundos para seleção de campeões
-const FIRST_CHOICE_TIMEOUT = 99999 * 1000; //30 * 1000; // 30s para escolha do 1v1 (99.999s para testes)
-const DISCONNECT_TIMEOUT = 30 * 1000; // 30 s para reconexão
+const ACTIVE_PER_TEAM = 3; // max champions on the field per team (roster=8, active=3)
+const MAX_MATCH_TURNS = 20; // game ends at the end of turn 20
+const CHAMPION_SELECTION_TIME = 120; // seconds for champion selection
+const FIRST_CHOICE_TIMEOUT = 45 * 1000; // 45s for the 1v1 pick before auto-selecting at random
+const DISCONNECT_TIMEOUT = 30 * 1000; // 30s to reconnect
 
 // ============================================================
-//  SERVIDOR HTTP & EXPRESS
+//  HTTP SERVER & EXPRESS
 // ============================================================
 
 const __filename = fileURLToPath(import.meta.url);
@@ -88,154 +92,15 @@ app.get("/", (_req, res) => {
 });
 
 // ============================================================
-//  ESTADO DO JOGO
+//  GAME STATE
 // ============================================================
 
 const match = new GameMatch();
+const envelopeBuilder = new CombatEnvelopeBuilder(match.combat);
 let waitingForAnimations = false;
 
-function getChampionSpecies(champion) {
-  if (!champion) return [];
-
-  if (Array.isArray(champion.species)) {
-    return champion.species
-      .map((item) =>
-        String(item || "")
-          .trim()
-          .toLowerCase(),
-      )
-      .filter(Boolean);
-  }
-
-  if (typeof champion.speciesTag === "string") {
-    return champion.speciesTag
-      .replace(/^species\s*:\s*/i, "")
-      .split(",")
-      .map((item) => item.trim().toLowerCase())
-      .filter(Boolean);
-  }
-
-  return [];
-}
-
-function normalizeChampionClassKey(champion) {
-  if (!champion) return null;
-
-  const candidates = [
-    champion.classKey,
-    champion.classTag,
-    champion.role,
-    champion.archetype,
-  ];
-
-  for (const candidate of candidates) {
-    if (typeof candidate !== "string") continue;
-    const normalized = candidate
-      .replace(/^class\s*:\s*/i, "")
-      .trim()
-      .toLowerCase();
-    if (normalized) return normalized;
-  }
-
-  return null;
-}
-
-function evaluateEmblemEligibilityForRoster(emblem, rosterKeys = []) {
-  if (!emblem || !emblem.requirements) return true;
-
-  const requirements = emblem.requirements;
-  const roster = rosterKeys.map((key) => championDB[key]).filter(Boolean);
-
-  const checks = [];
-
-  if (requirements.elementalAffinity) {
-    const targetElement = String(requirements.elementalAffinity.element || "")
-      .trim()
-      .toLowerCase();
-    const requiredCount = Number(requirements.elementalAffinity.count || 0);
-    const actualCount = roster.filter((champion) => {
-      const affinities = Array.isArray(champion.elementalAffinities)
-        ? champion.elementalAffinities
-        : typeof champion.elementalAffinities === "string"
-          ? [champion.elementalAffinities]
-          : [];
-      return affinities.some(
-        (affinity) => String(affinity).trim().toLowerCase() === targetElement,
-      );
-    }).length;
-    checks.push(actualCount >= requiredCount);
-  }
-
-  if (requirements.species) {
-    const targetSpecies = String(
-      requirements.species.value ??
-        requirements.species.species ??
-        requirements.species.key ??
-        "",
-    )
-      .trim()
-      .toLowerCase();
-    const requiredCount = Number(requirements.species.count || 0);
-    const actualCount = roster.filter((champion) =>
-      getChampionSpecies(champion).includes(targetSpecies),
-    ).length;
-    checks.push(actualCount >= requiredCount);
-  }
-
-  if (requirements.classKey) {
-    const targetClass = String(
-      requirements.classKey.value ??
-        requirements.classKey.class ??
-        requirements.classKey.key ??
-        "",
-    )
-      .trim()
-      .toLowerCase();
-    const requiredCount = Number(requirements.classKey.count || 0);
-    const actualCount = roster.filter(
-      (champion) => normalizeChampionClassKey(champion) === targetClass,
-    ).length;
-    checks.push(actualCount >= requiredCount);
-  }
-
-  if (requirements.baseStat) {
-    const statKey = String(
-      requirements.baseStat.stat ??
-        requirements.baseStat.key ??
-        requirements.baseStat.name ??
-        "",
-    ).trim();
-    const requiredCount = Number(requirements.baseStat.count || 0);
-    const threshold =
-      requirements.baseStat.min ??
-      requirements.baseStat.value ??
-      requirements.baseStat.threshold;
-
-    const actualCount = roster.filter((champion) => {
-      const value = Number(champion[statKey]);
-      if (!Number.isFinite(value)) return false;
-      if (threshold == null) return true;
-      return value >= Number(threshold);
-    }).length;
-
-    checks.push(actualCount >= requiredCount);
-  }
-
-  return checks.length === 0 || checks.every(Boolean);
-}
-
-/** Garante que a entrada do turno atual existe no histórico. */
-function ensureTurnEntry() {
-  return match.ensureTurnEntry();
-}
-
-/** Registra um evento no histórico do turno atual. */
-function logTurnEvent(eventType, eventData) {
-  match.logTurnEvent(eventType, eventData);
-}
-
 // ============================================================
-//  SERIALIZAÇÃO DO ESTADO
+//  STATE SERIALIZATION
 // ============================================================
 
 /**
@@ -264,15 +129,9 @@ function getLineupSummonAvailability(team) {
   return { canSummon: champions.length > 0, champions };
 }
 
-/**
- * Champions that entered the field this turn and must stay concealed from the
- * opposing player until the turn is locked and resolution begins — knowing about
- * a reinforcement while actions are still being chosen is privileged information.
- *
- * Concealment lives in the payload rather than in the emit sites: any broadcast
- * that happens to fire mid-turn (a disconnect, an emblem sync, a debug reset)
- * would otherwise reveal them, which is why the leak had no obvious pattern.
- */
+// Champions summoned this turn, hidden from the opponent until the turn locks —
+// a mid-turn reinforcement is privileged information. Concealment lives in the
+// payload (not the emit sites) so no stray broadcast can leak them.
 const concealedSummonIds = new Set();
 
 /** Reveals every concealed summon to everyone. Called when the turn locks. */
@@ -298,7 +157,7 @@ function getGameState(extraChampions = [], { viewerTeam = null } = {}) {
     c.serialize(),
   );
 
-  // Garantir que campeões extras (ex: recém-mortos) estejam no payload se o frontend ainda os vir como ativos
+  // Force extra champions (e.g. just-killed ones) into the payload while the client still sees them as active.
   for (const extra of extraChampions) {
     if (extra && !champions.find((c) => c.id === extra.id)) {
       champions.push(extra.serialize());
@@ -309,7 +168,7 @@ function getGameState(extraChampions = [], { viewerTeam = null } = {}) {
     ? champions.filter((c) => !isConcealedFromViewer(c, viewerTeam))
     : champions;
 
-  // Roster completo (8 campeões) de cada time, para exibição das lineup banners no cliente
+  // Full 8-champion roster of each team, for the client's line-up banners.
   const lineups = {};
   const playerEmblems = {};
   const lineupSummons = {};
@@ -360,10 +219,10 @@ function broadcastGameState(extraChampions = []) {
 }
 
 // ============================================================
-//  GERENCIAMENTO DE CAMPEÕES
+//  CHAMPION MANAGEMENT
 // ============================================================
 
-/** Retorna uma chave aleatória de campeão, excluindo as fornecidas. */
+/** Whether a champion may be picked during draft (released, enabled, not a minion). */
 function isChampionSelectableInDraft(championData) {
   if (!championData) return false;
   if ((championData.entityType ?? "champion") !== "champion") return false;
@@ -405,296 +264,47 @@ function fillRandomChampionSelection(currentSelection = [], fillAll = false) {
   return nextSelection.slice(0, TEAM_SIZE);
 }
 
-function processChampionMutationRequest(
-  {
-    targetId,
-    newChampionKey,
-    mode = "swap",
-    duration = 0,
-    hpMode = "preserveRatio",
-    statMode = "deltaFromBase",
-    expectedToken = null,
-  } = {},
-  options = {},
-) {
-  const mutationContext = options?.context ?? null;
+/** Cosmetic winter portrait swap, applied on spawn when the asset exists on disk. */
+function applySeasonalSkin(champion) {
+  if (Math.random() > 0.675) return;
 
-  if (mode === "restore") {
-    const restored = match.combat.restoreInactive(targetId);
-    return restored ? { champion: restored } : null;
-  }
+  const fileName = champion.portrait.split("/").pop();
+  if (!fileName) return;
 
-  if (mode === "transform") {
-    const transformed = applyChampionTransformation({
-      combat: match.combat,
-      targetId,
-      newChampionKey,
-      currentTurn: match.combat.currentTurn,
-      duration,
-      hpMode,
-      statMode,
-    });
-
-    if (!transformed) return null;
-
-    const transformation = transformed.runtime?.transformation;
-    if (transformation?.revertAtTurn && transformation?.token) {
-      const scheduleFn = mutationContext?.schedule;
-      const scheduledEffect = {
-        type: "championMutation",
-        turnToHappen: transformation.revertAtTurn,
-        payload: {
-          mode: "revertTransform",
-          targetId: transformed.id,
-          expectedToken: transformation.token,
-        },
-      };
-
-      if (typeof scheduleFn === "function") {
-        scheduleFn.call(mutationContext, scheduledEffect);
-      } else {
-        match.combat.scheduledEffects.push(scheduledEffect);
-      }
-    }
-
-    return { champion: transformed };
-  }
-
-  if (mode === "revertTransform") {
-    const reverted = revertChampionTransformation({
-      combat: match.combat,
-      targetId,
-      expectedToken,
-    });
-
-    if (!reverted) return null;
-
-    return {
-      champion: reverted,
-      log: `${formatChampionName(reverted)} retornou à sua forma original.`,
-    };
-  }
-
-  const old = match.combat.getChampion(targetId);
-  if (!old) return null;
-
-  const swappedOut = match.combat.swapOut(targetId);
-  if (!swappedOut) return null;
-
-  const baseData = championDB[newChampionKey];
-  if (!baseData)
-    throw new Error(`ERRO: "${newChampionKey}" não encontrado em championDB.`);
-
-  // Criar novo campeão com ID novo (nunca reusar targetId)
-  const newId = generateId(newChampionKey);
-  const newChampion = Champion.fromBaseData(baseData, newId, old.team, {
-    combatSlot: old.combatSlot,
-  });
-  newChampion.championKey = newChampionKey;
-
-  // Indica qual campeão este substituiu — lido pela passiva do substituto ao morrer
-  newChampion.runtime.swappedFrom = targetId;
-
-  match.combat.registerChampion(newChampion, { trackSnapshot: true });
-
-  return { champion: newChampion };
-}
-
-/**
- * Creates, registers and (optionally) notifies the clients of a new champion.
- *
- * @param {Object}  opts
- * @param {string}  opts.championKey   – key in championDB
- * @param {number}  opts.team          – 1 or 2
- * @param {number|null}  [opts.combatSlot]  – explicit slot; when omitted, the next free one is used
- * @param {boolean} [opts.trackSnapshot=true]  – whether to record it in combatSnapshot (false during initial setup)
- * @param {boolean} [opts.emit=false]          – whether to emit "championAdded" to the clients
- * @returns {Champion|null} the created instance, or null when impossible (team full or invalid data)
- */
-function spawnChampion({
-  championKey,
-  team,
-  combatSlot = null,
-  trackSnapshot = true,
-  emitState = true,
-  spawnProtection = true,
-} = {}) {
-  const baseData = championDB[championKey];
-  if (!baseData) {
-    console.warn(`[SPAWN] Aborted: "${championKey}" is not in the championDB.`);
-    return null;
-  }
-
-  const entityType = baseData.entityType ?? "champion";
-
-  // --- Check whether the team can take one more living champion ---
-  // Minions go straight through: the field cap only counts champions.
-  if (!match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM, { entityType })) {
-    console.warn(
-      `[SPAWN] Aborted: team ${team} already fields ${ACTIVE_PER_TEAM} champions (attempted: ${championKey}).`,
-    );
-    return null;
-  }
-
-  // --- Resolve combatSlot ---
-  if (!Number.isInteger(combatSlot)) {
-    combatSlot = match.combat.getNextAvailableSlot(team, ACTIVE_PER_TEAM, {
-      entityType,
-    });
-
-    if (combatSlot === null) {
-      console.warn(
-        `[SPAWN] Aborted: no free slot on team ${team} (attempted: ${championKey}).`,
-      );
-      return null; // no free slot
-    }
-  } else if (match.combat.getChampionAtSlot(team, combatSlot)) {
-    // The explicit slot (e.g. Jeff's revival) is already taken by another
-    // entity — relocate instead of stacking two entities on the same spot.
-    const fallbackSlot = match.combat.getNextAvailableSlot(
-      team,
-      ACTIVE_PER_TEAM,
-      { entityType },
-    );
-
-    console.warn(
-      `[SPAWN] Slot ${combatSlot} on team ${team} is taken; relocating ${championKey} to ${fallbackSlot}.`,
-    );
-
-    if (fallbackSlot === null) return null;
-    combatSlot = fallbackSlot;
-  }
-
-  const id = generateId(championKey);
-
-  const newChampion = Champion.fromBaseData(baseData, id, team, {
-    combatSlot,
-  });
-
-  function applySeasonalSkin(champion) {
-    const chance = 0.675;
-    const roll = Math.random();
-
-    if (roll > chance) return;
-
-    const basePath = champion.portrait;
-
-    const fileName = basePath.split("/").pop();
-    if (!fileName) return;
-
-    const baseName = fileName.replace(".webp", "");
-
-    const winterPath = `/assets/portraits/${baseName}_curtindo_o_inverno.webp`;
-
-    // Physical path on disk (adjust if needed).
-    const absolutePath = path.join(
-      process.cwd(),
-      "public",
-      "assets",
-      "portraits",
-      `${baseName}_curtindo_o_inverno.webp`,
-    );
-
-    // 👇 only applied when the file actually exists
-    if (fs.existsSync(absolutePath)) {
-      champion.portrait = winterPath;
-    }
-  }
-
-  applySeasonalSkin(newChampion);
-
-  newChampion.championKey = championKey;
-  /* console.log(
-    `[SPAWN] ${newChampion.name} (ID: ${id}) on team ${team}, slot ${combatSlot}, with championKey ${championKey}`,
-  ); */
-
-  match.combat.registerChampion(newChampion, { trackSnapshot });
-
-  emitCombatEvent(
-    "onChampionAdded",
-    {
-      // Must NOT be named "owner": emitCombatEvent overwrites that key with the
-      // hook's own owner (the champion on the champion path, the Player on the
-      // emblem path), so emblem hooks could never see the champion being added.
-      champion: newChampion,
-      context: {
-        currentTurn: match.combat.currentTurn,
-        allChampions: match.combat.activeChampions,
-        spawnProtection,
-      },
-      spawnProtection,
-    },
-    [newChampion],
-    {
-      players: match.players,
-    },
+  const baseName = fileName.replace(".webp", "");
+  const absolutePath = path.join(
+    process.cwd(),
+    "public",
+    "assets",
+    "portraits",
+    `${baseName}_curtindo_o_inverno.webp`,
   );
 
-  if (!trackSnapshot) {
-    // Initial setup — manual snapshot.
-    match.combat.combatSnapshot.push({
-      championKey,
-      id,
-      team,
-      combatSlot: newChampion.combatSlot,
-    });
+  if (fs.existsSync(absolutePath)) {
+    champion.portrait = `/assets/portraits/${baseName}_curtindo_o_inverno.webp`;
   }
-
-  if (emitState) {
-    broadcastGameState();
-  }
-
-  return newChampion;
 }
 
-/** Instantiates and registers champions from a list of keys into a team (initial selection phase). */
-/** Only the first ACTIVE_PER_TEAM take the field; the rest go to the reserve queue. */
-function assignChampionsToTeam(team, championKeys) {
-  championKeys.slice(0, ACTIVE_PER_TEAM).forEach((championKey, index) => {
-    if (!championKey) return;
-    spawnChampion({
-      championKey,
-      team,
-      combatSlot: index,
-      trackSnapshot: false,
-      emit: false,
-    });
+/**
+ * Spawns a champion through the combat model (which enforces the field cap and
+ * fires onChampionAdded), applies the server-only seasonal skin, and — when
+ * emitState — broadcasts the new state. Returns the instance, or null when it
+ * could not be spawned.
+ */
+function spawnChampion({ emitState = true, ...spawnOpts } = {}) {
+  const champion = match.combat.spawnChampion({
+    ...spawnOpts,
+    maxPerTeam: ACTIVE_PER_TEAM,
   });
+  if (!champion) return null;
+
+  applySeasonalSkin(champion);
+  if (emitState) broadcastGameState();
+
+  return champion;
 }
 
-/** Inicializa a fila de reserva de um jogador (DESATIVADO). */
-function initReserveQueue(_player) {
-  // Sistema de reservas desativado para modo 3x3 fixo.
-}
-
-/**
- * Limpa momentum e todos os efeitos temporários de um campeão ao sair de campo por troca.
- * Modifiers com isPermanent=true (statModifiers) ou permanent=true (damageModifiers) são mantidos.
- */
-function clearTemporaryEffectsOnSwitch(_champion) {
-  // Sistema de switch desativado para modo 3x3 fixo.
-}
-
-// /** Emite backChampionUpdate com a fila completa de reserva do time. */
-// function emitBackChampionUpdate(_team) {
-//   // Sistema de reservas desativado para modo 3x3 fixo.
-// }
-
-/**
- * Spawna o próximo campeão da fila de reserva do time.
- *
- * @param {number} team
- * @param {object} [opts]
- * @param {'death'|'switch'} [opts.reason='death']  Por morte automática ou por troca manual.
- * @param {string|null}      [opts.championToSwitchOutId]  ID do campeão a substituir (apenas reason='switch').
- * @returns {Champion|null}
- */
-// function spawnFromReserve(_team, _opts = {}) {
-//   // Sistema de reservas desativado para modo 3x3 fixo.
-//   return null;
-// }
-
-/** Verifica se ambos os jogadores selecionaram seus times e notifica os clientes. */
+/** Whether both players have selected their teams; notifies the clients when so. */
 function checkAllTeamsSelected() {
   if (match.isTeamSelected(0) && match.isTeamSelected(1)) {
     io.emit("allTeamsSelected");
@@ -704,46 +314,23 @@ function checkAllTeamsSelected() {
   return false;
 }
 
-/** Emite os sockets de morte de um campeão a partir do resultado de match.removeChampionFromGame(). */
+/** Emits a champion's death sockets from a match.removeChampionFromGame() result. */
 function emitChampionDeath(deathResult) {
   if (!deathResult) return;
 
-  const champ =
-    match.combat.activeChampions.get(deathResult.championId) ||
-    match.combat.deadChampions.get(deathResult.championId);
+  const champ = match.combat.getChampion(deathResult.championId);
 
-  console.log("[BACKEND][DEATH BEFORE EMIT]", {
-    id: champ?.id,
-    name: champ?.name,
-    HP: champ?.HP,
-    alive: champ?.alive,
-    deathClaimTriggered: champ?.runtime?.deathClaimTriggered,
-  });
-
-  // Garantimos que o estado do campeão morto (com runtime atualizado) seja enviado
-  // Limpar currentContext do campeão morto antes de serializar (evita referências circulares)
+  // Drop the dead champion's currentContext before serializing (avoids circular refs).
   if (champ?.runtime) delete champ.runtime.currentContext;
 
-  const state = getGameState(champ ? [champ] : []);
-
-  const deadChampInState = state.champions.find(
-    (c) => c.id === deathResult.championId,
-  );
-
-  console.log("[BACKEND][GAMESTATE SNAPSHOT]", {
-    found: !!deadChampInState,
-    deathClaimTriggered: deadChampInState?.runtime?.deathClaimTriggered,
-  });
-
   if (deathResult.scoreAwarded && deathResult.scorePayload) {
-    io.emit("scoreUpdate", deathResult.scorePayload);
     io.emit("combatAction", {
       action: null,
       scorePayload: deathResult.scorePayload,
       claimPoints: null,
       globalDialogs: [],
-      state,
-      log: `${deathResult.championName ?? "Campeão"} foi eliminado. Pontuação atualizada.`,
+      state: getGameState(champ ? [champ] : []),
+      log: `${deathResult.championName ?? "Champion"} was eliminated. Score updated.`,
     });
   }
 
@@ -752,17 +339,16 @@ function emitChampionDeath(deathResult) {
 }
 
 // ============================================================
-//  VALIDAÇÃO DE AÇÕES (pré-resolução)
+//  ACTION VALIDATION (pre-resolution)
 // ============================================================
 
 /**
- * Valida se o campeão pode SOLICITAR o uso de uma habilidade.
- * Chamada em "requestSkillUse" — rejeita imediatamente via socket.
+ * Whether a champion may REQUEST a skill use. Called in "requestSkillUse" —
+ * rejects immediately over the socket.
  */
 function validateActionIntent(user, skill, socket) {
-  // console.log("[VALIDATE ACTION CALLED]", user?.name);
   if (!user.alive) {
-    socket.emit("skillDenied", "Campeão morto.");
+    socket.emit("skillDenied", "Dead champion.");
     return false;
   }
 
@@ -773,7 +359,7 @@ function validateActionIntent(user, skill, socket) {
   }
 
   if (!editMode.actMultipleTimesPerTurn && user.hasActedThisTurn) {
-    socket.emit("skillDenied", "Já agiu neste turno.");
+    socket.emit("skillDenied", "Already acted this turn.");
     return false;
   }
 
@@ -781,295 +367,50 @@ function validateActionIntent(user, skill, socket) {
 }
 
 // ============================================================
-//  HELPERS DE MANIPULAÇÃO DE MOMENTUM
+//  MOMENTUM HELPERS
 // ============================================================
-/**
- * Aplica regeneração global de momentum (+12 unidades por turno)
- */
+
+/** Applies the global start-of-turn momentum regen (+12 per turn). */
 function applyGlobalMomentumRegen(champion, context, resolver) {
-  if (!champion || !champion.alive) return 0;
+  if (!champion || !champion.alive) return;
 
-  const GLOBAL_MOMENTUM_REGEN = 12; // +12 momentum por turno (equivalente a 3 unidades antigas)
+  const GLOBAL_MOMENTUM_REGEN = 12;
 
-  const applied = resolver
-    ? resolver.applyResourceChange({
-        target: champion,
-        amount: GLOBAL_MOMENTUM_REGEN,
-        context,
-        sourceId: champion.id,
-        visualPhase: "global_turn_regen",
-        visualAfterHooks: true,
-        debugLabel: "global_turn_regen",
-      })
-    : champion.addMomentum(GLOBAL_MOMENTUM_REGEN);
-
-  /*   console.log(
-    ` ${champion.name} regenerou ${applied} de Momentum no início do turno. Momentum atual: ${champion.momentum}/${champion.momentumMax}`,
-  ); */
-
-  // não retorna nada
+  if (resolver) {
+    resolver.applyResourceChange({
+      target: champion,
+      amount: GLOBAL_MOMENTUM_REGEN,
+      context,
+      sourceId: champion.id,
+      visualPhase: "global_turn_regen",
+      visualAfterHooks: true,
+      debugLabel: "global_turn_regen",
+    });
+  } else {
+    champion.addMomentum(GLOBAL_MOMENTUM_REGEN);
+  }
 }
 
-//  EMISSÃO DE AÇÕES DE COMBATE (v2)
+// ============================================================
+//  COMBAT ACTION EMISSION (v2)
 // ============================================================
 
-/**
- * Extrai efeitos visuais ordenados a partir de um resultado do CombatResolver.
- * Retorna um array de efeitos que o cliente animará sequencialmente.
- */
-
-function buildEmitTargetInfo(realTargetIds) {
-  let targetName = null;
-
-  if (realTargetIds.length === 1) {
-    const champ =
-      match.combat.activeChampions.get(realTargetIds[0]) ??
-      match.combat.deadChampions.get(realTargetIds[0]);
-
-    targetName = champ ? formatChampionName(champ) : null;
-  } else if (realTargetIds.length > 1) {
-    const names = realTargetIds.map((id) => {
-      const champ =
-        match.combat.activeChampions.get(id) ??
-        match.combat.deadChampions.get(id);
-
-      return champ ? formatChampionName(champ) : "Desconhecido";
-    });
-
-    const last = names.pop();
-    targetName = `${names.join(", ")} e ${last}`;
-  }
-
-  return {
-    targetId: realTargetIds[0] ?? null,
-    targetName,
-  };
-}
-
-function emitCombatEnvelopesFromContext({
-  user,
-  skill,
-  context,
-  scorePayload = null,
-  claimPoints = null,
-  log = null,
-}) {
-  const mainEnvelope = buildMainEnvelopeFromContext({
-    user,
-    skill,
-    context,
-  });
-
-  /*   const reactionEnvelopes = buildReactionEnvelopesFromContext({
-    user,
-    skill,
-    context,
-  }); */
-
-  if (mainEnvelope) {
-    /* console.log(
-      "SERVER SNAPSHOT ULT:",
-      [...match.combat.activeChampions.values()].map((c) => ({
-        name: c.name,
-        momentum: c.momentum,
-      })),
-    );
-    */
-    const {
-      damageEvents = [],
-      healEvents = [],
-      lifestealEvents = [],
-      shieldEvents = [],
-      buffEvents = [],
-      resourceEvents = [],
-      globalDialogs = [],
-      redirectionEvents = [],
-    } = mainEnvelope;
-
-    const hasVisualChanges =
-      damageEvents.length ||
-      healEvents.length ||
-      lifestealEvents.length ||
-      shieldEvents.length ||
-      buffEvents.length ||
-      resourceEvents.length ||
-      redirectionEvents.length ||
-      globalDialogs.length;
-
-    const shouldEmit =
-      mainEnvelope.action || hasVisualChanges || !!scorePayload;
-
-    if (shouldEmit) {
-      /* console.log("[DEBUG] [JEFF REVIVAL DIALOG] === ENVELOPE SEND ===", {
-        globalDialogs: context.visual.globalDialogs,
-      }); */
-      emitCombatAction({
-        ...mainEnvelope,
-        ...(log ? { log } : null),
-        scorePayload,
-        claimPoints,
-      });
-    }
-  }
-
-  /* for (const envelope of reactionEnvelopes) {
-    emitCombatAction(envelope);
-  } */
-}
-
-function buildMainEnvelopeFromContext({ user, skill, context }) {
-  const {
-    damageEvents = [],
-    healEvents = [],
-    lifestealEvents = [],
-    shieldEvents = [],
-    buffEvents = [],
-    resourceEvents = [],
-    globalDialogs = [],
-    redirectionEvents = [],
-  } = context.visual || {};
-
-  const userId = user?.id ?? null;
-  const userName = user?.name ?? null;
-
-  const mainDamage = damageEvents.filter((d) => (d.damageDepth ?? 0) === 0);
-  const mainHeal = healEvents.filter((h) => (h.damageDepth ?? 0) === 0);
-  const mainLifesteal = lifestealEvents.filter(
-    (ls) => (ls.damageDepth ?? 0) === 0,
-  );
-  const mainShield = shieldEvents.filter((s) => (s.damageDepth ?? 0) === 0);
-  const mainBuff = buffEvents.filter((b) => (b.damageDepth ?? 0) === 0);
-  const mainResource = resourceEvents.filter((r) => (r.damageDepth ?? 0) === 0);
-
-  // Coleta todos os alvos afetados (dano, cura, buff, shield)
-  const allTargetIds = [...mainDamage, ...mainHeal, ...mainShield, ...mainBuff]
-    .map((e) => e.targetId)
-    .filter((id) => id && id !== userId);
-
-  // Remove duplicatas
-  const uniqueTargetIds = [...new Set(allTargetIds)];
-
-  // Separa inimigos e aliados
-  const userTeam = user?.team;
-  const enemies = uniqueTargetIds.filter((id) => {
-    const champ =
-      match.combat.activeChampions.get(id) ??
-      match.combat.deadChampions.get(id);
-    return champ && userTeam !== undefined && champ.team !== userTeam;
-  });
-  const allies = uniqueTargetIds.filter((id) => {
-    const champ =
-      match.combat.activeChampions.get(id) ??
-      match.combat.deadChampions.get(id);
-    return champ && userTeam !== undefined && champ.team === userTeam;
-  });
-
-  // Regra: se houver inimigos, só mostra inimigos; senão, mostra aliados
-  const realTargetIds = enemies.length > 0 ? enemies : allies;
-
-  const { targetId, targetName } = buildEmitTargetInfo(realTargetIds);
-
-  // Garante que cada damageEvent tenha skillKey para animação por hit
-  const skillKey = skill?.key;
-  const patchedDamage = mainDamage.map((ev) => ({ ...ev, skillKey }));
-
-  return {
-    action: user
-      ? {
-          userId,
-          userName,
-          skillKey: skillKey,
-          skillName: skill?.name,
-          targetId,
-          targetName,
-        }
-      : null,
-    damageEvents: patchedDamage,
-    healEvents: mainHeal,
-    lifestealEvents: mainLifesteal,
-    shieldEvents: mainShield,
-    buffEvents: mainBuff,
-    resourceEvents: mainResource,
-    redirectionEvents,
-
-    globalDialogs,
-
-    state: context._intermediateSnapshot,
-  };
-}
-
-/**
- * Emite um envelope de ação de combate para todos os clientes.
- * Formato:
- *   action  — info sobre a skill usada (null para passivas/efeitos de turno)
- *   effects — array ordenado de efeitos a animar
- *   log     — texto verboso para o log de combate
- *   state   — snapshots do estado final dos campeões afetados
- */
-function emitCombatAction(envelope) {
-  if (!envelope) return;
-
-  io.emit("combatAction", envelope);
-}
-
-function collectCombatLogs(value, logs = [], visited = new Set()) {
-  if (value == null) return logs;
-
-  if (typeof value === "string") {
-    if (value.trim()) logs.push(value);
-    return logs;
-  }
-
-  if (Array.isArray(value)) {
-    for (const entry of value) {
-      collectCombatLogs(entry, logs, visited);
-    }
-    return logs;
-  }
-
-  if (typeof value !== "object") return logs;
-  if (visited.has(value)) return logs;
-
-  visited.add(value);
-
-  if (typeof value.log === "string" && value.log.trim()) {
-    logs.push(value.log);
-  }
-
-  if (typeof value.logMessage === "string" && value.logMessage.trim()) {
-    logs.push(value.logMessage);
-  }
-
-  const nestedLogCollections = [
-    "results",
-    "beforeLogs",
-    "afterLogs",
-    "passiveLogs",
-    "extraResults",
-    "globalDialogs",
-    "dialogs",
-  ];
-
-  for (const key of nestedLogCollections) {
-    const nestedValue = value[key];
-    if (Array.isArray(nestedValue)) {
-      collectCombatLogs(nestedValue, logs, visited);
-    }
-  }
-
-  return logs;
+/** Builds the action envelope via CombatEnvelopeBuilder and emits it if it has content. */
+function emitCombatEnvelopesFromContext(params) {
+  const envelope = envelopeBuilder.buildActionEnvelope(params);
+  if (envelope) io.emit("combatAction", envelope);
 }
 
 function emitCombatLogsFromResults(results = []) {
   if (!Array.isArray(results) || results.length === 0) return;
 
-  for (const log of collectCombatLogs(results)) {
+  for (const log of envelopeBuilder.collectLogs(results)) {
     io.emit("combatLog", log);
   }
 }
 
 // ============================================================
-//  RESOLUÇÃO DE TURNOS
+//  TURN RESOLUTION
 // ============================================================
 
 function emitGameOverIfNeeded({ checkTurnLimit = false } = {}) {
@@ -1096,24 +437,20 @@ function handleEndTurn() {
   revealConcealedSummons();
   broadcastGameState();
 
-  // 1. Resolver todas as ações via TurnResolver (switches têm prioridade 6 — saem primeiro)
+  // Resolve every action through the TurnResolver.
   const resolver = new TurnResolver(match, editMode, {
     mutationHandler: (request, meta = {}) =>
-      processChampionMutationRequest(request, {
-        context: meta.context ?? null,
-      }),
+      match.combat.mutateChampion(request, { context: meta.context ?? null }),
   });
   const { actionResults, deathResults } = resolver.resolveTurn();
 
-  // 2. Processamento de switch/substituição desativado (modo 3x3 fixo).
-
-  // 3. Coletar todos os championMutationRequests ANTES de emitir envelopes
+  // Collect all championMutationRequests BEFORE emitting envelopes; they are
+  // processed after deathResults so the new creature is never flagged as dead.
   const allChampionMutationRequests = [];
 
-  // 4. Emitir envelopes para cada resultado
   for (const result of actionResults) {
     if (result.executed) {
-      const actionLog = collectCombatLogs(result.results).join("\n");
+      const actionLog = envelopeBuilder.collectLogs(result.results).join("\n");
 
       emitCombatEnvelopesFromContext({
         user: result.user,
@@ -1124,8 +461,6 @@ function handleEndTurn() {
         log: actionLog || null,
       });
 
-      // Coletar championMutationRequests mas NÃO processar ainda
-      // (será feito após deathResults para evitar que a nova criatura seja marcada como morta)
       const championMutationRequests =
         result.context?.flags?.championMutationRequests;
       if (championMutationRequests?.length) {
@@ -1146,22 +481,20 @@ function handleEndTurn() {
     }
   }
 
-  // 5. Emitir mortes
   for (const death of deathResults) {
     emitChampionDeath(death);
   }
 
-  // 6. AGORA processar championMutationRequests (após deathResults)
-  // Assim evitamos que a nova criatura seja registrada como morta
+  // Now process championMutationRequests (after deathResults) so the new
+  // creature is not registered as dead.
   if (allChampionMutationRequests.length > 0) {
     for (const req of allChampionMutationRequests) {
-      processChampionMutationRequest(req);
+      match.combat.mutateChampion(req);
     }
 
     broadcastGameState();
   }
 
-  // 4. Hooks onTurnEnd
   const context = {
     currentTurn: match.combat.currentTurn,
     activeChampions: Array.from(match.combat.activeChampions.values()).filter(
@@ -1171,21 +504,21 @@ function handleEndTurn() {
 
   emitCombatEvent("onTurnEnd", { context }, match.combat.activeChampions);
 
-  // 5. Limpeza de turno e avanço
+  // Turn cleanup and advance.
   match.clearActions();
   match.clearTurnReadiness();
   match.clearFinishedAnimationSockets();
   match.clearTurnSummons();
 
-  // Checar fim de jogo (roster wipe, limite de turnos ou threshold de
-  // pontuação) somente após todas as demais tarefas de fim de turno.
+  // Check game end (roster wipe, turn limit or score threshold) only after every
+  // other end-of-turn task.
   emitGameOverIfNeeded({ checkTurnLimit: true });
 
   if (!match.isGameEnded()) {
     match.nextTurn();
   }
 
-  // 6. Sinaliza clientes que todos os eventos de combate foram emitidos
+  // Signal clients that every combat event has been emitted.
   waitingForAnimations = true;
   io.emit("combatPhaseComplete");
 }
@@ -1271,8 +604,43 @@ function handleScheduledEffect(effect, context) {
       break;
     }
 
+    // A status effect deliberately postponed to a later turn (e.g. the Barão's
+    // Reactor Overload). It lands here inside handleStartTurn, *before* the
+    // expiration purge, so a duration of 1 covers exactly this turn's
+    // resolution and is purged at the start of the next one.
+    case "applyStatusEffect": {
+      const {
+        targetId,
+        statusEffectKey,
+        duration = 1,
+        metadata = {},
+        stackCount = 1,
+        dialog = null,
+      } = effect.payload ?? {};
+
+      const target = match.combat.activeChampions.get(targetId);
+      if (!target || !target.alive || !statusEffectKey) break;
+
+      target.applyStatusEffect(
+        statusEffectKey,
+        duration,
+        context ?? { currentTurn: match.combat.currentTurn },
+        metadata,
+        stackCount,
+      );
+
+      if (dialog && context?.registerDialog) {
+        context.registerDialog({
+          message: dialog,
+          sourceId: target.id,
+          targetId: target.id,
+        });
+      }
+      break;
+    }
+
     case "championMutation": {
-      const result = processChampionMutationRequest(effect.payload);
+      const result = match.combat.mutateChampion(effect.payload);
       if (result?.log && context?.registerDialog) {
         context.registerDialog({
           message: result.log,
@@ -1291,7 +659,7 @@ function handleScheduledEffect(effect, context) {
   }
 }
 
-/** Aplica regeneração global de HP/MP/Energy no início do turno. */
+/** Runs start-of-turn processing: scheduled effects, hooks, purges and global regen. */
 function handleStartTurn() {
   const currentTurn = match.combat.currentTurn;
   const currentTurnEffects = [];
@@ -1334,7 +702,7 @@ function handleStartTurn() {
     });
   }
 
-  // 1. Injetar contexto
+  // Inject context.
   match.combat.activeChampions.forEach((champ) => {
     if (!champ.alive) return;
     champ.runtime = champ.runtime || {};
@@ -1346,8 +714,8 @@ function handleStartTurn() {
     decayShields(champ, currentTurn);
   });
 
-  // 3. Hooks onTurnStart (DoTs, passivas reativas, etc.)
-  // Skip turn 1 hooks — no previous effects to process on the first turn
+  // onTurnStart hooks (DoTs, reactive passives, etc.).
+  // Skip turn 1 — there are no previous effects to process on the first turn.
   let turnStartResults = [];
   if (currentTurn > 1) {
     turnStartResults = emitCombatEvent(
@@ -1359,13 +727,18 @@ function handleStartTurn() {
     emitCombatLogsFromResults(turnStartResults);
   }
 
-  // 4. Executar scheduled effects deste turno (inclusive os agendados durante onTurnStart)
+  // Run this turn's scheduled effects (including any scheduled during onTurnStart).
   const remaining = [];
 
   for (const effect of match.combat.scheduledEffects) {
     if (effect.turnToHappen === currentTurn) {
       handleScheduledEffect(effect, turnStartContext);
       if (effect.dialog) {
+        // A scheduled dialog announces the effect itself, so it must land in
+        // globalDialogs instead of being glued to whatever event the effect
+        // registered last (a revive's own buffs, for instance) — those events
+        // may target a champion the client does not know about yet.
+        turnStartContext._lastEventRef = null;
         turnStartContext.registerDialog(effect.dialog);
       }
     } else {
@@ -1384,31 +757,26 @@ function handleStartTurn() {
   // last real champion outside the regular end-turn action flow.
   emitGameOverIfNeeded();
 
-  // 3. Limpar expirados
+  // Purge expired effects.
   match.combat.activeChampions.forEach((champion) => {
     champion.purgeExpiredStatModifiers(match.combat.currentTurn);
     champion.purgeExpiredStatusEffects(match.combat.currentTurn);
     champion.purgeExpiredHookEffects(match.combat.currentTurn);
   });
 
-  // 5. Regen global
+  // Global momentum regen.
   match.combat.activeChampions.forEach((champion) => {
-    const applied = applyGlobalMomentumRegen(
-      champion,
-      turnStartContext,
-      resolver,
-    );
+    applyGlobalMomentumRegen(champion, turnStartContext, resolver);
   });
 
-  // 6. Limpar runtime context
+  // Clear the runtime context.
   match.combat.activeChampions.forEach((champ) => {
     if (champ.runtime) delete champ.runtime.currentContext;
   });
 
-  // 🔹 7. Emit envelope (novo modelo)
   emitCombatEnvelopesFromContext({
     user: null,
-    skill: { key: "turn_start", name: "Início do Turno" },
+    skill: { key: "turn_start", name: "Turn Start" },
     context: turnStartContext,
   });
 
@@ -1417,16 +785,16 @@ function handleStartTurn() {
 }
 
 // ============================================================
-//  RESET DO ESTADO DO JOGO
+//  GAME STATE RESET
 // ============================================================
 
-/** Reseta completamente o estado do jogo (todos desconectados ou timeout). */
+/** Fully resets the game state (everyone disconnected or timed out). */
 function resetGameState() {
   revealConcealedSummons();
   match.clearPlayers();
 }
 
-/** Reseta o estado de combate (HP, buffs, ult, etc.) mantendo os campeões e jogadores (debug/test only). */
+/** Resets combat state (HP, buffs, ult, etc.) while keeping champions and players (debug/test only). */
 function resetCombatState() {
   const snapshot = [...match.combat.combatSnapshot];
 
@@ -1445,8 +813,6 @@ function resetCombatState() {
 
   match.combat.combatSnapshot = snapshot;
   match.combat.start();
-
-  // console.log("[DEBUG] Combat state reset.");
 }
 
 // ============================================================
@@ -1454,20 +820,20 @@ function resetCombatState() {
 // ============================================================
 
 io.on("connection", (socket) => {
-  console.log("Um usuário conectado:", socket.id);
-  console.log("Total de usuários conectados:", io.engine.clientsCount);
+  console.log("A user connected:", socket.id);
+  console.log("Total connected users:", io.engine.clientsCount);
 
-  // Envia editMode IMEDIATAMENTE ao client SEM propriedades server-only (damageOutput, alwaysCrit, etc.)
+  // Send editMode to the client immediately, WITHOUT server-only fields (damageOutput, alwaysCrit, etc.).
   const { damageOutput, alwaysCrit, ...clientEditMode } = editMode;
   socket.emit("editModeUpdate", clientEditMode);
 
-  // --- Socket handler para reset de combate (debug) ---
+  // Combat reset (debug).
   socket.on("debugResetCombat", () => {
     resetCombatState();
     broadcastGameState();
   });
 
-  // --- Socket handler para início de turno após animações ---
+  // Start of turn, once animations finish on both clients.
   socket.on("combatAnimationsFinished", () => {
     if (!waitingForAnimations) return;
     if (match.getSlotBySocket(socket.id) === undefined) return;
@@ -1481,11 +847,11 @@ io.on("connection", (socket) => {
     }
   });
 
-  // --- Helpers internos à conexão ---
+  // --- Connection-scoped helpers ---
 
-  /** Atribui um slot de jogador e notifica o cliente. */
+  /** Assigns a player slot and notifies the client. */
   function assignPlayerSlot(username) {
-    // Se este socket já possui um slot, não criar outro (evita duplicação por autoLogin + clique manual)
+    // If this socket already owns a slot, don't create another (avoids autoLogin + manual-click duplication).
     const existingSlot = match.getSlotBySocket(socket.id);
     if (existingSlot !== undefined) {
       const existingPlayer = match.getPlayer(existingSlot);
@@ -1502,10 +868,7 @@ io.on("connection", (socket) => {
     else if (match.getPlayer(1) === null) slot = 1;
 
     if (slot === -1) {
-      socket.emit(
-        "serverFull",
-        "O servidor está cheio. Tente novamente mais tarde.",
-      );
+      socket.emit("serverFull", "The server is full. Please try again later.");
       socket.disconnect();
       return null;
     }
@@ -1544,15 +907,11 @@ io.on("connection", (socket) => {
       "gameStateUpdate",
       getGameState([], { viewerTeam: getViewerTeam(socket.id) }),
     );
-    // io.emit("switchesUpdate", {
-    //   team1: match.players[0]?.remainingSwitches ?? 0,
-    //   team2: match.players[1]?.remainingSwitches ?? 0,
-    // });
 
     return { playerSlot: slot, finalUsername };
   }
 
-  /** Inicia a seleção de campeões para jogadores pendentes. */
+  /** Starts champion selection for pending players. */
   function handleChampionSelection() {
     for (let i = 0; i < match.players.length; i++) {
       const player = match.players[i];
@@ -1581,7 +940,7 @@ io.on("connection", (socket) => {
     }
   }
 
-  /** Seleção automática (editMode) ou delega para seleção manual. */
+  /** Auto-selection (editMode); otherwise defers to manual selection. */
   function handleEditModeSelection() {
     for (let i = 0; i < match.players.length; i++) {
       const player = match.players[i];
@@ -1606,7 +965,7 @@ io.on("connection", (socket) => {
 
     const { playerSlot, finalUsername } = assignResult;
 
-    // Aguarda segundo jogador
+    // Wait for the second player.
     if (!match.areBothPlayersConnected()) {
       socket.emit(
         "waitingForOpponent",
@@ -1617,14 +976,14 @@ io.on("connection", (socket) => {
 
     io.emit("allPlayersConnected");
 
-    // Seleção de campeões
+    // Champion selection.
     if (editMode.enabled && editMode.autoSelection) {
       handleEditModeSelection();
     } else {
       handleChampionSelection();
     }
 
-    // Reconexão — cancela timer e notifica oponente
+    // Reconnection — cancel the timer and notify the opponent.
     if (match.getDisconnectionTimer(playerSlot)) {
       match.clearDisconnectionTimer(playerSlot);
 
@@ -1641,8 +1000,8 @@ io.on("connection", (socket) => {
 
     match.combat.start();
 
-    // Popula a fila de reserva de cada time com o roster confirmado
-    // e inicia a fase de escolha do primeiro campeão (1v1 inicial).
+    // Populate each team's reserve queue with its confirmed roster, then start
+    // the first-champion (initial 1v1) choice phase.
     match.players.forEach((player) => {
       if (!player) return;
       match.combat.reserveQueues.set(player.team, [
@@ -1653,7 +1012,7 @@ io.on("connection", (socket) => {
     startFirstChampionChoicePhase();
   }
 
-  /** Inicia a fase de escolha do primeiro campeão (1v1). */
+  /** Starts the first-champion (1v1) choice phase. */
   function startFirstChampionChoicePhase() {
     match.players.forEach((player) => {
       if (!player) return;
@@ -1666,14 +1025,14 @@ io.on("connection", (socket) => {
         timeout: FIRST_CHOICE_TIMEOUT,
       });
 
-      // Agenda o timeout para escolha automática
+      // Schedule the auto-pick timeout: a random champion from the roster.
       const timeoutId = setTimeout(() => {
-        // Se o jogador ainda não escolheu, escolhe automaticamente
         if (!match.combat.firstChampionChoices.has(player.socketId)) {
           console.log(
-            `[TIMEOUT] Jogador ${player.username} não escolheu. Selecionando automaticamente.`,
+            `[TIMEOUT] Player ${player.username} did not choose. Auto-selecting at random.`,
           );
-          const autoSelectedChampion = roster[0]; // Pega o primeiro da lista
+          const autoSelectedChampion =
+            roster[Math.floor(Math.random() * roster.length)];
           if (autoSelectedChampion) {
             handleFirstChampionChoice(player.socketId, autoSelectedChampion);
           }
@@ -1684,48 +1043,47 @@ io.on("connection", (socket) => {
     });
   }
 
-  /** Processa a escolha do primeiro campeão de um jogador. */
+  /** Processes a player's first-champion choice. */
   function handleFirstChampionChoice(socketId, championKey) {
     const player = match.getPlayerBySocketId(socketId);
     if (!player) return;
 
-    // Limpa o timeout e registra a escolha no GameMatch
+    // Clears the timeout and records the choice in GameMatch.
     const alreadyChosen = !match.setFirstChampionChoice(socketId, championKey);
     if (alreadyChosen) return;
 
     console.log(
-      `Jogador ${player.username} escolheu ${formatChampionName(
+      `Player ${player.username} chose ${formatChampionName(
         championDB[championKey],
-      )} para o 1v1.`,
+      )} for the 1v1.`,
     );
 
-    // Verifica se ambos já escolheram
     if (match.combat.firstChampionChoices.size === 2) {
       handleAllFirstChampionsChosen();
     }
   }
 
-  /** Quando ambos os jogadores escolheram seu campeão inicial. */
+  /** When both players have chosen their initial champion. */
   function handleAllFirstChampionsChosen() {
-    // Previne execuções múltiplas
+    // Prevents multiple executions.
     if (match.combat.activeChampions.size > 0) return;
 
-    console.log("Ambos os jogadores escolheram. Iniciando o 1v1.");
+    console.log("Both players have chosen. Starting the 1v1.");
 
-    // Finaliza a fase de escolha no GameMatch (spawna, atualiza reservas)
+    // Finalize the choice phase in GameMatch (spawns, updates reserves).
     const { choices } = match.finalizeFirstChampionChoices(spawnChampion);
 
     io.emit("firstChampionChoicesFinalized", { choices });
     broadcastGameState();
 
-    // Inicia o primeiro turno
+    // Start the first turn after a small UI delay.
     setTimeout(() => {
       handleStartTurn();
       io.emit("turnStart", {
         turn: match.combat.currentTurn,
         activeChampions: Array.from(match.combat.activeChampions.keys()),
       });
-    }, 1000); // Pequeno delay para UI
+    }, 1000);
   }
 
   // =============================
@@ -1736,24 +1094,24 @@ io.on("connection", (socket) => {
     let disconnectedSlot = match.getSlotBySocket(socket.id);
 
     if (disconnectedSlot === undefined) {
-      // fallback: procura no array players
+      // Fallback: look it up in the players array.
       disconnectedSlot = match.players.findIndex(
         (player) => player && player.socketId === socket.id,
       );
     }
 
     if (disconnectedSlot === -1 || disconnectedSlot === undefined) {
-      console.warn("Disconnect de socket não mapeado:", socket.id);
+      console.warn("Disconnect from an unmapped socket:", socket.id);
       return;
     }
 
     const wasGameActive = match.areBothPlayersConnected();
 
-    // Limpa timers pendentes
+    // Clear pending timers.
     match.clearDisconnectionTimer(disconnectedSlot);
     match.clearSelectionTimer(disconnectedSlot);
 
-    // Libera slot
+    // Release the slot.
     const disconnectedPlayer = match.getPlayer(disconnectedSlot);
     disconnectedPlayer?.clearSocket();
     disconnectedPlayer?.clearChampionSelection();
@@ -1766,17 +1124,15 @@ io.on("connection", (socket) => {
     io.emit("playerCountUpdate", connectedCount);
     io.emit("playerNamesUpdate", match.getPlayerNamesEntries());
 
-    // Nenhum jogador restante — reset total
+    // No players left — full reset.
     if (connectedCount === 0) {
       resetGameState();
       broadcastGameState();
       return;
     }
 
-    // Um jogador restante com jogo ativo — inicia contagem regressiva
+    // One player left with an active game — start the countdown.
     if (wasGameActive && connectedCount === 1) {
-      // console.log("PLAYERS:", match.players);
-      // console.log("CONNECTED COUNT:", connectedCount);
       const remainingSlot = match.players[0] ? 0 : 1;
       const remainingSocketId = match.players[remainingSlot].socketId;
 
@@ -1787,7 +1143,7 @@ io.on("connection", (socket) => {
       const timer = setTimeout(() => {
         io.to(remainingSocketId).emit(
           "forceLogout",
-          "Seu oponente se desconectou e não reconectou a tempo.",
+          "Your opponent disconnected and did not reconnect in time.",
         );
 
         match.setPlayer(remainingSlot, null);
@@ -1811,7 +1167,7 @@ io.on("connection", (socket) => {
     const player = match.players[playerSlot];
 
     if (!player) {
-      return socket.emit("actionFailed", "Você não está em uma partida ativa.");
+      return socket.emit("actionFailed", "You are not in an active match.");
     }
 
     const selectedKeys = Array.isArray(emblems) ? emblems : [];
@@ -1822,14 +1178,14 @@ io.on("connection", (socket) => {
     if (validKeys.length > 2) {
       return socket.emit(
         "actionFailed",
-        "Você pode selecionar no máximo 2 Emblems ativos.",
+        "You can select at most 2 active Emblems.",
       );
     }
 
-    // Antes da equipe ser confirmada, selectedChampionKeys ainda está vazio no
-    // servidor. Usamos o roster provisório enviado pelo cliente (draft em
-    // andamento) para essa checagem; a validação final e definitiva acontece
-    // de novo no handler de "selectTeam" contra a lineup realmente confirmada.
+    // Before the team is confirmed, selectedChampionKeys is still empty on the
+    // server. We use the provisional roster sent by the client (draft in
+    // progress) for this check; the final, authoritative validation happens
+    // again in the "selectTeam" handler against the truly confirmed line-up.
     const rosterKeys = player.isTeamSelected()
       ? player.selectedChampionKeys
       : Array.isArray(draftRoster)
@@ -1844,13 +1200,14 @@ io.on("connection", (socket) => {
       .filter(Boolean);
 
     const invalidForRoster = nextEmblems.find(
-      (emblem) => !evaluateEmblemEligibilityForRoster(emblem, rosterKeys),
+      (emblem) =>
+        !evaluateEmblemEligibilityForRoster(emblem, rosterKeys, championDB),
     );
 
     if (invalidForRoster) {
       return socket.emit(
         "actionFailed",
-        `Este Emblem não é elegível para a sua lineup atual: ${invalidForRoster.name}.`,
+        `This Emblem is not eligible for your current line-up: ${invalidForRoster.name}.`,
       );
     }
 
@@ -1875,27 +1232,24 @@ io.on("connection", (socket) => {
       if (!player || player.team !== clientTeam) {
         socket.emit(
           "actionFailed",
-          "Você não tem permissão para selecionar campeões para este time.",
+          "You are not allowed to select champions for this team.",
         );
         return;
       }
 
       if (player.isTeamSelected()) {
-        socket.emit("actionFailed", "Você já confirmou sua equipe.");
+        socket.emit("actionFailed", "You have already confirmed your team.");
         return;
       }
 
-      // Validação server-authoritative: rejeita keys inválidas
+      // Server-authoritative validation: reject invalid keys.
       const invalidKey = selectedChampionKeys.find((key) => {
         const data = championDB[key];
         return !isChampionSelectableInDraft(data);
       });
 
       if (invalidKey) {
-        socket.emit(
-          "actionFailed",
-          `Campeão inválido na seleção: ${invalidKey}`,
-        );
+        socket.emit("actionFailed", `Invalid champion in selection: ${invalidKey}`);
         return;
       }
 
@@ -1903,13 +1257,17 @@ io.on("connection", (socket) => {
 
       const invalidEmblem = player.emblems.find(
         (emblem) =>
-          !evaluateEmblemEligibilityForRoster(emblem, selectedChampionKeys),
+          !evaluateEmblemEligibilityForRoster(
+            emblem,
+            selectedChampionKeys,
+            championDB,
+          ),
       );
 
       if (invalidEmblem) {
         socket.emit(
           "actionFailed",
-          `Sua seleção de Emblems não é válida para a lineup final: ${invalidEmblem.name}.`,
+          `Your Emblem selection is not valid for the final line-up: ${invalidEmblem.name}.`,
         );
         return;
       }
@@ -1996,7 +1354,7 @@ io.on("connection", (socket) => {
     // availability already reflects this summon.
     broadcastGameState();
 
-    logTurnEvent("championSummoned", {
+    match.logTurnEvent("championSummoned", {
       championId: spawned.id,
       championKey,
       team,
@@ -2005,7 +1363,7 @@ io.on("connection", (socket) => {
 
   socket.on("requestSkillUse", ({ userId, skillKey, targetId }) => {
     const user = match.combat.activeChampions.get(userId);
-    if (!user) return socket.emit("skillDenied", "Sem permissão.");
+    if (!user) return socket.emit("skillDenied", "Not allowed.");
 
     if (skillKey === CLAIM_ACTION_KEY) {
       if (!validateActionIntent(user, null, socket)) return;
@@ -2014,14 +1372,14 @@ io.on("connection", (socket) => {
         !editMode.freeCostSkills &&
         (Number(user.momentum) || 0) < CLAIM_MIN_MOMENTUM
       ) {
-        return socket.emit("skillDenied", `Momentum insuficiente.`);
+        return socket.emit("skillDenied", `Not enough Momentum.`);
       }
 
       return socket.emit("skillApproved", { userId, skillKey });
     }
 
     const skill = user.skills.find((s) => s.key === skillKey);
-    if (!skill) return socket.emit("skillDenied", "Skill inválida.");
+    if (!skill) return socket.emit("skillDenied", "Invalid skill.");
 
     if (!validateActionIntent(user, skill, socket)) return;
 
@@ -2032,14 +1390,14 @@ io.on("connection", (socket) => {
     const cost = user.getSkillCost(skill);
 
     if (!editMode.freeCostSkills && cost > user.momentum) {
-      return socket.emit("skillDenied", `Momentum insuficiente.`);
+      return socket.emit("skillDenied", `Not enough Momentum.`);
     }
 
     socket.emit("skillApproved", { userId, skillKey });
   });
 
   // =============================
-  //  requestUndoActions (cancela ações pendentes do time do jogador)
+  //  requestUndoActions (cancels the player team's pending actions)
   // =============================
   socket.on("requestUndoActions", () => {
     const playerSlot = match.getSlotBySocket(socket.id);
@@ -2048,13 +1406,11 @@ io.on("connection", (socket) => {
 
     const playerTeam = playerSlot + 1;
 
-    // console.log("[UNDO] Player team:", playerTeam);
-
     for (let i = match.combat.pendingActions.length - 1; i >= 0; i--) {
-      // Se não tem nada no array, sair do loop
+      // Nothing left in the array — leave the loop (execution continues below it).
       if (!match.combat.pendingActions.length) {
-        console.warn("Pedido de undo sem ações pendentes.");
-        break; // SAI DO LOOP, mas continua a execução da função abaixo do loop
+        console.warn("Undo request with no pending actions.");
+        break;
       }
       const action = match.combat.pendingActions[i];
       const champ = match.combat.activeChampions.get(action.userId);
@@ -2063,7 +1419,7 @@ io.on("connection", (socket) => {
 
       if (champ.team !== playerTeam) continue;
 
-      // reverter estado
+      // Revert state.
       champ.hasActedThisTurn = false;
 
       if (action.momentumCost > 0) {
@@ -2073,7 +1429,7 @@ io.on("connection", (socket) => {
       match.combat.pendingActions.splice(i, 1);
     }
 
-    // 🔥 remover confirmação de fim de turno
+    // Remove the end-of-turn confirmation.
     if (match.isPlayerReady(playerSlot)) {
       match.removeReadyPlayer(playerSlot);
       io.emit("playerCanceledEndTurn", playerSlot);
@@ -2083,16 +1439,10 @@ io.on("connection", (socket) => {
   });
 
   // =============================
-  //  useSkill (enfileira ação pendente)
+  //  useSkill (enqueues a pending action)
   // =============================
 
   socket.on("useSkill", ({ userId, skillKey, targetIds }) => {
-    /* console.log("[USE SKILL] Recebido pedido de uso de skill:", {
-      userId,
-      skillKey,
-      targetIds,
-    });
-    */
     const playerSlot = match.getSlotBySocket(socket.id);
     const player = match.players[playerSlot];
     const user = match.combat.activeChampions.get(userId);
@@ -2101,7 +1451,7 @@ io.on("connection", (socket) => {
       if (!player || !user || user.team !== player.team) {
         return socket.emit(
           "actionFailed",
-          "Você não tem permissão para usar CLAIM com este campeão.",
+          "You are not allowed to use CLAIM with this champion.",
         );
       }
 
@@ -2111,7 +1461,7 @@ io.on("connection", (socket) => {
         !editMode.freeCostSkills &&
         (Number(user.momentum) || 0) < CLAIM_MIN_MOMENTUM
       ) {
-        return socket.emit("actionFailed", "Momentum insuficiente.");
+        return socket.emit("actionFailed", "Not enough Momentum.");
       }
 
       const action = new Action({ userId, skillKey, targetIds: {} });
@@ -2125,7 +1475,7 @@ io.on("connection", (socket) => {
 
       io.to(socket.id).emit(
         "combatLog",
-        `${formatChampionName(user)} preparou CLAIM. Ação pendente.`,
+        `${formatChampionName(user)} prepared CLAIM. Action pending.`,
       );
       return;
     }
@@ -2133,31 +1483,27 @@ io.on("connection", (socket) => {
     if (!player || !user || user.team !== player.team) {
       return socket.emit(
         "actionFailed",
-        "Você não tem permissão para usar habilidades com este campeão.",
+        "You are not allowed to use skills with this champion.",
       );
     }
 
     const skill = user.skills.find((s) => s.key === skillKey);
     if (!skill) {
-      return socket.emit("actionFailed", "Habilidade não encontrada.");
+      return socket.emit("actionFailed", "Skill not found.");
     }
 
     if (!validateActionIntent(user, skill, socket)) return;
 
-    // 🔥 Apenas ultimates têm custo
+    // Only ultimates have a cost. Momentum is actually spent by the TurnResolver
+    // when the action resolves, not here.
     let cost = 0;
 
     if (skill.isUltimate === true) {
       cost = user.getSkillCost(skill);
 
       if (!editMode.freeCostSkills && user.momentum < cost) {
-        return socket.emit("actionFailed", "Momentum insuficiente.");
+        return socket.emit("actionFailed", "Not enough Momentum.");
       }
-
-      //if (!editMode.freeCostSkills) {
-      // user.spendMomentum(cost);
-      // a lógica de consumo/gasto de recurso (Momentum) foi movida para responsabilidade da TurnResolver na execução da ação da skill respectiva.
-      //}
     }
 
     const action = new Action({ userId, skillKey, targetIds });
@@ -2168,16 +1514,14 @@ io.on("connection", (socket) => {
 
     match.enqueueAction(action);
 
-    // console.log("[PENDING ACTION ADDED]", match.combat.pendingActions);
-
     io.to(socket.id).emit(
       "combatLog",
-      `${formatChampionName(user)} usou ${skill.name}. Ação pendente.`,
+      `${formatChampionName(user)} used ${skill.name}. Action pending.`,
     );
   });
 
   // =============================
-  //  surrender (Render-se)
+  //  surrender
   // =============================
 
   socket.on("surrender", () => {
@@ -2212,16 +1556,13 @@ io.on("connection", (socket) => {
 
   socket.on("endTurn", () => {
     if (match.isGameEnded()) {
-      socket.emit("actionFailed", "O jogo já terminou.");
+      socket.emit("actionFailed", "The game has already ended.");
       return;
     }
 
     const playerSlot = match.getSlotBySocket(socket.id);
     if (playerSlot === undefined) {
-      socket.emit(
-        "actionFailed",
-        "Você não está em um slot de jogador válido.",
-      );
+      socket.emit("actionFailed", "You are not in a valid player slot.");
       return;
     }
 
@@ -2229,12 +1570,12 @@ io.on("connection", (socket) => {
     io.emit("playerConfirmedEndTurn", playerSlot);
 
     if (match.getReadyPlayersCount() === 2) {
-      // Valida se ambos ainda estão conectados
+      // Make sure both are still connected.
       if (!match.areBothPlayersConnected()) {
         match.clearTurnReadiness();
         socket.emit(
           "actionFailed",
-          "Seu oponente foi desconectado. O turno foi cancelado.",
+          "Your opponent was disconnected. The turn was canceled.",
         );
         return;
       }
@@ -2249,7 +1590,7 @@ io.on("connection", (socket) => {
 });
 
 // ============================================================
-//  INICIALIZAÇÃO DO SERVIDOR
+//  SERVER STARTUP
 // ============================================================
 
 const configuredPort = Number(process.env.PORT);
@@ -2259,17 +1600,17 @@ const initialPort = hasExplicitPort ? configuredPort : 3000;
 function startServer(port) {
   httpServer.once("error", (error) => {
     if (error.code === "EADDRINUSE" && !hasExplicitPort) {
-      console.warn(`Porta ${port} em uso. Tentando a próxima...`);
+      console.warn(`Port ${port} in use. Trying the next one...`);
       startServer(port + 1);
       return;
     }
 
-    console.error("Falha ao iniciar o servidor:", error);
+    console.error("Failed to start the server:", error);
     process.exit(1);
   });
 
   httpServer.listen(port, () => {
-    console.log(`Servidor rodando na porta ${port}`);
+    console.log(`Server running on port ${port}`);
   });
 }
 

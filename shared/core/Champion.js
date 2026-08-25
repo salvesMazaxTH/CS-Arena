@@ -148,6 +148,13 @@ export class Champion {
     champ.runtime ??= {};
     champ.runtime.hookEffects ??= [];
 
+    // Lets a champion definition seed runtime state that must exist from the
+    // very first turn (e.g. Zyrelle's starting ammo), rather than only
+    // appearing once some skill or onTurnStart hook first touches it.
+    if (baseData.initialRuntime) {
+      Object.assign(champ.runtime, baseData.initialRuntime);
+    }
+
     // INJETAR IMUNIDADE ELEMENTAL AUTOMÁTICA
     if (champ.elementalAffinities?.length) {
       champ.runtime.hookEffects.push({
@@ -346,9 +353,13 @@ export class Champion {
   getSkillCost(skill) {
     if (!skill) return 0;
     if (skill.isUltimate !== true) return 0;
-    if (!Number.isInteger(skill.momentumCost) || skill.momentumCost <= 0)
-      return 0;
-    return skill.momentumCost;
+    // A skill may ramp its own cost per use; otherwise the flat momentumCost stands.
+    const cost =
+      typeof skill.getMomentumCost === "function"
+        ? skill.getMomentumCost(this)
+        : skill.momentumCost;
+    if (!Number.isInteger(cost) || cost <= 0) return 0;
+    return cost;
   }
 
   addMomentum(input) {
@@ -589,8 +600,10 @@ export class Champion {
     return takeDamage(this, amount, context);
   }
 
-  heal(amount, context, options = {}) {
-    return heal(this, amount, context, this, options);
+  // `source` is who caused the healing, not who receives it — hooks such as
+  // Alexa Neruvya's Font key off it.
+  heal(amount, context, source = this, options = {}) {
+    return heal(this, amount, context, source, options);
   }
 
   addDamageModifier(mod) {

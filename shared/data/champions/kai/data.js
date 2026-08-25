@@ -9,5 +9,5 @@ export default {
 
   elementalAffinities: ["fire"],
   classKey: "brawler",
-  species: ["human", "mutant"],
+  species: ["human"],
 };

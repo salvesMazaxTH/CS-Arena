@@ -1,4 +1,7 @@
-import { getExclusiveIndicator } from "../indicators/exclusiveIndicators.js";
+import {
+  getExclusiveIndicator,
+  getRuntimeCounterIndicatorEntries,
+} from "../indicators/exclusiveIndicators.js";
 
 // Ícones Boxicons para seta para cima/baixo
 const BUFF_ICON = {
@@ -156,6 +159,15 @@ export const StatusIndicator = {
       activeStatuses.add("provocado");
     }
 
+    // Runtime-counter indicators (e.g. Zyrelle's ammo): active whenever the
+    // backing champion.runtime field is defined, badge sourced from it below.
+    const runtimeCounters = getRuntimeCounterIndicatorEntries();
+    for (const entry of runtimeCounters) {
+      if (champion.runtime?.[entry.runtimeKey] !== undefined) {
+        activeStatuses.add(entry.statusKey);
+      }
+    }
+
     // --- BUFF/DEBUFF INDICATORS ---
     // Remove buff/debuff indicators antigos
     portrait
@@ -225,7 +237,12 @@ export const StatusIndicator = {
     });
 
     for (const statusEffectName of activeStatuses) {
-      const effectData = champion.statusEffects.get(statusEffectName) || null;
+      const runtimeCounter = runtimeCounters.find(
+        (entry) => entry.statusKey === statusEffectName,
+      );
+      const effectData = runtimeCounter
+        ? { stacks: champion.runtime[runtimeCounter.runtimeKey] }
+        : champion.statusEffects.get(statusEffectName) || null;
       const icon =
         this.statusEffectIcons[statusEffectName.toLowerCase()] ||
         getExclusiveIndicator(statusEffectName);

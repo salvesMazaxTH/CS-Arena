@@ -95,8 +95,6 @@ const tharoxSkills = [
     name: "Carapace Impact",
     bf: 0,
     damageMode: "standard",
-    defScaling: 190,
-    hpExponent: 1.35,
     contact: true,
     priority: 0,
     description() {
@@ -106,10 +104,29 @@ const tharoxSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const hpRatio = Math.max(0, Math.min(1, user.HP / user.maxHP));
-      const baseDamage =
-        user.Defense *
-        (this.defScaling / 100) *
-        Math.pow(hpRatio, this.hpExponent);
+
+      let defenseConversion;
+
+      if (hpRatio > 0.75) {
+        // 75%–100% HP: 95% → 80%
+        defenseConversion =
+          0.80 + 0.15 * ((hpRatio - 0.75) / 0.25);
+      } else if (hpRatio > 0.50) {
+        // 50%–75% HP: 80% → 65%
+        defenseConversion =
+          0.65 + 0.15 * ((hpRatio - 0.50) / 0.25);
+      } else if (hpRatio > 0.25) {
+        // 25%–50% HP: 65% → 50%
+        defenseConversion =
+          0.50 + 0.15 * ((hpRatio - 0.25) / 0.25);
+      } else {
+        // 0%–25% HP: 50% → 40%
+        defenseConversion =
+          0.40 + 0.10 * (hpRatio / 0.25);
+      }
+
+      const baseDamage = user.Defense * defenseConversion;
+
       const result = new DamageEvent({
         attacker: user,
         baseDamage,
@@ -134,7 +151,7 @@ const tharoxSkills = [
 
     damageMode: "standard",
     contact: false,
-    momentumCost: 55,
+    momentumCost: 58,
     isUltimate: true,
     priority: 2,
 

@@ -39,7 +39,7 @@ const arenMarevothSkills = [
         attacker: user,
         defender: enemy,
         skill: this,
-        type: "physical",
+        type: "magical",
         context,
         allChampions: context?.allChampions,
       }).execute();
@@ -56,7 +56,7 @@ const arenMarevothSkills = [
             attacker: user,
             defender: enemy,
             skill: this,
-            type: "physical",
+            type: "magical",
             mode: DamageEvent.Modes.ABSOLUTE,
             context,
             allChampions: context?.allChampions,

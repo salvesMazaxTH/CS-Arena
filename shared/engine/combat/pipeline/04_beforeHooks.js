@@ -41,6 +41,9 @@ export function runBeforeHooks(event) {
     }
 
     composeDamage(event);
+
+    event.damage = _carryHookDamage(event.damage, deal);
+    event.damage = _carryHookDamage(event.damage, take);
   }
 
   // Consolida logs e efeitos no estado da classe/contexto
@@ -59,6 +62,18 @@ export function runBeforeHooks(event) {
       event.allChampions ?? event.context?.allChampions,
     );
   }
+}
+
+// Increases carry as a flat amount, reductions as a proportion, a cap as a plain ceiling.
+function _carryHookDamage(damage, phase) {
+  if (phase.sawDamageOverride) {
+    damage =
+      phase.damageDelta > 0
+        ? damage + phase.damageDelta
+        : damage * phase.damageRatio;
+  }
+
+  return Math.min(damage, phase.damageCap);
 }
 
 function _applyBeforeDealingPassive(event) {
@@ -113,7 +128,21 @@ function _processHook(event, eventName, payload) {
     critChanged: false,
     damageModelChanged: false,
     preMitigationDamage: undefined,
+
+    // How this phase moved `damage`, kept so a later recompose can carry it.
+    sawDamageOverride: false,
+    damageRatio: 1,
+    damageDelta: 0,
+    damageCap: Infinity,
   };
+
+  // Every hook reads the same payload snapshot, so their results compose as
+  // ratios against it — a "last one wins" overwrite would drop all the others.
+  const startingDamage = Number(payload.damage) || 0;
+  let damageRatio = 1;
+  let sawDamageOverride = false;
+  let smallestRequestedDamage = Infinity;
+  let damageCap = Infinity;
 
   for (const r of results) {
     if (!r) continue;
@@ -126,7 +155,19 @@ function _processHook(event, eventName, payload) {
 
     // Mutação de estado do evento
     if (r.damage !== undefined) {
-      event.damage = r.damage;
+      const requestedDamage = Number(r.damage);
+      sawDamageOverride = true;
+      smallestRequestedDamage = Math.min(
+        smallestRequestedDamage,
+        requestedDamage,
+      );
+      if (startingDamage > 0) {
+        damageRatio *= requestedDamage / startingDamage;
+      }
+    }
+    // A ceiling, not a damage value: it must not scale with the hit.
+    if (r.damageCap !== undefined) {
+      damageCap = Math.min(damageCap, Number(r.damageCap));
     }
     if (r.baseDamage !== undefined) {
       event.baseDamage = Number(r.baseDamage);
@@ -157,6 +198,23 @@ function _processHook(event, eventName, payload) {
       }
     });
   }
+
+  if (sawDamageOverride) {
+    event.damage =
+      startingDamage > 0
+        ? startingDamage * damageRatio
+        : smallestRequestedDamage;
+
+    summary.sawDamageOverride = true;
+    summary.damageRatio = damageRatio;
+    summary.damageDelta = event.damage - startingDamage;
+  }
+
+  if (Number.isFinite(damageCap)) {
+    event.damage = Math.min(event.damage, damageCap);
+    summary.damageCap = damageCap;
+  }
+
   return summary;
 }
 

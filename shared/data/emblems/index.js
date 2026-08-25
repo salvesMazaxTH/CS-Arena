@@ -2,6 +2,7 @@ import { firelord } from "./fire_lord.js";
 import { thunderRoar } from "./thunder_roar.js";
 import { ironclad } from "./ironclad.js";
 import { earthshaker } from "./earthshaker.js";
+import { earthenWard } from "./earthen_ward.js";
 import { oceanGrace } from "./ocean_grace.js";
 import { brawlerFury } from "./brawler_fury.js";
 import { tankBulwark } from "./tank_bulwark.js";
@@ -12,12 +13,16 @@ import { marksmanPrecision } from "./marksman_precision.js";
 import { humanitysDefiance } from "./humanitys_defiance.js";
 import { divineMandate } from "./divine_mandate.js";
 import { stormFist } from "./storm_fist.js";
+import { assassinsAmbush } from "./assassins_ambush.js";
+
+export { evaluateEmblemEligibilityForRoster } from "./eligibility.js";
 
 export const EMBLEMS = [
   firelord,
   thunderRoar,
   ironclad,
   earthshaker,
+  earthenWard,
   oceanGrace,
   brawlerFury,
   tankBulwark,
@@ -28,5 +33,6 @@ export const EMBLEMS = [
   humanitysDefiance,
   divineMandate,
   stormFist,
+  assassinsAmbush,
 ];
 

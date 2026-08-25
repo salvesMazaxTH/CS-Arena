@@ -21,7 +21,7 @@ export default {
     // Never triggers on enemies.
     if (healSrc.team !== owner.team) return;
     // Ignore self-healing.
-    if (healSrc === owner) return;
+    if (healSrc.id === owner.id) return;
 
     const heal = Math.floor(amount * (this.lifeStealHealPercent / 100));
     if (heal <= 0 || owner.HP >= owner.maxHP) return;

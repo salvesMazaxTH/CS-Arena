@@ -20,10 +20,9 @@ export default {
 
   onAfterHealing({ healTarget, healSrc, owner, amount, context }) {
     if (healTarget.team !== owner.team) return;
-    if (healSrc.id === owner?.id) return;
     if (healTarget.id === owner.id) return;
 
-    const selfHealAmount = amount;
+    const selfHealAmount = this.selfHeal;
 
     if (selfHealAmount <= 0) return;
 
@@ -57,8 +56,12 @@ export default {
       });
     }
 
+    // The threshold reads the ally's HP before the heal landed, as the
+    // passive describes; `amount` is what was actually applied.
+    const healTargetHPBefore = healTarget.HP - amount;
+
     if (
-      healTarget.HP <
+      healTargetHPBefore <
       healTarget.maxHP * (this.hpThreshold / 100)
     ) {
       owner.modifyStat({

@@ -107,6 +107,9 @@ export class DamageEvent {
     this.critOptions = params.critOptions ?? params.context?.critOptions ?? [];
     this.flags = params.flags ?? {};
 
+    // Per-hit, never on the shared context: reflects must not inherit the pierce.
+    this.ignoreDamageReduction = params.ignoreDamageReduction ?? false;
+
     this.damageDepth = this.context.damageDepth ?? 0;
 
     this.hookPolicy = DEFAULT_HOOK_POLICY;

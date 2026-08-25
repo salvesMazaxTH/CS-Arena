@@ -1,81 +1,7 @@
-//============================================================
-//  SKILL OVERLAYS (HOVER/TOUCH ON SKILL BUTTONS, AND CLICK ON PORTRAIT)
-// ============================================================
-
-import { elementEmoji } from "../../shared/ui/elementEmoji.js";
 import {
   CLAIM_ACTION_KEY,
   CLAIM_MIN_MOMENTUM,
-  CLAIM_MAX_POINTS,
 } from "../../shared/engine/combat/claim.js";
-
-let skillOverlay = null;
-
-function extractGlossaryKeys(text) {
-  const keys = new Set();
-
-  for (const [key, data] of Object.entries(GAME_GLOSSARY)) {
-    const terms = [key, ...(data.aliases || [])];
-
-    for (const term of terms) {
-      const regex = new RegExp(`\\b${term}\\w*`, "i");
-
-      if (regex.test(text)) {
-        keys.add(key);
-        break;
-      }
-    }
-  }
-
-  return [...keys];
-}
-
-function renderGlossaryStatusEffects(text) {
-  if (!text) return text;
-
-  let result = text;
-
-  for (const [key, data] of Object.entries(GAME_GLOSSARY)) {
-    const terms = [key, ...(data.aliases || [])];
-
-    for (const term of terms) {
-      const regex = new RegExp(`\\b${term}\\w*`, "gi");
-
-      result = result.replace(
-        regex,
-        `<span class="glossary-statusEffect" data-key="${key}">$&</span>`,
-      );
-    }
-  }
-
-  return result;
-}
-
-function renderGlossaryPanel(keys) {
-  const container = document.createElement("div");
-  container.className = "skill-glossary-panel";
-
-  keys.forEach((key) => {
-    const entry = GAME_GLOSSARY[key];
-    if (!entry) return;
-
-    const item = document.createElement("div");
-    item.className = "glossary-item";
-
-    item.innerHTML = `
-      <span class="glossary-title">${entry.title}:</span>
-      <span class="glossary-desc">${entry.description}</span>
-    `;
-
-    container.appendChild(item);
-  });
-
-  return container;
-}
-
-// =========================
-// Helpers (outside the function)
-// =========================
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -86,418 +12,14 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
-function toParagraphs(text) {
-  return String(text ?? "").replace(/\n/g, "<br>");
+// Overlay visibility: shown by swapping .hidden → .active; hidden the reverse.
+function showOverlay(el) {
+  el?.classList.remove("hidden");
+  el?.classList.add("active");
 }
-
-function getClaimPointsPreview(champion) {
-  if (!champion) return 0;
-
-  const momentum = Math.max(0, Number(champion?.momentum) || 0);
-  if (momentum < CLAIM_MIN_MOMENTUM) {
-    return 0;
-  }
-
-  const momentumPoints =
-    momentum >= 75
-      ? 3
-      : momentum >= 50
-        ? 2
-        : momentum >= 25
-          ? 1
-          : 0;
-  const fieldEntryTurn = Number.isFinite(champion?.runtime?.fieldEntryTurn)
-    ? Number(champion.runtime.fieldEntryTurn)
-    : currentTurn;
-  const turnsInField = Math.max(0, currentTurn - fieldEntryTurn);
-
-  return Math.min(CLAIM_MAX_POINTS, momentumPoints + turnsInField);
-}
-
-// =========================
-// Skill Overlay
-// =========================
-
-function showSkillOverlay(button, skill, champion) {
-  removeSkillOverlay();
-  if (!button || !skill) return;
-
-  const overlay = document.createElement("div");
-  overlay.className = "skill-hover-overlay";
-
-  // =========================
-  // Skill data
-  // =========================
-
-  const rawDesc =
-    typeof skill.description === "function"
-      ? skill.description(champion)
-      : skill.description || "";
-
-  const parsedDesc = renderGlossaryStatusEffects(rawDesc);
-  const glossaryKeys = extractGlossaryKeys(rawDesc);
-
-  const isClaim = skill?.key === CLAIM_ACTION_KEY;
-
-  const claimPoints = isClaim ? getClaimPointsPreview(champion) : null;
-
-  const momentumCost =
-    skill.isUltimate && Number.isInteger(skill.momentumCost)
-      ? skill.momentumCost
-      : null;
-
-  // =========================
-  // HTML
-  // =========================
-
-  overlay.innerHTML = `
-
-  <div class="skill-overlay-title">
-    ${escapeHtml(skill.name || "Habilidade")}
-  </div>
-
-  ${
-    isClaim
-      ? `
-        <div class="skill-overlay-claim-value">
-          <span class="meta-label">Claim Value:</span>
-          <span class="meta-value">${claimPoints} points</span>
-        </div>
-      `
-      : `
-        <div class="skill-overlay-meta-primary">
-
-          ${
-            momentumCost
-              ? `
-            <div class="skill-meta-item">
-              <span class="meta-label">Cost:</span>
-              <span class="meta-value">
-                ${momentumCost} Momentum
-              </span>
-            </div>
-          `
-              : ""
-          }
-
-          ${
-            skill.damageMode != null
-              ? `
-            <div class="skill-meta-item">
-              <span class="meta-label">Damage Type:</span>
-              <span class="meta-value">
-                ${getDamageModeLabel(skill.damageMode)}
-              </span>
-            </div>
-          `
-              : ""
-          }
-
-          ${
-            skill.bf
-              ? `
-            <div class="skill-meta-item">
-              <span class="meta-label">BF:</span>
-              <span class="meta-value">${skill.bf}%</span>
-            </div>
-          `
-              : ""
-          }
-
-        </div>
-
-        ${
-          skill.element
-            ? `
-          <div class="skill-overlay-element-row">
-            <span class="meta-label">Element:</span>
-            <span class="meta-value">
-              ${elementEmoji[skill.element] || skill.element}
-            </span>
-          </div>
-        `
-            : ""
-        }
-
-        <div class="skill-overlay-contact-row">
-          <span class="meta-label">Contact:</span>
-          <span class="meta-value">${skill.contact ? "✅" : "❌"}</span>
-        </div>
-
-        <div class="skill-overlay-content-priority-row">
-          <span class="meta-label">Priority:</span>
-          <span class="meta-value">
-            ${
-              skill.priority != null
-                ? skill.priority > 0
-                  ? `+${skill.priority}`
-                  : skill.priority
-                : "-"
-            }
-          </span>
-        </div>
-      `
-  }
-
-  ${
-    !isClaim
-      ? `
-        <div class="skill-overlay-desc">
-          ${toParagraphs(parsedDesc)}
-        </div>
-      `
-      : ""
-  }
-
-`;
-
-  document.body.appendChild(overlay);
-  skillOverlay = overlay;
-
-  // =========================
-  // Glossary
-  // =========================
-
-  let glossaryPanel = null;
-
-  if (glossaryKeys.length) {
-    glossaryPanel = renderGlossaryPanel(glossaryKeys);
-    document.body.appendChild(glossaryPanel);
-  }
-
-  // =========================
-  // Overlay Positioning
-  // =========================
-
-  const buttonRect = button.getBoundingClientRect();
-  const overlayRect = overlay.getBoundingClientRect();
-
-  let top = buttonRect.bottom + 8;
-  let left = buttonRect.left + buttonRect.width / 2 - overlayRect.width / 2;
-
-  if (top + overlayRect.height > window.innerHeight) {
-    top = buttonRect.top - overlayRect.height - 8;
-  }
-
-  left = Math.max(8, Math.min(left, window.innerWidth - overlayRect.width - 8));
-
-  overlay.style.position = "fixed";
-  overlay.style.top = `${Math.max(8, top)}px`;
-  overlay.style.left = `${left}px`;
-  overlay.style.zIndex = 15000;
-
-  // =========================
-  // Glossary Panel Positioning
-  // =========================
-
-  if (glossaryPanel) {
-    const overlayBox = overlay.getBoundingClientRect();
-
-    glossaryPanel.style.position = "fixed";
-    glossaryPanel.style.top = `${overlayBox.bottom + 6}px`;
-    glossaryPanel.style.left = `${overlayBox.left}px`;
-    glossaryPanel.style.zIndex = 15000;
-  }
-
-  // =========================
-  // Fade in
-  // =========================
-
-  requestAnimationFrame(() => overlay.classList.add("active"));
-}
-
-// =========================
-// Remove overlay
-// =========================
-
-function removeSkillOverlay() {
-  if (skillOverlay) {
-    skillOverlay.classList.remove("active");
-
-    const toRemove = skillOverlay;
-    skillOverlay = null;
-
-    setTimeout(() => toRemove.remove(), 150);
-  }
-
-  document
-    .querySelectorAll(".skill-glossary-panel")
-    .forEach((el) => el.remove());
-}
-
-function getDamageModeLabel(mode) {
-  switch (mode) {
-    case "standard":
-      return "Standard";
-    case "piercing":
-      return "Piercing";
-    case "absolute":
-      return "Absolute";
-  }
-}
-
-function openChampionOverlay(champion) {
-  if (!champion) return;
-  if (portraitOverlay) closeOverlay();
-
-  portraitOverlay = createChampionOverlay(champion);
-  document.body.appendChild(portraitOverlay);
-  requestAnimationFrame(() => portraitOverlay.classList.add("active"));
-}
-
-function createChampionOverlay(champion) {
-  const overlay = document.createElement("div");
-  overlay.classList.add("portrait-overlay");
-
-  // --- Helpers de sanitização ---
-  const escapeHtml = (value) =>
-    String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-
-  overlay.innerHTML = `
-    <div class="portrait-overlay-content" role="dialog" aria-modal="true">
-      <img class="portrait-overlay-img"
-          src="${escapeHtml(champion.portrait)}"
-          alt="${escapeHtml(champion.name)}">
-
-      <h3 class="portrait-overlay-name">
-        ${escapeHtml(champion.name)}
-      </h3>
-    </div>
-  `;
-
-  const toParagraphs = (text) => String(text ?? "").replace(/\n/g, "<br>");
-
-  // --- Passiva ---
-  const passive = champion?.passive;
-  const passiveName = passive?.name ? `PASSIVE — ${passive.name}` : "PASSIVE";
-
-  const rawPassiveDesc =
-    typeof passive?.description === "function"
-      ? passive.description(champion)
-      : typeof passive?.description === "string"
-        ? passive.description
-        : "";
-
-  const parsedPassiveDesc = renderGlossaryStatusEffects(rawPassiveDesc);
-  const passiveGlossaryKeys = extractGlossaryKeys(rawPassiveDesc);
-
-  let passiveItemHtml = "";
-
-  if (parsedPassiveDesc) {
-    passiveItemHtml = `
-    <div class="portrait-overlay-passive">
-      <h4 class="portrait-overlay-passive-name">
-        ${escapeHtml(passiveName)}
-      </h4>
-      <p class="portrait-overlay-passive-desc">
-        ${toParagraphs(parsedPassiveDesc)}
-      </p>
-    </div>
-  `;
-  }
-
-  const details = document.createElement("div");
-  details.classList.add("portrait-overlay-details");
-  details.innerHTML = `
-    <div class="portrait-overlay-details-content">
-      <h3 class="portrait-overlay-details-title">Passive</h3>
-      <div class="portrait-overlay-passive-list">
-        ${passiveItemHtml}
-      </div>
-    </div>
-  `;
-
-  overlay.appendChild(details);
-
-  // =========================
-  // Glossário da passiva
-  // =========================
-
-  if (passiveGlossaryKeys.length) {
-    const glossaryPanel = renderGlossaryPanel(passiveGlossaryKeys);
-    document.body.appendChild(glossaryPanel);
-
-    requestAnimationFrame(() => {
-      const rect = overlay.getBoundingClientRect();
-
-      glossaryPanel.style.position = "fixed";
-      glossaryPanel.style.top = `${rect.bottom + 6}px`;
-      glossaryPanel.style.left = `${rect.left}px`;
-      glossaryPanel.style.zIndex = 15000;
-    });
-  }
-
-  // Enemy champion skills (fake action bar)
-  if (
-    playerTeam !== null &&
-    champion.team !== playerTeam &&
-    Array.isArray(champion.skills) &&
-    champion.skills.length
-  ) {
-    const skillsSection = document.createElement("div");
-    skillsSection.classList.add("portrait-overlay-enemy-skills");
-
-    const skillsTitle = document.createElement("h3");
-    skillsTitle.classList.add("portrait-overlay-details-title");
-    skillsTitle.textContent = "Skills";
-    skillsSection.appendChild(skillsTitle);
-
-    const skillsBar = document.createElement("div");
-    skillsBar.classList.add("portrait-overlay-enemy-skills-bar");
-
-    champion.skills.forEach((skill) => {
-      const isUlt = skill.isUltimate === true;
-      const label = isUlt ? `ULT — ${skill.name}` : skill.name;
-
-      const btn = document.createElement("button");
-      btn.className =
-        "portrait-overlay-enemy-skill-btn" + (isUlt ? " ultimate" : "");
-      btn.textContent = label;
-
-      btn.addEventListener("mouseenter", () =>
-        showSkillOverlay(btn, skill, champion),
-      );
-      btn.addEventListener("mouseleave", () => removeSkillOverlay());
-
-      skillsBar.appendChild(btn);
-    });
-
-    skillsSection.appendChild(skillsBar);
-    details.appendChild(skillsSection);
-  }
-
-  // Close when clicking on the backdrop
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) closeChampionOverlay();
-  });
-
-  // Close with Escape
-  const handleEsc = (e) => {
-    if (e.key === "Escape") closeChampionOverlay();
-  };
-  overlay._escHandler = handleEsc;
-  document.addEventListener("keydown", handleEsc);
-
-  return overlay;
-}
-
-function closeChampionOverlay() {
-  if (!portraitOverlay) return;
-
-  removeSkillOverlay();
-  portraitOverlay.classList.remove("active");
-  if (portraitOverlay._escHandler) {
-    document.removeEventListener("keydown", portraitOverlay._escHandler);
-  }
-
-  const toRemove = portraitOverlay;
-  portraitOverlay = null;
-  setTimeout(() => toRemove.remove(), 200);
+function hideOverlay(el) {
+  el?.classList.remove("active");
+  el?.classList.add("hidden");
 }
 
 // ============================================================
@@ -508,10 +30,11 @@ import { championDB } from "/shared/data/championDB.js";
 import { Champion } from "/shared/core/Champion.js";
 import { StatusIndicator } from "../../shared/ui/statusIndicator.js";
 import { createCombatAnimationManager } from "./animation/animsAndLogManager.js";
-import { GAME_GLOSSARY } from "./gameGlossary.js";
 import { syncChampionVFX } from "../../shared/vfx/vfxManager.js";
 import { audioManager } from "./utils/AudioManager.js";
 import { EMBLEMS } from "/shared/data/emblems/index.js";
+import { createOverlays } from "./ui/overlays.js";
+import { createTargeting } from "./ui/targeting.js";
 import {
   ELEMENT_IDENTITIES,
   CLASS_IDENTITIES,
@@ -572,17 +95,14 @@ const editMode = {
 };
 
 // ============================================================
-//  ESTADO DO JOGO
+//  GAME STATE
 // ============================================================
 
-// --- Identidade do jogador ---
+// --- Player identity ---
 let playerId = null;
 let playerTeam = null;
 let username = null;
-const playerNames = new Map(); // slot → nome de usuário
-
-// Reserva/switch desativados.
-// const teamReserveQueue = new Map(); // team → string[]
+const playerNames = new Map(); // slot → username
 
 // --- Turn & Combat ---
 let currentTurn = 1;
@@ -598,7 +118,6 @@ let selectedChampions = Array(TEAM_SIZE).fill(null);
 let championSelectionTimer = null;
 let championSelectionTimeLeft = 0;
 let playerTeamConfirmed = false;
-/* let allAvailableChampionKeys = []; */
 let draggedChampionKey = null;
 let draggedFromSlotIndex = -1; // -1 = available grid, >= 0 = selected slot
 
@@ -606,8 +125,23 @@ let draggedFromSlotIndex = -1; // -1 = available grid, >= 0 = selected slot
 let disconnectionCountdownInterval = null;
 let countdownInterval = null;
 
-// --- Overlays ---
-let portraitOverlay = null;
+// --- Overlays (extracted UI module) ---
+const {
+  showSkillOverlay,
+  removeSkillOverlay,
+  openChampionOverlay,
+  showQuickStatsOverlay,
+  hideQuickStatsOverlay,
+} = createOverlays({
+  getCurrentTurn: () => currentTurn,
+  getPlayerTeam: () => playerTeam,
+});
+
+const { collectClientTargets } = createTargeting({
+  getActiveChampions: () => activeChampions,
+  removeSkillOverlay,
+});
+
 const EMBLEM_MAX_SELECTION = 2;
 let playerEmblems = [];
 let selectedEmblemKeys = [];
@@ -666,14 +200,6 @@ const musicVolumeSlider = document.getElementById("music-volume");
 const sfxToggle = document.getElementById("sfx-toggle");
 const sfxVolumeSlider = document.getElementById("sfx-volume");
 
-// --- Campeões de retaguarda (reserva) desativados ---
-// const backChampionDisplayTeam1 = document.getElementById(
-//   "backChampionDisplayTeam1",
-// );
-// const backChampionDisplayTeam2 = document.getElementById(
-//   "backChampionDisplayTeam2",
-// );
-
 // ============================================================
 //  GLOBAL EXPORTS (used by AnimsAndLogManager and others)
 // ============================================================
@@ -696,7 +222,6 @@ const combatAnimations = createCombatAnimationManager({
   setCurrentTurn: (turn) => {
     currentTurn = turn;
   },
-  updateTurnDisplay,
   applyTurnUpdate,
   syncStatusIndicatorRotation: () => StatusIndicator.syncRotationLoopState(),
   combatDialog,
@@ -728,7 +253,7 @@ audioManager.preloadAll();
 
 function openSettings() {
   settingsOverlay.classList.remove("hidden");
-  // Pequeno delay para a animação CSS
+  // Small delay for the CSS animation
   setTimeout(() => settingsOverlay.classList.add("active"), 10);
 }
 
@@ -818,9 +343,6 @@ socket.on("playerAssigned", (data) => {
     arena?.classList.remove("arena--mirrored");
     document.body.classList.remove("perspective-team2");
   }
-
-  // rebuildReserveDisplay(1);
-  // rebuildReserveDisplay(2);
 });
 
 socket.on("playerEmblemsUpdated", ({ emblems } = {}) => {
@@ -843,9 +365,8 @@ socket.on("serverFull", (message) => {
 });
 
 socket.on("allPlayersConnected", () => {
-  // Transição: login → main content
-  loginScreen.classList.remove("active");
-  loginScreen.classList.add("hidden");
+  // Transition: login → main content
+  hideOverlay(loginScreen);
   mainContent.classList.remove("hidden");
   mainContent.classList.add("visible");
 
@@ -895,11 +416,10 @@ socket.on("allPlayersConnected", () => {
 socket.on("forceLogout", (message) => {
   alert(message);
 
-  // Volta para a tela de login
+  // Back to the login screen
   mainContent.classList.remove("visible");
   mainContent.classList.add("hidden");
-  loginScreen.classList.remove("hidden");
-  loginScreen.classList.add("active");
+  showOverlay(loginScreen);
 
   // Clear all game state
   activeChampions.clear();
@@ -985,8 +505,8 @@ window.addEventListener("beforeunload", function (e) {
   ) {
     const confirmationMessage =
       "Are you sure you want to leave? You may lose your progress in the match.";
-    (e || window.event).returnValue = confirmationMessage; // Para navegadores antigos
-    return confirmationMessage; // Para navegadores modernos
+    (e || window.event).returnValue = confirmationMessage; // For old browsers
+    return confirmationMessage; // For modern browsers
   }
 });
 
@@ -999,8 +519,7 @@ window.addEventListener("beforeunload", function (e) {
 // ============================================================
 
 socket.on("startChampionSelection", ({ timeLeft }) => {
-  championSelectionScreen.classList.remove("hidden");
-  championSelectionScreen.classList.add("active");
+  showOverlay(championSelectionScreen);
   mainContent.classList.remove("visible");
   mainContent.classList.add("hidden");
 
@@ -1035,8 +554,7 @@ socket.on("startChampionSelection", ({ timeLeft }) => {
 });
 
 socket.on("allTeamsSelected", () => {
-  championSelectionScreen.classList.remove("active");
-  championSelectionScreen.classList.add("hidden");
+  hideOverlay(championSelectionScreen);
   mainContent.classList.remove("hidden");
   mainContent.classList.add("visible");
 
@@ -1555,7 +1073,7 @@ function renderLineupChipContent(champion, slotIndex) {
 
   return `
     <span class="lineup-chip-inner">
-      <img class="lineup-chip-portrait" src="${escapeHtml(champion.portrait || "/assets/portraits/placeholder.webp")}" alt="${escapeHtml(champion.name || "Campeão")}">
+      <img class="lineup-chip-portrait" src="${escapeHtml(champion.portrait || "/assets/portraits/placeholder.webp")}" alt="${escapeHtml(champion.name || "Champion")}">
       <span class="lineup-chip-identity-row">
         ${renderChampionIdentityBadgesMarkup(champion)}
       </span>
@@ -1565,7 +1083,7 @@ function renderLineupChipContent(champion, slotIndex) {
 
 function attachChampionCardInteractions(card, championKey, fromSlotIndex = -1) {
   card.title =
-    "Tap no botao para species | long press ou clique direito para flip";
+    "Tap the button for species | long press or right-click to flip";
 
   const flipCard = () => {
     card.classList.toggle("is-flipped");
@@ -1646,24 +1164,26 @@ function attachChampionCardInteractions(card, championKey, fromSlotIndex = -1) {
   });
 }
 
+/** Whether a champion may be picked during draft (released/enabled, not a minion). */
+function isDraftSelectable(champion) {
+  if (!champion || (champion.entityType ?? "champion") !== "champion") {
+    return false;
+  }
+  if (champion.selectable === false) return false;
+  if (
+    (champion.unreleased === true || champion.disabled === true) &&
+    !editMode.unavailableChampions
+  ) {
+    return false;
+  }
+  return true;
+}
+
 function renderAvailableChampions() {
   availableChampionsGrid.innerHTML = "";
 
-  // Filter valid champions
-  let allAvailableChampionKeys = Object.keys(championDB).filter((key) => {
-    const champion = championDB[key];
-    const isChampion = (champion.entityType ?? "champion") === "champion";
-    const isSelectable = champion.selectable !== false;
-    const isunavailable = champion.unreleased || champion.disabled;
-    if (!isChampion) return false;
-    if (!isSelectable) return false;
-    if (isunavailable && !editMode.unavailableChampions) return false;
-    return true;
-  });
-
-  // Sort alphabetically
-  allAvailableChampionKeys = sortChampionKeysAlphabetically(
-    allAvailableChampionKeys,
+  const allAvailableChampionKeys = sortChampionKeysAlphabetically(
+    Object.keys(championDB).filter((key) => isDraftSelectable(championDB[key])),
   );
 
   allAvailableChampionKeys.forEach((key) => {
@@ -1685,21 +1205,9 @@ function renderAvailableChampions() {
 // --- Click on champion card ---
 
 function getDraftSelectableChampionKeys(excludeKeys = []) {
-  return Object.keys(championDB).filter((key) => {
-    const champion = championDB[key];
-    if (!champion || (champion.entityType ?? "champion") !== "champion") {
-      return false;
-    }
-    if (champion.selectable === false) return false;
-    if (excludeKeys.includes(key)) return false;
-    if (
-      (champion.unreleased === true || champion.disabled === true) &&
-      !editMode.unavailableChampions
-    ) {
-      return false;
-    }
-    return true;
-  });
+  return Object.keys(championDB).filter(
+    (key) => !excludeKeys.includes(key) && isDraftSelectable(championDB[key]),
+  );
 }
 
 function getRandomChampionKeyForDraft(excludeKeys = []) {
@@ -2029,11 +1537,6 @@ function requestEndTurn() {
   if (hasConfirmedEndTurn || isSummonReminderOpen()) return;
 
   const summonable = getSummonableLineupChampions();
-  console.log("[END TURN] Line-up summon availability:", {
-    canSummon: lineupSummonState?.canSummon === true,
-    champions: summonable,
-  });
-
   if (!summonable.length) {
     endTurn();
     return;
@@ -2151,13 +1654,7 @@ socket.on("requestFirstChampionSelection", ({ roster, team }) => {
   openFirstChoiceOverlay();
 });
 
-socket.on("firstChampionChosenAck", ({ championKey }) => {
-  // mark chosen locally; UI already updated when emitting
-  // keep overlay visible showing waiting state
-});
-
-socket.on("firstChampionChoicesFinalized", ({ firstChampions }) => {
-  // firstChampions: [team1Key, team2Key]
+socket.on("firstChampionChoicesFinalized", () => {
   firstChoicePending = false;
   firstChoiceResolved = true;
   closeFirstChoiceOverlay();
@@ -2237,7 +1734,7 @@ function updateChampionSelectionTimerUI() {
 }
 
 // ============================================================
-//  GERENCIAMENTO DE CAMPEÕES
+//  CHAMPION MANAGEMENT
 // ============================================================
 
 socket.on("championRemoved", (championId) => {
@@ -2261,8 +1758,8 @@ function createNewChampion(championData) {
   champion.baseAttack = baseData.Attack;
   champion.baseDefense = baseData.Defense;
   champion.baseSpeed = baseData.Speed;
-  champion.baseCritical = baseData.Critical;
-  champion.baseLifeSteal = baseData.LifeSteal;
+  champion.baseCritical = baseData.Critical ?? 0;
+  champion.baseLifeSteal = baseData.LifeSteal ?? 0;
 
   activeChampions.set(champion.id, champion);
 
@@ -2348,129 +1845,6 @@ function sortTeamContainersByCombatSlot() {
     }
   }
 }
-/*   */
-// Quick stats overlay (hover/touch on the portrait)
-let quickStatsOverlay = null;
-
-function showQuickStatsOverlay(champion) {
-  hideQuickStatsOverlay();
-  if (!champion) return;
-
-  quickStatsOverlay = document.createElement("div");
-  quickStatsOverlay.className = "quick-stats-overlay";
-  quickStatsOverlay.style.position = "fixed";
-  quickStatsOverlay.style.zIndex = 13000;
-  quickStatsOverlay.style.pointerEvents = "none";
-
-  const statRows = [];
-
-  // HP (texto)
-  statRows.push({
-    label: "HP",
-    value: `${champion.HP}/${champion.maxHP}`,
-  });
-
-  // Numéricos baseados em comparação
-  statRows.push({
-    label: "Attack",
-    value: champion.Attack,
-    base: champion.baseAttack,
-  });
-
-  statRows.push({
-    label: "Defense",
-    value: champion.Defense,
-    base: champion.baseDefense,
-  });
-
-  statRows.push({
-    label: "Speed",
-    value: champion.Speed,
-    base: champion.baseSpeed,
-  });
-
-  statRows.push({
-    label: "Evasion",
-    value: champion.Evasion ?? 0,
-    base: champion.baseEvasion,
-    percent: true,
-  });
-
-  statRows.push({
-    label: "Critical",
-    value: champion.Critical ?? 0,
-    base: champion.baseCritical,
-    percent: true,
-  });
-
-  statRows.push({
-    label: "Life Steal",
-    value: champion.LifeSteal ?? 0,
-    base: champion.baseLifeSteal,
-    percent: true,
-  });
-
-  let html = `<div class='quick-stats-content'>`;
-  html += `<div class='quick-stats-title'>${champion.name}</div>`;
-  html += `<div class='quick-stats-list'>`;
-
-  for (const row of statRows) {
-    let color = "#fff";
-    let displayValue = row.value;
-
-    if (typeof row.base === "number" && typeof row.value === "number") {
-      if (row.value > row.base) color = "#00ff66";
-      else if (row.value < row.base) color = "#ff2a2a";
-
-      if (row.percent) {
-        displayValue = `${row.value}%`;
-      }
-    }
-
-    html += `
-      <div class='quick-stat-row'>
-        <span class='quick-stat-label'>${row.label}:</span>
-        <span class='quick-stat-value' style='color:${color}'>
-          ${displayValue}
-        </span>
-      </div>
-    `;
-  }
-
-  html += `</div></div>`;
-
-  quickStatsOverlay.innerHTML = html;
-  document.body.appendChild(quickStatsOverlay);
-
-  const portrait = document.querySelector(
-    `.champion[data-champion-id='${champion.id}'] .portrait`,
-  );
-
-  if (portrait) {
-    const rect = portrait.getBoundingClientRect();
-    const overlayRect = quickStatsOverlay.getBoundingClientRect();
-
-    let top = rect.top - overlayRect.height - 8;
-    if (top < 0) top = rect.bottom + 8;
-
-    let left = rect.left + (rect.width - overlayRect.width) / 2;
-    if (left < 8) left = 8;
-
-    if (left + overlayRect.width > window.innerWidth) {
-      left = window.innerWidth - overlayRect.width - 8;
-    }
-
-    quickStatsOverlay.style.top = `${top}px`;
-    quickStatsOverlay.style.left = `${left}px`;
-  }
-}
-
-function hideQuickStatsOverlay() {
-  if (quickStatsOverlay) {
-    quickStatsOverlay.remove();
-    quickStatsOverlay = null;
-  }
-}
 
 /** Remove a champion from the local team (edit mode / debug). */
 function deleteChampion(championId) {
@@ -2532,14 +1906,6 @@ async function handleSkillUsage(button) {
 
   const cost = user.getSkillCost(skill);
 
-  console.log(
-    "CLIENT CHECK: ",
-    user.name,
-    "trying to use",
-    skill.name,
-    `(Cost: ${cost}, Momentum: ${user.momentum})`,
-  );
-
   if (!editMode.freeCostSkills && cost > user.momentum) {
     alert(`Not enough Momentum.`);
     user.updateUI(currentTurn);
@@ -2556,9 +1922,6 @@ socket.on("skillDenied", (message) => {
 });
 
 socket.on("skillApproved", async ({ userId, skillKey }) => {
-  console.log(
-    `[SkillApproved] Resolving targets for ${userId} using ${skillKey}`,
-  );
   const user = activeChampions.get(userId);
   if (!user) return;
 
@@ -2583,7 +1946,6 @@ socket.on("skillApproved", async ({ userId, skillKey }) => {
 
   // Collects targets on the client
   const targets = await collectClientTargets(user, skill);
-  console.log("[SkillApproved] Collected targets:", targets);
   if (!targets) return;
 
   const targetIds = {};
@@ -2604,221 +1966,6 @@ socket.on("skillApproved", async ({ userId, skillKey }) => {
     advanceActionBarSlot(userId);
   }
 });
-
-// --- Collects targets on the client ---
-
-async function collectClientTargets(user, skill) {
-  if (!skill || !Array.isArray(skill.targetSpec)) return null;
-
-  const normalizedSpec = skill.targetSpec.map((s) =>
-    typeof s === "string" ? { type: s } : s,
-  );
-
-  const hasGlobal = normalizedSpec.some(
-    (s) => s.type === "all" || s.type === "all:enemy" || s.type === "all:ally",
-  );
-
-  // If it's a global skill, don't open the selection UI
-  if (hasGlobal) {
-    return {};
-  }
-
-  const championsInField = Array.from(activeChampions.values());
-
-  const targets = {};
-  const enemyCounter = { count: 0 };
-  const chosenTargets = new Set();
-
-  for (const spec of normalizedSpec) {
-    const target = await selectTargetForRole(
-      spec,
-      user,
-      championsInField,
-      enemyCounter,
-      chosenTargets,
-      spec.unique === true,
-    );
-
-    console.log(`[collectClientTargets] Role: ${spec.type}, Target:`, target);
-
-    // cancelamento manual
-    if (target === null) return null;
-
-    // slot ignorado
-    if (target === undefined) continue;
-
-    Object.assign(targets, target);
-  }
-
-  const hasTargets = Object.keys(targets).length > 0;
-
-  if (!hasTargets) {
-    alert("There are no valid targets for this skill.");
-    return null;
-  }
-
-  return targets;
-}
-
-async function selectTargetForRole(
-  spec,
-  user,
-  championsInField,
-  enemyCounter,
-  chosenTargets,
-  enforceUnique,
-) {
-  // Helper: filters already chosen targets when uniqueness is enforced
-  const filterUnique = (list) =>
-    enforceUnique ? list.filter((c) => !chosenTargets.has(c.id)) : list;
-
-  // Helper: sorts candidates to strictly match their visual order on the field (by combatSlot)
-  const byFieldOrder = (list) =>
-    [...list].sort((a, b) => (a.combatSlot ?? 0) - (b.combatSlot ?? 0));
-
-  const role = spec.type;
-
-  console.log(`[selectTargetForRole] Selecting target for role: ${role}`);
-
-  // SELF (automatic)
-  if (role === "self") {
-    chosenTargets.add(user.id);
-    return { self: user };
-  }
-
-  // ALLY (automatic — first available ally)
-  if (role === "ally") {
-    let allies = championsInField.filter(
-      (c) => c.team === user.team && c.id !== user.id,
-    );
-    allies = byFieldOrder(filterUnique(allies));
-    if (allies.length === 0) return undefined;
-    chosenTargets.add(allies[0].id);
-    return { ally: allies[0] };
-  }
-
-  // SELECT ALLY (manual selection)
-  if (role === "select:ally") {
-    let candidates = championsInField.filter((c) => c.team === user.team);
-
-    if (spec.excludesSelf) {
-      candidates = candidates.filter((c) => c.id !== user.id);
-    }
-
-    candidates = byFieldOrder(filterUnique(candidates));
-
-    const target = await createTargetSelectionOverlay(
-      candidates,
-      "Choose an Ally",
-    );
-
-    if (target === null) return null;
-    if (target === undefined) return undefined;
-
-    chosenTargets.add(target.id);
-    return { ally: target };
-  }
-
-  // ALLY/ENEMY GLOBAL (no selection, affects all champions of the type)
-  if (role === "all:ally" || role === "all" || role === "all:enemy") return {};
-
-  // ENEMY (manual selection)
-  if (role === "enemy") {
-    enemyCounter.count++;
-
-    const index = enemyCounter.count;
-
-    let candidates = championsInField.filter((c) => c.team !== user.team);
-    candidates = byFieldOrder(filterUnique(candidates));
-
-    const target = await createTargetSelectionOverlay(
-      candidates,
-      index === 1 ? "Select the ENEMY" : `Select the ENEMY ${index}`,
-    );
-
-    console.log(
-      `[selectTargetForRole] Candidates for enemy ${index}:`,
-      candidates,
-    );
-
-    if (target === null) return null;
-    if (target === undefined) return undefined;
-
-    chosenTargets.add(target.id);
-    const key = index === 1 ? "enemy" : `enemy${index}`;
-    console.log(
-      `[selectTargetForRole] Selected target for ${key}:`,
-      target,
-      chosenTargets,
-    );
-
-    return { [key]: target };
-  }
-
-  console.error(`[selectTargetForRole] Unknown target role: ${role}`);
-  return undefined;
-}
-
-// --- Overlay de seleção de alvo ---
-
-function createTargetSelectionOverlay(candidates, title) {
-  // Remove skill overlay if open (fixes mobile bug)
-  removeSkillOverlay && removeSkillOverlay();
-  return new Promise((resolve) => {
-    // if there are no candidates, avoid opening the empty selection UI
-    if (!Array.isArray(candidates) || candidates.length === 0) {
-      console.log(
-        `[createTargetSelectionOverlay] No candidates available for "${title}". Skipping selection. Resolving undefined.`,
-      );
-      resolve(undefined);
-      return;
-    }
-
-    const overlay = document.createElement("div");
-    overlay.classList.add("targetSelectionOverlay");
-
-    const h2 = document.createElement("h2");
-    h2.textContent = title;
-    overlay.appendChild(h2);
-
-    const container = document.createElement("div");
-    container.classList.add("target-candidates");
-
-    candidates.forEach((champion) => {
-      const card = document.createElement("div");
-      card.classList.add("target-candidate");
-      card.innerHTML = `
-        <img src="${champion.portrait}" alt="${champion.name}">
-        <h3>${champion.name}</h3>
-        <p>HP: ${champion.HP}/${champion.maxHP}</p>
-      `;
-      card.addEventListener("click", (e) => {
-        e.stopPropagation();
-        closeTargetOverlay(overlay);
-        resolve(champion);
-      });
-      container.appendChild(card);
-    });
-
-    overlay.appendChild(container);
-
-    // Click outside cancels the selection
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) {
-        closeTargetOverlay(overlay);
-        resolve(null);
-      }
-    });
-
-    document.body.appendChild(overlay);
-    requestAnimationFrame(() => overlay.classList.add("active"));
-  });
-}
-
-function closeTargetOverlay(overlay) {
-  overlay.classList.remove("active");
-  setTimeout(() => overlay.remove(), 200);
-}
 
 // ============================================================
 //  LINEUP BANNERS
@@ -2879,7 +2026,7 @@ function renderLineupBanners(lineupsByTeam = {}) {
 }
 
 // ============================================================
-//  GERENCIAMENTO DE TURNOS
+//  TURN MANAGEMENT
 // ============================================================
 
 socket.on("gameStateUpdate", (gameState) => {
@@ -2923,10 +2070,6 @@ socket.on("gameStateUpdate", (gameState) => {
     renderLineupBanner();
     resolveSummonReminderRequest({ summoned: true });
   }
-});
-
-socket.on("scoreUpdate", (score) => {
-  updateScoreDisplay(score);
 });
 
 socket.on("actionFailed", (message) => {
@@ -2977,7 +2120,7 @@ socket.on("actionsCanceled", () => {
 /** Applies the turn transition on the client: resets actions and updates the UI. */
 function applyTurnUpdate(turn) {
   currentTurn = turn;
-  updateTurnDisplay(currentTurn);
+  combatAnimations.updateTurnDisplay(currentTurn);
   hasConfirmedEndTurn = false;
   pendingSummonChampionKey = null;
   closeSummonReminder();
@@ -3000,83 +2143,6 @@ function applyTurnUpdate(turn) {
   if (playerTeam !== null) initActionBar();
 
   logCombat(`Start of Turn ${currentTurn}`);
-}
-
-let turnTransitionTimer = null;
-let turnTransitionSequence = 0;
-let isFirstTurnUpdate = true;
-
-function showTurnTransition(turn) {
-  const overlay = document.getElementById("turnTransitionOverlay");
-  const number = document.getElementById("turnTransitionNumber");
-
-  if (!overlay || !number) return;
-
-  const sequence = ++turnTransitionSequence;
-
-  clearTimeout(turnTransitionTimer);
-
-  const turnLabel = turn === 20 ? "LAST TURN" : `TURN ${turn}`;
-
-  // Garante que o overlay comece mostrando o novo turno
-  number.textContent = turnLabel;
-
-  // Reset da animação do texto
-  number.classList.remove("is-changing");
-
-  // Força o browser a reconhecer o estado inicial
-  void number.offsetWidth;
-
-  // Entrada do overlay
-  overlay.classList.add("is-visible");
-
-  // Mantém o banner visível por um instante
-  turnTransitionTimer = setTimeout(() => {
-    if (sequence !== turnTransitionSequence) return;
-
-    // Fade/blur do turno atual
-    number.classList.add("is-changing");
-
-    setTimeout(() => {
-      if (sequence !== turnTransitionSequence) return;
-
-      number.textContent = turnLabel;
-
-      // Força reflow para reiniciar a entrada
-      void number.offsetWidth;
-
-      number.classList.remove("is-changing");
-
-      // Depois de mostrar o novo turno, fecha o overlay
-      turnTransitionTimer = setTimeout(() => {
-        if (sequence !== turnTransitionSequence) return;
-
-        overlay.classList.remove("is-visible");
-      }, 700);
-    }, 230);
-  }, 700);
-}
-
-let lastDisplayedTurn = null;
-
-function updateTurnDisplay(turn) {
-  const turnDisplay = document.querySelector(".turn-display");
-  const turnText = turnDisplay?.querySelector("p");
-
-  if (turnText) {
-    turnText.textContent = turn === 20 ? "Last Turn" : `Turn ${turn}`;
-  }
-
-  if (isFirstTurnUpdate) {
-    isFirstTurnUpdate = false;
-    lastDisplayedTurn = turn;
-    return;
-  }
-
-  if (turn !== lastDisplayedTurn) {
-    lastDisplayedTurn = turn;
-    showTurnTransition(turn);
-  }
 }
 
 function endTurn() {
@@ -3108,11 +2174,10 @@ socket.on("waitingForOpponentEndTurn", (message) => {
 });
 
 // ============================================================
-//  LOG DE COMBATE
+//  COMBAT LOG
 // ============================================================
 
 socket.on("combatAction", (envelope) => {
-  console.log("RECEBIDO NO CLIENT:", envelope);
   combatAnimations.handleCombatAction(envelope);
 });
 
@@ -3130,54 +2195,6 @@ function logCombat(text) {
   if (typeof text !== "string" || !text) return;
   combatAnimations.handleCombatLog(text);
 }
-
-// ============================================================
-//  EXIBIÇÃO DO CAMPEÃO DE RETAGUARDA (DESATIVADA)
-// ============================================================
-
-// const remainingSwitchesPerTeam = new Map([
-//   [1, 0],
-//   [2, 0],
-// ]);
-
-// socket.on("switchesUpdate", ({ team1, team2 }) => {
-//   remainingSwitchesPerTeam.set(1, team1);
-//   remainingSwitchesPerTeam.set(2, team2);
-//   rebuildReserveDisplay(1);
-//   rebuildReserveDisplay(2);
-// });
-
-// socket.on("backChampionUpdate", ({ team, queue }) => {
-//   teamReserveQueue.set(team, queue ?? []);
-//   rebuildReserveDisplay(team);
-// });
-
-// function getReserveDisplayElement(team) {
-//   if (playerTeam === 1 || playerTeam === 2) {
-//     return team === playerTeam
-//       ? backChampionDisplayTeam1
-//       : backChampionDisplayTeam2;
-//   }
-//
-//   return team === 1 ? backChampionDisplayTeam1 : backChampionDisplayTeam2;
-// }
-
-function rebuildReserveDisplay(_team) {
-  // Reserva/switch UI desativados.
-}
-
-// socket.on("championSwitchedOut", (championId) => {
-//   combatAnimations.handleChampionSwitchedOut(championId);
-// });
-
-// socket.on("switchQueued", ({ championId }) => {
-//   document.getElementById("undo-actions-btn").disabled = false;
-//   advanceActionBarSlot(championId);
-// });
-
-// socket.on("switchDenied", (message) => {
-//   alert(message);
-// });
 
 // ============================================================
 //  ACTION BAR (slot-by-slot action selection)
@@ -3257,7 +2274,7 @@ function showActionBarSlot({ playerAdvanced = true } = {}) {
 
   const header = document.createElement("div");
   header.className = "action-bar-header";
-  header.textContent = `Escolha sua ação para o Slot ${slotNumber} (${champion.name})`;
+  header.textContent = `Choose your action for Slot ${slotNumber} (${champion.name})`;
   actionBarEl.appendChild(header);
 
   const skillsBar = document.createElement("div");
@@ -3271,7 +2288,7 @@ function showActionBarSlot({ playerAdvanced = true } = {}) {
   const claimBtn = document.createElement("button");
   claimBtn.className = "action-bar-skill-btn claim";
   claimBtn.textContent = "CLAIM";
-  claimBtn.title = "Marca pontos com base no seu Momentum atual.";
+  claimBtn.title = "Scores points based on your current Momentum.";
 
   claimBtn.addEventListener("mouseenter", () =>
     showSkillOverlay(claimBtn, claimSkill, champion),
@@ -3309,7 +2326,7 @@ function showActionBarSlot({ playerAdvanced = true } = {}) {
       champion.statusEffects.has("rooted");
     if (skill.contact && hasRooted) {
       btn.disabled = true;
-      btn.title = "Não pode usar habilidades de contato enquanto Enraizado.";
+      btn.title = "Cannot use contact skills while Rooted.";
     }
 
     if (isUlt) {
@@ -3325,41 +2342,37 @@ function showActionBarSlot({ playerAdvanced = true } = {}) {
   teamContainer.appendChild(actionBarEl);
 
   if (skipSlotBtn) skipSlotBtn.disabled = false;
-
-  // Update reserve display disabled.
-  // rebuildReserveDisplay(playerTeam);
 }
 
 function advanceActionBarSlot(champId) {
   if (actionBarSlotOrder[currentActionBarSlot] === champId) {
     currentActionBarSlot++;
     showActionBarSlot();
-    // Habilita o undo sempre que avança slot (há ação pendente)
+    // Enable undo whenever a slot advances (there is a pending action).
     document.getElementById("undo-actions-btn").disabled = false;
-    // rebuildReserveDisplay(playerTeam);
   }
 }
 
 async function handleClaimUsage(champion) {
   if (window.gameEnded) {
-    alert("O jogo já terminou. Nenhuma ação pode ser realizada.");
+    alert("The game has already ended. No action can be taken.");
     return;
   }
 
   if (!champion) return;
 
   if (champion.team !== playerTeam) {
-    alert("Você só pode agir com campeões do seu time.");
+    alert("You can only act with champions on your team.");
     return;
   }
 
   if (!editMode.actMultipleTimesPerTurn && champion.hasActedThisTurn) {
-    alert(`${champion.name} já agiu neste turno.`);
+    alert(`${champion.name} has already acted this turn.`);
     return;
   }
 
   if (!editMode.freeCostSkills && CLAIM_MIN_MOMENTUM > champion.momentum) {
-    alert("Momentum insuficiente para CLAIM.");
+    alert("Not enough Momentum for CLAIM.");
     champion.updateUI(currentTurn);
     return;
   }
@@ -3389,32 +2402,22 @@ function removeActionBar() {
   }
   if (skipSlotBtn) skipSlotBtn.disabled = true;
   setEndTurnButtonVisible(false);
-  // Rebuild reserve display disabled.
-  // if (playerTeam !== null) rebuildReserveDisplay(playerTeam);
 }
 
-/* function handleSwitchViaReserveCard(reserveKey) {
-  // Lógica de switch/reserva desativada.
-  void reserveKey;
-} */
-
 // ============================================================
-//  SURRENDER (Render-se)
+//  SURRENDER
 // ============================================================
 
 function openSurrenderDialog() {
   if (gameEnded || !playerTeam) return;
   if (settingsOverlay && settingsOverlay.classList.contains("active")) {
-    settingsOverlay.classList.remove("active");
-    settingsOverlay.classList.add("hidden");
+    hideOverlay(settingsOverlay);
   }
-  surrenderOverlay.classList.remove("hidden");
-  surrenderOverlay.classList.add("active");
+  showOverlay(surrenderOverlay);
 }
 
 function closeSurrenderDialog() {
-  surrenderOverlay.classList.remove("active");
-  surrenderOverlay.classList.add("hidden");
+  hideOverlay(surrenderOverlay);
 }
 
 function confirmSurrender() {

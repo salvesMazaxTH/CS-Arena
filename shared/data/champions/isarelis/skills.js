@@ -19,10 +19,11 @@ const isarelisSkills = [
     bf: 55,
     damageMode: "standard",
     contact: true,
+    hitVfx: "multislash",
     priority: 0,
 
     description() {
-      return "Deals physical contact damage to the chosen target.";
+      return "Isarelis closes on the chosen target with both daggers reversed and opens them up in a handful of strokes, short blades finding the gaps a longer edge would never reach, dealing physical contact damage.";
     },
 
     targetSpec: ["enemy"],
@@ -128,6 +129,7 @@ const isarelisSkills = [
 
     bf: 85,
     damageMode: "standard",
+    hitVfx: "multislash",
     contact: true,
     isUltimate: true,
     momentumCost: 55,

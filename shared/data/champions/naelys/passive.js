@@ -44,6 +44,8 @@ export default {
 
   onAfterHealing({ healTarget, healSrc, owner, amount, context }) {
     if (healSrc.id !== owner?.id) return;
+    // Only HP she restores to herself feeds the stacks, as her passive states.
+    if (healTarget.id !== owner.id) return;
 
     owner.runtime = owner.runtime || {};
     owner.runtime.mareStacks = owner.runtime.mareStacks || 0;

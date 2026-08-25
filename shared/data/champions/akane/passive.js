@@ -1,6 +1,6 @@
 export default {
-  key: "crimson_severance",
-  name: "Crimson Severance",
+  key: "violet_severance",
+  name: "Violet Severance",
 
   critBonus: 25,
   piercingRatio: 0.75,
