@@ -760,7 +760,10 @@ function handleStartTurn() {
   // Purge expired effects.
   match.combat.activeChampions.forEach((champion) => {
     champion.purgeExpiredStatModifiers(match.combat.currentTurn);
-    champion.purgeExpiredStatusEffects(match.combat.currentTurn);
+    champion.purgeExpiredStatusEffects(
+      match.combat.currentTurn,
+      turnStartContext,
+    );
     champion.purgeExpiredHookEffects(match.combat.currentTurn);
   });
 

@@ -9,6 +9,12 @@ const frozen = {
   type: "debuff",
   subtypes: ["hardCC", "ice"],
 
+  // Frozen is the evolved form of Chilled: applying it consumes the Chilled it
+  // grows out of, Chilled can never land back on top of it, and running its full
+  // duration leaves the target Chilled instead of simply free.
+  evolvesFrom: "chilled",
+  decaysTo: { key: "chilled", duration: 1 },
+
   onStatusEffectAdded({ owner, duration, context }) {
     owner.modifyStat({
       statName: "Speed",

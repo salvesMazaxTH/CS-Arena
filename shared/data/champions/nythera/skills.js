@@ -46,7 +46,6 @@ const nytheraSkills = [
       // Status effects only land if the damage connected (not evaded, not immune).
       if (!result?.evaded && !result?.immune && !wasFrozen) {
         if (wasChilled) {
-          target.removeStatusEffect("chilled");
           target.applyStatusEffect("frozen", this.freezeDuration, context);
         } else {
           target.applyStatusEffect("chilled", this.chillDuration, context);
@@ -182,10 +181,10 @@ const nytheraSkills = [
 
       // Status effects only land if the damage connected (not evaded, not immune).
       if (!result?.evaded && !result?.immune) {
-        if (!isChilled && !isFrozen) {
-          target.applyStatusEffect("chilled", this.chillDuration, context);
-        } else if (isChilled && !isFrozen) {
+        if (isChilled) {
           target.applyStatusEffect("frozen", this.freezeDuration, context);
+        } else if (!isFrozen) {
+          target.applyStatusEffect("chilled", this.chillDuration, context);
         }
       }
 

@@ -1,6 +1,9 @@
 import { revertStatModifiersFromStatus } from "./championCombat.js";
 import { ElementalInteractions } from "../engine/combat/ElementalInteractions.js";
-import { StatusEffectsRegistry } from "../data/statusEffects/effectsRegistry.js";
+import {
+  EvolvedStatusByBase,
+  StatusEffectsRegistry,
+} from "../data/statusEffects/effectsRegistry.js";
 import { emitCombatEvent } from "../engine/combat/combatEvents.js";
 import { formatChampionName } from "../ui/formatters.js";
 
@@ -293,6 +296,11 @@ export function applyStatusEffect(
     context,
   );
 
+  // A base status can never land on a target already holding its evolved form.
+  const evolved = EvolvedStatusByBase[statusEffectKey];
+
+  if (evolved && champion.hasStatusEffect(evolved)) return false;
+
   const validation = _canApplyStatusEffect(
     champion,
     statusEffectKey,
@@ -321,6 +329,10 @@ export function applyStatusEffect(
       targetId: champion.id,
     });
     return false;
+  }
+
+  if (definition.evolvesFrom) {
+    champion.removeStatusEffect(definition.evolvesFrom);
   }
 
   return applyStatusEffectCore({
@@ -494,7 +506,7 @@ export function removeStatusEffect(champion, statusEffectName) {
  * @param {number} currentTurn - Current turn number
  * @returns {array} List of removed statusEffect names
  */
-export function purgeExpiredStatusEffects(champion, currentTurn) {
+export function purgeExpiredStatusEffects(champion, currentTurn, context) {
   const removedStatusEffects = [];
   for (const [
     statusEffectName,
@@ -508,9 +520,18 @@ export function purgeExpiredStatusEffects(champion, currentTurn) {
       );
       */
       // No longer remove from runtime.hookEffects; status effect hooks are only in statusEffects Map now
-      // 🎨 Anima a remoção do indicador com delay visual
-      /*       StatusIndicator.animateIndicatorRemove(champion, statusEffectName); */
     }
   }
+
+  // An evolved status that ran its full duration decays back into its base
+  // rather than ending outright.
+  for (const statusEffectName of removedStatusEffects) {
+    const decay = StatusEffectsRegistry[statusEffectName]?.decaysTo;
+
+    if (decay) {
+      applyStatusEffect(champion, decay.key, decay.duration, context);
+    }
+  }
+
   return removedStatusEffects;
 }

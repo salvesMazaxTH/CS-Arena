@@ -516,8 +516,8 @@ export class Champion {
     return removeStatusEffect(this, statusEffectKey);
   }
 
-  purgeExpiredStatusEffects(currentTurn) {
-    return purgeExpiredStatusEffects(this, currentTurn);
+  purgeExpiredStatusEffects(currentTurn, context) {
+    return purgeExpiredStatusEffects(this, currentTurn, context);
   }
 
   // ===============================
