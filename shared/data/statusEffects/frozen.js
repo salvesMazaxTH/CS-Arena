@@ -9,9 +9,7 @@ const frozen = {
   type: "debuff",
   subtypes: ["hardCC", "ice"],
 
-  // Frozen is the evolved form of Chilled: applying it consumes the Chilled it
-  // grows out of, Chilled can never land back on top of it, and running its full
-  // duration leaves the target Chilled instead of simply free.
+  // Evolved form of Chilled: replaces it on apply, decays back into it on expiry.
   evolvesFrom: "chilled",
   decaysTo: { key: "chilled", duration: 1 },
 
@@ -54,9 +52,7 @@ const frozen = {
   onAfterDmgTaking({ attacker, defender, owner, damage, element, context }) {
     if (damage <= 0) return;
 
-    // Only remove the status if it was already present before the damage
-    // was dealt, preventing it from being removed immediately after application.
-    // Check the current effect and verify that it expires after the current turn.
+    // A freeze applied this same turn must survive it.
     const currentTurn = context?.currentTurn ?? 0;
 
     const effect =
@@ -78,7 +74,6 @@ ${reaction.log}`,
       };
     }
 
-    // If it was just applied this turn, do not remove it.
     return;
   },
 

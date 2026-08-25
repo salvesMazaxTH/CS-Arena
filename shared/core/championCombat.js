@@ -634,10 +634,6 @@ export function purgeExpiredStatModifiers(champion, currentTurn) {
   return revertedStats;
 }
 
-/**
- * Drop the stat modifiers a status effect applied and restore the stats it
- * changed. Called when the status is removed before its own expiry.
- */
 export function revertStatModifiersFromStatus(champion, statusKey) {
   const affectedStats = new Set();
   const remaining = [];

@@ -28,8 +28,6 @@ export const StatusEffectsRegistry = {
   poisoned,
 };
 
-// Evolved forms keyed by the base status they replace, derived from each
-// definition's `evolvesFrom`.
 export const EvolvedStatusByBase = Object.fromEntries(
   Object.values(StatusEffectsRegistry)
     .filter((definition) => definition.evolvesFrom)

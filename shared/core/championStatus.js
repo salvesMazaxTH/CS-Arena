@@ -190,8 +190,7 @@ function applyStatusEffectCore({
       });
     }
 
-    // Whatever the hook just appended belongs to this status, so removing it
-    // early can give the stats back instead of leaving them stuck.
+    // Everything the hook just appended belongs to this status.
     for (let i = ownModifiersFrom; i < champion.statModifiers.length; i++) {
       champion.statModifiers[i].statusKey = statusEffectKey;
     }
@@ -527,8 +526,6 @@ export function purgeExpiredStatusEffects(champion, currentTurn, context) {
     }
   }
 
-  // An evolved status that ran its full duration decays back into its base
-  // rather than ending outright.
   for (const statusEffectName of removedStatusEffects) {
     const decay = StatusEffectsRegistry[statusEffectName]?.decaysTo;
 

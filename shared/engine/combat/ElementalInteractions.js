@@ -1,11 +1,7 @@
 import { DamageEvent } from "./DamageEvent.js";
 import { formatChampionName } from "../../ui/formatters.js";
 
-/**
- * Reactions between an element and a status effect belonging to an opposing one.
- * Every reaction resolves into its own absolute damage plus a dialog, so the
- * player always sees the interaction happen instead of only its aftermath.
- */
+// Reactions between an element and a status effect of an opposing one.
 export class ElementalInteractions {
   // Reaction damage, as a percentage of the target's max HP.
   static SHATTER_MAXHP_PERCENT = 4;
@@ -15,7 +11,6 @@ export class ElementalInteractions {
   // Statuses that cannot coexist: either one landing on the other vaporizes both.
   static OPPOSING_STATUSES = { burning: "frozen", frozen: "burning" };
 
-  /** The ice just broke. Fire turns the break into steam; anything else shatters it. */
   static onFrozenBroken({ target, element, context }) {
     if (element === "fire") return this.vaporize({ target, context });
 
@@ -29,11 +24,7 @@ export class ElementalInteractions {
     });
   }
 
-  /**
-   * Annuls an incoming Burning or Frozen when the opposing one is already on the
-   * target, turning both into steam. Returns true when the caller must drop the
-   * application it was about to make.
-   */
+  // Returns true when the caller must drop the application it was about to make.
   static resolveOpposingStatus({ target, incomingKey, context }) {
     const opposing = this.OPPOSING_STATUSES[incomingKey];
 
@@ -51,7 +42,6 @@ export class ElementalInteractions {
     return this.vaporize({ target, context });
   }
 
-  /** Water on a Conductor closes the circuit. */
   static onConductorSoaked({ target, context }) {
     return this._react({
       target,
@@ -75,9 +65,8 @@ export class ElementalInteractions {
   }
 
   static _react({ target, context, percent, key, name, dialog }) {
-    // The elements did this, not a champion: no attacker means no lifesteal and
-    // no on-hit passives feeding off a reaction. `isDot` is what allows that, and
-    // it also keeps the reaction from cascading into further reactive hooks.
+    // No attacker: the elements did this, so no lifesteal or on-hit passive feeds
+    // off it. `isDot` is what permits that, and it also blocks reaction cascades.
     const reactionContext = {
       ...context,
       isDot: true,
