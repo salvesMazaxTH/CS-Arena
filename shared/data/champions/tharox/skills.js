@@ -52,15 +52,15 @@ const tharoxSkills = [
         });
 
         return {
-          log: `${formatChampionName(user)}  <b>Primeval Taunt</b>. But failed. Taunt Streak reset.`,
+          log: `${formatChampionName(user)} used <b>Primeval Taunt</b>, but it failed. Taunt Streak reset.`,
         };
       }
-
-      user.runtime.lastTauntTurn = context.currentTurn;
 
       if (!context.currentTurn) {
         throw new Error("Context must include currentTurn for Primeval Taunt.");
       }
+
+      user.runtime.lastTauntTurn = context.currentTurn;
 
       // if it was successful, increment the tauntStreak for the next attempt
       user.runtime.tauntStreak += 1;
@@ -93,12 +93,13 @@ const tharoxSkills = [
   {
     key: "carapace_impact",
     name: "Carapace Impact",
-    bf: 0,
+    maxDefScaling: 95,
+    minDefScaling: 40,
     damageMode: "standard",
     contact: true,
     priority: 0,
     description() {
-      return `Tharox crashes into the enemy with the overwhelming weight of his stone-like frame, dealing damage equal to ${this.defScaling}% of his Defense. The more wounded he becomes, the less force he can bring to bear — his devastating strength waning as his colossal body begins to falter.`;
+      return `Tharox crashes into the chosen target with the overwhelming weight of his stone-like frame, dealing damage equal to ${this.maxDefScaling}% of his Defense at full health. The more wounded he becomes, the less force he can bring to bear — his devastating strength waning down to ${this.minDefScaling}% as his colossal body begins to falter.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {

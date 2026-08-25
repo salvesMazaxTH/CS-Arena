@@ -17,7 +17,7 @@ export default {
   },
 
   onAfterDmgTaking({ attacker, defender, owner, damage, context }) {
-    if (damage <= 0) return;
+    if (damage <= 0 || attacker.id === owner.id) return;
 
     owner.runtime.tharoxInerciaStacks =
       (owner.runtime.tharoxInerciaStacks || 0) + 1;
@@ -37,7 +37,6 @@ export default {
       isPermanent: true,
     });
 
-    // Cura 3% do HP máximo para cada 50 de Defesa.
     const defenseMultipliers = Math.floor(owner.Defense / this.defensePerHealingStep);
     const healingAmount =
       owner.maxHP * this.healingPerMaxHP * defenseMultipliers;
@@ -46,7 +45,6 @@ export default {
       owner.heal(healingAmount, context, owner);
     }
 
-    // Escudo equivalente a 7,5% do HP máximo.
     const shieldAmount = owner.maxHP * this.shieldPercentage;
 
     owner.addShield(shieldAmount, 0, context, "regular");
