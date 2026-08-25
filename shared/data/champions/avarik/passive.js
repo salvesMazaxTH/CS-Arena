@@ -45,7 +45,8 @@ export default {
     if (!isHollow(attacker, "HP", this.threshold)) return;
 
     return {
-      damage: this.edictDamage,
+      // A ceiling, not a damage value: it must not scale with the hit.
+      damageCap: this.edictDamage,
       log:
         `<b>[Passive — ${this.name}]</b> ` +
         `${formatChampionName(attacker)} holds less than ${this.threshold} HP ` +

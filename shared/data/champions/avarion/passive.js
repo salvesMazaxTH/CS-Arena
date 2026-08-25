@@ -45,7 +45,8 @@ export default {
     if (!isHollow(attacker, "Attack", this.threshold)) return;
 
     return {
-      damage: this.edictDamage,
+      // A ceiling, not a damage value: it must not scale with the hit.
+      damageCap: this.edictDamage,
       log:
         `<b>[Passive — ${this.name}]</b> ` +
         `${formatChampionName(attacker)} wields less than ${this.threshold} Attack ` +
