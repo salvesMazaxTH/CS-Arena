@@ -26,9 +26,9 @@ const rakhanaSkills = [
     description() {
       return `Strikes an enemy with a powerful iron-infused palm.
 
-      If an Iron Lotus Shield is already on her when this ability hits, she consumes it to stun the target for ${this.stunDuration} turn and restore HP equal to ${this.shieldPercent}% of her Max HP.
+      If any Shield is on her when this ability hits, she consumes it to stun the target for ${this.stunDuration} turn and restores HP equal to ${this.shieldPercent}% of her Max HP.
 
-      Otherwise, she forms one equal to ${this.shieldPercent}% of her Max HP after dealing damage.`;
+      Otherwise, she gains a Shield equal to ${this.shieldPercent}% of her Max HP after dealing damage.`;
     },
 
     targetSpec: ["enemy"],
@@ -41,9 +41,7 @@ const rakhanaSkills = [
       user.runtime ??= {};
       user.runtime.shields ??= [];
 
-      const lotusShieldIndex = user.runtime.shields.findIndex(
-        (shield) => shield?.sourceId === "iron_lotus",
-      );
+      const hadShield = user.runtime.shields.length > 0;
 
       const result = new DamageEvent({
         baseDamage,
@@ -66,8 +64,8 @@ const rakhanaSkills = [
         user.maxHP * (this.shieldPercent / 100),
       );
 
-      if (lotusShieldIndex !== -1) {
-        user.runtime.shields.splice(lotusShieldIndex, 1);
+      if (hadShield) {
+        user.runtime.shields.splice(0, 1);
 
         user.heal(value, context, user);
 
@@ -87,7 +85,7 @@ const rakhanaSkills = [
           targetId: enemy.id,
         });
       } else {
-        user.addShield(value, 0, context, "regular", { sourceId: "iron_lotus" });
+        user.addShield(value, 0, context);
 
         context.registerDialog?.({
           message: `${formatChampionName(
