@@ -608,7 +608,6 @@ export function heal(
 
 /** Drop expired stat modifiers, recompute affected stats from base; returns reverted stats. */
 export function purgeExpiredStatModifiers(champion, currentTurn) {
-  const revertedStats = [];
   const affectedStats = new Set();
   const remaining = [];
 
@@ -622,7 +621,43 @@ export function purgeExpiredStatModifiers(champion, currentTurn) {
 
   champion.statModifiers = remaining;
 
-  // Recalculate each affected stat from base, reapplying remaining modifiers
+  const revertedStats = _recomputeStats(champion, remaining, affectedStats);
+
+  champion.tauntEffects = champion.tauntEffects.filter(
+    (effect) => effect.expiresAtTurn > currentTurn,
+  );
+
+  champion.damageReductionModifiers = champion.damageReductionModifiers.filter(
+    (modifier) => modifier.expiresAtTurn > currentTurn,
+  );
+
+  return revertedStats;
+}
+
+/**
+ * Drop the stat modifiers a status effect applied and restore the stats it
+ * changed. Called when the status is removed before its own expiry.
+ */
+export function revertStatModifiersFromStatus(champion, statusKey) {
+  const affectedStats = new Set();
+  const remaining = [];
+
+  for (const modifier of champion.statModifiers) {
+    if (modifier.statusKey === statusKey) {
+      affectedStats.add(modifier.statName);
+    } else {
+      remaining.push(modifier);
+    }
+  }
+
+  champion.statModifiers = remaining;
+
+  return _recomputeStats(champion, remaining, affectedStats);
+}
+
+function _recomputeStats(champion, remaining, affectedStats) {
+  const revertedStats = [];
+
   for (const statName of affectedStats) {
     const baseKey = statName === "maxHP" ? "baseHP" : `base${statName}`;
     const baseValue = champion[baseKey];
@@ -655,14 +690,6 @@ export function purgeExpiredStatModifiers(champion, currentTurn) {
       });
     }
   }
-
-  champion.tauntEffects = champion.tauntEffects.filter(
-    (effect) => effect.expiresAtTurn > currentTurn,
-  );
-
-  champion.damageReductionModifiers = champion.damageReductionModifiers.filter(
-    (modifier) => modifier.expiresAtTurn > currentTurn,
-  );
 
   return revertedStats;
 }

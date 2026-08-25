@@ -1,3 +1,4 @@
+import { revertStatModifiersFromStatus } from "./championCombat.js";
 import { StatusEffectsRegistry } from "../data/statusEffects/effectsRegistry.js";
 import { emitCombatEvent } from "../engine/combat/combatEvents.js";
 import { formatChampionName } from "../ui/formatters.js";
@@ -169,11 +170,19 @@ function applyStatusEffectCore({
   champion.statusEffects.set(statusEffectKey, effectInstance);
 
   if (typeof effectInstance.onStatusEffectAdded === "function") {
+    const ownModifiersFrom = champion.statModifiers.length;
+
     effectInstance.onStatusEffectAdded({
       owner: champion,
       duration: resolvedDuration,
       context,
     });
+
+    // Whatever the hook just appended belongs to this status, so removing it
+    // early can give the stats back instead of leaving them stuck.
+    for (let i = ownModifiersFrom; i < champion.statModifiers.length; i++) {
+      champion.statModifiers[i].statusKey = statusEffectKey;
+    }
   }
 
   emitCombatEvent(
@@ -462,7 +471,9 @@ export function isActionBlockedByHardCC(champion) {
  * @param {string} statusEffectName - Name of the statusEffect to remove
  */
 export function removeStatusEffect(champion, statusEffectName) {
-  champion.statusEffects.delete(statusEffectName);
+  if (!champion.statusEffects.delete(statusEffectName)) return;
+
+  revertStatModifiersFromStatus(champion, statusEffectName);
 }
 
 /**

@@ -10,7 +10,7 @@ const nytheraSkills = [
 
     chillDuration: 2,
     freezeDuration: 1,
-    bonusIfFrozen: 50,
+    bonusIfCold: 50,
 
     contact: false,
     priority: 0,
@@ -19,23 +19,21 @@ const nytheraSkills = [
     description() {
       return `Nythera draws an edge of northern wind across the chosen target, dealing Ice magical damage and leaving them Chilled for ${this.chillDuration} turn(s).
 
-      If the target is already Chilled, the cold seizes them instead: they become Frozen for ${this.freezeDuration} turn(s) and take +${this.bonusIfFrozen}% bonus damage.`;
+      If the cold already holds them, the edge bites for +${this.bonusIfCold}% bonus damage, and a Chilled target is seized outright: Frozen for ${this.freezeDuration} turn(s).`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
       const [target] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
-      let totalDamage = baseDamage;
 
-      const isFrozen = target.hasStatusEffect("frozen");
-
-      // Bonus damage precomputed when the target is already Frozen.
-      if (isFrozen) {
-        totalDamage += (baseDamage * this.bonusIfFrozen) / 100;
-      }
+      const wasFrozen = target.hasStatusEffect("frozen");
+      const wasChilled = target.hasStatusEffect("chilled");
+      const wasCold = wasChilled || wasFrozen;
 
       const result = new DamageEvent({
-        baseDamage: totalDamage,
+        baseDamage: wasCold
+          ? baseDamage * (1 + this.bonusIfCold / 100)
+          : baseDamage,
         attacker: user,
         defender: target,
         skill: this,
@@ -45,8 +43,9 @@ const nytheraSkills = [
       }).execute();
 
       // Status effects only land if the damage connected (not evaded, not immune).
-      if (!result?.evaded && !result?.immune) {
-        if (isFrozen) {
+      if (!result?.evaded && !result?.immune && !wasFrozen) {
+        if (wasChilled) {
+          target.removeStatusEffect("chilled");
           target.applyStatusEffect("frozen", this.freezeDuration, context);
         } else {
           target.applyStatusEffect("chilled", this.chillDuration, context);
