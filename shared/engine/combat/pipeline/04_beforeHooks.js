@@ -42,9 +42,6 @@ export function runBeforeHooks(event) {
 
     composeDamage(event);
 
-    // The recompose rebuilt `damage` from the pre-mitigation value, wiping out
-    // whatever the hooks just did to it. Carry their results onto the new
-    // number instead of losing them.
     event.damage = _carryHookDamage(event.damage, deal);
     event.damage = _carryHookDamage(event.damage, take);
   }
@@ -67,11 +64,7 @@ export function runBeforeHooks(event) {
   }
 }
 
-// Re-applies a hook phase's damage result on top of a recomposed damage value.
-// The hooks ran against the old number, so their output cannot be reused as-is.
-// A phase that raised damage was adding a bonus, so the amount carries over; one
-// that lowered it was scaling damage down, so the proportion does. A `damageCap`
-// is neither — it is a ceiling, and it simply still applies.
+// Increases carry as a flat amount, reductions as a proportion, a cap as a plain ceiling.
 function _carryHookDamage(damage, phase) {
   if (phase.sawDamageOverride) {
     damage =
@@ -143,15 +136,8 @@ function _processHook(event, eventName, payload) {
     damageCap: Infinity,
   };
 
-  // Every hook in this phase computes its `damage` result independently
-  // from the SAME starting value (`payload.damage`), since they all read
-  // the same payload snapshot rather than seeing each other's output. If
-  // more than one hook touches `damage` on the same instance (e.g. Avarik's
-  // Edict clamping a Hollow attacker's hit AND the defender's own damage
-  // passive reducing it), a flat "last result wins" overwrite would silently
-  // discard every earlier result, including hard caps. Composing the results
-  // as ratios against that shared starting value keeps every hook's effect
-  // instead of only the last one to run.
+  // Every hook reads the same payload snapshot, so their results compose as
+  // ratios against it — a "last one wins" overwrite would drop all the others.
   const startingDamage = Number(payload.damage) || 0;
   let damageRatio = 1;
   let sawDamageOverride = false;
@@ -179,9 +165,7 @@ function _processHook(event, eventName, payload) {
         damageRatio *= requestedDamage / startingDamage;
       }
     }
-    // A ceiling rather than a value: it does not scale with the damage it is
-    // capping, so it survives a recompose untouched while `damage` results are
-    // carried over proportionally.
+    // A ceiling, not a damage value: it must not scale with the hit.
     if (r.damageCap !== undefined) {
       damageCap = Math.min(damageCap, Number(r.damageCap));
     }
@@ -216,9 +200,6 @@ function _processHook(event, eventName, payload) {
   }
 
   if (sawDamageOverride) {
-    // Normal case: at least one hook had a non-zero starting damage to
-    // express its change as a ratio against — apply every hook's effect
-    // together instead of only the last one.
     event.damage =
       startingDamage > 0
         ? startingDamage * damageRatio

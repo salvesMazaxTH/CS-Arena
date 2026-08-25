@@ -133,7 +133,6 @@ export function composeDamage(event) {
   let flat = 0;
   let percent = 0;
 
-  // When the hit pierces damage reduction, both the percent and the flat part are skipped.
   if (!event.ignoreDamageReduction) {
     const tr = event.defender.getTotalDamageReduction?.(event.context?.currentTurn) || {
       flat: 0,

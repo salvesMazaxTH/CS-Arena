@@ -14,10 +14,7 @@ const totalBlock = {
     user.runtime.hookEffects ??= [];
     user.runtime.totalBlockStreak ??= 0;
 
-    // The streak only holds across consecutive turns. It is checked here, on
-    // use, rather than from the effect's own end-of-turn hook: by then the
-    // effect is gone, either consumed by the hit it blocked or purged at the
-    // start of the turn, so the hook would never fire to reset anything.
+    // Checked on use, not at turn end: by then the effect is already gone.
     if (user.runtime.lastTotalBlockTurn !== context.currentTurn - 1) {
       user.runtime.totalBlockStreak = 0;
     }
