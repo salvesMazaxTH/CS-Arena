@@ -26,7 +26,7 @@ const reyskaroneSkills = [
 
     priority: 1,
     description() {
-      return `Reyskarone spills ${this.hpSacrificePercent}% of his own Max HP to brand the chosen target with the Tithe for ${this.titheDuration} turn(s), then strikes them for magical damage.
+      return `Reyskarone spills ${this.hpSacrificePercent}% of his own Max HP — never falling below 1 HP — to brand the chosen target with the Tithe for ${this.titheDuration} turn(s), then strikes them for magical damage.
 
       While the brand holds, every ally who strikes the marked target restores ${this.titheHeal} HP and deals +${this.titheBonusDamage} bonus damage. The brand cannot take hold through Absolute Immunity, Supreme Shield or Spell Shield — it burns one of those shields away instead.`;
     },
@@ -34,9 +34,45 @@ const reyskaroneSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
 
-      const hpSacrifice = user.maxHP * (this.hpSacrificePercent / 100);
+      // The cost is a self-imposed drain rather than damage: it ignores
+      // shields and never brings Reyskarone below 1 HP. With no blood left to
+      // spill there is nothing to pay the brand with, so the skill fails.
+      const hpSacrifice = Math.min(
+        Math.floor(user.maxHP * (this.hpSacrificePercent / 100)),
+        user.HP - 1,
+      );
 
-      user.takeDamage(hpSacrifice);
+      if (hpSacrifice <= 0) {
+        context.registerDialog({
+          message: `But it failed.`,
+          sourceId: user.id,
+          targetId: user.id,
+        });
+
+        return {
+          log: `${formatChampionName(user)} had no blood left to spill. <b>Blood Tithe</b> failed.`,
+        };
+      }
+
+      // The drain never goes through a DamageEvent, so it registers its own
+      // visual event and dialog, or the HP loss lands on the client
+      // unannounced. Paying it first also makes it the anchor every later
+      // dialog of this skill attaches to, keeping them in narrative order.
+      user.modifyHP(-hpSacrifice, { context });
+
+      context.registerDamage({
+        target: user,
+        amount: hpSacrifice,
+        rawAmount: hpSacrifice,
+        sourceId: user.id,
+      });
+
+      context.registerDialog({
+        message: `${formatChampionName(user)} spills his own blood for the <b>Tithe</b>!`,
+        sourceId: user.id,
+        targetId: user.id,
+        duration: 1000,
+      });
 
       enemy.runtime.hookEffects ??= [];
       const shields = Array.isArray(enemy.runtime?.shields)
@@ -58,26 +94,35 @@ const reyskaroneSkills = [
         // =========================
         // TEMPORARY HOOK: TITHE
         // =========================
+        // Recasting refreshes the brand rather than stacking a second one.
+        enemy.runtime.hookEffects = enemy.runtime.hookEffects.filter(
+          (effect) => effect.key !== "tithe",
+        );
+
         enemy.runtime.hookEffects.push({
           key: "tithe",
           group: "skill",
 
           expiresAtTurn: context.currentTurn + this.titheDuration,
 
+          // The brand rides on the branded champion, so both hooks are the
+          // taking side of the exchange and the scope alone already keeps them
+          // from firing on anyone else's damage.
           hookScope: {
-            onAfterDmgDealing: "defender",
+            onBeforeDmgTaking: "defender",
+            onAfterDmgTaking: "defender",
           },
 
-          onBeforeDmgDealing: ({ defender, damage }) => {
-            if (defender !== enemy) return;
+          onBeforeDmgTaking: ({ attacker, damage }) => {
+            if (attacker.team !== user.team) return;
 
             return {
               damage: damage + this.titheBonusDamage,
             };
           },
 
-          onAfterDmgDealing: ({ attacker, defender, owner, context }) => {
-            if (defender !== enemy) return;
+          onAfterDmgTaking: ({ attacker, owner, context }) => {
+            if (attacker.team !== user.team) return;
 
             // The attacker drinks from the brand.
             attacker.heal(this.titheHeal, context, owner);
@@ -91,11 +136,22 @@ const reyskaroneSkills = [
           duration: 1000,
         });
       } else {
-        if (supremeShieldIdx !== -1) {
-          shields.splice(supremeShieldIdx, 1);
-        } else if (spellShieldIdx !== -1) {
-          shields.splice(spellShieldIdx, 1);
-        }
+        const burnedShieldIdx =
+          supremeShieldIdx !== -1 ? supremeShieldIdx : spellShieldIdx;
+        const burnedShieldName =
+          supremeShieldIdx !== -1 ? "Supreme Shield" : "Spell Shield";
+
+        if (burnedShieldIdx !== -1) shields.splice(burnedShieldIdx, 1);
+
+        context.registerDialog({
+          message:
+            burnedShieldIdx !== -1
+              ? `The <b>Tithe</b> burns away ${formatChampionName(enemy)}'s ${burnedShieldName} instead!`
+              : `${formatChampionName(enemy)} is immune to the <b>Tithe</b>!`,
+          sourceId: user.id,
+          targetId: enemy.id,
+          duration: 1000,
+        });
       }
 
       // Immediate follow-up attack.
@@ -108,10 +164,6 @@ const reyskaroneSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
-
-      if (!titheBlocked && result?.log) {
-        result.log += `\n${formatChampionName(enemy)} is branded with the Tithe.`;
-      }
 
       return result;
     },
