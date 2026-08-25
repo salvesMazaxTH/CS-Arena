@@ -128,6 +128,10 @@ const gryskarchuSkills = [
       const bonus =
         ally.Defense * (this.defDamageBonus / 100);
 
+      ally.damageModifiers = ally.damageModifiers.filter(
+        (mod) => mod.id !== "mother_earths_protection",
+      );
+
       ally.addDamageModifier({
         id: "mother_earths_protection",
         expiresAtTurn:
