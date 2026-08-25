@@ -20,7 +20,8 @@ export default {
     onEvade: undefined,
   },
 
-  onBuffingStat({ owner, statName, buffSrc, buffTarget, context }) {
+  onBuffingStat({ owner, statName, amount, buffSrc, buffTarget, context }) {
+    if (amount <= 0) return;
     if (!buffSrc || buffSrc.team !== owner.team) return;
     if (!buffTarget || buffTarget.team !== owner.team) return;
 
