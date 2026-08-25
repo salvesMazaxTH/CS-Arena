@@ -28,9 +28,15 @@ const lanaSkills = [
       const lastUsed = user.runtime.lastUsedDontYouDare ?? -Infinity;
 
       if (context.currentTurn - lastUsed <= 1) {
-        return {
-          message: `${formatChampionName(user)} tries to shout again, but <b>Don't You Dare!</b> was already used last turn!`,
-        };
+        const failure = `${formatChampionName(user)} tries to shout again, but <b>Don't You Dare!</b> was already used last turn!`;
+
+        context.registerDialog({
+          message: failure,
+          sourceId: user.id,
+          targetId: enemy.id,
+        });
+
+        return { log: failure };
       }
 
       user.runtime.lastUsedDontYouDare = context.currentTurn;
@@ -44,7 +50,6 @@ const lanaSkills = [
       enemy.runtime.hookEffects.push({
         key: hookKey,
         group: "skill_effect",
-        duration: 1,
 
         hookScope: {
           onValidateAction: "actionSource",
@@ -63,7 +68,7 @@ const lanaSkills = [
       });
 
       return {
-        message: `${formatChampionName(enemy)} will not be able to act next!`,
+        log: `${formatChampionName(enemy)} will not be able to act next!`,
       };
     },
   },

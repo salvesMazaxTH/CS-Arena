@@ -14,14 +14,59 @@ export default {
 
   hpThreshold: 0.35, // 35% of Max HP
 
+  // Heavier blows get through more of the plush: the tier is picked by the
+  // damage that would have landed on Lana.
+  absorptionTiers: [
+    { upTo: 120, percent: 90 },
+    { upTo: 200, percent: 75 },
+    { upTo: Infinity, percent: 55 },
+  ],
+
   description() {
+    const [light, medium, heavy] = this.absorptionTiers;
+
     return `Tutu is always watching over Lana. While he is alive, she receives a Spell Shield at the start of every turn.
 
-    When Lana drops below ${this.hpThreshold * 100}% of her Max HP, Tutu takes her place on the field. When Tutu falls, Lana returns to the battle with the HP she left it with. This can only happen once per battle.`;
+    When Lana drops below ${this.hpThreshold * 100}% of her Max HP, Tutu takes her place on the field. When a blow would have killed her, he throws himself in front of it and enters already carrying it: his plush body soaks ${light.percent}% of a blow up to ${light.upTo}, ${medium.percent}% of one up to ${medium.upTo}, and ${heavy.percent}% of anything heavier — and however heavy it was, he holds on with at least 1 HP.
+
+    When Tutu falls, Lana returns to the battle with the HP she left it with. This can only happen once per battle.`;
   },
 
   hookScope: {
+    onBeforeDmgTaking: "defender",
     onAfterDmgTaking: "defender",
+  },
+
+  onBeforeDmgTaking({ owner, damage, context }) {
+    owner.runtime.lana ??= {
+      triggered: false,
+    };
+
+    if (owner.runtime.lana.triggered) return;
+    if (owner.HP - damage > 0) return;
+
+    owner.runtime.lana.triggered = true;
+
+    const tier = this.absorptionTiers.find((t) => damage <= t.upTo);
+    const carried = damage * (1 - tier.percent / 100);
+
+    context.requestChampionMutation({
+      targetId: owner.id,
+      newChampionKey: "lana_dino",
+      mode: "swap",
+      entryDamage: carried,
+    });
+
+    context.registerDialog({
+      message: `${formatChampionName(owner)}'s Plush Dinosaur throws himself in front of the blow!`,
+      sourceId: owner.id,
+      targetId: owner.id,
+    });
+
+    return {
+      damage: 0,
+      log: `Tutu takes the blow meant for ${formatChampionName(owner)}!`,
+    };
   },
 
   onAfterDmgTaking({ owner, context }) {

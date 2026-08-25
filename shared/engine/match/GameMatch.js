@@ -475,6 +475,7 @@ class CombatState {
       hpMode = "preserveRatio",
       statMode = "deltaFromBase",
       expectedToken = null,
+      entryDamage = 0,
     } = {},
     options = {},
   ) {
@@ -553,6 +554,14 @@ class CombatState {
 
     // Which champion this one replaced — read by the replacement's on-death passive.
     newChampion.runtime.swappedFrom = targetId;
+
+    // A replacement that steps into an incoming blow carries it in, never dead on arrival.
+    if (entryDamage > 0) {
+      newChampion.HP = Math.max(
+        1,
+        newChampion.maxHP - Math.round(entryDamage),
+      );
+    }
 
     this.registerChampion(newChampion, { trackSnapshot: true });
 
