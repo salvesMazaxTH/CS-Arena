@@ -139,24 +139,27 @@ const rakhanaSkills = [
         (e) => e.key !== "silver_mirror_reflect",
       );
 
+      const reflectPercent = this.reflectPercent;
+      let spent = false;
+
       user.runtime.hookEffects.push({
         key: "silver_mirror_reflect",
         expiresAtTurn: context.currentTurn + this.duration,
 
         hookScope: {
-          onAfterDmgTaking: "defender",
+          onBeforeDmgTaking: "defender",
         },
 
         name: "Silver Mirror (Reflection)",
 
-        onAfterDmgTaking({
+        onBeforeDmgTaking({
           defender,
           attacker,
           damage,
           skill,
           context,
         }) {
-          if (context.damageDepth > 0) return;
+          if (context.damageDepth > 0 || spent) return;
 
           const shieldActive =
             Array.isArray(defender.runtime?.shields) &&
@@ -164,8 +167,10 @@ const rakhanaSkills = [
 
           if (!shieldActive) return;
 
-          const reducedDamage = Math.floor(damage * 0.5);
-          const reflectedDamage = Math.floor(damage * 0.5);
+          spent = true;
+
+          const reflectedDamage = Math.floor(damage * (reflectPercent / 100));
+          const reducedDamage = damage - reflectedDamage;
 
           context.registerDialog?.({
             message: `<b>[${this.name}]</b> ${formatChampionName(
