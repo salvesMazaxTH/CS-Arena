@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../ui/formatters.js";
 import { StatusEffect } from "../../core/StatusEffect.js";
+import { ElementalInteractions } from "../../engine/combat/ElementalInteractions.js";
 
 // Reduces Speed and Attack to 0 and prevents the target from acting for X turns (usually 1)
 const frozen = {
@@ -44,7 +45,7 @@ const frozen = {
     };
   },
 
-  onAfterDmgTaking({ attacker, defender, owner, damage, context }) {
+  onAfterDmgTaking({ attacker, defender, owner, damage, element, context }) {
     if (damage <= 0) return;
 
     // Only remove the status if it was already present before the damage
@@ -59,8 +60,15 @@ const frozen = {
     if (effect && effect.appliedAtTurn < currentTurn) {
       defender.removeStatusEffect("frozen");
 
+      const reaction = ElementalInteractions.onFrozenBroken({
+        target: defender,
+        element,
+        context,
+      });
+
       return {
-        log: `${formatChampionName(defender)} was unfrozen after taking damage!`,
+        log: `${formatChampionName(defender)} breaks out of the ice!
+${reaction.log}`,
       };
     }
 

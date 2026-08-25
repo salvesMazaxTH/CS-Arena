@@ -1,4 +1,5 @@
 import { revertStatModifiersFromStatus } from "./championCombat.js";
+import { ElementalInteractions } from "../engine/combat/ElementalInteractions.js";
 import { StatusEffectsRegistry } from "../data/statusEffects/effectsRegistry.js";
 import { emitCombatEvent } from "../engine/combat/combatEvents.js";
 import { formatChampionName } from "../ui/formatters.js";
@@ -299,6 +300,17 @@ export function applyStatusEffect(
     metadata,
     context,
   );
+
+  if (
+    validation.allowed &&
+    ElementalInteractions.resolveOpposingStatus({
+      target: champion,
+      incomingKey: statusEffectKey,
+      context,
+    })
+  ) {
+    return false;
+  }
 
   if (!validation.allowed) {
     context.registerDialog({
