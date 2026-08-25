@@ -25,7 +25,7 @@ export const GAME_GLOSSARY = {
   poisoned: {
     title: "Poisoned",
     description:
-      "At the start of the turn, deals continuous magic damage equal to 5% of maximum HP per stack and removes 1 stack. When the last stack is consumed, the effect expires. New applications only add stacks to the same active status.",
+      "At the start of the turn, deals magic damage over time equal to 4% of maximum HP per stack and removes 1 stack. When the last stack is consumed, the effect expires. New applications only add stacks to the same active status. Damage over time never triggers reactive effects.",
   },
   spell_shield: {
     title: "Spell Shield",
@@ -75,11 +75,11 @@ export const GAME_GLOSSARY = {
   burning: {
     title: "Burning",
     description:
-      "The champion takes continuous damage (usually 20) for a certain number of turns (usually 1).",
+      "At the start of the turn, deals magic damage over time equal to 15 plus 4% of maximum HP. Damage over time never triggers reactive effects.",
   },
   bleeding: {
     title: "Bleeding",
     description:
-      "At the start of the turn, deals continuous physical damage equal to 5% of maximum HP per stack and removes 1 stack. When the last stack is consumed, the effect expires. New applications only add stacks to the same active status.",
+      "At the start of the turn, deals physical damage over time equal to 4% of maximum HP per stack and removes 1 stack. When the last stack is consumed, the effect expires. New applications only add stacks to the same active status. Damage over time never triggers reactive effects.",
   },
 };

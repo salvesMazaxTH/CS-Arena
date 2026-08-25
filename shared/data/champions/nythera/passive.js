@@ -7,7 +7,7 @@ export default {
   chillDuration: 2,
   freezeDuration: 2,
   description() {
-    return `The cold around Nythera answers for her. Whenever she takes damage from a contact source (Absolute Damage excluded), the aggressor is left ❄️ Chilled for ${this.chillDuration} turn(s).
+    return `The cold around Nythera answers for her. Whenever she is struck by a contact source (Absolute Damage excluded), the aggressor is left ❄️ Chilled for ${this.chillDuration} turn(s).
 
     If they are already Chilled, the frost closes in and they become Frozen for ${this.freezeDuration} turn(s) instead.`;
   },

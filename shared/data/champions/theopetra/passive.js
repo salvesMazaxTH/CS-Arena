@@ -8,7 +8,7 @@ export default {
   piercingRatio: 0.35, // 35% of the damage becomes Piercing
 
   description() {
-    return `Gains 1 stack whenever she takes damage (max ${this.maxStacks}). Upon reaching ${this.maxStacks} stacks, her next ability deals +${this.bonusPercent}% bonus damage and becomes Piercing (${this.piercingRatio * 100}% Piercing), then all stacks are consumed.
+    return `Gains 1 stack whenever she is struck (max ${this.maxStacks}). Upon reaching ${this.maxStacks} stacks, her next ability deals +${this.bonusPercent}% bonus damage and becomes Piercing (${this.piercingRatio * 100}% Piercing), then all stacks are consumed.
     
     Theópetra is immune to Control effects (softCC and hardCC).`;
   },

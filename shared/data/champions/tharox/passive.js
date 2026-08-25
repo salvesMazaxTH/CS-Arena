@@ -9,7 +9,7 @@ export default {
   defensePerHealingStep: 75,
   shieldPercentage: 0.075,
   description() {
-    return `Whenever Tharox takes damage, he gains 1 Inertia stack. At ${this.stacksNeeded}, consume them and gain +${this.defBonus} permanent Defense. Additionally, he heals for ${this.healingPerMaxHP * 100}% of his Max HP for every ${this.defensePerHealingStep} Defense he has and gains a shield equivalent to ${this.shieldPercentage * 100}% of his Max HP.`;
+    return `Whenever Tharox is struck, he gains 1 Inertia stack. At ${this.stacksNeeded}, consume them and gain +${this.defBonus} permanent Defense. Additionally, he heals for ${this.healingPerMaxHP * 100}% of his Max HP for every ${this.defensePerHealingStep} Defense he has and gains a shield equivalent to ${this.shieldPercentage * 100}% of his Max HP.`;
   },
 
   hookScope: {

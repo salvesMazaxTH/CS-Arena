@@ -20,8 +20,7 @@ const morakhanSkills = [
     priority: 3,
 
     description() {
-      return `During this turn, after taking damage:
-      Gains a shield equivalent to ${this.shieldPercent}% of the damage taken.`;
+      return `During this turn, the first time he is struck he gains a shield equal to ${this.shieldPercent}% of the damage taken.`;
     },
 
     targetSpec: ["self"],

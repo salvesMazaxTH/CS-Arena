@@ -1086,6 +1086,18 @@ Para cada extra em context.extraDamageQueue:
 
 `context.damageDepth` (padrão `0`) rastreia recursão. Passivas que geram dano de reação devem verificar depth antes de enfileirar.
 
+**Regra global dos hooks reativos.** `canRunHook` bloqueia `onBeforeDmgDealing`,
+`onAfterDmgDealing`, `onBeforeDmgTaking` e `onAfterDmgTaking` quando
+`context.isDot` é verdadeiro ou `damageDepth > 0`. Ou seja, **dano ao longo do
+tempo e dano aninhado (reflect, thorns, contra-ataque, fila de dano extra) nunca
+disparam efeitos reativos** — só o golpe direto dispara. Dano `absolute` **não**
+é bloqueado: ele dispara normalmente, e quem quiser excluí-lo precisa checar
+`mode` no próprio hook (a passiva da Nythera é o único caso hoje).
+
+Consequência para textos de skill: descrições de efeitos reativos usam "is
+struck" / "is hit" em vez de "takes damage", e o glossário dos status de DoT
+carrega a regra. Só se explicita caso a caso quando o champion **desvia** dela.
+
 ### Flags de Skill
 
 | Flag                                | Efeito                                          |

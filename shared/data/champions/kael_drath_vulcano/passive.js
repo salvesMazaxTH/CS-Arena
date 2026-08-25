@@ -5,7 +5,7 @@ export default {
   burnDuration: 2,
 
   description() {
-    return `Kael'Drath carries a volcano where his heart should be. Whenever he takes damage, the aggressor is swallowed by the flames that answer for him and is left Burning for ${this.burnDuration} turn(s).`;
+    return `Kael'Drath carries a volcano where his heart should be. Whenever he is struck, the aggressor is swallowed by the flames that answer for him and is left Burning for ${this.burnDuration} turn(s).`;
   },
 
   hookScope: {

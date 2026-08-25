@@ -113,7 +113,7 @@ const rakhanaSkills = [
     description() {
       return `Rakhana enters a defensive stance and gains a Shield equal to ${this.shieldPercent}% of her Max HP for this turn.
 
-      The first time she takes damage from a direct attack while the Shield is active, she reduces that damage by 50% and reflects the prevented damage back to the attacker.
+      The first time she is struck while the Shield is active, she reduces that damage by 50% and reflects the prevented damage back to the attacker.
 
       If the incoming attack is Contact, she also stuns the attacker for 1 turn.`;
     },
