@@ -96,6 +96,8 @@ export default {
           )
         : [];
 
+    if (!enemies.length) return;
+
     const lowestHealthEnemy = enemies.reduce((a, b) => {
       if (a.HP < b.HP) return a;
       if (b.HP < a.HP) return b;
