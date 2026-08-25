@@ -54,7 +54,7 @@ const torrenSkills = [
             (champion) =>
               champion.team !== user.team &&
               champion.id !== enemy.id &&
-              champion.isAlive?.(),
+              champion.alive,
           )
         : [];
 
@@ -133,16 +133,20 @@ const torrenSkills = [
       if (isWeakEnough) {
         tauntLog = target.applyTaunt(user.id, this.tauntDuration, context);
 
+        target.damageModifiers = target.damageModifiers.filter(
+          (mod) => mod.id !== "scorned",
+        );
+
         target.addDamageModifier({
-          key: "scorned",
+          id: "scorned",
           expiresAtTurn: context.currentTurn + this.tauntDuration,
 
-          apply: ({ damage, defender }) => {
+          apply: ({ baseDamage, defender }) => {
             if (!defender || defender.id !== user.id) {
-              return damage * 0.7;
+              return baseDamage * 0.7;
             }
 
-            return damage;
+            return baseDamage;
           },
         });
       }
