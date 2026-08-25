@@ -7,7 +7,12 @@
 //  ultimates and skills that are explicitly several strokes.
 // ============================================================
 
-import { getElementCenter } from "./animationUtils.js";
+import {
+  computeEffectBox,
+  getElementCenter,
+  runSoloEffect,
+} from "./animationUtils.js";
+import { getParticleScale } from "./effectQuality.js";
 
 const SPRITE_SIZE = 48;
 
@@ -86,13 +91,15 @@ export class MultislashEffect {
 
     this.lifetime =
       (this.blades.length - 1) * STAGGER + SWEEP_DURATION + WOUND_DURATION;
+    this.particleScale = getParticleScale();
   }
 
   spawnSparks(blade) {
     const dirX = Math.cos(blade.angle);
     const dirY = Math.sin(blade.angle);
+    const count = Math.round(14 * this.particleScale);
 
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < count; i++) {
       // Scattered along the cut, thrown outwards along its own axis.
       const along = (Math.random() - 0.5) * blade.length * 0.8;
       const speed = 260 + Math.random() * 620;
@@ -241,7 +248,12 @@ export class MultislashEffect {
   }
 }
 
-export async function playMultislash({ userEl, targetEl, skill }) {
+// Padding around the target big enough to hold the widest blade sweep and
+// its sparks at their farthest travel, scaled by the target's own size.
+const PADDING_SCALE = 1.2;
+const PADDING_FLOOR = 320;
+
+export async function playMultislash({ userEl, targetEl, skill, canvasBatch }) {
   if (!targetEl) return;
 
   // Authorial override first, then the element, then plain steel for the
@@ -249,20 +261,9 @@ export async function playMultislash({ userEl, targetEl, skill }) {
   const requested = skill?.hitVfxPalette || skill?.element;
   const paletteKey = requested in PALETTES ? requested : "steel";
 
-  const canvas = document.createElement("canvas");
-  // Capped ratio: the effect is all soft glows, so extra pixels buy nothing.
-  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-  canvas.width = window.innerWidth * dpr;
-  canvas.height = window.innerHeight * dpr;
-  canvas.style.cssText =
-    "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999";
-  document.body.appendChild(canvas);
-
-  const ctx = canvas.getContext("2d");
-  ctx.scale(dpr, dpr);
-
   const rect = targetEl.getBoundingClientRect();
   const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  const size = Math.max(rect.width, rect.height);
 
   // Blades fan around the attack direction, so the swing comes from the user.
   let baseAngle = 0;
@@ -271,32 +272,16 @@ export async function playMultislash({ userEl, targetEl, skill }) {
     baseAngle = Math.atan2(center.y - userCenter.y, center.x - userCenter.x);
   }
 
-  const effect = new MultislashEffect(
-    ctx,
-    center,
-    Math.max(rect.width, rect.height),
-    baseAngle,
-    paletteKey,
-  );
-  let last = performance.now();
+  const buildEffect = (ctx) =>
+    new MultislashEffect(ctx, center, size, baseAngle, paletteKey);
+  const padding = size * PADDING_SCALE + PADDING_FLOOR;
 
   targetEl.classList.add("slash-hit");
   setTimeout(() => targetEl.classList.remove("slash-hit"), 380);
 
-  await new Promise((resolve) => {
-    function frame(now) {
-      const dt = Math.min((now - last) / 1000, 1 / 30);
-      last = now;
-
-      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-      if (!effect.step(dt)) {
-        canvas.remove();
-        resolve();
-        return;
-      }
-      requestAnimationFrame(frame);
-    }
-
-    requestAnimationFrame(frame);
-  });
+  if (canvasBatch) {
+    await canvasBatch.run([center], padding, buildEffect);
+  } else {
+    await runSoloEffect(computeEffectBox([center], padding), buildEffect);
+  }
 }
