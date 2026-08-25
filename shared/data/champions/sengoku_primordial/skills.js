@@ -34,6 +34,7 @@ const sengokuPrimordialSkills = [
     name: "Cataclysmic Breath",
     bf: 130,
     damageMode: "standard",
+    element: "fire",
     contact: false,
     isUltimate: true,
     momentumCost: 33,
