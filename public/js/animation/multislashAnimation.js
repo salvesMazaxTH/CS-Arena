@@ -12,6 +12,7 @@ import {
   getElementCenter,
   runSoloEffect,
 } from "./animationUtils.js";
+import { getParticleScale } from "./effectQuality.js";
 
 const SPRITE_SIZE = 48;
 
@@ -90,13 +91,15 @@ export class MultislashEffect {
 
     this.lifetime =
       (this.blades.length - 1) * STAGGER + SWEEP_DURATION + WOUND_DURATION;
+    this.particleScale = getParticleScale();
   }
 
   spawnSparks(blade) {
     const dirX = Math.cos(blade.angle);
     const dirY = Math.sin(blade.angle);
+    const count = Math.round(14 * this.particleScale);
 
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < count; i++) {
       // Scattered along the cut, thrown outwards along its own axis.
       const along = (Math.random() - 0.5) * blade.length * 0.8;
       const speed = 260 + Math.random() * 620;

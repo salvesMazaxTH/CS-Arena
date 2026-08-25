@@ -12,6 +12,7 @@ import {
   getElementCenter,
   runSoloEffect,
 } from "./animationUtils.js";
+import { getParticleScale } from "./effectQuality.js";
 
 const SPRITE_SIZE = 48;
 
@@ -88,14 +89,16 @@ export class SlashEffect {
 
     this.length = size * 2.3;
     this.maxWidth = size * 0.15;
+    this.particleScale = getParticleScale();
   }
 
   spawnSparks() {
     // Thrown out of the fissure, perpendicular to it.
     const perpX = -this.dirY;
     const perpY = this.dirX;
+    const count = Math.round(16 * this.particleScale);
 
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < count; i++) {
       const along = (Math.random() - 0.5) * this.length * 0.7;
       const speed = 120 + Math.random() * 420;
       const side = Math.random() < 0.5 ? 1 : -1;

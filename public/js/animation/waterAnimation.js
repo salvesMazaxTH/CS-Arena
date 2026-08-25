@@ -13,6 +13,7 @@ import {
   getElementCenter,
   runSoloEffect,
 } from "./animationUtils.js";
+import { getParticleScale } from "./effectQuality.js";
 
 const SPRITE_SIZE = 64;
 
@@ -58,6 +59,7 @@ export class WaterBoltEffect {
     this.droplets = [];
     this.impacted = false;
     this.split = false;
+    this.particleScale = getParticleScale();
 
     const dx = to.x - from.x;
     const dy = to.y - from.y;
@@ -77,7 +79,7 @@ export class WaterBoltEffect {
   // `power` shrinks the secondary burst so it reads as spray breaking off the
   // main splash rather than a second impact.
   spawnDroplets(power) {
-    const count = Math.round(34 * power);
+    const count = Math.round(34 * power * this.particleScale);
     for (let i = 0; i < count; i++) {
       const theta = Math.random() * Math.PI * 2;
       const speed = (140 + Math.random() * 480) * power;
@@ -106,7 +108,11 @@ export class WaterBoltEffect {
       this.pos.y =
         u * u * this.from.y + 2 * u * t * this.ctrl.y + t * t * this.to.y;
 
-      const spawns = Math.min(Math.ceil(dt * 140), MAX_TRAIL - this.trail.length);
+      const maxTrail = MAX_TRAIL * this.particleScale;
+      const spawns = Math.min(
+        Math.ceil(dt * 140 * this.particleScale),
+        maxTrail - this.trail.length,
+      );
       for (let i = 0; i < spawns; i++) {
         this.trail.push({
           x: this.pos.x + (Math.random() - 0.5) * 16,

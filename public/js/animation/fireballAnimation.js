@@ -12,6 +12,7 @@ import {
   getElementCenter,
   runSoloEffect,
 } from "./animationUtils.js";
+import { getParticleScale } from "./effectQuality.js";
 
 const SPRITE_SIZE = 64;
 
@@ -56,6 +57,7 @@ export class FireballEffect {
     this.trail = [];
     this.embers = [];
     this.impacted = false;
+    this.particleScale = getParticleScale();
 
     const dx = to.x - from.x;
     const dy = to.y - from.y;
@@ -73,7 +75,8 @@ export class FireballEffect {
   }
 
   spawnEmbers() {
-    for (let i = 0; i < 38; i++) {
+    const count = Math.round(38 * this.particleScale);
+    for (let i = 0; i < count; i++) {
       const theta = Math.random() * Math.PI * 2;
       const speed = 120 + Math.random() * 520;
       this.embers.push({
@@ -101,7 +104,11 @@ export class FireballEffect {
       this.pos.y =
         u * u * this.from.y + 2 * u * t * this.ctrl.y + t * t * this.to.y;
 
-      const spawns = Math.min(Math.ceil(dt * 140), MAX_TRAIL - this.trail.length);
+      const maxTrail = MAX_TRAIL * this.particleScale;
+      const spawns = Math.min(
+        Math.ceil(dt * 140 * this.particleScale),
+        maxTrail - this.trail.length,
+      );
       for (let i = 0; i < spawns; i++) {
         this.trail.push({
           x: this.pos.x + (Math.random() - 0.5) * 18 * this.scale,

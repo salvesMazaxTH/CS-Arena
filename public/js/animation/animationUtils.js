@@ -1,5 +1,7 @@
 // Geometry and canvas plumbing shared by every skill animation.
 
+import { recordEffectFrame } from "./effectQuality.js";
+
 export function getElementCenter(el) {
   const rect = el.getBoundingClientRect();
   return {
@@ -63,6 +65,7 @@ export async function runSoloEffect(box, buildEffect, onFrame) {
 
       ctx.clearRect(box.x, box.y, box.width, box.height);
       const alive = effect.step(dt);
+      recordEffectFrame(dt);
       onFrame?.(effect);
       if (!alive) {
         canvas.remove();
