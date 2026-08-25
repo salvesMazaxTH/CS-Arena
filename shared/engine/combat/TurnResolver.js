@@ -1131,6 +1131,16 @@ export class TurnResolver {
         });
       },
 
+      // Hooks emitted from inside a registry (onAfterHealing, for one) have
+      // nowhere to return their logs to, since nothing reads the emit's result.
+      // Routing them through registerResult puts them in the action's results,
+      // which is what the battle log is built from.
+      registerHookLogs(hookResults) {
+        for (const hookResult of hookResults) {
+          if (hookResult?.log) this.registerResult({ log: hookResult.log });
+        }
+      },
+
       consumeRegisteredResults() {
         if (!this.registeredResults.length) return [];
 
@@ -1256,18 +1266,20 @@ export class TurnResolver {
         this._lastEventRef = event; // reference for dialogs possibly related to this heal
 
         // 🔥 Fires the heal hook
-        emitCombatEvent(
-          "onAfterHealing",
-          {
-            healSrc: sourceChamp || null,
-            healTarget: target,
-            amount: value,
-            context: this,
+        this.registerHookLogs(
+          emitCombatEvent(
+            "onAfterHealing",
+            {
+              healSrc: sourceChamp || null,
+              healTarget: target,
+              amount: value,
+              context: this,
 
-            healType: "normal",
-            isLifesteal: false,
-          },
-          this.allChampions,
+              healType: "normal",
+              isLifesteal: false,
+            },
+            this.allChampions,
+          ),
         );
       },
 
@@ -1289,19 +1301,21 @@ export class TurnResolver {
 
         this._lastEventRef = null;
 
-        emitCombatEvent(
-          "onAfterHealing",
-          {
-            healSrc: sourceChamp || null,
-            healTarget: target,
-            amount: value,
-            context: this,
+        this.registerHookLogs(
+          emitCombatEvent(
+            "onAfterHealing",
+            {
+              healSrc: sourceChamp || null,
+              healTarget: target,
+              amount: value,
+              context: this,
 
-            healType: "lifesteal",
-            isLifesteal: true,
-            fromTargetId,
-          },
-          this.allChampions,
+              healType: "lifesteal",
+              isLifesteal: true,
+              fromTargetId,
+            },
+            this.allChampions,
+          ),
         );
 
         const event = {
