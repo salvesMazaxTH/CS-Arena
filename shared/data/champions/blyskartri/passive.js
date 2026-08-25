@@ -41,7 +41,7 @@ export default {
   },
 
   onEvade({ owner, defender, context }) {
-    if (!defender || defender.team !== owner.team) return;
+    if (defender.id !== owner.id) return;
 
     const stackResult = this._addStack({
       owner,

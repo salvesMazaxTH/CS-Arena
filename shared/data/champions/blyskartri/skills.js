@@ -172,15 +172,9 @@ const blyskartriSkills = [
     resolve({ user, targets, context = {} }) {
       const [ally] = targets;
 
-      const alreadyHasModifier = ally
-        .getDamageModifiers()
-        .some((mod) => mod.id === "infinite_horizon");
-
-      if (alreadyHasModifier) {
-        return {
-          log: `${formatChampionName(ally)} is already under the effect of Infinite Horizon.`,
-        };
-      }
+      ally.damageModifiers = ally.damageModifiers.filter(
+        (mod) => mod.id !== "infinite_horizon",
+      );
 
       ally.addDamageModifier({
         id: "infinite_horizon",
