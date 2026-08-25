@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../basicStrike.js";
 
 const nytheraSkills = [
@@ -87,9 +88,6 @@ const nytheraSkills = [
 
       user.runtime.hookEffects ??= [];
 
-      if (!user.runtime.hookEffects)
-        throw new Error("NYTHERA: hookEffects was not properly initialized.");
-
       const effect = {
         key: "stasis_chamber",
         expiresAtTurn: context?.currentTurn + this.effectDuration,
@@ -98,12 +96,34 @@ const nytheraSkills = [
           onAfterDmgTaking: "defender",
         },
 
-        onAfterDmgTaking({ attacker, context }) {
+        onAfterDmgTaking({ attacker, damage, context }) {
+          if (damage <= 0 || attacker.team === user.team) return;
+
           attacker.applyStatusEffect("frozen", freezeDuration, context);
+
+          const caught = `${formatChampionName(attacker)} is caught by the stillness of the <b>Stasis Chamber</b>!`;
+
+          context.registerDialog({
+            message: caught,
+            sourceId: user.id,
+            targetId: attacker.id,
+          });
+
+          return { log: caught };
         },
       };
 
       user.runtime.hookEffects.push(effect);
+
+      const sealed = `${formatChampionName(user)} seals herself inside a chamber of standing ice.`;
+
+      context.registerDialog({
+        message: sealed,
+        sourceId: user.id,
+        targetId: user.id,
+      });
+
+      return { log: sealed };
     },
   },
 

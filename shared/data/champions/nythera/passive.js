@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 
 export default {
   key: "glacial_omen",
@@ -15,10 +16,10 @@ export default {
     onAfterDmgTaking: "defender",
   },
 
-  onAfterDmgTaking({ attacker, owner, skill, damage, context }) {
+  onAfterDmgTaking({ attacker, owner, skill, damage, mode, context }) {
     if (damage <= 0 || attacker.team === owner.team) return;
 
-    if (!skill.contact) return;
+    if (!skill.contact || mode === DamageEvent.Modes.ABSOLUTE) return;
 
     // Do not stack with Stasis Chamber, which does the same thing, but better.
     if (
