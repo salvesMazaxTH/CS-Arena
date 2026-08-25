@@ -85,7 +85,7 @@ const alexaNeruvyaSkills = [
     key: "advent_of_the_colossal_tide",
     name: "Advent of the Colossal Tide",
 
-    bf: 45,
+    bf: 60,
     damageMode: "piercing",
     piercingPercentage: 80,
     contact: false,
