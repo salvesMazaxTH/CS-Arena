@@ -176,11 +176,19 @@ function applyStatusEffectCore({
   if (typeof effectInstance.onStatusEffectAdded === "function") {
     const ownModifiersFrom = champion.statModifiers.length;
 
-    effectInstance.onStatusEffectAdded({
+    const added = effectInstance.onStatusEffectAdded({
       owner: champion,
       duration: resolvedDuration,
       context,
     });
+
+    if (added?.message) {
+      context.registerDialog({
+        message: added.message,
+        sourceId: champion.id,
+        targetId: champion.id,
+      });
+    }
 
     // Whatever the hook just appended belongs to this status, so removing it
     // early can give the stats back instead of leaving them stuck.

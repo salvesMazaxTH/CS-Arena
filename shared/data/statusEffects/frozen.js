@@ -35,7 +35,7 @@ const frozen = {
     });
 
     return {
-      message: `${owner.name} was ${this.name}!`,
+      message: `${formatChampionName(owner)} was ${this.name}!`,
     };
   },
 
