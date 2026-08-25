@@ -96,18 +96,19 @@ const alexaNeruvyaSkills = [
     priority: 1,
 
     healPercentOfDamage: 50,
+    momentumGainPercentOfDamage: 6,
     transformInto: "alexa_neruvya_primordial",
     transformDuration: 2,
 
     description() {
-      return `Alexa Neruvya answers one foe first, calling home through them every drop she has ever spent mending an ally, dealing Water magical damage that ignores ${this.piercingPercentage}% of their Defense. The tide that returns from that strike does not disperse: it carries ${this.healPercentOfDamage}% of the damage dealt back to her and every active ally, restoring HP.
+      return `Alexa Neruvya answers one foe first, calling home through them every drop she has ever spent mending an ally, dealing Water magical damage that ignores ${this.piercingPercentage}% of their Defense. The tide that returns from that strike does not disperse: it carries ${this.healPercentOfDamage}% of the damage dealt back to her and every active ally, restoring HP, and leaves ${this.momentumGainPercentOfDamage}% of it behind in her as Momentum.
 
       Only then does she stop holding the shape she has been wearing. What surfaces is a blue dragon with the whole ocean hanging off it, her <b>Primordial Form</b>, for ${this.transformDuration} turn(s), replacing her skills, her passive and her stats.`;
     },
 
     targetSpec: ["enemy"],
 
-    resolve({ user, targets, context }) {
+    resolve({ user, targets, context, resolver }) {
       const [enemy] = targets;
 
       const baseDamage = (user.Attack * this.bf) / 100;
@@ -144,6 +145,25 @@ const alexaNeruvyaSkills = [
           results.push({
             log: `The tide rolls back and restores ${restored} HP to ${formatChampionName(ally)}.`,
           });
+        });
+      }
+
+      const momentumGain = Math.floor(
+        ((mainDamageResult?.totalDamage || 0) *
+          this.momentumGainPercentOfDamage) /
+          100,
+      );
+
+      if (momentumGain > 0) {
+        resolver.applyResourceChange({
+          target: user,
+          amount: momentumGain,
+          context,
+          sourceId: user.id,
+        });
+
+        results.push({
+          log: `The tide leaves ${momentumGain} Momentum behind in ${formatChampionName(user)}.`,
         });
       }
 

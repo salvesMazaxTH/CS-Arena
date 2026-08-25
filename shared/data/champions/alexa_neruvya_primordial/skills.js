@@ -77,7 +77,7 @@ const alexaNeruvyaPrimordialSkills = [
     element: "water",
 
     isUltimate: true,
-    momentumCost: 30,
+    momentumCost: 27,
     priority: 0,
 
     description() {
