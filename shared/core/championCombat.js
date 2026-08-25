@@ -194,6 +194,16 @@ export function getTotalDamageReduction(champion, currentTurn) {
   return { flat, percent };
 }
 
+// Per-stat floor and ceiling. Both the clamp on the way in and the recompute
+// that runs when a modifier expires read this, so they can never disagree.
+const STAT_LIMITS = {
+  Critical: { min: 0, max: 95 },
+  Evasion: { min: 0, max: 75 },
+  default: { min: 10, max: 999 },
+};
+
+const statLimitsFor = (statName) => STAT_LIMITS[statName] || STAT_LIMITS.default;
+
 /** Core stat mutation: rounds, clamps to per-stat limits, records the modifier. */
 export function applyStatModifier(
   champion,
@@ -227,13 +237,7 @@ export function applyStatModifier(
     amount = roundToFive(amount);
   }
 
-  const limits = {
-    Critical: { min: 0, max: 95 },
-    Evasion: { min: 0, max: 75 },
-    default: { min: 10, max: 999 },
-  };
-
-  const { min, max } = limits[statName] || limits.default;
+  const { min, max } = statLimitsFor(statName);
 
   const previous = champion[statName];
   const effectiveMin = ignoreMinimum ? 0 : min;
@@ -624,21 +628,14 @@ export function purgeExpiredStatModifiers(champion, currentTurn) {
     const baseValue = champion[baseKey];
     if (baseValue === undefined) continue;
 
-    const limits = {
-      Critical: { min: 0, max: 95 },
-      Evasion: { min: 0, max: 95 },
-      default: { min: 10, max: 999 },
-    };
-    const { max } = limits[statName] || limits.default;
+    const { max } = statLimitsFor(statName);
 
     const previousValue = champion[statName];
     let newValue = baseValue;
 
     for (const mod of remaining) {
       if (mod.statName === statName) {
-        const effectiveMin = mod.ignoreMinimum
-          ? 0
-          : (limits[statName] || limits.default).min;
+        const effectiveMin = mod.ignoreMinimum ? 0 : statLimitsFor(statName).min;
         newValue = Math.max(effectiveMin, Math.min(newValue + mod.amount, max));
       }
     }
