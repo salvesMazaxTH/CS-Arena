@@ -32,41 +32,31 @@ const eliasCrossSkills = [
 
     resolve({ user, targets, context }) {
       const [enemy] = targets;
-      const baseDamage = (user.Attack * this.bf) / 100;
 
-      const isOverloaded = enemy.hasStatusEffect("conductor");
+      if (enemy.hasStatusEffect("conductor")) {
+        context.extraDamageQueue ??= [];
 
-      /* console.log(
-        `Lightning Impact: ${formatChampionName(enemy)} ${
-          isOverloaded ? "has" : "does not have"
-        } Conductor. Target Status Effects: ${[
-          ...enemy.statusEffects.keys(),
-        ].join(", ")}`,
-      );
-      */
-
-      const results = [];
-
-      const pushResult = (r) => {
-        if (Array.isArray(r)) results.push(...r);
-        else if (r) results.push(r);
-      };
+        context.extraDamageQueue.push({
+          baseDamage: this.damageBonus,
+          mode: this.damageBonusMode,
+          attacker: user,
+          defender: enemy,
+          skill: this,
+          type: "magical",
+        });
+      }
 
       const result = new DamageEvent({
-        baseDamage: isOverloaded
-          ? baseDamage + this.damageBonus
-          : baseDamage,
+        baseDamage: (user.Attack * this.bf) / 100,
         attacker: user,
         defender: enemy,
         skill: this,
         type: "magical",
         context,
-        allChampions: context?.allChampions,
+        allChampions: context.allChampions,
       }).execute();
 
-      pushResult(result);
-
-      return results;
+      return Array.isArray(result) ? result : [result];
     },
   },
 
@@ -81,22 +71,26 @@ const eliasCrossSkills = [
     priority: 0,
     element: "lightning",
 
+    passiveChanceBonus: 35,
+    conductorDuration: 2,
+
     description() {
-      return `Elias Cross gains +35% Passive chance this turn and the next. If the target has Conductor, deals ${this.damageBonus} bonus Absolute Damage.`;
+      return `Elias Cross gains +${this.passiveChanceBonus}% Passive chance this turn and the next. If the target has Conductor, deals ${this.damageBonus} bonus Absolute Damage. Marks the target as a Conductor for ${this.conductorDuration} turn(s).`;
     },
 
-    targetSpec: ["enemy", "self"],
+    targetSpec: ["enemy"],
 
     resolve({ user, targets, context }) {
       const [enemy] = targets;
 
-      // Applies the temporary bonus and stores the actual amount applied
-      // so it can be correctly removed when it expires.
-      const initialChance = user.passive?.initialChance ?? 1;
+      // The amount actually applied is stored so expiry can remove exactly it.
       const currentChance =
-        user.runtime.passiveChance ?? initialChance;
+        user.runtime.passiveChance ?? user.passive.initialChance;
 
-      const nextChance = Math.min(100, currentChance + 35);
+      const nextChance = Math.min(
+        100,
+        currentChance + this.passiveChanceBonus,
+      );
       const appliedBonus = Math.max(
         0,
         nextChance - currentChance,
@@ -113,21 +107,32 @@ const eliasCrossSkills = [
         });
       }
 
-      const baseDamage = (user.Attack * this.bf) / 100;
-      const isOverloaded =
-        enemy.hasStatusEffect("conductor");
+      if (enemy.hasStatusEffect("conductor")) {
+        context.extraDamageQueue ??= [];
+
+        context.extraDamageQueue.push({
+          baseDamage: this.damageBonus,
+          mode: this.damageBonusMode,
+          attacker: user,
+          defender: enemy,
+          skill: this,
+          type: "magical",
+        });
+      }
 
       const result = new DamageEvent({
-        baseDamage: isOverloaded
-          ? baseDamage + this.damageBonus
-          : baseDamage,
+        baseDamage: (user.Attack * this.bf) / 100,
         attacker: user,
         defender: enemy,
         skill: this,
         type: "magical",
         context,
-        allChampions: context?.allChampions,
+        allChampions: context.allChampions,
       }).execute();
+
+      enemy.applyStatusEffect("conductor", this.conductorDuration, context, {
+        sourceSkill: this,
+      });
 
       return Array.isArray(result) ? result : [result];
     },
@@ -144,7 +149,7 @@ const eliasCrossSkills = [
     momentumCost: 66,
 
     recoilDamage: 25,
-    reductedDamagePercent: 20,
+    reducedDamagePercent: 20,
     recoilDamageMode: "absolute",
 
     cannotBeEvaded: true,
@@ -155,7 +160,7 @@ const eliasCrossSkills = [
     element: "lightning",
 
     description() {
-      return `Deals damage to ALL characters except Elias Cross. Characters with Lightning or Earth Affinity take only ${this.reductedDamagePercent}% damage. However, Elias Cross takes Absolute Recoil Damage equal to ${this.recoilDamage}% of his Max HP. Targets below 17% HP are obliterated, or below 25% HP if they have Conductor. This attack cannot be evaded.`;
+      return `Deals damage to ALL characters except Elias Cross. Characters with Lightning or Earth Affinity take only ${this.reducedDamagePercent}% damage. However, Elias Cross takes Absolute Recoil Damage equal to ${this.recoilDamage}% of his Max HP. Targets below 17% HP are obliterated, or below 25% HP if they have Conductor. This attack cannot be evaded.`;
     },
 
     finishingType: "obliterate",
@@ -181,14 +186,15 @@ const eliasCrossSkills = [
           ? [targets]
           : [];
 
-      // Find a single valid iteration to attach the recoil to.
-      const recoilIndex = targetList.findIndex(
+      // The recoil rides the last struck target, so it can never cut the storm short.
+      const recoilIndex = targetList.findLastIndex(
         (t) => t?.alive && t !== user,
       );
 
       for (let i = 0; i < targetList.length; i++) {
         const target = targetList[i];
 
+        if (!user.alive) break;
         if (!target?.alive) continue;
         if (target === user) continue;
 
@@ -202,10 +208,9 @@ const eliasCrossSkills = [
         ) {
           finalBaseDamage =
             baseDamage *
-            (this.reductedDamagePercent / 100);
+            (this.reducedDamagePercent / 100);
         }
 
-        // 🔥 Inject recoil into a single valid execution.
         if (i === recoilIndex) {
           context.extraDamageQueue ??= [];
 

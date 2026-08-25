@@ -33,8 +33,6 @@ export default {
     const chance = owner.runtime.passiveChance / 100;
     const roll = Math.random();
 
-    console.log(`[PASSIVE - Elias] roll=${roll} | chance=${chance}`);
-
     if (roll >= chance) return;
 
     context.registerDialog({
