@@ -28,6 +28,25 @@ const raliaSkills = [
     },
     targetSpec: ["self", "enemy"],
     resolve({ user, targets, context = {} }) {
+      const userName = formatChampionName(user);
+
+      // The oath is sworn in life rather than damage: it ignores shields and
+      // never brings Rália below 1 HP. With nothing left to give, there is
+      // no oath to swear and the skill fails.
+      const hpCost = Math.min(this.selfDamage, user.HP - 1);
+
+      if (hpCost <= 0) {
+        context.registerDialog({
+          message: `But it failed.`,
+          sourceId: user.id,
+          targetId: user.id,
+        });
+
+        return {
+          log: `${userName} had no blood left to swear on. <b>Iron Oath</b> failed.`,
+        };
+      }
+
       user.modifyStat({
         statName: "Defense",
         amount: -this.defLoss,
@@ -35,7 +54,24 @@ const raliaSkills = [
         context,
       });
 
-      user.modifyHP(-this.selfDamage, { context });
+      // The cost never goes through a DamageEvent, so it registers its own
+      // visual event and dialog, or the HP loss lands on the client
+      // unannounced — leaving the bar full while lifesteal heals on top of it.
+      user.modifyHP(-hpCost, { context });
+
+      context.registerDamage({
+        target: user,
+        amount: hpCost,
+        rawAmount: hpCost,
+        sourceId: user.id,
+      });
+
+      context.registerDialog({
+        message: `${userName} swears the <b>Iron Oath</b> in her own blood!`,
+        sourceId: user.id,
+        targetId: user.id,
+        duration: 1000,
+      });
 
       user.modifyStat({
         statName: "Attack",
@@ -47,8 +83,7 @@ const raliaSkills = [
       // Immediate follow-up attack.
       const enemy = targets.find((t) => t.id !== user.id);
 
-      const userName = formatChampionName(user);
-      const selfLog = `${userName} swears the Iron Oath, giving up ${this.selfDamage} HP and ${this.defLoss} Defense for +${this.atkBuff} Attack over ${this.buffDuration} turn(s).`;
+      const selfLog = `${userName} swears the Iron Oath, giving up ${hpCost} HP and ${this.defLoss} Defense for +${this.atkBuff} Attack over ${this.buffDuration} turn(s).`;
 
       if (!enemy) {
         return { log: selfLog };
@@ -99,19 +134,27 @@ const raliaSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
-      const effectiveDamage = result.totalDamage || 0;
+      // `result` is an array whenever the hit drew a counter-attack or a
+      // reflect; the strike on the chosen target is always the first entry.
+      const results = Array.isArray(result) ? result : [result];
+      const mainResult = results[0];
+
+      const effectiveDamage = mainResult.totalDamage || 0;
       const healingAmount = Math.max(
         this.minHeal,
-        effectiveDamage * (this.healPercent / 100),
+        Math.floor(effectiveDamage * (this.healPercent / 100)),
       );
 
-      user.heal(healingAmount, context);
+      // Log what she actually recovered, which is less than she asked for when
+      // the heal runs into her HP ceiling.
+      const healed = user.heal(healingAmount, context);
 
-      // Extend the engine's log instead of replacing it.
-      const userName = formatChampionName(user);
-      result.log += `\n${userName} restores ${healingAmount} HP.`;
+      if (healed > 0) {
+        // Extend the engine's log instead of replacing it.
+        mainResult.log += `\n${formatChampionName(user)} restores ${healed} HP.`;
+      }
 
-      return result;
+      return results;
     },
   },
 
