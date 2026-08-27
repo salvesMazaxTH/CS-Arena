@@ -5,7 +5,8 @@ export function roundToFive(x) {
   return Math.round(x / 5) * 5;
 }
 
-/** The single door into runtime.hookEffects, so an effect can be turned away before it lands. */
+/** The single door into runtime.hookEffects, so an effect can be turned away
+ * before it lands. Every hookEffect declares type "buff", "debuff" or "neutral". */
 export function addHookEffect(champion, hookEffect, context) {
   const results = emitCombatEvent(
     "onHookEffectIncoming",

@@ -80,7 +80,7 @@ const laisaelisSkills = [
             }
 
             echo.addHookEffect({
-              type: "buff",
+              type: "neutral",
               key: "manifest_fade",
               group: "skill",
               ownerId: echo.id,

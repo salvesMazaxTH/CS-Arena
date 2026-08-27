@@ -137,7 +137,7 @@ const zyrelleSkills = [
         (hook) => hook.key !== "reckless_reload_exposure",
       );
       user.addHookEffect({
-        type: "buff",
+        type: "debuff",
         key: "reckless_reload_exposure",
         name: "Reckless Reload",
         expiresAtTurn: context.currentTurn + this.duration,

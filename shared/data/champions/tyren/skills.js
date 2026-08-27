@@ -131,6 +131,7 @@ const tyrenSkills = [
 
       user.addHookEffect({
         type: "buff",
+        subtypes: ["statMod"],
         key: "living_steel_aegis_expiration",
         name: "Living Steel Aegis",
 
