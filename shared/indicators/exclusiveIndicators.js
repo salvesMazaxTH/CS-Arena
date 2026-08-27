@@ -1,16 +1,5 @@
-/**
- * Registry de indicators exclusivos de personagem/habilidade.
- *
- * Status effects genéricos (presentes em múltiplos campeões) ficam em
- * statusEffectIcons dentro de statusIndicator.js.
- *
- * Efeitos exclusivos de um único personagem/habilidade se registram aqui.
- * O statusIndicator.js consulta este registry de forma genérica,
- * sem importar nada específico de nenhum efeito.
- *
- * Para adicionar um novo indicator exclusivo:
- *   registerExclusiveIndicator("nomeDoEfeito", { type, value, background?, color? });
- */
+// Indicators for effects exclusive to one champion or skill. Generic status
+// effects shared by several champions live in statusEffectIcons instead.
 
 const registry = new Map();
 
@@ -37,7 +26,7 @@ export function getRuntimeCounterIndicatorEntries() {
   return runtimeCounterEntries;
 }
 
-// ── Registro de indicators exclusivos ──────────────────────────
+// ── Registered exclusive indicators ─────────────────────────────
 
 // Reyskarone's Blood Tithe: the hookEffect key is "tithe".
 // The asset file is still named tributo_indicator.png.
@@ -45,6 +34,16 @@ registerExclusiveIndicator("tithe", {
   type: "image",
   value: "/assets/indicators/tributo_indicator.png",
   background: "",
+});
+
+// Aren Marevoth's Tide: stacks live on the marked enemy, so this is the only
+// place the player can read how many are on it.
+registerExclusiveIndicator("marevoth_tide", {
+  type: "emoji",
+  value: "🌊",
+  background: "rgba(30, 110, 180, 0.8)",
+  label: "Tide",
+  showStackCount: true,
 });
 
 // Zyrelle's revolver: current rounds loaded (runtime.zyrelleAmmo), 0-6.

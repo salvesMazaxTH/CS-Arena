@@ -252,18 +252,19 @@ export class Champion {
         return clone;
       })(),
 
-      // Data-only keys for client-side indicator/UI logic.
+      // Data-only view of the hooks for client-side indicators.
       // Never serialize hook functions or full hook objects.
-      runtimeHookEffectKeys: (() => {
+      runtimeHookEffectData: (() => {
         const hooks = Array.isArray(this.runtime?.hookEffects)
           ? this.runtime.hookEffects
           : [];
 
         return hooks
-          .map((effect) =>
-            typeof effect?.key === "string" ? effect.key.toLowerCase() : null,
-          )
-          .filter(Boolean);
+          .filter((effect) => typeof effect?.key === "string")
+          .map((effect) => ({
+            key: effect.key.toLowerCase(),
+            stacks: effect.stacks ?? 0,
+          }));
       })(),
 
       actionBlockedByHardCC: this.isActionBlockedByHardCC(),

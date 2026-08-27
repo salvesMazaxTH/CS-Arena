@@ -88,6 +88,12 @@ export const StatusIndicator = {
       background: "none",
       label: "Imunidade Absoluta",
     },
+    debuffimmunity: {
+      type: "emoji",
+      value: "🪬",
+      background: "rgba(120, 200, 160, 0.8)",
+      label: "Debuff Immunity",
+    },
     burning: {
       type: "emoji",
       value: "🔥",
@@ -156,13 +162,11 @@ export const StatusIndicator = {
     const activeStatuses = new Set(
       [...champion.statusEffects.keys()].map((s) => String(s).toLowerCase()),
     );
-    const runtimeHookEffectKeys = Array.isArray(
-      champion.runtime?.hookEffectKeys,
-    )
-      ? champion.runtime.hookEffectKeys
+    const hookEffectData = Array.isArray(champion.runtime?.hookEffectData)
+      ? champion.runtime.hookEffectData
       : [];
-    for (const hookKey of runtimeHookEffectKeys) {
-      activeStatuses.add(String(hookKey).toLowerCase());
+    for (const hook of hookEffectData) {
+      activeStatuses.add(hook.key);
     }
     const hasActiveTaunt =
       Array.isArray(champion.tauntEffects) && champion.tauntEffects.length > 0;
@@ -254,7 +258,9 @@ export const StatusIndicator = {
       );
       const effectData = runtimeCounter
         ? { stacks: champion.runtime[runtimeCounter.runtimeKey] }
-        : champion.statusEffects.get(statusEffectName) || null;
+        : champion.statusEffects.get(statusEffectName) ||
+          hookEffectData.find((hook) => hook.key === statusEffectName) ||
+          null;
       const icon =
         this.statusEffectIcons[statusEffectName.toLowerCase()] ||
         getExclusiveIndicator(statusEffectName);
