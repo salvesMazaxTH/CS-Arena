@@ -2,6 +2,7 @@ import { formatChampionName } from "../../ui/formatters.js";
 import { getHardCCActionDenial } from "../../core/championStatus.js";
 import { emitCombatEvent } from "./combatEvents.js";
 import { SpawnProtection } from "./spawnProtection.js";
+import { Nothingness } from "./nothingness.js";
 import {
   CLAIM_ACTION_KEY,
   CLAIM_MIN_MOMENTUM,
@@ -147,6 +148,14 @@ export class TurnResolver {
         actionResults,
         turnExecutionMap,
       );
+
+      for (const recalled of Nothingness.processRuptures(this.combat, context)) {
+        context.registerDialog({
+          message: recalled.log,
+          sourceId: recalled.champion.id,
+          targetId: recalled.champion.id,
+        });
+      }
     }
 
     const deathContext = this.createBaseContext({ sourceId: null });

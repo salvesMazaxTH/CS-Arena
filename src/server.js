@@ -30,6 +30,7 @@ import { championDB } from "../shared/data/championDB.js";
 import { findBrokenDuo, getDuoForCore } from "../shared/data/duos.js";
 import { isChampionDraftable } from "../shared/data/draftEligibility.js";
 import { SpawnProtection } from "../shared/engine/combat/spawnProtection.js";
+import { Nothingness } from "../shared/engine/combat/nothingness.js";
 import { Champion } from "../shared/core/Champion.js";
 import { formatChampionName } from "../shared/ui/formatters.js";
 
@@ -790,6 +791,18 @@ function handleStartTurn() {
   match.combat.activeChampions.forEach((champion) => {
     applyGlobalMomentumRegen(champion, turnStartContext, resolver);
   });
+
+  // After the purge, or the sweep would strip the arrival state they land with.
+  for (const recalled of Nothingness.processDueReturns(
+    match.combat,
+    turnStartContext,
+  )) {
+    turnStartContext.registerDialog({
+      message: recalled.log,
+      sourceId: recalled.champion.id,
+      targetId: recalled.champion.id,
+    });
+  }
 
   // Clear the runtime context.
   match.combat.activeChampions.forEach((champ) => {

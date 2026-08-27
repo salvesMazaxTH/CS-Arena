@@ -2,6 +2,7 @@ import { getClaimMaxPoints } from "../combat/claim.js";
 import { championDB } from "../../data/championDB.js";
 import { getDuoForCore } from "../../data/duos.js";
 import { SpawnProtection } from "../combat/spawnProtection.js";
+import { Nothingness } from "../combat/nothingness.js";
 import { Champion } from "../../core/Champion.js";
 import { generateId } from "../../utils/id.js";
 import { emitCombatEvent } from "../combat/combatEvents.js";
@@ -473,7 +474,8 @@ class CombatState {
 
   /**
    * Applies a champion mutation request (restore / transform / revertTransform /
-   * swap) and returns { champion, log? }, or null when it cannot be applied.
+   * vanish / recallFromNothingness / swap) and returns { champion, log? }, or
+   * null when it cannot be applied.
    * On transform, schedules the matching revert. Sockets are the server's job.
    */
   mutateChampion(
@@ -486,10 +488,25 @@ class CombatState {
       statMode = "deltaFromBase",
       expectedToken = null,
       entryDamage = 0,
+      turns = 1,
+      returnState = null,
+      ruptureSourceId = null,
     } = {},
     options = {},
   ) {
     const mutationContext = options?.context ?? null;
+
+    if (mode === "vanish") {
+      return Nothingness.send(this, targetId, {
+        turns,
+        returnState,
+        ruptureSourceId,
+      });
+    }
+
+    if (mode === "recallFromNothingness") {
+      return Nothingness.recall(this, targetId, { context: mutationContext });
+    }
 
     if (mode === "restore") {
       const restored = this.restoreInactive(targetId);
