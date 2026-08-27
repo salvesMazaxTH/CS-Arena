@@ -1,7 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
-const MAX_CRIT_CHANCE = 95;
-
 export default {
   key: "the_grace_that_remains",
   name: "The Grace That Remains",
@@ -29,10 +27,9 @@ export default {
   },
 
   onBeforeHealing({ owner, healTarget, amount, context }) {
-    if (amount <= 0) return;
+    if (amount <= 0 || healTarget.HP >= healTarget.maxHP) return;
 
-    const chance = Math.min(owner.Critical, MAX_CRIT_CHANCE);
-    if (Math.random() * 100 >= chance) return;
+    if (Math.random() * 100 >= owner.Critical) return;
 
     context.registerDialog({
       message: `💧 The tide runs deep — ${formatChampionName(healTarget)} is mended beyond measure!`,

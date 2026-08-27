@@ -66,17 +66,18 @@ const alexaNeruvyaSkills = [
     resolve({ user, targets, context }) {
       const [ally] = targets;
 
+      // Cleansed first, so nothing left on them can suppress the mending.
+      const debuffs = ally.getStatusEffects({ type: "debuff" });
+      debuffs.forEach((statusEffect) =>
+        ally.removeStatusEffect(statusEffect.key),
+      );
+
       const restored = new HealEvent({
         target: ally,
         amount: this.healAmount,
         context,
         source: user,
       }).execute();
-
-      const debuffs = ally.getStatusEffects({ type: "debuff" });
-      debuffs.forEach((statusEffect) =>
-        ally.removeStatusEffect(statusEffect.key),
-      );
 
       const userName = formatChampionName(user);
       const allyName = formatChampionName(ally);
@@ -126,7 +127,7 @@ const alexaNeruvyaSkills = [
 
       const damageResult = new DamageEvent({
         baseDamage,
-        mode: "piercing",
+        mode: DamageEvent.Modes.PIERCING,
         piercingPercentage: this.piercingPercentage,
         attacker: user,
         defender: enemy,
@@ -148,7 +149,7 @@ const alexaNeruvyaSkills = [
 
       if (healAmount > 0) {
         const allies = context.aliveChampions.filter(
-          (champ) => champ.team === user.team && champ.alive,
+          (champ) => champ.team === user.team,
         );
 
         allies.forEach((ally) => {
@@ -158,6 +159,9 @@ const alexaNeruvyaSkills = [
             context,
             source: user,
           }).execute();
+
+          if (restored <= 0) return;
+
           results.push({
             log: `The tide rolls back and restores ${restored} HP to ${formatChampionName(ally)}.`,
           });

@@ -14,9 +14,10 @@ export default {
   // No hookScope here on purpose: onTurnStart is dispatched once per champion
   // with no other party in the payload, so it is self-scoped by construction.
   onTurnStart({ owner, context }) {
-    owner.runtime ??= {};
-    if (owner.runtime.colossalHushTriggered) return;
-    owner.runtime.colossalHushTriggered = true;
+    // Runtime survives the revert, so the mark is keyed to this transformation.
+    const sequence = owner.runtime.transformation?.sequence ?? 0;
+    if (owner.runtime.colossalHushSequence === sequence) return;
+    owner.runtime.colossalHushSequence = sequence;
 
     const awedEnemies = context.aliveChampions.filter(
       (champ) =>
