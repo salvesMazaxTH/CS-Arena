@@ -50,8 +50,11 @@ const SPLIT_DELAY = 0.08;
 const GRAVITY = 1500;
 
 export class WaterBoltEffect {
-  constructor(ctx, from, to) {
+  // `scale` multiplies every visual radius; particle counts stay fixed so the
+  // bigger variant costs the same to render.
+  constructor(ctx, from, to, scale = 1) {
     this.ctx = ctx;
+    this.scale = scale;
     this.from = from;
     this.to = to;
     this.age = 0;
@@ -86,11 +89,13 @@ export class WaterBoltEffect {
       this.droplets.push({
         x: this.to.x,
         y: this.to.y,
-        vx: Math.cos(theta) * speed + Math.cos(this.angle) * 80,
-        vy: Math.sin(theta) * speed + Math.sin(this.angle) * 80 - 160,
+        vx: (Math.cos(theta) * speed + Math.cos(this.angle) * 80) * this.scale,
+        vy:
+          (Math.sin(theta) * speed + Math.sin(this.angle) * 80 - 160) *
+          this.scale,
         life: 0.3 + Math.random() * 0.35,
         maxLife: 0.65,
-        size: (9 + Math.random() * 20) * power,
+        size: (9 + Math.random() * 20) * power * this.scale,
         sprite: SPRITES[i % 3],
       });
     }
@@ -115,13 +120,13 @@ export class WaterBoltEffect {
       );
       for (let i = 0; i < spawns; i++) {
         this.trail.push({
-          x: this.pos.x + (Math.random() - 0.5) * 16,
-          y: this.pos.y + (Math.random() - 0.5) * 16,
-          vx: (Math.random() - 0.5) * 80,
-          vy: (Math.random() - 0.5) * 80 + 40,
+          x: this.pos.x + (Math.random() - 0.5) * 16 * this.scale,
+          y: this.pos.y + (Math.random() - 0.5) * 16 * this.scale,
+          vx: (Math.random() - 0.5) * 80 * this.scale,
+          vy: ((Math.random() - 0.5) * 80 + 40) * this.scale,
           life: 0.16 + Math.random() * 0.26,
           maxLife: 0.42,
-          size: 14 + Math.random() * 24,
+          size: (14 + Math.random() * 24) * this.scale,
           sprite: SPRITES[1 + (i % 3)],
         });
       }
@@ -212,7 +217,7 @@ export class WaterBoltEffect {
       [SPRITES[1], 26, 0.95],
       [SPRITES[0], 12, 1],
     ]) {
-      const size = radius * pulse;
+      const size = radius * pulse * this.scale;
       ctx.globalAlpha = alpha;
       ctx.drawImage(sprite, -size / 2, -size / 2, size, size);
     }
@@ -225,7 +230,7 @@ export class WaterBoltEffect {
     const e = (this.age - TRAVEL_DURATION) / IMPACT_DURATION;
     const fade = 1 - e;
 
-    const flash = 300 * (1 - e * e);
+    const flash = 300 * (1 - e * e) * this.scale;
     ctx.globalAlpha = fade * 0.7;
     ctx.drawImage(SPRITES[2], to.x - flash / 2, to.y - flash / 2, flash, flash);
 
@@ -234,9 +239,9 @@ export class WaterBoltEffect {
       [1, 12, "#bdefff"],
       [0.62, 6, "#5fc8ff"],
     ]) {
-      const ring = 18 + 280 * Math.sqrt(e) * speed;
+      const ring = (18 + 280 * Math.sqrt(e) * speed) * this.scale;
       ctx.globalAlpha = fade * fade;
-      ctx.lineWidth = width * fade;
+      ctx.lineWidth = width * fade * this.scale;
       ctx.strokeStyle = color;
       ctx.beginPath();
       ctx.arc(to.x, to.y, ring, 0, Math.PI * 2);
@@ -247,35 +252,43 @@ export class WaterBoltEffect {
 }
 
 // Padding around the travel line big enough to hold the splash ring and
-// droplets at their farthest reach.
+// droplets at their farthest reach; both grow with `scale` so the big variant
+// still fits.
 const PADDING = 480;
 
-export async function playWaterBolt({ userEl, targetEl, canvasBatch }) {
-  if (!targetEl) return;
+// `scale` is baked in at registration time: 1 for regular water skills,
+// 1.85 for ultimates and the BIG_WATERBOLT_SKILLS exceptions.
+export function createWaterBoltAnimation(scale) {
+  const padding = PADDING * scale;
 
-  const targetCenter = getElementCenter(targetEl);
-  const start = userEl
-    ? getElementCenter(userEl)
-    : { x: targetCenter.x - 260, y: targetCenter.y - 160 };
+  return async ({ userEl, targetEl, canvasBatch }) => {
+    if (!targetEl) return;
 
-  const buildEffect = (ctx) => new WaterBoltEffect(ctx, start, targetCenter);
+    const targetCenter = getElementCenter(targetEl);
+    const start = userEl
+      ? getElementCenter(userEl)
+      : { x: targetCenter.x - 260, y: targetCenter.y - 160 };
 
-  let hitFlashed = false;
-  const onFrame = (effect) => {
-    if (effect.impacted && !hitFlashed) {
-      hitFlashed = true;
-      targetEl.classList.add("water-hit");
-      setTimeout(() => targetEl.classList.remove("water-hit"), 320);
+    const buildEffect = (ctx) =>
+      new WaterBoltEffect(ctx, start, targetCenter, scale);
+
+    let hitFlashed = false;
+    const onFrame = (effect) => {
+      if (effect.impacted && !hitFlashed) {
+        hitFlashed = true;
+        targetEl.classList.add("water-hit");
+        setTimeout(() => targetEl.classList.remove("water-hit"), 320);
+      }
+    };
+
+    if (canvasBatch) {
+      await canvasBatch.run([start, targetCenter], padding, buildEffect, onFrame);
+    } else {
+      await runSoloEffect(
+        computeEffectBox([start, targetCenter], padding),
+        buildEffect,
+        onFrame,
+      );
     }
   };
-
-  if (canvasBatch) {
-    await canvasBatch.run([start, targetCenter], PADDING, buildEffect, onFrame);
-  } else {
-    await runSoloEffect(
-      computeEffectBox([start, targetCenter], PADDING),
-      buildEffect,
-      onFrame,
-    );
-  }
 }

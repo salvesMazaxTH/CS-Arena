@@ -1751,10 +1751,11 @@ await animateSkill(skillKey, { targetEl, userEl, skill });
 | `default_fire`                       | Bola de fogo em Canvas 2D (`fireballAnimation.js`): trilha em arco, impacto com brasas, shockwave e flash `.fire-hit`.         |
 | `default_fire_big`                   | Mesma classe `FireballEffect` com `scale: 1.85` — usada por ultimates de fogo e pelas exceções de `BIG_FIREBALL_SKILLS`.        |
 | `default_water`                      | Projétil de água em Canvas 2D (`waterAnimation.js`): trilha em arco, splash com dois anéis, gotículas que se separam em duas levas e caem com gravidade, flash `.water-hit`. |
+| `default_water_big`                  | Mesma classe `WaterBoltEffect` com `scale: 1.85` — usada por ultimates de água e pelas exceções de `BIG_WATERBOLT_SKILLS`.      |
 | `default_slash`                      | Corte único (`slashAnimation.js`): um fio é traçado rápido na diagonal, segura, e então rasga numa fenda larga de bordas luminosas e miolo vazio. Flash `.slash-hit`. |
 | `default_multislash`                 | Combo (`multislashAnimation.js`): três lâminas escalonadas em leque, faíscas, e cada ferida se abre em duas bordas. Reservado a ultimates de corte e skills que são vários golpes. |
 
-**Fallbacks por elemento**: skills sem animação própria caem em `DEFAULT_ELEMENT_ANIMATIONS` quando são ofensivas (`damageMode` definido) e não fazem contato (`contact: false`) — `lightning` → `default_lightning`, `fire` → `default_fire`, `water` → `default_water`. Skills de fogo com `isUltimate: true`, mais as chaves listadas em `BIG_FIREBALL_SKILLS` (hoje `magma_bomb`), sobem para `default_fire_big`.
+**Fallbacks por elemento**: skills sem animação própria caem em `DEFAULT_ELEMENT_ANIMATIONS` quando são ofensivas (`damageMode` definido) e não fazem contato (`contact: false`) — `lightning` → `default_lightning`, `fire` → `default_fire`, `water` → `default_water`. Skills de fogo com `isUltimate: true`, mais as chaves listadas em `BIG_FIREBALL_SKILLS` (hoje `magma_bomb`), sobem para `default_fire_big`; o mesmo vale para água com `BIG_WATERBOLT_SKILLS` (hoje vazio) e `default_water_big`.
 
 **Motivo autoral — `hitVfx`**: uma skill pode declarar `hitVfx: "slash"` ou `hitVfx: "multislash"` para pedir uma animação pelo *gesto* em vez do elemento. Isso é consultado **antes** do gate de `contact`, porque um corte normalmente é `contact: true`, e vence o fallback de elemento. A chave resolvida é `default_${hitVfx}`.
 

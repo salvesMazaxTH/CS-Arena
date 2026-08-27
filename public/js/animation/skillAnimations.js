@@ -14,7 +14,7 @@ import { playLightningBolt } from "./lightningAnimation.js";
 import { playMeleePunch } from "./meleePunchAnimation.js";
 import { playMultislash } from "./multislashAnimation.js";
 import { playSlash } from "./slashAnimation.js";
-import { playWaterBolt } from "./waterAnimation.js";
+import { createWaterBoltAnimation } from "./waterAnimation.js";
 
 const skillAnimationRegistry = new Map();
 
@@ -34,8 +34,9 @@ const DEFAULT_ELEMENT_ANIMATIONS = {
   water: "default_water",
 };
 
-// Non-ultimate fire skills that still deserve the big blast.
+// Non-ultimate skills that still deserve the big blast, per element.
 const BIG_FIREBALL_SKILLS = new Set(["magma_bomb"]);
+const BIG_WATERBOLT_SKILLS = new Set();
 
 function resolveDefaultAnimationKey(skill) {
   if (!skill || typeof skill !== "object") return null;
@@ -56,6 +57,12 @@ function resolveDefaultAnimationKey(skill) {
     (skill.isUltimate === true || BIG_FIREBALL_SKILLS.has(skill.key))
   ) {
     return "default_fire_big";
+  }
+  if (
+    key === "default_water" &&
+    (skill.isUltimate === true || BIG_WATERBOLT_SKILLS.has(skill.key))
+  ) {
+    return "default_water_big";
   }
   return key;
 }
@@ -84,6 +91,7 @@ registerSkillAnimation("blazing_fist_barrage", playMeleePunch);
 registerSkillAnimation("default_lightning", playLightningBolt);
 registerSkillAnimation("default_fire", createFireballAnimation(1));
 registerSkillAnimation("default_fire_big", createFireballAnimation(1.85));
-registerSkillAnimation("default_water", playWaterBolt);
+registerSkillAnimation("default_water", createWaterBoltAnimation(1));
+registerSkillAnimation("default_water_big", createWaterBoltAnimation(1.85));
 registerSkillAnimation("default_slash", playSlash);
 registerSkillAnimation("default_multislash", playMultislash);
