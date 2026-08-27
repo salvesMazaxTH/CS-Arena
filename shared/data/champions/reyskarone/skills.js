@@ -2,6 +2,7 @@ import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../totalBlock.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
+import { SpawnProtection } from "../../../engine/combat/spawnProtection.js";
 
 const reyskaroneSkills = [
   // =========================
@@ -80,7 +81,9 @@ const reyskaroneSkills = [
         ? enemy.runtime.shields
         : [];
 
-      const hasAbsoluteImmunity = enemy.hasStatusEffect?.("absoluteImmunity");
+      const unreachable =
+        enemy.hasStatusEffect?.("absoluteImmunity") ||
+        SpawnProtection.isActive(enemy);
       const supremeShieldIdx = shields.findIndex(
         (shield) => shield?.type === "supreme" && shield?.amount > 0,
       );
@@ -89,7 +92,7 @@ const reyskaroneSkills = [
       );
 
       const titheBlocked =
-        hasAbsoluteImmunity || supremeShieldIdx !== -1 || spellShieldIdx !== -1;
+        unreachable || supremeShieldIdx !== -1 || spellShieldIdx !== -1;
 
       if (!titheBlocked) {
         // =========================

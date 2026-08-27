@@ -1,6 +1,7 @@
 import { formatChampionName } from "../../ui/formatters.js";
 import { getHardCCActionDenial } from "../../core/championStatus.js";
 import { emitCombatEvent } from "./combatEvents.js";
+import { SpawnProtection } from "./spawnProtection.js";
 import {
   CLAIM_ACTION_KEY,
   CLAIM_MIN_MOMENTUM,
@@ -525,6 +526,9 @@ export class TurnResolver {
 
   canExecuteAction(user, action) {
     if (!user || !user.alive) return { denied: true };
+
+    const takingTheField = SpawnProtection.actionDenial(user);
+    if (takingTheField) return takingTheField;
 
     const hardCCDenial = getHardCCActionDenial(user);
     if (hardCCDenial) {

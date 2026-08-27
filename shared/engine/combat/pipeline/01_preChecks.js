@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { emitCombatEvent } from "../combatEvents.js";
+import { SpawnProtection } from "../spawnProtection.js";
 
 export function preChecks(event) {
   /*     console.log("DEBUG ATTACKER:", event.attacker);
@@ -13,6 +14,13 @@ export function preChecks(event) {
     (activeChampions instanceof Map && !activeChampions.has(event.defender.id))
   ) {
     return _buildInactiveTargetResult(event);
+  }
+
+  if (SpawnProtection.isActive(event.defender)) {
+    return _buildImmuneResult(
+      event,
+      SpawnProtection.unreachableMessage(event.defender),
+    );
   }
 
   // 1️⃣ IMUNIDADE

@@ -29,6 +29,7 @@ import { Player } from "../shared/engine/match/Player.js";
 import { championDB } from "../shared/data/championDB.js";
 import { findBrokenDuo, getDuoForCore } from "../shared/data/duos.js";
 import { isChampionDraftable } from "../shared/data/draftEligibility.js";
+import { SpawnProtection } from "../shared/engine/combat/spawnProtection.js";
 import { Champion } from "../shared/core/Champion.js";
 import { formatChampionName } from "../shared/ui/formatters.js";
 
@@ -776,6 +777,7 @@ function handleStartTurn() {
 
   // Purge expired effects.
   match.combat.activeChampions.forEach((champion) => {
+    SpawnProtection.clear(champion);
     champion.purgeExpiredStatModifiers(match.combat.currentTurn);
     champion.purgeExpiredStatusEffects(
       match.combat.currentTurn,

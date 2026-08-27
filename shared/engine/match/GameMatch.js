@@ -1,6 +1,7 @@
 import { getClaimMaxPoints } from "../combat/claim.js";
 import { championDB } from "../../data/championDB.js";
 import { getDuoForCore } from "../../data/duos.js";
+import { SpawnProtection } from "../combat/spawnProtection.js";
 import { Champion } from "../../core/Champion.js";
 import { generateId } from "../../utils/id.js";
 import { emitCombatEvent } from "../combat/combatEvents.js";
@@ -433,6 +434,10 @@ class CombatState {
     const id = generateId(championKey);
     const newChampion = Champion.fromBaseData(baseData, id, team, { combatSlot });
     newChampion.championKey = championKey;
+
+    if (spawnProtection !== false && entityType === "champion") {
+      SpawnProtection.grant(newChampion);
+    }
 
     this.registerChampion(newChampion, { trackSnapshot });
 

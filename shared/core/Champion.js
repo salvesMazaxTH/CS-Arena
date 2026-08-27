@@ -181,23 +181,6 @@ export class Champion {
       });
     }
 
-    champ.runtime.hookEffects.push({
-      key: "spawn_protection",
-      group: "system",
-
-      hookScope: {
-        onChampionAdded: "champion",
-      },
-
-      onChampionAdded({ champion, context, spawnProtection = true }) {
-        if (spawnProtection === false) return;
-        if (champion?.entityType !== "champion") return;
-
-        champion.applyStatusEffect("inert", 1, context);
-        champion.applyStatusEffect("absoluteImmunity", 1, context);
-      },
-    });
-
     return champ;
   }
 

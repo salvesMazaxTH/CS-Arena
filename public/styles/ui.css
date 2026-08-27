@@ -1252,6 +1252,55 @@
     transform 0.5s ease-out;
 }
 
+/* Taking the Field: a cold arrival light, off the green/red status axis. */
+
+.champion.is-taking-the-field .portrait-wrapper {
+  opacity: 0.72;
+  box-shadow:
+    0 25px 45px rgba(0, 0, 0, 0.7),
+    0 0 0 2px rgba(207, 228, 255, 0.55),
+    0 0 22px 4px rgba(125, 182, 255, 0.35);
+  animation: takingTheFieldSettle 2.6s ease-in-out infinite;
+}
+
+@keyframes takingTheFieldSettle {
+  0%,
+  100% {
+    opacity: 0.66;
+  }
+  50% {
+    opacity: 0.86;
+  }
+}
+
+.taking-the-field-tag {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  white-space: nowrap;
+  pointer-events: none;
+
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(207, 228, 255, 0.6);
+  background: rgba(10, 18, 30, 0.92);
+
+  color: #cfe4ff;
+  font-size: clamp(0.42rem, 0.75vw, 0.56rem);
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .champion.is-taking-the-field .portrait-wrapper {
+    animation: none;
+    opacity: 0.76;
+  }
+}
+
 .champion-card {
   background: linear-gradient(180deg, #151515, #080808);
   border: 2px solid rgba(0, 255, 150, 0.4);

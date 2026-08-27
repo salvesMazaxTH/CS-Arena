@@ -1,6 +1,5 @@
-// A duo is a champion-selection affordance, not a champion: one card that puts
-// both of its cores into the line-up at once. It is deliberately absent from
-// championDB, so the server rejects the duo key on sight.
+// A selection affordance, not a champion: absent from championDB on purpose,
+// so the server rejects the duo key on sight.
 
 const duoDB = {
   laisaelis_laiserisa: {
@@ -23,10 +22,7 @@ export function findBrokenDuo(championKeys) {
   });
 }
 
-/**
- * Reads and edits a line-up array in terms of the duos inside it. Client and
- * server share it so the draft UI and the authoritative check cannot drift.
- */
+/** Reads and edits a line-up array in terms of the duos inside it. */
 export class DuoLayout {
   constructor(selection, teamSize) {
     this.selection = selection;
@@ -53,8 +49,7 @@ export class DuoLayout {
     return laidOut ? { duo, start } : null;
   }
 
-  // A run is pinned to a multiple of its own length so the card never straddles
-  // a row of the selection grid.
+  // Pinned to a multiple of its own length: the card must not straddle a grid row.
   canPlaceAt(duo, start) {
     const span = this.span(duo);
     if (start % span !== 0 || start + span > this.teamSize) return false;

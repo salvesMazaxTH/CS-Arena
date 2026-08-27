@@ -6,6 +6,7 @@ import {
 } from "../data/statusEffects/effectsRegistry.js";
 import { emitCombatEvent } from "../engine/combat/combatEvents.js";
 import { formatChampionName } from "../ui/formatters.js";
+import { SpawnProtection } from "../engine/combat/spawnProtection.js";
 
 function resolveStatusEffectDuration(duration, metadata = {}) {
   if (metadata?.persistent) return Infinity;
@@ -365,6 +366,17 @@ function _canApplyStatusEffect(
   }
 
   const definition = StatusEffectsRegistry[statusEffectKey];
+
+  if (
+    definition?.type === "debuff" &&
+    SpawnProtection.isActive(champion)
+  ) {
+    return {
+      allowed: false,
+      reason: "takingTheField",
+      message: SpawnProtection.unreachableMessage(champion),
+    };
+  }
 
   const eventResults = emitCombatEvent(
     "onStatusEffectIncoming",

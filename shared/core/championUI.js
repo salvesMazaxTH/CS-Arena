@@ -1,4 +1,26 @@
 import { StatusIndicator } from "../ui/statusIndicator.js";
+import { SpawnProtection } from "../engine/combat/spawnProtection.js";
+
+// Spelled out in words: the icon strip is for buffs and debuffs only.
+function syncTakingTheFieldUI(champion) {
+  const arriving = SpawnProtection.isActive(champion);
+  champion.el.classList.toggle("is-taking-the-field", arriving);
+
+  const existing = champion.el.querySelector(".taking-the-field-tag");
+
+  if (!arriving) {
+    existing?.remove();
+    return;
+  }
+
+  if (existing) return;
+
+  const tag = document.createElement("span");
+  tag.className = "taking-the-field-tag";
+  tag.textContent = SpawnProtection.label;
+  tag.title = `${champion.name} cannot act or be reached until next turn.`;
+  champion.el.appendChild(tag);
+}
 
 /**
  * Create the champion DOM element
@@ -229,6 +251,12 @@ export function updateChampionUI(champion, context) {
       hpSegments.dataset.segmentCount = String(hpSegmentCount);
     }
   }
+
+  // =========================
+  // Arrival state
+  // =========================
+
+  syncTakingTheFieldUI(champion);
 
   // =========================
   // Status indicators
