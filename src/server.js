@@ -68,7 +68,7 @@ const editMode = {
   executionOverride: null, // null = normal; number = forced threshold (1 = 100%, 0.5 = 50%)
   freeCostSkills: false, // Skills cost no resource. (SERVER-ONLY)
   unrestrictedSummon: false, // Summon line-up champions from turn 1 and more than once per turn (field cap still applies).
-  summonWithoutSpawnProtection: false, // Line-up summons enter without inert/immunity spawn protection.
+  summonWithoutSpawnProtection: false, // Line-up summons enter with no spawn protection at all.
 };
 
 const TEAM_SIZE = 8;

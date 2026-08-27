@@ -17,8 +17,13 @@ function syncTakingTheFieldUI(champion) {
 
   const tag = document.createElement("span");
   tag.className = "taking-the-field-tag";
-  tag.textContent = SpawnProtection.label;
   tag.title = `${champion.name} cannot act or be reached until next turn.`;
+
+  const lock = document.createElement("span");
+  lock.className = "taking-the-field-lock";
+  lock.textContent = "\u{1F512}";
+
+  tag.append(lock, SpawnProtection.label);
   champion.el.appendChild(tag);
 }
 

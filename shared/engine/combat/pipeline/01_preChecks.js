@@ -20,6 +20,7 @@ export function preChecks(event) {
     return _buildImmuneResult(
       event,
       SpawnProtection.unreachableMessage(event.defender),
+      { quiet: true },
     );
   }
 
@@ -170,7 +171,11 @@ function _rollEvasion({ attacker, defender, context, debugMode }) {
   };
 }
 
-function _buildImmuneResult(event, customMessage = null) {
+function _buildImmuneResult(
+  event,
+  customMessage = null,
+  { quiet = false } = {},
+) {
   // Usamos as propriedades que já existem na instância
   const targetName = formatChampionName(event.defender);
   const username = event.attacker ? formatChampionName(event.attacker) : null;
@@ -180,7 +185,7 @@ function _buildImmuneResult(event, customMessage = null) {
     target: event.defender,
     amount: 0,
     sourceId: event.attacker?.id ?? null,
-    flags: { immune: true, immuneMessage: customMessage },
+    flags: { immune: true, immuneMessage: customMessage, immuneQuiet: quiet },
   });
 
   const log = customMessage

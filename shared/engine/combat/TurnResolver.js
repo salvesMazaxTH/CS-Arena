@@ -1230,6 +1230,7 @@ export class TurnResolver {
           evaded: flags?.evaded,
           immune: !!flags?.immune,
           immuneMessage: flags?.immuneMessage ?? null,
+          immuneQuiet: !!flags?.immuneQuiet,
           shieldBlocked: !!flags?.shieldBlocked,
           finishing: hasFinishing,
           finishingType,

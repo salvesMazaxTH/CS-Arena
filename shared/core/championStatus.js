@@ -329,6 +329,8 @@ export function applyStatusEffect(
   }
 
   if (!validation.allowed) {
+    if (validation.quiet) return false;
+
     context.registerDialog({
       message:
         validation.message ??
@@ -374,6 +376,7 @@ function _canApplyStatusEffect(
     return {
       allowed: false,
       reason: "takingTheField",
+      quiet: true,
       message: SpawnProtection.unreachableMessage(champion),
     };
   }

@@ -30,6 +30,7 @@ import { championDB } from "/shared/data/championDB.js";
 import { DuoLayout, duoDB, getDuoForCore } from "/shared/data/duos.js";
 import { isChampionDraftable } from "/shared/data/draftEligibility.js";
 import { Champion } from "/shared/core/Champion.js";
+import { SpawnProtection } from "/shared/engine/combat/spawnProtection.js";
 import { StatusIndicator } from "../../shared/ui/statusIndicator.js";
 import { createCombatAnimationManager } from "./animation/animsAndLogManager.js";
 import { syncChampionVFX } from "../../shared/vfx/vfxManager.js";
@@ -2382,6 +2383,7 @@ function isChampionAutoSkippedInActionBar(champion) {
   if (!editMode.actMultipleTimesPerTurn && champion.hasActedThisTurn === true) {
     return true;
   }
+  if (SpawnProtection.isActive(champion)) return true;
   if (champion.actionBlockedByHardCC === true) return true;
   return champion.isActionBlockedByHardCC?.() === true;
 }

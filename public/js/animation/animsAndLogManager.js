@@ -854,6 +854,8 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   async function animateImmune(effect) {
+    if (effect.immuneQuiet) return;
+
     const { targetId, immuneMessage } = effect;
     const message = immuneMessage || `${championName(targetId)} is <b>Immune!</b>`;
     await showDialog(message);
