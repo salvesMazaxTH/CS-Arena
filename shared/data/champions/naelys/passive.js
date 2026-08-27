@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 export default {
   key: "heart_of_the_tides",
@@ -31,7 +32,11 @@ export default {
     owner.runtime.mareStacks = owner.runtime.mareStacks || 0;
 
     // Restore HP
-    const restored = owner.heal(this.healPerHit, context);
+    const restored = new HealEvent({
+      target: owner,
+      amount: this.healPerHit,
+      context,
+    }).execute();
 
     if (restored <= 0) return;
 

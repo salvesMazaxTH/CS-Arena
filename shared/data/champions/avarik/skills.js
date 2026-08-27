@@ -2,6 +2,7 @@ import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
 import totalBlock from "../totalBlock.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const GLUTTONS_TOLL_HOOK_KEY = "gluttons_toll_hook";
 
@@ -69,7 +70,7 @@ const avarikSkills = [
     resolve({ user, context = {} }) {
       const healAmount = (user.maxHP * this.healPercent) / 100;
 
-      user.heal(healAmount, context);
+      new HealEvent({ target: user, amount: healAmount, context }).execute();
 
       user.runtime ??= {};
       user.runtime.hookEffects ??= [];

@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../totalBlock.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const reyskaroneSkills = [
   // =========================
@@ -125,7 +126,12 @@ const reyskaroneSkills = [
             if (attacker.team !== user.team) return;
 
             // The attacker drinks from the brand.
-            attacker.heal(this.titheHeal, context, owner);
+            new HealEvent({
+              target: attacker,
+              amount: this.titheHeal,
+              context,
+              source: owner,
+            }).execute();
           },
         });
 

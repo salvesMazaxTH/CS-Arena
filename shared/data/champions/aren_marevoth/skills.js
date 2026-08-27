@@ -3,6 +3,7 @@ import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../totalBlock.js";
 import { applyTide, consumeTide, getTideStacks } from "./tide.js";
 import { getClaimPoints } from "../../../engine/combat/claim.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const arenMarevothSkills = [
   // ========================
@@ -130,7 +131,12 @@ const arenMarevothSkills = [
             );
 
             const healAmount = owner.maxHP * 0.1;
-            owner.heal(healAmount, context, owner);
+            new HealEvent({
+              target: owner,
+              amount: healAmount,
+              context,
+              source: owner,
+            }).execute();
 
             return {
               log: `${formatChampionName(owner)} restored ${Math.floor(healAmount)} HP and gained 1 additional Claim point from Blessing of the Ocean Depths.`,

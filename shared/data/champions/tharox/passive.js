@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 export default {
   key: "unyielding_mass",
@@ -42,7 +43,12 @@ export default {
       owner.maxHP * this.healingPerMaxHP * defenseMultipliers;
 
     if (healingAmount > 0) {
-      owner.heal(healingAmount, context, owner);
+      new HealEvent({
+        target: owner,
+        amount: healingAmount,
+        context,
+        source: owner,
+      }).execute();
     }
 
     const shieldAmount = owner.maxHP * this.shieldPercentage;

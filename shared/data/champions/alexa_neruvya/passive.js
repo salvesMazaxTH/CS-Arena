@@ -18,7 +18,7 @@ export default {
 
   hookScope: {
     onBeforeDmgDealing: "attacker",
-    onBeforeHealing: "source",
+    onBeforeHealing: "healSrc",
   },
 
   // Her Critical is reserved for mending, so damage criticals are unmade.
@@ -28,16 +28,16 @@ export default {
     return { crit: { ...crit, didCrit: false, bonus: 0, critExtra: 0 } };
   },
 
-  onBeforeHealing({ owner, target, amount, context }) {
+  onBeforeHealing({ owner, healTarget, amount, context }) {
     if (amount <= 0) return;
 
     const chance = Math.min(owner.Critical, MAX_CRIT_CHANCE);
     if (Math.random() * 100 >= chance) return;
 
     context.registerDialog({
-      message: `💧 The tide runs deep — ${formatChampionName(target)} is mended beyond measure!`,
+      message: `💧 The tide runs deep — ${formatChampionName(healTarget)} is mended beyond measure!`,
       sourceId: owner.id,
-      targetId: target.id,
+      targetId: healTarget.id,
     });
 
     // The sharpest ally takes the surge; ties fall to Attack, then to chance.

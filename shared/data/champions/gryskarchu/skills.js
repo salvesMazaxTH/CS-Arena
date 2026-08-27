@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../totalBlock.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const gryskarchuSkills = [
   // =========================
@@ -74,7 +75,12 @@ const gryskarchuSkills = [
         if (!target.alive) continue;
         if (target.team !== user.team) continue;
 
-        target.heal(this.healAmount, context, user);
+        new HealEvent({
+          target,
+          amount: this.healAmount,
+          context,
+          source: user,
+        }).execute();
         someoneHealed = true;
       }
 
@@ -114,7 +120,12 @@ const gryskarchuSkills = [
       const healAmount =
         ally.maxHP * (this.healPercent / 100);
 
-      ally.heal(healAmount, context, user);
+      new HealEvent({
+        target: ally,
+        amount: healAmount,
+        context,
+        source: user,
+      }).execute();
 
       ally.modifyStat({
         statName: "Defense",

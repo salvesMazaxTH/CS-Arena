@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../totalBlock.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const naelthosSkills = [
   // ========================
@@ -59,7 +60,12 @@ const naelthosSkills = [
 
       // 💧 Heal ally (if available)
       if (ally) {
-        ally.heal(healAmount, context, user);
+        new HealEvent({
+          target: ally,
+          amount: healAmount,
+          context,
+          source: user,
+        }).execute();
         const debuffStatusEffects = ally.getStatusEffects({ type: "debuff" });
 
         debuffStatusEffects.forEach((statusEffect) => {

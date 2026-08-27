@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../totalBlock.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const tharoxSkills = [
   // ========================
@@ -204,7 +205,12 @@ const tharoxSkills = [
       const proportionalHeal = Math.max(0, user.Defense - user.baseDefense);
 
       if (proportionalHeal > 0) {
-        user.heal(proportionalHeal, context, user);
+        new HealEvent({
+          target: user,
+          amount: proportionalHeal,
+          context,
+          source: user,
+        }).execute();
       }
 
       // SupremeShield.
@@ -279,7 +285,12 @@ const tharoxSkills = [
             (healingUponShieldBreakPercent / 100);
 
           if (healingAmount > 0) {
-            defender.heal(healingAmount, context, defender);
+            new HealEvent({
+              target: defender,
+              amount: healingAmount,
+              context,
+              source: defender,
+            }).execute();
           }
 
           defender.runtime.hookEffects = defender.runtime.hookEffects.filter(
@@ -307,7 +318,12 @@ const tharoxSkills = [
               defBonusWhileShielded * (healingUponShieldBreakPercent / 100);
 
             if (healingAmount > 0) {
-              owner.heal(healingAmount, context, owner);
+              new HealEvent({
+                target: owner,
+                amount: healingAmount,
+                context,
+                source: owner,
+              }).execute();
             }
           }
 

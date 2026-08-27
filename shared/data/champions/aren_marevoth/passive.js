@@ -1,3 +1,4 @@
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 // shared/champions/aren_marevoth/passive.js
 
 import { formatChampionName } from "../../../ui/formatters.js";
@@ -51,7 +52,12 @@ export default {
 
       const healingAmount = owner.maxHP * this.healPercent;
 
-      owner.heal(healingAmount, context, owner);
+      new HealEvent({
+        target: owner,
+        amount: healingAmount,
+        context,
+        source: owner,
+      }).execute();
 
       owner.runtime.deepTransfigurationNextAttackBonus = true;
 

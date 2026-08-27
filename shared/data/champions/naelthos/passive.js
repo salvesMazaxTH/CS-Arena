@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 export default {
   key: "returning_sea",
@@ -29,7 +30,7 @@ export default {
 
     if (heal <= 0) return;
 
-    owner.heal(heal, context);
+    new HealEvent({ target: owner, amount: heal, context }).execute();
 
     const ownerName = formatChampionName(owner);
     return {

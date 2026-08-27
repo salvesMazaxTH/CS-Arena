@@ -1,5 +1,4 @@
 import { formatChampionName } from "../ui/formatters.js";
-import { emitCombatEvent } from "../engine/combat/combatEvents.js";
 
 export function roundToFive(x) {
   return Math.round(x / 5) * 5;
@@ -530,81 +529,18 @@ export function takeDamage(champion, amount, context) {
   }
 }
 
-/** Heal the champion, running onBeforeHealing hooks; returns the amount actually healed. */
-export function heal(
-  champion,
-  amount,
-  context,
-  source = champion,
-  options = {},
-) {
+/** Restore HP up to maxHP; returns the amount actually restored. */
+export function heal(champion, amount) {
   if (!champion.alive) return 0;
-
-  const ctx = context || champion.runtime?.currentContext;
-
-  const payload = {
-    source,
-    target: champion,
-    amount,
-
-    context: ctx,
-
-    healType: options?.type || "normal",
-    isLifesteal: options?.type === "lifesteal",
-
-    fromTargetId: options?.fromTargetId ?? null,
-  };
-
-  // Normalize the initial value before hooks run.
-  if (payload.amount > 0) {
-    payload.amount = Math.max(Math.floor(payload.amount), 1);
-  }
-
-  // Let hooks modify the heal before it lands.
-  const beforeResults =
-    emitCombatEvent("onBeforeHealing", payload, ctx?.allChampions) || [];
-
-  // Every hook reads the same payload snapshot, so their results compose as
-  // ratios against it — a "last one wins" overwrite would drop all the others.
-  const requestedAmount = payload.amount;
-  let healRatio = 1;
-
-  for (const result of beforeResults) {
-    if (typeof result?.amount !== "number" || requestedAmount <= 0) continue;
-
-    healRatio *= result.amount / requestedAmount;
-  }
-
-  payload.amount = Math.max(0, Math.round(requestedAmount * healRatio));
-
-  amount = payload.amount;
 
   const before = champion.HP;
 
-  champion.HP = Math.min(champion.HP + amount, champion.maxHP);
+  champion.HP = Math.min(
+    champion.HP + Math.max(0, Math.floor(amount)),
+    champion.maxHP,
+  );
 
-  const healed = Math.max(0, champion.HP - before);
-
-  if (healed <= 0) return 0;
-
-  const isLifesteal = options?.type === "lifesteal";
-
-  if (isLifesteal && ctx?.registerLifesteal) {
-    ctx.registerLifesteal({
-      target: champion,
-      amount: healed,
-      sourceId: source?.id,
-      fromTargetId: options?.fromTargetId ?? null,
-    });
-  } else if (ctx?.registerHeal) {
-    ctx.registerHeal({
-      target: champion,
-      amount: healed,
-      sourceId: source?.id,
-    });
-  }
-
-  return healed;
+  return Math.max(0, champion.HP - before);
 }
 
 /** Drop expired stat modifiers, recompute affected stats from base; returns reverted stats. */

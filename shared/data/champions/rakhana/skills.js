@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../totalBlock.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const rakhanaSkills = [
   // =========================
@@ -67,7 +68,12 @@ const rakhanaSkills = [
       if (hadShield) {
         user.runtime.shields.splice(0, 1);
 
-        user.heal(value, context, user);
+        new HealEvent({
+          target: user,
+          amount: value,
+          context,
+          source: user,
+        }).execute();
 
         enemy.applyStatusEffect(
           "stunned",

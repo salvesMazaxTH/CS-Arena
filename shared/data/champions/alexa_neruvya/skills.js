@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicShot from "../basicShot.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const alexaNeruvyaSkills = [
   // ========================
@@ -29,7 +30,12 @@ const alexaNeruvyaSkills = [
     resolve({ user, targets, context }) {
       const [ally] = targets;
 
-      const restored = ally.heal(this.healAmount, context, user);
+      const restored = new HealEvent({
+        target: ally,
+        amount: this.healAmount,
+        context,
+        source: user,
+      }).execute();
 
       const userName = formatChampionName(user);
       const allyName = formatChampionName(ally);
@@ -60,7 +66,12 @@ const alexaNeruvyaSkills = [
     resolve({ user, targets, context }) {
       const [ally] = targets;
 
-      const restored = ally.heal(this.healAmount, context, user);
+      const restored = new HealEvent({
+        target: ally,
+        amount: this.healAmount,
+        context,
+        source: user,
+      }).execute();
 
       const debuffs = ally.getStatusEffects({ type: "debuff" });
       debuffs.forEach((statusEffect) =>
@@ -141,7 +152,12 @@ const alexaNeruvyaSkills = [
         );
 
         allies.forEach((ally) => {
-          const restored = ally.heal(healAmount, context, user);
+          const restored = new HealEvent({
+            target: ally,
+            amount: healAmount,
+            context,
+            source: user,
+          }).execute();
           results.push({
             log: `The tide rolls back and restores ${restored} HP to ${formatChampionName(ally)}.`,
           });

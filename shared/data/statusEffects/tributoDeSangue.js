@@ -1,3 +1,4 @@
+import { HealEvent } from "../../engine/combat/HealEvent.js";
 const tributoDeSangue = {
   key: "tributo",
   name: "Tributo de Sangue",
@@ -29,7 +30,7 @@ const tributoDeSangue = {
 
     const heal = 15;
 
-    attacker.heal(heal, context);
+    new HealEvent({ target: attacker, amount: heal, context }).execute();
 
     return {
       log: `🩸 Tributo: ${attacker.name} recuperou ${heal} HP.`,

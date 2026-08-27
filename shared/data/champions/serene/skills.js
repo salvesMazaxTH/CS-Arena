@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicShot from "../basicShot.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const sereneSkills = [
   // ========================
@@ -234,7 +235,11 @@ const sereneSkills = [
                 const heal = Math.floor(
                   owner.maxHP * (reviveHealPercent / 100),
                 );
-                const applied = owner.heal(heal, context);
+                const applied = new HealEvent({
+                  target: owner,
+                  amount: heal,
+                  context,
+                }).execute();
                 if (applied <= 0) return;
 
                 context.registerDialog({

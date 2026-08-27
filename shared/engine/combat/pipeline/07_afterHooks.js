@@ -1,4 +1,5 @@
 import { emitCombatEvent } from "../combatEvents.js";
+import { HealEvent } from "../HealEvent.js";
 
 export function runAfterHooks(event) {
   // 1. Executa hooks de passivas
@@ -48,12 +49,14 @@ function _applyLifeSteal(event) {
   const rawHeal = (event.actualDmg * lsRate) / 100;
 
   // 3. Aplica a cura (heal() garante floor e mínimo de 1)
-  const effectiveHeal = event.attacker.heal(
-    rawHeal,
-    event.context,
-    event.attacker,
-    { type: "lifesteal", fromTargetId: event.defender?.id ?? null },
-  );
+  const effectiveHeal = new HealEvent({
+    target: event.attacker,
+    amount: rawHeal,
+    context: event.context,
+    source: event.attacker,
+    type: "lifesteal",
+    fromTargetId: event.defender?.id ?? null,
+  }).execute();
 
   if (effectiveHeal <= 0) {
     if (event.constructor.debugMode) console.groupEnd();

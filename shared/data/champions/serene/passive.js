@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 export default {
   key: "grace_of_the_quietude",
@@ -37,7 +38,11 @@ export default {
     if (heal <= 0 || owner.HP >= owner.maxHP) return;
 
     const before = owner.HP;
-    const applied = owner.heal(heal, context);
+    const applied = new HealEvent({
+      target: owner,
+      amount: heal,
+      context,
+    }).execute();
 
     return {
       log: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} restores ${applied} HP (${before} → ${owner.HP}).`,
