@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../totalBlock.js";
 
 const akaneSkills = [
@@ -63,7 +64,9 @@ const akaneSkills = [
         statModifierSrc: user,
       });
 
-      return null;
+      return {
+        log: `${formatChampionName(user)} bathes in blood, gaining +${this.lifeStealBuff}% Life Steal for ${this.buffDuration} turn(s).`,
+      };
     },
   },
 

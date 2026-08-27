@@ -128,7 +128,7 @@ const jeffTheDeathSkills = [
       // Mark the enemy.
       enemy.runtime.markedByDeathsEmbrace = true;
 
-      const punishDamage = enemy.HP * this.punishPercent;
+      const punishPercent = this.punishPercent;
       const rewardAttack = this.rewardAttack;
 
       enemy.runtime.hookEffects ??= [];
@@ -141,11 +141,13 @@ const jeffTheDeathSkills = [
         onTurnStart({ owner, context }) {
           if (!owner.runtime.markedByDeathsEmbrace) return;
 
-          if (this.expiresAtTurn < context.currentTurn) {
+          // The purge drops this hook right after its last tick, so the mark
+          // has to clear itself here or its VFX would never come off.
+          if (this.expiresAtTurn <= context.currentTurn) {
             owner.runtime.markedByDeathsEmbrace = false;
-            return;
           }
 
+          const punishDamage = owner.HP * punishPercent;
           const dotContext = { ...context, isDot: true };
 
           const result = new DamageEvent({
@@ -258,6 +260,7 @@ const jeffTheDeathSkills = [
         key: "death_claim_execution",
         group: "deathClaim",
         triggerTurn,
+        expiresAtTurn: triggerTurn + 1,
 
         priority: -999,
 
@@ -277,21 +280,29 @@ const jeffTheDeathSkills = [
           // Check only once, at the start of the following turn.
           if (context.currentTurn !== this.triggerTurn) return;
 
-          if (owner.HP / owner.maxHP <= threshold) {
-            owner.runtime.deathClaimTriggered = true;
+          if (owner.HP / owner.maxHP > threshold) return;
 
-            owner.HP = 0;
-            owner.alive = false;
+          owner.runtime.deathClaimTriggered = true;
 
-            // Clear immediately upon execution.
-            owner.runtime.markedByDeathsInevitability = false;
+          owner.HP = 0;
+          owner.alive = false;
 
-            owner.runtime.hookEffects =
-              owner.runtime.hookEffects.filter(
-                (effect) =>
-                  effect.key !== "death_claim_execution",
-              );
-          }
+          // Clear immediately upon execution.
+          owner.runtime.markedByDeathsInevitability = false;
+
+          owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
+            (effect) => effect.key !== "death_claim_execution",
+          );
+
+          context.registerDialog({
+            message: `Death claims ${formatChampionName(owner)}!`,
+            sourceId: owner.id,
+            targetId: owner.id,
+          });
+
+          return {
+            log: `<b>Death's Inevitability</b> claims ${formatChampionName(owner)}.`,
+          };
         },
 
         onTurnEnd({ owner, context }) {
@@ -303,22 +314,11 @@ const jeffTheDeathSkills = [
         },
       };
 
-      console.log(
-        `[JEFF][DEATH'S INEVITABILITY] Execution hook scheduled for ${formatChampionName(
-          enemy,
-        )}. Hook:`,
-        hook,
-      );
-
       enemy.runtime.hookEffects ??= [];
-      enemy.runtime.hookEffects.push(hook);
-
-      console.log(
-        `[JEFF][DEATH'S INEVITABILITY] Hook registered. Current hookEffects for ${formatChampionName(
-          enemy,
-        )}:`,
-        enemy.runtime.hookEffects,
+      enemy.runtime.hookEffects = enemy.runtime.hookEffects.filter(
+        (effect) => effect.key !== "death_claim_execution",
       );
+      enemy.runtime.hookEffects.push(hook);
 
       return damageResult;
     },

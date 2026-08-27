@@ -12,7 +12,7 @@ export default {
 
     Her critical hits deal only +${this.critBonus}% damage, but ignore ${this.piercingRatio * 100}% of the target's defense.
     
-    Against targets with less than ${this.minDefense} Defense, her hits do not ignore Defense and deal only ${this.lowDefenseDamageRatio * 100}% of the damage.`;
+    Against targets with less than ${this.minDefense} Defense, her hits do not ignore Defense and deal only ${Math.round(this.lowDefenseDamageRatio * 100)}% of the damage.`;
   },
 
   hookScope: {
@@ -23,7 +23,6 @@ export default {
     const newCrit = {
       ...(crit ?? {}),
       didCrit: true,
-      chance: 100,
       bonus: this.critBonus,
     };
 
