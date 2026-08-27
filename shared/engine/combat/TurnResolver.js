@@ -232,12 +232,21 @@ export class TurnResolver {
   //  DEATH PROCESSING
   // ============================================================
 
+  // Re-swept until stable, because a death hook may kill someone the pass
+  // already walked over — the sisters' shared bond does exactly that.
   processChampionDeaths(context = null) {
     const results = [];
-    for (const champ of this.combat.activeChampions.values()) {
-      if (!champ.alive) {
+    let removedAny = true;
+
+    while (removedAny) {
+      removedAny = false;
+
+      for (const champ of this.combat.activeChampions.values()) {
+        if (champ.alive) continue;
+
         const result = this.match.removeChampionFromGame(champ.id);
         if (result) results.push(result);
+        removedAny = true;
 
         if (context) {
           // The dead champion is already out of activeChampions, so it is
@@ -252,6 +261,7 @@ export class TurnResolver {
         }
       }
     }
+
     return results;
   }
 
@@ -278,7 +288,7 @@ export class TurnResolver {
     }
 
     // 2. valida ação (hooks)
-    const denial = this.canExecuteAction(user, action);
+    const denial = this.canExecuteAction(user, action, context);
     if (denial?.denied) {
       context.registerDialog({
         message: denial.message || `${formatChampionName(user)} não pode agir.`,
@@ -533,7 +543,7 @@ export class TurnResolver {
   //  VALIDAÇÃO DE AÇÃO (hooks podem negar)
   // ============================================================
 
-  canExecuteAction(user, action) {
+  canExecuteAction(user, action, context = null) {
     if (!user || !user.alive) return { denied: true };
 
     const takingTheField = SpawnProtection.actionDenial(user);
@@ -577,6 +587,7 @@ export class TurnResolver {
         actionSource: user,
         skill: action?.skill,
         target: mainTarget,
+        context,
       },
       this.combat.activeChampions,
       {
@@ -1172,6 +1183,10 @@ export class TurnResolver {
 
       getAdjacentChampions(target, { side } = {}) {
         return combat.getAdjacentChampions(target, { side });
+      },
+
+      getChampionAtSlot(team, slot) {
+        return combat.getChampionAtSlot(team, slot);
       },
 
       // nextEventIndex() {
