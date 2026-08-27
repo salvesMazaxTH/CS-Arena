@@ -4,7 +4,7 @@ import {
   CLAIM_ACTION_KEY,
   getClaimPoints,
 } from "../../../engine/combat/claim.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
 
 const MISERS_TOLL_HOOK_KEY = "misers_toll_hook";
 

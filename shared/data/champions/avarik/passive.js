@@ -8,7 +8,7 @@ import {
   isEdictInForce,
   isHollow,
   isIndirectDamage,
-} from "../edict.js";
+} from "../pairs/edict.js";
 
 export default {
   key: "edict_of_hollow_flesh",

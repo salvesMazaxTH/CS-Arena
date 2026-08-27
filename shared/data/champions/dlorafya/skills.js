@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
 
 // Every Burning D'Lorafya inflicts ticks for this multiple of a normal Burn.
 export const DLORAFYA_BURN_DAMAGE_MULTIPLIER = 2;

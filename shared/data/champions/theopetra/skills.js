@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
 
 const theopetraSkills = [
   // ========================

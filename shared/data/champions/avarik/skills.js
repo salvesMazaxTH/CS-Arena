@@ -1,7 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const GLUTTONS_TOLL_HOOK_KEY = "gluttons_toll_hook";

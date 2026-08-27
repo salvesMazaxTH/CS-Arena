@@ -1,5 +1,5 @@
 // Centralized Total Block (global)
-import { formatChampionName } from "../../ui/formatters.js";
+import { formatChampionName } from "../../../ui/formatters.js";
 
 const totalBlock = {
   key: "total_block",

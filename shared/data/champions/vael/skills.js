@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { getClaimPoints } from "../../../engine/combat/claim.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
 
 const vaelSkills = [
   // ========================

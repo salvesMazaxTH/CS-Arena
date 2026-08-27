@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
 import { applyTide, consumeTide, getTideStacks } from "./tide.js";
 import { getClaimPoints } from "../../../engine/combat/claim.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";

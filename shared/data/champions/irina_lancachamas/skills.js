@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
 
 // Pushes the flamethrower's self-inflicted overheat recoil onto the extra
 // damage queue. Always fires on the skills that use it — the gun overheats

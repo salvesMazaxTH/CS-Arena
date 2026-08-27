@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import basicStrike from "../basicStrike.js";
+import basicStrike from "../generic/basicStrike.js";
 import kindledFists from "./passive.js";
 
 const kaiSkills = [

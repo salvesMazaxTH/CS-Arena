@@ -1,5 +1,5 @@
 // Centralized Basic Strike (global melee)
-import { DamageEvent } from "../../engine/combat/DamageEvent.js";
+import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 
 const basicStrike = {
   key: "basic_strike",
