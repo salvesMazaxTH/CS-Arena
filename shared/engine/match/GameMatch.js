@@ -1,5 +1,6 @@
 import { getClaimMaxPoints } from "../combat/claim.js";
 import { championDB } from "../../data/championDB.js";
+import { getDuoForCore } from "../../data/duos.js";
 import { Champion } from "../../core/Champion.js";
 import { generateId } from "../../utils/id.js";
 import { emitCombatEvent } from "../combat/combatEvents.js";
@@ -290,14 +291,18 @@ class CombatState {
    * slots and have no cap of their own, so a team already fielding three
    * minions can still summon three champions.
    */
-  canSpawnOnTeam(team, maxPerTeam = 3, { entityType = "champion" } = {}) {
+  canSpawnOnTeam(
+    team,
+    maxPerTeam = 3,
+    { entityType = "champion", requiredSlots = 1 } = {},
+  ) {
     if (entityType === "minion") return true;
 
     const championsOnField = this.getTeamChampions(team, {
       alive: true,
     }).filter((champion) => champion.entityType !== "minion");
 
-    return championsOnField.length < maxPerTeam;
+    return championsOnField.length + requiredSlots <= maxPerTeam;
   }
 
   /**
@@ -1031,19 +1036,24 @@ export class GameMatch {
       const team = this.getPlayerTeam(socketId);
       choices.push({ championKey, team });
 
-      // Spawna o campeão escolhido usando a função injetada
-      spawnChampionFn({
-        championKey,
-        team,
-        combatSlot: 0, // Ambos começam no slot 0
-        trackSnapshot: true,
-        spawnProtection: false,
+      // Picking one half of a duo brings its whole line-up in.
+      const entering = getDuoForCore(championKey)?.cores ?? [championKey];
+
+      entering.forEach((key, offset) => {
+        spawnChampionFn({
+          championKey: key,
+          team,
+          combatSlot: offset,
+          trackSnapshot: true,
+          spawnProtection: false,
+        });
       });
 
-      // Remove o campeão da fila de reserva
       const reserve = this.combat.reserveQueues.get(team) || [];
-      const newReserve = reserve.filter((key) => key !== championKey);
-      this.combat.reserveQueues.set(team, newReserve);
+      this.combat.reserveQueues.set(
+        team,
+        reserve.filter((key) => !entering.includes(key)),
+      );
     });
 
     return { choices };

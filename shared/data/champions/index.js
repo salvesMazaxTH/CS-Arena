@@ -10,9 +10,8 @@ import gryskarchu from "./gryskarchu/index.js";
 import node_sparckina_07 from "./node_sparckina_07/index.js";
 import kai from "./kai/index.js";
 import barao_estrondoso from "./barao_estrondoso/index.js";
-/* import laisaelis from "./laisaelis/index.js";
+import laisaelis from "./laisaelis/index.js";
 import laiserisa from "./laiserisa/index.js";
-import laisaelis_laiserisa from "./laisaelis_laiserisa/index.js"; */
 import blyskartri from "./blyskartri/index.js";
 import elias_cross from "./elias_cross/index.js";
 import nythera from "./nythera/index.js";
@@ -59,9 +58,8 @@ const championDB = {
   gryskarchu,
   node_sparckina_07,
   kai,
-  /* laisaelis,
+  laisaelis,
   laiserisa,
-  laisaelis_laiserisa, */
   barao_estrondoso,
   blyskartri,
   elias_cross,

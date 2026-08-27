@@ -1,6 +1,8 @@
 export default {
-  name: "passive",
-  trigger: "always",
-  effect: "buff",
-  description: "none",
+  key: "laiserisa_passive",
+  name: "Laiserisa Passive",
+
+  description() {
+    return `Not written yet.`;
+  },
 };

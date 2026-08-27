@@ -27,6 +27,8 @@ import { GameMatch } from "../shared/engine/match/GameMatch.js";
 import { Player } from "../shared/engine/match/Player.js";
 
 import { championDB } from "../shared/data/championDB.js";
+import { findBrokenDuo, getDuoForCore } from "../shared/data/duos.js";
+import { isChampionDraftable } from "../shared/data/draftEligibility.js";
 import { Champion } from "../shared/core/Champion.js";
 import { formatChampionName } from "../shared/ui/formatters.js";
 
@@ -112,6 +114,11 @@ let waitingForAnimations = false;
  * Mirrors the rules enforced by the "summonFromLineup" handler so the client can
  * remind the player about an unused summon without re-deriving them and drifting.
  */
+/** The champions that actually arrive when `championKey` is summoned. */
+function resolveSummonGroup(championKey) {
+  return getDuoForCore(championKey)?.cores ?? [championKey];
+}
+
 function getLineupSummonAvailability(team) {
   if (
     !editMode.unrestrictedSummon &&
@@ -126,8 +133,12 @@ function getLineupSummonAvailability(team) {
     const baseData = championDB[championKey];
     if (!baseData) return false;
 
+    const entering = resolveSummonGroup(championKey);
+    if (!entering.every((key) => reserve.includes(key))) return false;
+
     return match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM, {
       entityType: baseData.entityType ?? "champion",
+      requiredSlots: entering.length,
     });
   });
 
@@ -227,23 +238,11 @@ function broadcastGameState(extraChampions = []) {
 //  CHAMPION MANAGEMENT
 // ============================================================
 
-/** Whether a champion may be picked during draft (released, enabled, not a minion). */
-function isChampionSelectableInDraft(championData) {
-  if (!championData) return false;
-  if ((championData.entityType ?? "champion") !== "champion") return false;
-  if (championData.selectable === false) return false;
-  if (championData.unreleased === true && !editMode.unavailableChampions)
-    return false;
-  if (championData.disabled === true && !editMode.unavailableChampions)
-    return false;
-
-  return true;
-}
-
 function getRandomChampionKey(excludeKeys = []) {
   const availableKeys = Object.keys(championDB).filter((key) => {
     if (excludeKeys.includes(key)) return false;
-    return isChampionSelectableInDraft(championDB[key]);
+    if (championDB[key].hiddenFromDraftGrid === true) return false;
+    return isChampionDraftable(championDB[key], editMode);
   });
   if (availableKeys.length === 0) return null;
   return availableKeys[Math.floor(Math.random() * availableKeys.length)];
@@ -1274,13 +1273,22 @@ io.on("connection", (socket) => {
       }
 
       // Server-authoritative validation: reject invalid keys.
-      const invalidKey = selectedChampionKeys.find((key) => {
-        const data = championDB[key];
-        return !isChampionSelectableInDraft(data);
-      });
+      const invalidKey = selectedChampionKeys.find(
+        (key) => !isChampionDraftable(championDB[key], editMode),
+      );
 
       if (invalidKey) {
         socket.emit("actionFailed", `Invalid champion in selection: ${invalidKey}`);
+        return;
+      }
+
+      const brokenDuo = findBrokenDuo(selectedChampionKeys);
+
+      if (brokenDuo) {
+        socket.emit(
+          "actionFailed",
+          `${brokenDuo.name} can only be taken together, never one without the other.`,
+        );
         return;
       }
 
@@ -1342,7 +1350,9 @@ io.on("connection", (socket) => {
     }
 
     const reserve = match.combat.reserveQueues.get(team) || [];
-    if (!championKey || !reserve.includes(championKey)) {
+    const entering = championKey ? resolveSummonGroup(championKey) : [];
+
+    if (!entering.length || !entering.every((key) => reserve.includes(key))) {
       return socket.emit(
         "actionFailed",
         "That champion is not available to be summoned.",
@@ -1350,49 +1360,57 @@ io.on("connection", (socket) => {
     }
 
     // The field cap counts champions only — minions are always allowed in.
-    const summonEntityType = championDB[championKey]?.entityType ?? "champion";
+    const summonEntityType = championDB[championKey].entityType ?? "champion";
 
     if (
       !match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM, {
         entityType: summonEntityType,
+        requiredSlots: entering.length,
       })
     ) {
       return socket.emit(
         "actionFailed",
-        "There is no free space on the battlefield to summon more champions.",
+        entering.length > 1
+          ? `${getDuoForCore(championKey).name} enter together and need ${entering.length} free spaces on the battlefield.`
+          : "There is no free space on the battlefield to summon more champions.",
       );
     }
 
-    const spawned = spawnChampion({
-      championKey,
-      team,
-      trackSnapshot: true,
-      emitState: false,
-      spawnProtection: !editMode.summonWithoutSpawnProtection,
-    });
-    if (!spawned) {
+    const spawnedGroup = entering.map((key) =>
+      spawnChampion({
+        championKey: key,
+        team,
+        trackSnapshot: true,
+        emitState: false,
+        spawnProtection: !editMode.summonWithoutSpawnProtection,
+      }),
+    );
+
+    if (spawnedGroup.some((spawned) => !spawned)) {
       return socket.emit("actionFailed", "This champion could not be summoned.");
     }
 
     match.combat.reserveQueues.set(
       team,
-      reserve.filter((key) => key !== championKey),
+      reserve.filter((key) => !entering.includes(key)),
     );
     match.markSummonedThisTurn(team);
 
     // The opponent is still choosing actions, so this reinforcement stays hidden
     // from them until the turn locks and resolution begins.
-    concealedSummonIds.add(spawned.id);
+    spawnedGroup.forEach((spawned) => concealedSummonIds.add(spawned.id));
 
     // Emitted only after the bookkeeping above, so the payload's summon
     // availability already reflects this summon.
     broadcastGameState();
 
-    match.logTurnEvent("championSummoned", {
-      championId: spawned.id,
-      championKey,
-      team,
-    });
+    spawnedGroup.forEach((spawned) =>
+      match.logTurnEvent("championSummoned", {
+        championId: spawned.id,
+        championKey: spawned.championKey,
+        team,
+      }),
+    );
   });
 
   socket.on("requestSkillUse", ({ userId, skillKey, targetId }) => {
