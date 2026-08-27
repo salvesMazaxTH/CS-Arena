@@ -24,8 +24,8 @@ export default {
     Stored Damage: <b>${stored > 0 ? stored : 0}</b>
 
     Reactor Overload:
-    The core never vents what it has just unleashed. Whenever the Barão uses a skill, he becomes Stunned on the following turn.
-    His Basic Attack and his CLAIM demand nothing from the reactor, and never leave him Stunned.
+    The core never vents what it has just unleashed. Whenever the Barão uses a skill, he is left Inert on the following turn.
+    His Basic Attack and his CLAIM demand nothing from the reactor, and never leave him Inert.
 
     Final Blast:
     When the Barão uses his Ultimate, he deals bonus damage equal to his total Stored Damage and resets it to 0.`;
@@ -73,10 +73,10 @@ export default {
   // Actions that never overload the reactor: the Basic Attack and the CLAIM.
   overloadExemptSkillKeys: ["basic_strike", CLAIM_ACTION_KEY],
 
-  // 🔴 After using any ability (except Basic Attack and CLAIM), becomes Stunned on the
-  // NEXT turn. The Stun must not be applied here: actions resolve at the end of
-  // the turn, so a Stun applied on the spot would either be wasted (this turn's
-  // action is already resolved) or linger into the turn after it. Instead it is
+  // 🔴 After using any ability (except Basic Attack and CLAIM), is left Inert on the
+  // NEXT turn. It must not be applied here: actions resolve at the end of
+  // the turn, so applying it on the spot would either waste it (this turn's
+  // action is already resolved) or let it linger into the turn after. Instead it is
   // scheduled for the next turn, where handleStartTurn applies it with a
   // duration of 1 — long enough to deny that turn's action, gone by the
   // following start-of-turn purge.
@@ -105,14 +105,14 @@ export default {
       turnToHappen,
       payload: {
         targetId: owner.id,
-        statusEffectKey: "stunned",
+        statusEffectKey: "inert",
         duration: 1,
-        dialog: `${formatChampionName(owner)} is <b>Stunned</b> by the <b>Reactor Overload</b>!`,
+        dialog: `${formatChampionName(owner)} is left <b>Inert</b> by the <b>Reactor Overload</b>!`,
       },
     });
 
     return {
-      log: `${formatChampionName(owner)} suffered <b>Reactor Overload</b> and will become <b>Stunned</b> next turn!`,
+      log: `${formatChampionName(owner)} suffered <b>Reactor Overload</b> and will be left <b>Inert</b> next turn!`,
     };
   },
 };
