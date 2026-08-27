@@ -21,7 +21,6 @@ const laisaelisSkills = [
     echoDuration: 3,
 
     contact: false,
-    momentumCost: 55,
     priority: 2,
 
     description() {
@@ -80,8 +79,8 @@ const laisaelisSkills = [
               });
             }
 
-            echo.runtime.hookEffects ??= [];
-            echo.runtime.hookEffects.push({
+            echo.addHookEffect({
+              type: "buff",
               key: "manifest_fade",
               group: "skill",
               ownerId: echo.id,
@@ -98,13 +97,44 @@ const laisaelisSkills = [
                   targetId: owner.id,
                 });
               },
-            });
+            }, context);
           },
         },
       });
 
       return {
         log: `${formatChampionName(user)} looks at ${formatChampionName(source)} and answers that there could be more of it.`,
+      };
+    },
+  },
+
+  // ========================
+  // That Will Not Reach You
+  // ========================
+  {
+    key: "that_will_not_reach_you",
+    name: "That Will Not Reach You",
+
+    wardDuration: 2,
+
+    contact: false,
+    priority: 3,
+
+    description() {
+      return `Laisaelis steps between an ally and the next thing meant to diminish them. For ${this.wardDuration} turn(s) the chosen ally — herself or her sister included — carries <b>Debuff Immunity</b>: the first negative effect that would take hold never does, and the ward is spent turning it away. It stops nothing that merely deals damage.`;
+    },
+
+    targetSpec: ["select:ally"],
+
+    resolve({ user, targets, context }) {
+      const ally = targets.ally ?? user;
+
+      ally.applyStatusEffect("debuffImmunity", this.wardDuration, context, {
+        sourceId: user.id,
+      });
+
+      return {
+        log: `${formatChampionName(user)} stands between ${formatChampionName(ally)} and whatever comes next.`,
       };
     },
   },
@@ -150,38 +180,42 @@ const laisaelisSkills = [
       const survivalHP = this.survivalHP;
       const skillName = this.name;
 
-      twin.runtime.hookEffects.push({
-        key: "keep_you_here",
-        group: "skill",
-        ownerId: user.id,
-        expiresAtTurn: context.currentTurn + this.auraDuration,
+      twin.addHookEffect(
+        {
+          type: "buff",
+          key: "keep_you_here",
+          group: "skill",
+          ownerId: user.id,
+          expiresAtTurn: context.currentTurn + this.auraDuration,
 
-        hookScope: {
-          onBeforeDmgTaking: "defender",
+          hookScope: {
+            onBeforeDmgTaking: "defender",
+          },
+
+          hookPolicies: {
+            onBeforeDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
+          },
+
+          onBeforeDmgTaking({ defender, owner, damage, context }) {
+            if (defender !== owner) return;
+            if (owner.HP - damage > 0) return;
+
+            owner.runtime.preventFinishingUntilTurn = context.currentTurn + 1;
+
+            context.registerDialog({
+              message: `<b>${skillName}</b> — ${formatChampionName(owner)} is held here, and the ending does not take.`,
+              sourceId: owner.id,
+              targetId: owner.id,
+            });
+
+            return {
+              damage: Math.max(owner.HP - survivalHP, 0),
+              log: `${formatChampionName(owner)} is kept on the field with ${survivalHP} HP.`,
+            };
+          },
         },
-
-        hookPolicies: {
-          onBeforeDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
-        },
-
-        onBeforeDmgTaking({ defender, owner, damage, context }) {
-          if (defender !== owner) return;
-          if (owner.HP - damage > 0) return;
-
-          owner.runtime.preventFinishingUntilTurn = context.currentTurn + 1;
-
-          context.registerDialog({
-            message: `<b>${skillName}</b> — ${formatChampionName(owner)} is held here, and the ending does not take.`,
-            sourceId: owner.id,
-            targetId: owner.id,
-          });
-
-          return {
-            damage: Math.max(owner.HP - survivalHP, 0),
-            log: `${formatChampionName(owner)} is kept on the field with ${survivalHP} HP.`,
-          };
-        },
-      });
+        context,
+      );
 
       return {
         log: `${formatChampionName(user)} anchors ${formatChampionName(twin)} to the field: she is not going anywhere.`,
