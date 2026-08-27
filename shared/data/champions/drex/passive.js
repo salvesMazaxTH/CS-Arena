@@ -27,7 +27,7 @@ export default {
   hookScope: {
     onBeforeDmgDealing: "attacker",
     onBuffingStat: "buffTarget",
-    onAfterHealing: undefined,
+    onBeforeHealing: undefined,
   },
 
   hookPolicies: {
@@ -75,7 +75,7 @@ export default {
       context,
       isPermanent: true,
       ignoreMinimum: true,
-      statModifierSrc: defender,
+      statModifierSrc: owner,
     });
 
     if (!result?.appliedAmount) return;

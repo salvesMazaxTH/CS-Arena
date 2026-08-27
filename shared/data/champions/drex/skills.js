@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../basicStrike.js";
+import { BLEEDING_DAMAGE_PER_STACK_RATIO } from "../../statusEffects/bleeding.js";
 
 const drexSkills = [
   basicStrike,
@@ -106,7 +107,9 @@ const drexSkills = [
         const existingStacks =
           Number(enemy.getStatusEffect("bleeding")?.stacks) || 0;
 
-        const tickDamage = Math.floor(enemy.maxHP * 0.05);
+        const tickDamage = Math.floor(
+          enemy.maxHP * BLEEDING_DAMAGE_PER_STACK_RATIO,
+        );
 
         // Existing Bleeding stacks trigger immediate damage.
         for (let index = 0; index < existingStacks; index += 1) {
@@ -160,6 +163,7 @@ const drexSkills = [
     damagePerBleedStack: 18,
 
     minimumBleedStacks: 5,
+    stacksApplied: 2,
     shieldFromTargetMaxHpRatio: 0.245,
     shieldDecayTurns: 3,
 
@@ -171,7 +175,7 @@ const drexSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Deals moderate-high damage to the chosen target. Deals +${this.damagePerBleedStack}% bonus damage for each Bleeding stack on the target. If the target has fewer than ${this.minimumBleedStacks} Bleeding stacks, applies 2 stacks or enough to reach ${this.minimumBleedStacks}. If this ability hits a target with ${this.minimumBleedStacks}+ Bleeding stacks, Drex gains a shield equal to ${this.shieldFromTargetMaxHpRatio * 100}% of the target's Max HP for ${this.shieldDecayTurns} turns.`;
+      return `Deals moderate-high damage to the chosen target. Deals +${this.damagePerBleedStack}% bonus damage for each Bleeding stack on the target. If the target has fewer than ${this.minimumBleedStacks} Bleeding stacks, applies ${this.stacksApplied} stacks, or only enough to reach ${this.minimumBleedStacks}. If this ability hits a target with ${this.minimumBleedStacks}+ Bleeding stacks, Drex gains a shield equal to ${this.shieldFromTargetMaxHpRatio * 100}% of the target's Max HP for ${this.shieldDecayTurns} turns.`;
     },
 
     resolve({ user, targets, context = {} }) {
@@ -182,7 +186,7 @@ const drexSkills = [
       // If below the minimum, apply +2 stacks or enough to reach the minimum.
       if (bleedStacks < this.minimumBleedStacks) {
         const stacksToApply = Math.min(
-          2,
+          this.stacksApplied,
           this.minimumBleedStacks - bleedStacks,
         );
 
