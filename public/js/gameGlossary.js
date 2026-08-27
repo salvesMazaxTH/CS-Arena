@@ -80,7 +80,7 @@ export const GAME_GLOSSARY = {
   burning: {
     title: "Burning",
     description:
-      "At the start of the turn, deals magic damage over time equal to 15 plus 4% of maximum HP. Damage over time never triggers reactive effects.",
+      "At the start of the turn, deals magic damage over time equal to 15 plus 4% of maximum HP. While Burning, all HP the champion recovers is reduced by 35%. Damage over time never triggers reactive effects.",
   },
   bleeding: {
     title: "Bleeding",

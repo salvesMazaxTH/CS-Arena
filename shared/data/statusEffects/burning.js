@@ -8,9 +8,17 @@ const burning = {
   name: "Burning",
   type: "debuff",
   subtypes: ["dot", "fire"],
+  healingReductionPercent: 35,
 
   hookScope: {
     onAfterDmgTaking: "defender",
+    onBeforeHealing: "healTarget",
+  },
+
+  onBeforeHealing({ amount }) {
+    if (amount <= 0) return;
+
+    return { amount: amount * (1 - this.healingReductionPercent / 100) };
   },
 
   onAfterDmgTaking({ defender, damage, element, context }) {
@@ -59,9 +67,11 @@ const burning = {
         name: this.name,
         type: this.type,
         subtypes: this.subtypes,
+        healingReductionPercent: this.healingReductionPercent,
         hookScope: this.hookScope,
         onTurnStart: this.onTurnStart,
         onAfterDmgTaking: this.onAfterDmgTaking,
+        onBeforeHealing: this.onBeforeHealing,
       },
     });
   },
