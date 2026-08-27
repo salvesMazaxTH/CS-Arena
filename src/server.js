@@ -264,30 +264,51 @@ function fillRandomChampionSelection(currentSelection = [], fillAll = false) {
   return nextSelection.slice(0, TEAM_SIZE);
 }
 
-/** Cosmetic winter portrait swap, applied on spawn when the asset exists on disk. */
-function applySeasonalSkin(champion) {
-  if (Math.random() > 0.675) return;
+const PORTRAITS_DIR = path.join(process.cwd(), "public", "assets", "portraits");
 
-  const fileName = champion.portrait.split("/").pop();
-  if (!fileName) return;
+function portraitBaseName(champion) {
+  return champion.portrait.split("/").pop().replace(".webp", "");
+}
 
-  const baseName = fileName.replace(".webp", "");
-  const absolutePath = path.join(
-    process.cwd(),
-    "public",
-    "assets",
-    "portraits",
-    `${baseName}_curtindo_o_inverno.webp`,
-  );
+/** Winter portrait for this champion when the roll hits and the asset exists; else null. */
+function rollSeasonalSkin(champion) {
+  if (Math.random() > 0.675) return null;
 
-  if (fs.existsSync(absolutePath)) {
-    champion.portrait = `/assets/portraits/${baseName}_curtindo_o_inverno.webp`;
+  const skinFile = `${portraitBaseName(champion)}_curtindo_o_inverno.webp`;
+  return fs.existsSync(path.join(PORTRAITS_DIR, skinFile))
+    ? `/assets/portraits/${skinFile}`
+    : null;
+}
+
+/** A random hand-authored alt portrait for this champion when the roll hits; else null. */
+function rollAltSkin(champion) {
+  if (Math.random() > 0.35) return null;
+
+  const baseName = portraitBaseName(champion);
+  const altSkins = [];
+  for (let index = 1; ; index += 1) {
+    const skinFile = `${baseName}_alt_skin_${index}.webp`;
+    if (!fs.existsSync(path.join(PORTRAITS_DIR, skinFile))) break;
+    altSkins.push(skinFile);
   }
+  if (altSkins.length === 0) return null;
+
+  return `/assets/portraits/${altSkins[Math.floor(Math.random() * altSkins.length)]}`;
+}
+
+/** Server-only cosmetic portrait swap on spawn; a coin flip settles it when both skins roll in. */
+function applyCosmeticSkin(champion) {
+  const seasonal = rollSeasonalSkin(champion);
+  const alt = rollAltSkin(champion);
+
+  const chosen =
+    seasonal && alt ? (Math.random() < 0.5 ? seasonal : alt) : seasonal ?? alt;
+  if (chosen) champion.portrait = chosen;
 }
 
 /**
  * Spawns a champion through the combat model (which enforces the field cap and
- * fires onChampionAdded), applies the server-only seasonal skin, and — when
+ * fires onChampionAdded), applies the server-only cosmetic skins, and — when
  * emitState — broadcasts the new state. Returns the instance, or null when it
  * could not be spawned.
  */
@@ -298,7 +319,7 @@ function spawnChampion({ emitState = true, ...spawnOpts } = {}) {
   });
   if (!champion) return null;
 
-  applySeasonalSkin(champion);
+  applyCosmeticSkin(champion);
   if (emitState) broadcastGameState();
 
   return champion;
