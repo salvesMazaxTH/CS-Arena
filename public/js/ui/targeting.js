@@ -110,6 +110,34 @@ export function createTargeting({ getActiveChampions, removeSkillOverlay }) {
       return { ally: target };
     }
 
+    // SELECT ANY (manual selection, either team)
+    if (role === "select:any") {
+      let candidates = championsInField;
+
+      if (spec.excludesSelf) {
+        candidates = candidates.filter((c) => c.id !== user.id);
+      }
+
+      if (Array.isArray(spec.excludesKeys)) {
+        candidates = candidates.filter(
+          (c) => !spec.excludesKeys.includes(c.championKey),
+        );
+      }
+
+      candidates = byFieldOrder(filterUnique(candidates));
+
+      const target = await createTargetSelectionOverlay(
+        candidates,
+        "Choose a Target",
+      );
+
+      if (target === null) return null;
+      if (target === undefined) return undefined;
+
+      chosenTargets.add(target.id);
+      return { any: target };
+    }
+
     // ALLY/ENEMY GLOBAL (no selection, affects all champions of the type)
     if (role === "all:ally" || role === "all" || role === "all:enemy") return {};
 

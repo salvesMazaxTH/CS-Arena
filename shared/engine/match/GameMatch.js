@@ -4,6 +4,7 @@ import { getDuoForCore } from "../../data/duos.js";
 import { SpawnProtection } from "../combat/spawnProtection.js";
 import { Nothingness } from "../combat/nothingness.js";
 import { Champion } from "../../core/Champion.js";
+import { roundToFive } from "../../core/championCombat.js";
 import { generateId } from "../../utils/id.js";
 import { emitCombatEvent } from "../combat/combatEvents.js";
 import { formatChampionName } from "../../ui/formatters.js";
@@ -15,6 +16,10 @@ import {
 // Sanity ceiling for the minion slot search. Minions have no rule-level cap;
 // this only keeps the lookup from running away if something goes wrong.
 const MAX_MINION_SLOTS = 24;
+
+// Percentage stats are left alone: they are already small and rounding to five
+// would distort them.
+const SCALABLE_STATS = ["HP", "Attack", "Defense", "Speed"];
 
 class LobbyState {
   constructor(match) {
@@ -395,14 +400,24 @@ class CombatState {
     trackSnapshot = true,
     maxPerTeam = 3,
     spawnProtection = true,
+    asEntityType = null,
+    statScale = 1,
   } = {}) {
-    const baseData = championDB[championKey];
-    if (!baseData) {
+    const dbData = championDB[championKey];
+    if (!dbData) {
       console.warn(`[SPAWN] Aborted: "${championKey}" is not in the championDB.`);
       return null;
     }
 
-    const entityType = baseData.entityType ?? "champion";
+    const entityType = asEntityType ?? dbData.entityType ?? "champion";
+
+    const scaledStats = {};
+    if (statScale !== 1) {
+      for (const stat of SCALABLE_STATS) {
+        scaledStats[stat] = roundToFive(dbData[stat] * statScale);
+      }
+    }
+    const baseData = { ...dbData, entityType, ...scaledStats };
 
     // The field cap counts champions only; minions go straight through.
     if (!this.canSpawnOnTeam(team, maxPerTeam, { entityType })) {
@@ -622,7 +637,9 @@ class CombatState {
       (this.playerScores[victimSlot] || 0) -
       (this.playerScores[scoringSlot] || 0);
     const comebackBonus = !isMinion && scoreDeficit >= 10 ? 2 : 0;
-    const killPoints = claimValueAtDeath + deathBonus + comebackBonus;
+    const killPoints = champion.runtime?.grantsNoPoints
+      ? 0
+      : claimValueAtDeath + deathBonus + comebackBonus;
 
     let scoreAwarded = false;
 

@@ -2,12 +2,110 @@ import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 
 const TWIN_KEY = "laiserisa";
+const SISTER_KEYS = ["laisaelis", "laiserisa"];
 
 const laisaelisSkills = [
   // ========================
   // Total Block (global)
   // ========================
   totalBlock,
+
+  // ========================
+  // Manifest
+  // ========================
+  {
+    key: "manifest",
+    name: "Manifest",
+
+    echoScale: 0.375,
+    echoDuration: 3,
+
+    contact: false,
+    momentumCost: 55,
+    priority: 2,
+
+    description() {
+      return `Laisaelis looks at something on the field and answers that there could be more of it. At the start of the next turn an Echo of the chosen entity takes the field at her side with its skills, its passive and everything currently upon it, at ${this.echoScale * 100}% of its base stats. The Echo fades after ${this.echoDuration} turns and concedes no points when it falls. Neither sister can be echoed.`;
+    },
+
+    targetSpec: [{ type: "select:any", excludesKeys: SISTER_KEYS }],
+
+    resolve({ user, targets, context }) {
+      const source = targets.any;
+
+      if (!source || SISTER_KEYS.includes(source.championKey)) {
+        return {
+          log: `${formatChampionName(user)} finds nothing there worth echoing.`,
+        };
+      }
+
+      const echoScale = this.echoScale;
+      const skillName = this.name;
+      const fadesAtTurn = context.currentTurn + 1 + this.echoDuration;
+
+      context.schedule({
+        type: "spawnChampion",
+        turnToHappen: context.currentTurn + 1,
+
+        payload: {
+          championKey: source.championKey,
+          team: user.team,
+          asEntityType: "minion",
+          statScale: echoScale,
+
+          onSpawn: (echo, spawnContext) => {
+            echo.name = `Echo of ${source.name}`;
+            echo.runtime.grantsNoPoints = true;
+
+            for (const modifier of source.statModifiers) {
+              echo.modifyStat({
+                statName: modifier.statName,
+                amount: modifier.amount * echoScale,
+                duration: modifier.expiresAtTurn - spawnContext.currentTurn,
+                context: spawnContext,
+                isPermanent: modifier.isPermanent,
+                statModifierSrc: echo,
+              });
+            }
+
+            for (const effect of source.statusEffects.values()) {
+              const remaining = effect.expiresAtTurn - spawnContext.currentTurn;
+              if (remaining <= 0) continue;
+
+              echo.applyStatusEffect(effect.key, remaining, spawnContext, {
+                stackCount: effect.stacks ?? 1,
+                persistent: !Number.isFinite(remaining),
+              });
+            }
+
+            echo.runtime.hookEffects ??= [];
+            echo.runtime.hookEffects.push({
+              key: "manifest_fade",
+              group: "skill",
+              ownerId: echo.id,
+
+              onTurnStart({ owner, context }) {
+                if (context.currentTurn < fadesAtTurn) return;
+
+                owner.HP = 0;
+                owner.alive = false;
+
+                context.registerDialog({
+                  message: `<b>${skillName}</b> — ${formatChampionName(owner)} was only ever an answer, and it stops being one.`,
+                  sourceId: owner.id,
+                  targetId: owner.id,
+                });
+              },
+            });
+          },
+        },
+      });
+
+      return {
+        log: `${formatChampionName(user)} looks at ${formatChampionName(source)} and answers that there could be more of it.`,
+      };
+    },
+  },
 
   // ========================
   // Ultimate
