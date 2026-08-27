@@ -28,7 +28,8 @@ const burning = {
   },
 
   onTurnStart({ owner, context }) {
-    const damage = 15 + Math.floor(owner.maxHP * 0.04);
+    const multiplier = Number(this.damageMultiplier) || 1;
+    const damage = (15 + Math.floor(owner.maxHP * 0.04)) * multiplier;
 
     const dotContext = { ...context, isDot: true };
 
