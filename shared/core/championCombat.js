@@ -209,6 +209,7 @@ export function applyStatModifier(
   {
     statName,
     amount,
+    percentAmount = null,
     duration = 1,
     context,
     isPermanent = false,
@@ -254,6 +255,7 @@ export function applyStatModifier(
     champion.statModifiers.push({
       statName: statName,
       amount: amount,
+      percentAmount: percentAmount,
       ignoreMinimum: ignoreMinimum,
       expiresAtTurn: currentTurn + duration,
       isPermanent: isPermanent,
@@ -321,6 +323,7 @@ function _applyStatChange(champion, config, rawAmount) {
   return applyStatModifier(champion, {
     statName,
     amount: effectiveAmount,
+    percentAmount: isPercent ? rawAmount : null,
     duration,
     context,
     isPermanent,

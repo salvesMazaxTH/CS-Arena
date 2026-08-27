@@ -248,7 +248,7 @@ export class TurnResolver {
         if (result) results.push(result);
         removedAny = true;
 
-        if (context) {
+        if (context && !champ.runtime?.leavesNoDeath) {
           // The dead champion is already out of activeChampions, so it is
           // appended explicitly: passives that react to their OWN death (such
           // as Jeff's revival) must still be reached, and it is the only hook
@@ -1052,13 +1052,25 @@ export class TurnResolver {
     const targets = {};
     for (const role in action.targetIds) {
       const target = this.combat.activeChampions.get(action.targetIds[role]);
-      if (!isUnavailable(target)) {
+
+      if (!isUnavailable(target) && this._roleAcceptsTarget(role, user, target)) {
         targets[role] = target;
       } else if (role === "self") {
         targets[role] = user;
       }
     }
     return targets;
+  }
+
+  /** The client picks the target, so the side it claims is checked here too. */
+  _roleAcceptsTarget(role, user, target) {
+    if (role === "self") return target.id === user.id;
+    if (role.startsWith("ally")) return target.team === user.team;
+    if (role.startsWith("enemy")) return target.team !== user.team;
+    if (role === "any") return true;
+
+    console.warn(`[TARGETS] ${user.name} sent an unknown target role: ${role}.`);
+    return false;
   }
 
   // ============================================================

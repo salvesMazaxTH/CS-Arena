@@ -25,7 +25,7 @@ const laisaelisSkills = [
     priority: 2,
 
     description() {
-      return `Laisaelis looks at something on the field and answers that there could be more of it. At the start of the next turn an Echo of the chosen entity takes the field at her side with its skills, its passive and everything currently upon it, at ${this.echoScale * 100}% of its base stats. The Echo fades after ${this.echoDuration} turns and concedes no points when it falls. Neither sister can be echoed.`;
+      return `Laisaelis looks at something on the field and answers that there could be more of it. At the start of the next turn an Echo of the chosen entity takes the field at her side with its skills, its passive and everything currently upon it, at ${this.echoScale * 100}% of its base stats. The Echo fades after ${this.echoDuration} turns, and its ending is not a death: it concedes no points, and nothing that answers to dying answers to it. Neither sister can be echoed.`;
     },
 
     targetSpec: [{ type: "select:any", excludesKeys: SISTER_KEYS }],
@@ -55,12 +55,14 @@ const laisaelisSkills = [
 
           onSpawn: (echo, spawnContext) => {
             echo.name = `Echo of ${source.name}`;
-            echo.runtime.grantsNoPoints = true;
+            echo.runtime.leavesNoDeath = true;
+            echo.momentum = source.momentum;
 
             for (const modifier of source.statModifiers) {
               echo.modifyStat({
                 statName: modifier.statName,
-                amount: modifier.amount * echoScale,
+                amount: modifier.percentAmount ?? modifier.amount,
+                isPercent: modifier.percentAmount != null,
                 duration: modifier.expiresAtTurn - spawnContext.currentTurn,
                 context: spawnContext,
                 isPermanent: modifier.isPermanent,

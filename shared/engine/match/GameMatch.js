@@ -637,7 +637,7 @@ class CombatState {
       (this.playerScores[victimSlot] || 0) -
       (this.playerScores[scoringSlot] || 0);
     const comebackBonus = !isMinion && scoreDeficit >= 10 ? 2 : 0;
-    const killPoints = champion.runtime?.grantsNoPoints
+    const killPoints = champion.runtime?.leavesNoDeath
       ? 0
       : claimValueAtDeath + deathBonus + comebackBonus;
 
