@@ -64,6 +64,8 @@ const editMode = {
   alwaysEvade: false, // Force evasion on every attack. (SERVER-ONLY)
   executionOverride: null, // null = normal; number = forced threshold (1 = 100%, 0.5 = 50%)
   freeCostSkills: false, // Skills cost no resource. (SERVER-ONLY)
+  unrestrictedSummon: false, // Summon line-up champions from turn 1 and more than once per turn (field cap still applies).
+  summonWithoutSpawnProtection: false, // Line-up summons enter without inert/immunity spawn protection.
 };
 
 const TEAM_SIZE = 8;
@@ -111,7 +113,10 @@ let waitingForAnimations = false;
  * remind the player about an unused summon without re-deriving them and drifting.
  */
 function getLineupSummonAvailability(team) {
-  if (match.getCurrentTurn() === 1 || match.hasSummonedThisTurn(team)) {
+  if (
+    !editMode.unrestrictedSummon &&
+    (match.getCurrentTurn() === 1 || match.hasSummonedThisTurn(team))
+  ) {
     return { canSummon: false, champions: [] };
   }
 
@@ -1319,19 +1324,21 @@ io.on("connection", (socket) => {
 
     const team = player.team;
 
-    // Line-up summons are blocked on the first turn.
-    if (match.getCurrentTurn() === 1) {
-      return socket.emit(
-        "actionFailed",
-        "You cannot summon line-up champions on the first turn.",
-      );
-    }
+    if (!editMode.unrestrictedSummon) {
+      // Line-up summons are blocked on the first turn.
+      if (match.getCurrentTurn() === 1) {
+        return socket.emit(
+          "actionFailed",
+          "You cannot summon line-up champions on the first turn.",
+        );
+      }
 
-    if (match.hasSummonedThisTurn(team)) {
-      return socket.emit(
-        "actionFailed",
-        "You have already summoned a line-up champion this turn.",
-      );
+      if (match.hasSummonedThisTurn(team)) {
+        return socket.emit(
+          "actionFailed",
+          "You have already summoned a line-up champion this turn.",
+        );
+      }
     }
 
     const reserve = match.combat.reserveQueues.get(team) || [];
@@ -1361,6 +1368,7 @@ io.on("connection", (socket) => {
       team,
       trackSnapshot: true,
       emitState: false,
+      spawnProtection: !editMode.summonWithoutSpawnProtection,
     });
     if (!spawned) {
       return socket.emit("actionFailed", "This champion could not be summoned.");
