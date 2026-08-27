@@ -131,6 +131,12 @@ export function syncChampionVFX(champion) {
     champion._vfxState[type] = shouldExist;
   }
 
+  // Concealed has no canvas of its own, only a portrait phase.
+  champion.el.classList.toggle(
+    "is-concealed",
+    !!champion.statusEffects?.has("concealed"),
+  );
+
   // 2. Triggers exclusivos/habilidades
   for (const [type, trigger] of Object.entries(ExclusiveVFXTriggers)) {
     const shouldExist = trigger(champion);

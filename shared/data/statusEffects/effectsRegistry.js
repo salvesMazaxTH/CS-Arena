@@ -12,6 +12,7 @@ import poisoned from "./poisoned.js";
 import absoluteImmunity from "./absoluteImmunity.js";
 import conductor from "./conductor.js";
 import invisible from "./invisible.js";
+import concealed from "./concealed.js";
 import healBlock from "./healBlock.js";
 
 export const StatusEffectsRegistry = {
@@ -26,6 +27,7 @@ export const StatusEffectsRegistry = {
   absoluteImmunity,
   conductor,
   invisible,
+  concealed,
   poisoned,
   healBlock,
 };

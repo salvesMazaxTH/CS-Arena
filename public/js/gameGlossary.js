@@ -55,6 +55,11 @@ export const GAME_GLOSSARY = {
     description:
       "The champion cannot be directly targeted by enemies, only affected indirectly and by area effects.",
   },
+  concealed: {
+    title: "Concealed",
+    description:
+      "Only the enemy directly opposite the champion can land a hit. Taking any damage, or acting, ends it.",
+  },
   obliterate: {
     title: "Obliterate",
     aliases: [

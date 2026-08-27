@@ -120,6 +120,12 @@ export const StatusIndicator = {
       background: "none",
       label: "Heal Block",
     },
+    concealed: {
+      type: "emoji",
+      value: "🌫️",
+      background: "rgba(70, 80, 95, 0.75)",
+      label: "Concealed",
+    },
     provocado: {
       type: "image",
       value: "/assets/indicators/taunted_indicator.png",

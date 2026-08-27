@@ -54,6 +54,8 @@ const isarelisSkills = [
     key: "shadowstep",
     name: "Shadowstep",
 
+    invisibleDuration: 2,
+
     description() {
       return "Becomes Invisible until her next action. Cannot be targeted by enemies.";
     },
@@ -62,50 +64,9 @@ const isarelisSkills = [
     priority: 1,
 
     resolve({ user, context }) {
-      // Reset previous Invisibility.
       user.removeStatusEffect("invisible");
-
-      user.applyStatusEffect("invisible", 99, context, {
+      user.applyStatusEffect("invisible", this.invisibleDuration, context, {
         source: "shadowstep",
-      });
-
-      user.runtime ??= {};
-      user.runtime.hookEffects ??= [];
-
-      user.runtime.hookEffects = user.runtime.hookEffects.filter(
-        (e) => e.key !== "shadowstep_cleanup",
-      );
-
-      const appliedContext = context;
-
-      user.runtime.hookEffects.push({
-        key: "shadowstep_cleanup",
-        group: "skillRuntime",
-        ownerId: user.id,
-
-        hookScope: {
-          onActionResolved: "actionSource",
-        },
-
-        onActionResolved({ owner, actionSource, context }) {
-          if (!actionSource || actionSource.id !== owner.id) return;
-
-          // Ignore the action that applied Invisibility.
-          if (context === appliedContext) return;
-
-          // Any subsequent action removes Invisibility.
-          owner.removeStatusEffect("invisible");
-
-          owner.runtime.hookEffects =
-            owner.runtime.hookEffects.filter(
-              (e) => e.key !== "shadowstep_cleanup",
-            );
-
-          context?.registerDialog?.({
-            message: `${formatChampionName(owner)} emerges from the shadows.`,
-            sourceId: owner.id,
-          });
-        },
       });
 
       context.registerDialog({
