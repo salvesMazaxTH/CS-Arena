@@ -1423,6 +1423,10 @@ let firstChoiceSelected = null;
 let firstChoiceResolved = false; // true once the first champion has been decided; chips stop opening the 1v1 overlay
 const materializedLineupChampions = new Set();
 
+// Where each line-up champion of either team stands, decided by the server.
+let lineupStatuses = {};
+let enemyLineupStatuses = {};
+
 // --- Manual mid-match summon from lineup ---
 // Eligibility (slot free, once per turn) is server-authoritative; this only
 // tracks a request in flight so we don't double-submit while awaiting a reply.
@@ -1460,16 +1464,15 @@ function lineupEntries(championKeys) {
   return entries;
 }
 
-function isLineupEntryMaterialized({ championKey, duo }) {
-  if (playerTeam === null) return false;
-
+function lineupEntryStatus({ championKey, duo }) {
   const keys = duo ? duo.cores : [championKey];
-  return (
-    keys.length > 0 &&
-    keys.every((key) =>
-      materializedLineupChampions.has(`${playerTeam}:${key}`),
-    )
-  );
+  if (!keys.length) return "reserve";
+
+  const statuses = keys.map((key) => lineupStatuses[key] ?? "reserve");
+
+  if (statuses.includes("nothingness")) return "nothingness";
+  if (statuses.every((status) => status === "dead")) return "dead";
+  return statuses.every((status) => status === "reserve") ? "reserve" : "field";
 }
 
 function renderLineupBanner() {
@@ -1494,7 +1497,11 @@ function renderLineupBanner() {
         (duo ? duo.cores.includes(firstChoiceSelected) : champKey === firstChoiceSelected),
     );
     chip.classList.toggle("duo-chip", !!duo);
-    chip.classList.toggle("materialized", isLineupEntryMaterialized(entry));
+
+    const status = lineupEntryStatus(entry);
+    chip.classList.toggle("materialized", status !== "reserve");
+    chip.classList.toggle("is-dead", status === "dead");
+    chip.classList.toggle("in-nothingness", status === "nothingness");
     chip.classList.toggle(
       "summon-locked",
       firstChoiceResolved &&
@@ -1758,21 +1765,16 @@ function syncMaterializedLineupChampions(gameStateChampions = []) {
 
   if (!lineupChips || playerTeam === null) return;
 
-  Array.from(lineupChips.children).forEach((chip) => {
-    const championKey = chip.dataset.championKey;
-    if (!championKey) return;
-    chip.classList.toggle(
-      "materialized",
-      materializedLineupChampions.has(`${playerTeam}:${championKey}`),
-    );
-  });
+  renderLineupBanner();
 }
 
 function resetLineupMaterializationState() {
   materializedLineupChampions.clear();
+  lineupStatuses = {};
+  enemyLineupStatuses = {};
   if (!lineupChips) return;
   Array.from(lineupChips.children).forEach((chip) => {
-    chip.classList.remove("materialized");
+    chip.classList.remove("materialized", "is-dead", "in-nothingness");
   });
 }
 
@@ -2159,12 +2161,15 @@ function renderLineupBanners(lineupsByTeam = {}) {
     .map((champKey, idx) => {
       const champion = champKey ? championDB[champKey] : null;
 
-      const isMaterialized =
-        !!champKey &&
-        materializedLineupChampions.has(`${enemyTeam}:${champKey}`);
+      const status = champKey
+        ? (enemyLineupStatuses[champKey] ?? "reserve")
+        : "reserve";
+      const isMaterialized = status !== "reserve";
 
       const chipClass = `lineup-chip${
         isMaterialized ? " materialized" : " unrevealed"
+      }${status === "dead" ? " is-dead" : ""}${
+        status === "nothingness" ? " in-nothingness" : ""
       }`;
 
       if (!isMaterialized) {
@@ -2218,6 +2223,10 @@ socket.on("gameStateUpdate", (gameState) => {
       canSummon: false,
       champions: [],
     };
+
+    lineupStatuses = gameState?.lineupStatus?.[playerTeam] ?? {};
+    enemyLineupStatuses =
+      gameState?.lineupStatus?.[playerTeam === 1 ? 2 : 1] ?? {};
   }
 
   syncMaterializedLineupChampions(gameState?.champions || []);

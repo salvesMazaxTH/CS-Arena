@@ -190,10 +190,12 @@ function getGameState(extraChampions = [], { viewerTeam = null } = {}) {
   const lineups = {};
   const playerEmblems = {};
   const lineupSummons = {};
+  const lineupStatus = {};
   for (const player of match.players) {
     if (!player) continue;
     lineups[player.team] = player.selectedChampionKeys || [];
     lineupSummons[player.team] = getLineupSummonAvailability(player.team);
+    lineupStatus[player.team] = getLineupStatuses(player.team, viewerTeam);
     playerEmblems[player.team] = Array.isArray(player.emblems)
       ? player.emblems
           .map((emblem) => (typeof emblem === "string" ? emblem : emblem?.key))
@@ -207,7 +209,40 @@ function getGameState(extraChampions = [], { viewerTeam = null } = {}) {
     lineups,
     playerEmblems,
     lineupSummons,
+    lineupStatus,
   };
+}
+
+/** Where each of a team's line-up champions stands, as this viewer may see it. */
+function getLineupStatuses(team, viewerTeam) {
+  const statuses = {};
+
+  for (const championKey of match.combat.reserveQueues.get(team) || []) {
+    statuses[championKey] = "reserve";
+  }
+
+  for (const champion of match.combat.deadChampions.values()) {
+    if (champion.team === team) statuses[champion.championKey] = "dead";
+  }
+
+  for (const champion of match.combat.inactiveChampions.values()) {
+    if (champion.team !== team) continue;
+
+    statuses[champion.championKey] = Nothingness.isVanished(champion)
+      ? "nothingness"
+      : "field";
+  }
+
+  for (const champion of match.combat.activeChampions.values()) {
+    if (champion.team !== team) continue;
+
+    // A concealed summon must still read as untouched reserve to the opponent.
+    statuses[champion.championKey] = isConcealedFromViewer(champion, viewerTeam)
+      ? "reserve"
+      : "field";
+  }
+
+  return statuses;
 }
 
 /** Team of the player behind a socket, or null when the socket is not playing. */

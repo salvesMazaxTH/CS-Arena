@@ -1973,13 +1973,68 @@
   user-select: none;
 }
 
-.lineup-chip.materialized {
+.lineup-chip.materialized .lineup-chip-inner {
   opacity: 0.7;
   filter: grayscale(1) brightness(0.88) saturate(0.75);
+}
+.lineup-chip.materialized {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 3px 8px rgba(0, 0, 0, 0.18);
 }
+.lineup-chip.is-dead::after {
+  content: "";
+  position: absolute;
+  inset: 9%;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to top left,
+      transparent calc(50% - 2.5px),
+      rgba(255, 74, 74, 0.96) calc(50% - 2.5px),
+      rgba(255, 74, 74, 0.96) calc(50% + 2.5px),
+      transparent calc(50% + 2.5px)
+    ),
+    linear-gradient(
+      to top right,
+      transparent calc(50% - 2.5px),
+      rgba(255, 74, 74, 0.96) calc(50% - 2.5px),
+      rgba(255, 74, 74, 0.96) calc(50% + 2.5px),
+      transparent calc(50% + 2.5px)
+    );
+  filter:
+    drop-shadow(0 0 2px rgba(0, 0, 0, 0.95))
+    drop-shadow(0 0 7px rgba(255, 40, 40, 0.45));
+}
+
+.lineup-chip.in-nothingness {
+  border-style: dashed;
+  border-color: rgba(178, 140, 255, 0.8);
+  box-shadow:
+    inset 0 0 14px rgba(120, 70, 220, 0.35),
+    0 0 12px rgba(150, 100, 255, 0.28);
+}
+.lineup-chip.in-nothingness .lineup-chip-portrait {
+  opacity: 0.35;
+  filter: grayscale(1) brightness(0.55);
+}
+.lineup-chip.in-nothingness::after {
+  content: "∅";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-weight: 700;
+  line-height: 1;
+  font-size: 1.75rem;
+  color: rgba(206, 180, 255, 0.95);
+  text-shadow:
+    0 0 4px rgba(0, 0, 0, 0.9),
+    0 0 14px rgba(150, 100, 255, 0.65);
+}
+
 .lineup-chip.summon-locked {
   opacity: 0.5;
   filter: grayscale(0.9) brightness(0.84) saturate(0.72);
