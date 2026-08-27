@@ -11,5 +11,5 @@ export default {
   Defense: 250,
   Speed: 250,
 
-  species: ["fairy"],
+  species: ["fairy", "numen", "magickin"],
 };

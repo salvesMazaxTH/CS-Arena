@@ -8,5 +8,5 @@ export default {
 
   elementalAffinities: ["steel"],
   classKey: "mage",
-  species: ["human", "mageborn"],
+  species: ["human", "magickin"],
 };

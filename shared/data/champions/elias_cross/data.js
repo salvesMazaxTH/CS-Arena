@@ -9,5 +9,5 @@ export default {
   
   elementalAffinities: ["lightning"],
   classKey: "mage",
-  species: ["hollowed", "mageborn"],
+  species: ["hollowed", "magickin"],
 };

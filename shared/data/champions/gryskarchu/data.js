@@ -8,5 +8,5 @@ export default {
 
   elementalAffinities: ["earth"],
   classKey: "tank",
-  species: ["spirit", "avatar"],
+  species: ["spirit", "avatar", "numen"],
 };

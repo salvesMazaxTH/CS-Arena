@@ -10,5 +10,5 @@ export default {
   LifeSteal: 20,
 
   classKey: "enchanter",
-  species: ["spirit", "avatar", "mageborn"],
+  species: ["spirit", "avatar", "numen", "magickin"],
 };

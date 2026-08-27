@@ -10,5 +10,5 @@ export default {
 
   classKey: "enchanter",
   elementalAffinities: ["water"],
-  species: ["primordial dragon", "dragon", "mageborn"],
+  species: ["primordial dragon", "dragon", "magickin"],
 };

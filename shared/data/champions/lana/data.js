@@ -7,5 +7,5 @@ export default {
   Speed: 55,
 
   classKey: "mage",
-  species: ["human", "mutant", "mageborn"],
+  species: ["human", "mutant", "magickin"],
 };

@@ -7,5 +7,5 @@ export default {
   Speed: 40,
 
   classKey: "enchanter",
-  species: ["God-Touched", "epiphanic", "human", "mageborn"],
+  species: ["God-Touched", "epiphanic", "human", "magickin"],
 };

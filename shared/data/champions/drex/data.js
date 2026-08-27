@@ -10,5 +10,5 @@ export default {
   LifeSteal: 15,
 
   classKey: "mage",
-  species: ["vampire", "mageborn"],
+  species: ["vampire", "magickin"],
 };
