@@ -29,7 +29,7 @@ export const assassinsAmbush = {
   },
 
   description() {
-    return `Your Assassin class champions' attacks always deal Piercing Damage, ignoring at least ${this.piercingPercentage}% of the target's Defense.`;
+    return `Your Assassin class champions' attacks always deal Piercing Damage, ignoring an extra ${this.piercingPercentage}% of the target's Defense on top of any Piercing the hit already carries.`;
   },
 
   hookScope: {
@@ -41,16 +41,15 @@ export const assassinsAmbush = {
     if (!isAssassin(attacker)) return;
 
     // Absolute damage already ignores Defense entirely — never downgrade it.
-    // A stronger existing pierce also stands, since this is meant as a floor.
     if (mode === "absolute") return;
-    if (mode === "piercing" && Number(piercingPercentage || 0) >= this.piercingPercentage) {
-      return;
-    }
+
+    const current = mode === "piercing" ? Number(piercingPercentage || 0) : 0;
+    const total = Math.min(100, current + this.piercingPercentage);
 
     return {
       mode: "piercing",
-      piercingPercentage: this.piercingPercentage,
-      log: `<b>[Emblem — Assassin's Ambush]</b> ${defender?.name ?? "the target"} is caught in the ambush: the strike ignores ${this.piercingPercentage}% of their Defense.`,
+      piercingPercentage: total,
+      log: `<b>[Emblem — Assassin's Ambush]</b> ${defender?.name ?? "the target"} is caught in the ambush: the strike ignores ${total}% of their Defense.`,
     };
   },
 };
