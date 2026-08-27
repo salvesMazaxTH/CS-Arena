@@ -8,5 +8,5 @@ export default {
 
   classKey: "mage",
   elementalAffinities: ["earth"],
-  species: ["elf"],
+  species: ["elf", "mageborn"],
 };

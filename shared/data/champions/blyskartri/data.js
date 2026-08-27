@@ -9,5 +9,5 @@ export default {
   Evasion: 10,
 
   classKey: "enchanter",
-  species: ["spirit", "avatar"],
+  species: ["spirit", "avatar", "mageborn"],
 };
