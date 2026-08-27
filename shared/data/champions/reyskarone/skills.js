@@ -125,12 +125,12 @@ const reyskaroneSkills = [
           onAfterDmgTaking: ({ attacker, owner, context }) => {
             if (attacker.team !== user.team) return;
 
-            // The attacker drinks from the brand.
+            // The brand is Reyskarone's, so the healing is credited to him.
             new HealEvent({
               target: attacker,
               amount: this.titheHeal,
               context,
-              source: owner,
+              source: user,
             }).execute();
           },
         });
@@ -258,7 +258,10 @@ const reyskaroneSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} seals a Crimson Pact with ${formatChampionName(ally)}.`,
+        log:
+          user === ally
+            ? `${formatChampionName(user)} seals a Crimson Pact in his own blood.`
+            : `${formatChampionName(user)} seals a Crimson Pact with ${formatChampionName(ally)}.`,
       };
     },
   },

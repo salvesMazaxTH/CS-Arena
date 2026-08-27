@@ -114,6 +114,12 @@ export const StatusIndicator = {
       background: "none",
       label: "Enraizado",
     },
+    healblock: {
+      type: "image",
+      value: "/assets/indicators/healBlock_indicator.png",
+      background: "none",
+      label: "Heal Block",
+    },
     provocado: {
       type: "image",
       value: "/assets/indicators/taunted_indicator.png",
