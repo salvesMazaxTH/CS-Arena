@@ -564,17 +564,18 @@ export function heal(
   const beforeResults =
     emitCombatEvent("onBeforeHealing", payload, ctx?.allChampions) || [];
 
-  for (const result of beforeResults) {
-    if (!result) continue;
+  // Every hook reads the same payload snapshot, so their results compose as
+  // ratios against it — a "last one wins" overwrite would drop all the others.
+  const requestedAmount = payload.amount;
+  let healRatio = 1;
 
-    // Explicit override of the final heal value.
-    if (typeof result.amount === "number") {
-      payload.amount = result.amount;
-    }
+  for (const result of beforeResults) {
+    if (typeof result?.amount !== "number" || requestedAmount <= 0) continue;
+
+    healRatio *= result.amount / requestedAmount;
   }
 
-  // Safety clamp after modifications.
-  payload.amount = Math.max(0, Math.floor(payload.amount));
+  payload.amount = Math.max(0, Math.round(requestedAmount * healRatio));
 
   amount = payload.amount;
 
