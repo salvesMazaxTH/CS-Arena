@@ -5,14 +5,14 @@ export default {
   critBonus: 25,
   piercingRatio: 0.75,
   minDefense: 120,
-  lowDefenseDamageRatio: 2 / 3,
+  lowDefenseDamagePercent: 65,
 
   description() {
     return `Akane's hits are always critical.
 
     Her critical hits deal only +${this.critBonus}% damage, but ignore ${this.piercingRatio * 100}% of the target's defense.
     
-    Against targets with less than ${this.minDefense} Defense, her hits do not ignore Defense and deal only ${Math.round(this.lowDefenseDamageRatio * 100)}% of the damage.`;
+    Against targets with less than ${this.minDefense} Defense, her hits do not ignore Defense and deal only ${this.lowDefenseDamagePercent}% of the damage.`;
   },
 
   hookScope: {
@@ -31,7 +31,7 @@ export default {
     if (targetDefense < this.minDefense) {
       return {
         crit: newCrit,
-        damage: damage * this.lowDefenseDamageRatio,
+        damage: damage * (this.lowDefenseDamagePercent / 100),
         mode: "standard",
         piercingPercentage: 0,
       };
