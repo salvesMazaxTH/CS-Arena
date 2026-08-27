@@ -3,6 +3,7 @@ export default {
   portrait: "/assets/portraits/laiserisa.webp",
   unreleased: true,
   hiddenFromDraftGrid: true,
+  classKey: "enchanter",
 
   // Four stats at 250: a thousand split evenly, the whole of one thing.
   HP: 250,
