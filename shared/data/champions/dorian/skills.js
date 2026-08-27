@@ -11,24 +11,31 @@ const dorianSkills = [
   {
     key: "sawtooth_embrace",
     name: "Sawtooth Embrace",
-    bf: 50,
-    concealedBonus: 40,
+    bf: 15,
+    maxHPPercent: 12,
+    concealedBf: 25,
+    concealedMaxHPPercent: 20,
     contact: true,
     damageMode: "absolute",
+    hitVfx: "slash",
     priority: 0,
 
     description() {
-      return `Dorian folds both hollow wheels around the chosen target and draws them shut — a cut only his own hands make without losing themselves to the edge. Deals ${this.bf}% of his Attack as Absolute Damage. Struck from concealment the cut runs ${this.concealedBonus}% deeper, and stepping out of cover ends it.`;
+      return `Dorian folds both hollow wheels around the chosen target and draws them shut — a cut only his own hands make without losing themselves to the edge. Deals Absolute Damage equal to ${this.bf}% of his Attack plus ${this.maxHPPercent}% of the target's Max HP. Struck from concealment the wheels close harder — ${this.concealedBf}% of Attack plus ${this.concealedMaxHPPercent}% of Max HP — and stepping out of cover ends it.`;
     },
 
     targetSpec: ["enemy"],
 
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
-      let baseDamage = (user.Attack * this.bf) / 100;
 
       const fromConcealment = user.hasStatusEffect("concealed");
-      if (fromConcealment) baseDamage *= 1 + this.concealedBonus / 100;
+      const bf = fromConcealment ? this.concealedBf : this.bf;
+      const maxHPPercent = fromConcealment
+        ? this.concealedMaxHPPercent
+        : this.maxHPPercent;
+      const baseDamage =
+        (user.Attack * bf) / 100 + (enemy.maxHP * maxHPPercent) / 100;
 
       const result = new DamageEvent({
         baseDamage,
@@ -112,12 +119,13 @@ const dorianSkills = [
     killBankCap: 3,
     contact: false,
     damageMode: "standard",
+    hitVfx: "multislash",
     isUltimate: true,
     momentumCost: 55,
     priority: 0,
 
     description() {
-      return `The wires snap taut and every wheel comes round at once, the whole account brought down on the chosen target. Deals heavy ranged physical damage. Against a feiticeiro it also bites for bonus Absolute Damage equal to ${this.feiticeiroMaxHPPercent}% of their Max HP and leaves them with Heal Block for ${this.healBlockDuration} turns. If the strike kills, Dorian's team scores points equal to his current Grudge, up to ${this.killBankCap}, and the ledger empties.`;
+      return `The wires snap taut and every wheel comes round at once, the whole account brought down on the chosen target. Deals heavy ranged physical damage and leaves the target with Heal Block for ${this.healBlockDuration} turns. Against a feiticeiro it also bites for bonus Absolute Damage equal to ${this.feiticeiroMaxHPPercent}% of their Max HP. If the strike kills, Dorian's team scores points equal to his current Grudge, up to ${this.killBankCap}, and the ledger empties.`;
     },
 
     targetSpec: ["enemy"],
@@ -141,6 +149,12 @@ const dorianSkills = [
         (r) => r?.targetId === enemy.id && !r?.evaded && !r?.immune,
       );
 
+      if (landed) {
+        enemy.applyStatusEffect("healBlock", this.healBlockDuration, context, {
+          source: this.key,
+        });
+      }
+
       if (landed && isFeiticeiro(enemy)) {
         const bonus = Math.floor(
           (enemy.maxHP * this.feiticeiroMaxHPPercent) / 100,
@@ -163,12 +177,8 @@ const dorianSkills = [
           );
         }
 
-        enemy.applyStatusEffect("healBlock", this.healBlockDuration, context, {
-          source: this.key,
-        });
-
         context.registerDialog?.({
-          message: `${formatChampionName(enemy)} is a feiticeiro — the wheels bite deeper and the wounds will not close.`,
+          message: `${formatChampionName(enemy)} is a feiticeiro — the wheels bite deeper.`,
           sourceId: user.id,
           targetId: enemy.id,
         });

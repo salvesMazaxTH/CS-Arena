@@ -8,6 +8,8 @@ export default {
   Speed: 90,
   Critical: 20,
 
+  unreleased: true,
+
   classKey: "assassin",
   species: ["human"],
 
