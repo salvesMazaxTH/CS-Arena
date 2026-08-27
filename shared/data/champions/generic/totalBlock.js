@@ -50,6 +50,7 @@ const totalBlock = {
     user.runtime.totalBlockStreak += 1;
 
     const effect = {
+      type: "buff",
       key: "total_block_effect",
       group: "skill",
 
@@ -81,7 +82,7 @@ const totalBlock = {
       },
     };
 
-    user.runtime.hookEffects.push(effect);
+    user.addHookEffect(effect, context);
     user.runtime.lastTotalBlockTurn = context.currentTurn;
 
     const successMessage = `${formatChampionName(user)} uses <b>Total Block</b> and is protected against the next attack!`;

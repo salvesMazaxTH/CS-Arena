@@ -143,7 +143,8 @@ const rakhanaSkills = [
       const reflectPercent = this.reflectPercent;
       let spent = false;
 
-      user.runtime.hookEffects.push({
+      user.addHookEffect({
+        type: "buff",
         key: "silver_mirror_reflect",
         expiresAtTurn: context.currentTurn + this.duration,
 
@@ -227,7 +228,7 @@ const rakhanaSkills = [
             )} reduces incoming damage by 50% and reflects ${reflectedDamage} damage!`,
           };
         },
-      });
+      }, context);
 
       context.registerDialog?.({
         message: `${formatChampionName(

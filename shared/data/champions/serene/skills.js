@@ -180,6 +180,7 @@ const sereneSkills = [
         const reviveHealPercent = this.reviveHealPercent;
 
         const effect = {
+          type: "buff",
           key: "epiphany_threshold",
           group: "epiphany",
           ownerId,
@@ -225,7 +226,8 @@ const sereneSkills = [
               );
             }
 
-            owner.runtime.hookEffects.push({
+            owner.addHookEffect({
+              type: "buff",
               key: "epiphany_return",
               group: "epiphany",
               ownerId,
@@ -248,7 +250,7 @@ const sereneSkills = [
                   targetId: owner.id,
                 });
               },
-            });
+            }, context);
 
             context.registerDialog({
               message: `${formatChampionName(owner)} is held at the Threshold, and death lets go!`,
@@ -263,7 +265,7 @@ const sereneSkills = [
           },
         };
 
-        ally.runtime.hookEffects.push(effect);
+        ally.addHookEffect(effect, context);
       });
 
       return {

@@ -88,6 +88,7 @@ const nytheraSkills = [
       user.runtime.hookEffects ??= [];
 
       const effect = {
+        type: "buff",
         key: "stasis_chamber",
         expiresAtTurn: context?.currentTurn + this.effectDuration,
 
@@ -106,7 +107,7 @@ const nytheraSkills = [
         },
       };
 
-      user.runtime.hookEffects.push(effect);
+      user.addHookEffect(effect, context);
 
       const sealed = `${formatChampionName(user)} seals herself inside a chamber of standing ice.`;
 

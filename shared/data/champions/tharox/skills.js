@@ -220,7 +220,8 @@ const tharoxSkills = [
       });
 
       // Hook of the Apotheosis.
-      user.runtime.hookEffects.push({
+      user.addHookEffect({
+        type: "buff",
         key: "apotheosis-of-the-monolith",
         name: "Apotheosis of the Monolith",
         expiresAtTurn,
@@ -335,7 +336,7 @@ const tharoxSkills = [
             (hook) => hook.key !== "apotheosis-of-the-monolith",
           );
         },
-      });
+      }, context);
 
       return {
         log:

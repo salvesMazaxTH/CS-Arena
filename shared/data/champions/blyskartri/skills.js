@@ -97,7 +97,8 @@ const blyskartriSkills = [
 
       const piercingDamageBonus = this.piercingDamageBonus;
 
-      ally.runtime.hookEffects.push({
+      ally.addHookEffect({
+        type: "buff",
         key: "vital_conductance_counter",
         expiresAtTurn: context.currentTurn + this.buffsDuration,
 
@@ -135,7 +136,7 @@ const blyskartriSkills = [
             log: counterLog,
           };
         },
-      });
+      }, context);
 
       return {
         log: `${formatChampionName(user)} strengthens ${formatChampionName(ally)}.`,
@@ -196,7 +197,8 @@ const blyskartriSkills = [
         (hook) => hook.key !== "infinite_horizon_overtake",
       );
 
-      ally.runtime.hookEffects.push({
+      ally.addHookEffect({
+        type: "buff",
         key: "infinite_horizon_overtake",
         name: "Infinite Horizon",
         expiresAtTurn: context.currentTurn + this.effectDuration,
@@ -235,7 +237,7 @@ const blyskartriSkills = [
 
           return { log: overtake };
         },
-      });
+      }, context);
 
       return {
         log: `${formatChampionName(user)} opens the Horizon for ${formatChampionName(ally)}!`,

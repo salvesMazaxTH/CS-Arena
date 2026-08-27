@@ -111,6 +111,7 @@ const naelysSkills = [
       user.runtime.hookEffects ??= [];
 
       const effect = {
+        type: "buff",
         key: "mass_of_the_raging_sea",
         expiresAtTurn: context.currentTurn + 2,
         lastTriggerTurn: null,
@@ -166,7 +167,7 @@ const naelysSkills = [
         },
       };
 
-      user.runtime.hookEffects.push(effect);
+      user.addHookEffect(effect, context);
 
       user.applyDamageReduction({
         amount: this.damageReduction,

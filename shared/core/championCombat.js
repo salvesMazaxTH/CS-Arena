@@ -1,7 +1,31 @@
 import { formatChampionName } from "../ui/formatters.js";
+import { emitCombatEvent } from "../engine/combat/combatEvents.js";
 
 export function roundToFive(x) {
   return Math.round(x / 5) * 5;
+}
+
+/** The single door into runtime.hookEffects, so an effect can be turned away before it lands. */
+export function addHookEffect(champion, hookEffect, context) {
+  const results = emitCombatEvent(
+    "onHookEffectIncoming",
+    { target: champion, hookEffect, context },
+    context.allChampions,
+  );
+
+  const cancelled = results.find((result) => result?.cancel);
+
+  if (cancelled) {
+    context.registerDialog({
+      message: cancelled.message,
+      sourceId: champion.id,
+      targetId: champion.id,
+    });
+    return false;
+  }
+
+  champion.runtime.hookEffects.push(hookEffect);
+  return true;
 }
 
 /** Push a shield onto the champion's runtime. type: "regular" | "spell" | "supreme". */

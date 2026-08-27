@@ -30,6 +30,7 @@ import {
   heal,
   purgeExpiredStatModifiers,
   purgeExpiredHookEffects,
+  addHookEffect,
   addDamageModifier,
   purgeExpiredModifiers,
   getDamageModifiers,
@@ -155,9 +156,9 @@ export class Champion {
       Object.assign(champ.runtime, baseData.initialRuntime);
     }
 
-    // INJETAR IMUNIDADE ELEMENTAL AUTOMÁTICA
     if (champ.elementalAffinities?.length) {
       champ.runtime.hookEffects.push({
+        type: "buff",
         key: "elemental_affinity_immunity",
         group: "system",
 
@@ -497,6 +498,10 @@ export class Champion {
 
   removeStatusEffect(statusEffectKey) {
     return removeStatusEffect(this, statusEffectKey);
+  }
+
+  addHookEffect(hookEffect, context) {
+    return addHookEffect(this, hookEffect, context);
   }
 
   purgeExpiredStatusEffects(currentTurn, context) {

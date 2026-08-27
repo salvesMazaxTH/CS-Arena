@@ -82,7 +82,8 @@ const avarikSkills = [
           (he) => he.key === GLUTTONS_TOLL_HOOK_KEY,
         )
       ) {
-        user.runtime.hookEffects.push({
+        user.addHookEffect({
+          type: "buff",
           key: GLUTTONS_TOLL_HOOK_KEY,
           group: "skill",
           hookScope: {
@@ -105,7 +106,7 @@ const avarikSkills = [
               log: `${formatChampionName(owner)} collected <b>Glutton's Toll</b> from his own Claim, seizing ${bonusClaimPoints} additional point(s).`,
             };
           },
-        });
+        }, context);
       }
 
       return {

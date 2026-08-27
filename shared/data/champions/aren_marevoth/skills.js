@@ -84,7 +84,7 @@ const arenMarevothSkills = [
             targetId: enemy.id,
           });
         } else {
-          applyTide(enemy);
+          applyTide(enemy, context);
         }
       }
 
@@ -125,7 +125,8 @@ const arenMarevothSkills = [
           (he) => he.key === "blessing_of_the_ocean_depths_hook",
         )
       ) {
-        user.runtime.hookEffects.push({
+        user.addHookEffect({
+          type: "buff",
           key: "blessing_of_the_ocean_depths_hook",
           group: "skill",
           hookScope: {
@@ -154,7 +155,7 @@ const arenMarevothSkills = [
               scoringSlot: owner.team - 1,
             };
           },
-        });
+        }, context);
       }
 
       return {
@@ -249,7 +250,8 @@ const arenMarevothSkills = [
       if (
         !user.runtime.hookEffects.some((he) => he.key === "abyssal_depths_hook")
       ) {
-        user.runtime.hookEffects.push({
+        user.addHookEffect({
+          type: "buff",
           key: "abyssal_depths_hook",
           group: "skill",
           hookScope: {
@@ -288,7 +290,7 @@ const arenMarevothSkills = [
               log: `${formatChampionName(owner)} triggered Abyssal Depths (${claimPointsRequired}+ Value Points), permanently increasing Max HP by ${maxHPBonusPercent}% (+${hpBonus} HP)! (${owner.runtime.abyssalDepthsHpStacks}/${maxHPBonusStacks})`,
             };
           },
-        });
+        }, context);
       }
 
       return results;

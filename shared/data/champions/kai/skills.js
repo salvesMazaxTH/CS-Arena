@@ -65,6 +65,7 @@ const kaiSkills = [
       user.runtime.fireStance = "emberStance";
 
       const effect = {
+        type: "buff",
         key: "living_ember_stance",
         state: "emberStance", // "emberStance" → "livingEmber"
         expiresAtTurn: context.currentTurn + stanceDuration,
@@ -135,7 +136,7 @@ const kaiSkills = [
         },
       };
 
-      user.runtime.hookEffects.push(effect);
+      user.addHookEffect(effect, context);
 
       // Damage reduction granted by the stance.
       user.applyDamageReduction({

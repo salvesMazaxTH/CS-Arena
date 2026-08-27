@@ -47,7 +47,8 @@ const lanaSkills = [
       const hookKey = `dont_you_dare_${user.id}`;
 
       // Register the hook that blocks the next action.
-      enemy.runtime.hookEffects.push({
+      enemy.addHookEffect({
+        type: "debuff",
         key: hookKey,
         group: "skill_effect",
 
@@ -65,7 +66,7 @@ const lanaSkills = [
             message: `${formatChampionName(actionSource)} freezes up! Their action is blocked!`,
           };
         },
-      });
+      }, context);
 
       return {
         log: `${formatChampionName(enemy)} will not be able to act next!`,

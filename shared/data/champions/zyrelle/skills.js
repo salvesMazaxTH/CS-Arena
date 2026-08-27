@@ -136,7 +136,8 @@ const zyrelleSkills = [
       user.runtime.hookEffects = user.runtime.hookEffects.filter(
         (hook) => hook.key !== "reckless_reload_exposure",
       );
-      user.runtime.hookEffects.push({
+      user.addHookEffect({
+        type: "buff",
         key: "reckless_reload_exposure",
         name: "Reckless Reload",
         expiresAtTurn: context.currentTurn + this.duration,
@@ -149,7 +150,7 @@ const zyrelleSkills = [
           if (defender !== user) return;
           return { damage: damage * (1 + vulnerabilityPercent / 100) };
         },
-      });
+      }, context);
 
       return {
         log: `${formatChampionName(user)} slams in a full reload (${MAX_AMMO}/${MAX_AMMO}), but leaves herself exposed!`,

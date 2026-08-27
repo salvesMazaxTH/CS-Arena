@@ -133,7 +133,8 @@ const jeffTheDeathSkills = [
 
       enemy.runtime.hookEffects ??= [];
 
-      enemy.runtime.hookEffects.push({
+      enemy.addHookEffect({
+        type: "debuff",
         key: "deaths_embrace_mark",
         expiresAtTurn:
           context.currentTurn + this.markDuration,
@@ -181,11 +182,12 @@ const jeffTheDeathSkills = [
             } <b>Death's Embrace</b> damage.`,
           };
         },
-      });
+      }, context);
 
       user.runtime.hookEffects ??= [];
 
-      user.runtime.hookEffects.push({
+      user.addHookEffect({
+        type: "buff",
         key: "deaths_embrace_buff",
         expiresAtTurn:
           context.currentTurn + this.markDuration,
@@ -206,7 +208,7 @@ const jeffTheDeathSkills = [
               (effect) => effect.key !== "deaths_embrace_buff",
             );
         },
-      });
+      }, context);
 
       return damageResult;
     },
@@ -257,6 +259,7 @@ const jeffTheDeathSkills = [
 
       // Internal hook for the inevitable execution.
       const hook = {
+        type: "debuff",
         key: "death_claim_execution",
         group: "deathClaim",
         triggerTurn,
@@ -318,7 +321,7 @@ const jeffTheDeathSkills = [
       enemy.runtime.hookEffects = enemy.runtime.hookEffects.filter(
         (effect) => effect.key !== "death_claim_execution",
       );
-      enemy.runtime.hookEffects.push(hook);
+      enemy.addHookEffect(hook, context);
 
       return damageResult;
     },

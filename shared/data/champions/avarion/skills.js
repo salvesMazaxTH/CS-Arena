@@ -112,7 +112,8 @@ const avarionSkills = [
       if (
         !user.runtime.hookEffects.some((he) => he.key === MISERS_TOLL_HOOK_KEY)
       ) {
-        user.runtime.hookEffects.push({
+        user.addHookEffect({
+          type: "buff",
           key: MISERS_TOLL_HOOK_KEY,
           group: "skill",
           // No hookScope: the toll watches the enemy's Claim, not Avarion's
@@ -166,7 +167,7 @@ const avarionSkills = [
               log: `${formatChampionName(owner)} levied <b>Miser's Toll</b> on ${formatChampionName(actionSource)}'s Claim, diverting ${collected} point(s) to his own ledger.`,
             };
           },
-        });
+        }, context);
       }
 
       return {

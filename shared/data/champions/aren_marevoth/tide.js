@@ -19,7 +19,7 @@ export function getTideStacks(champion) {
  * Apply 1 stack of Tide to a target champion via runtime.hookEffects
  * @param {object} target
  */
-export function applyTide(target) {
+export function applyTide(target, context) {
   target.runtime ??= {};
   target.runtime.hookEffects ??= [];
 
@@ -30,12 +30,16 @@ export function applyTide(target) {
   if (hook) {
     hook.stacks = (hook.stacks || 0) + 1;
   } else {
-    target.runtime.hookEffects.push({
-      key: TIDE_HOOK_KEY,
-      name: "Tide",
-      group: "marevoth_tide",
-      stacks: 1,
-    });
+    target.addHookEffect(
+      {
+        type: "debuff",
+        key: TIDE_HOOK_KEY,
+        name: "Tide",
+        group: "marevoth_tide",
+        stacks: 1,
+      },
+      context,
+    );
   }
 }
 

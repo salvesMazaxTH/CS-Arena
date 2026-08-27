@@ -103,7 +103,8 @@ const reyskaroneSkills = [
           (effect) => effect.key !== "tithe",
         );
 
-        enemy.runtime.hookEffects.push({
+        enemy.addHookEffect({
+        type: "debuff",
           key: "tithe",
           group: "skill",
 
@@ -136,7 +137,7 @@ const reyskaroneSkills = [
               source: user,
             }).execute();
           },
-        });
+        }, context);
 
         context.registerDialog({
           message: `${formatChampionName(enemy)} is branded with the <b>Tithe</b>!`,

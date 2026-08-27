@@ -113,6 +113,7 @@ const naelthosSkills = [
       user.runtime.hookEffects ??= [];
 
       const hookEffect = {
+        type: "buff",
         key: "aquatic_form_hook",
         group: "skill",
         form: "aquatic_form",
@@ -162,7 +163,7 @@ const naelthosSkills = [
         },
       };
 
-      user.runtime.hookEffects.push(hookEffect);
+      user.addHookEffect(hookEffect, context);
       user.runtime.form = "aquatic_form"; // Drives the visual effect.
 
       const userName = formatChampionName(user);

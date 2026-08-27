@@ -129,7 +129,8 @@ const tyrenSkills = [
         (effect) => effect.key !== "living_steel_aegis_expiration",
       );
 
-      user.runtime.hookEffects.push({
+      user.addHookEffect({
+        type: "buff",
         key: "living_steel_aegis_expiration",
         name: "Living Steel Aegis",
 
@@ -176,7 +177,7 @@ const tyrenSkills = [
             )}'s Living Steel transformation expires.`,
           };
         },
-      });
+      }, context);
 
       return {
         log:
