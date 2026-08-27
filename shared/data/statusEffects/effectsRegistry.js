@@ -12,6 +12,7 @@ import poisoned from "./poisoned.js";
 import absoluteImmunity from "./absoluteImmunity.js";
 import conductor from "./conductor.js";
 import invisible from "./invisible.js";
+import healBlock from "./healBlock.js";
 
 export const StatusEffectsRegistry = {
   paralyzed,
@@ -26,6 +27,7 @@ export const StatusEffectsRegistry = {
   conductor,
   invisible,
   poisoned,
+  healBlock,
 };
 
 export const EvolvedStatusByBase = Object.fromEntries(

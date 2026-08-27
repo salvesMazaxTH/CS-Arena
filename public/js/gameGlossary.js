@@ -27,6 +27,11 @@ export const GAME_GLOSSARY = {
     description:
       "At the start of the turn, deals magic damage over time equal to 4% of maximum HP per stack and removes 1 stack. When the last stack is consumed, the effect expires. New applications only add stacks to the same active status. Damage over time never triggers reactive effects.",
   },
+  healBlock: {
+    title: "Heal Block",
+    description:
+      "The champion cannot recover HP by any means, lifesteal included.",
+  },
   spell_shield: {
     title: "Spell Shield",
     description:
