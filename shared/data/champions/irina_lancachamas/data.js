@@ -6,7 +6,6 @@ export default {
   Attack: 340,
   Defense: 50,
   Speed: 90,
-  Critical: 0,
 
   classKey: "marksman",
   elementalAffinities: ["fire"],

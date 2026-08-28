@@ -24,7 +24,7 @@ const arenMarevothSkills = [
     element: "water",
 
     tideThreshold: 2,
-    tideBonusDamage: 10,
+    tideBonusDamage: 15,
     buffsRemoved: 2,
 
     description() {

@@ -5,7 +5,7 @@ export default {
   markedCritBonus: 70,
 
   description() {
-    return `Lorena's aim is less a skill than an inside joke only she finds funny — because she never misses. Once she's marked a target, her next hit against them is always a critical hit, landing at 1.${this.markedCritBonus}x instead of the usual multiplier.`;
+    return `Lorena's aim is less a skill than an inside joke only she finds funny — because she never misses. Once she's marked a target, her next hit against them is always a critical hit, landing at ${(1 + this.markedCritBonus / 100).toFixed(2)}x instead of the usual multiplier.`;
   },
 
   hookScope: {
@@ -13,13 +13,19 @@ export default {
   },
 
   onBeforeDmgDealing({ owner, defender, crit }) {
-    if (defender?.runtime?.lorenaMarkedBy !== owner) return;
+    if (!defender?.runtime?.lorenaMarked) return;
 
     // The mark is a one-shot promise: it pays out once, then it's gone.
-    defender.runtime.lorenaMarkedBy = null;
+    delete defender.runtime.lorenaMarked;
 
     return {
-      crit: { ...(crit ?? {}), didCrit: true, bonus: this.markedCritBonus },
+      crit: {
+        ...(crit ?? {}),
+        didCrit: true,
+        forced: true,
+        disabled: false,
+        bonus: this.markedCritBonus,
+      },
     };
   },
 };

@@ -1,6 +1,43 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
+import unstableOvercharge from "./passive.js";
+
+const editMode = false; // Enable to test Voltexz's recoil (deals 999 to herself).
+
+// A fixed cut of the base damage a skill dispatched comes straight back on
+// Voltexz as Absolute recoil, the moment the skill goes out — never dodged,
+// never scaled by what the target absorbs. Depth 1 keeps it a nested event so it
+// cannot recoil off itself.
+function applyOverchargeRecoil({ user, baseDamage, context }) {
+  const recoilDamage = editMode
+    ? 999
+    : Math.floor((baseDamage * unstableOvercharge.recoilPercent) / 100);
+  if (recoilDamage <= 0) return [];
+
+  context.registerDialog?.({
+    message: `${formatChampionName(user)} is torn by her own current for ${recoilDamage} — <b>Unstable Overcharge</b>.`,
+    sourceId: user.id,
+    targetId: user.id,
+  });
+
+  const result = new DamageEvent({
+    baseDamage: recoilDamage,
+    attacker: user,
+    defender: user,
+    skill: {
+      key: "unstable_overcharge_recoil",
+      name: "Recoil (Unstable Overcharge)",
+      suppressLog: true,
+    },
+    type: "magical",
+    mode: DamageEvent.Modes.ABSOLUTE,
+    context: { ...context, damageDepth: 1 },
+    allChampions: context?.allChampions,
+  }).execute();
+
+  return Array.isArray(result) ? result : [result];
+}
 
 const voltexzSkills = [
   // ========================
@@ -33,6 +70,7 @@ const voltexzSkills = [
 
       const baseDamage = (user.Attack * this.bf) / 100;
       const results = [];
+      let dispatchedBase = 0;
 
       if (primary) {
         const primaryResult = new DamageEvent({
@@ -50,6 +88,7 @@ const voltexzSkills = [
           : [primaryResult];
 
         results.push(...primaryResults);
+        dispatchedBase += baseDamage;
       }
 
       if (secondary) {
@@ -68,7 +107,12 @@ const voltexzSkills = [
           : [secondaryResult];
 
         results.push(...secondaryResults);
+        dispatchedBase += baseDamage;
       }
+
+      results.push(
+        ...applyOverchargeRecoil({ user, baseDamage: dispatchedBase, context }),
+      );
 
       return results;
     },
@@ -126,6 +170,8 @@ const voltexzSkills = [
         enemy.applyStatusEffect("paralyzed", this.paralyzeDuration, context);
       }
 
+      results.push(...applyOverchargeRecoil({ user, baseDamage, context }));
+
       return results;
     },
   },
@@ -171,6 +217,8 @@ const voltexzSkills = [
         : [damageResult];
 
       results.push(...damageResults);
+
+      results.push(...applyOverchargeRecoil({ user, baseDamage, context }));
 
       return results;
     },
