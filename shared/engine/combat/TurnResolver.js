@@ -1167,10 +1167,8 @@ export class TurnResolver {
         });
       },
 
-      // Hooks emitted from inside a registry (onAfterHealing, for one) have
-      // nowhere to return their logs to, since nothing reads the emit's result.
-      // Routing them through registerResult puts them in the action's results,
-      // which is what the battle log is built from.
+      // A hook emitted from inside a registry (onBuffingStat) can't return its
+      // logs anywhere; this routes them into the action results the log reads.
       registerHookLogs(hookResults) {
         for (const hookResult of hookResults) {
           if (hookResult?.log) this.registerResult({ log: hookResult.log });
@@ -1305,23 +1303,6 @@ export class TurnResolver {
 
         this.visual.healEvents.push(event);
         this._lastEventRef = event; // reference for dialogs possibly related to this heal
-
-        // 🔥 Fires the heal hook
-        this.registerHookLogs(
-          emitCombatEvent(
-            "onAfterHealing",
-            {
-              healSrc: sourceChamp || null,
-              healTarget: target,
-              amount: value,
-              context: this,
-
-              healType: "normal",
-              isLifesteal: false,
-            },
-            this.allChampions,
-          ),
-        );
       },
 
       registerLifesteal({
@@ -1341,23 +1322,6 @@ export class TurnResolver {
         target?.addHealingReceived?.(value);
 
         this._lastEventRef = null;
-
-        this.registerHookLogs(
-          emitCombatEvent(
-            "onAfterHealing",
-            {
-              healSrc: sourceChamp || null,
-              healTarget: target,
-              amount: value,
-              context: this,
-
-              healType: "lifesteal",
-              isLifesteal: true,
-              fromTargetId,
-            },
-            this.allChampions,
-          ),
-        );
 
         const event = {
           seq: this.visual.seq++,

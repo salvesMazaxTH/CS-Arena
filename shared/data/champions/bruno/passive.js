@@ -13,7 +13,7 @@ export default {
     onStatusEffectApplied: undefined,
   },
 
-  onBeforeDmgDealing({ attacker, owner, defender, crit, damage }) {
+  onBeforeDmgDealing({ attacker, owner, defender, crit }) {
     if (attacker !== owner) return;
     if (!defender?.maxHP) return;
 
@@ -24,18 +24,13 @@ export default {
 
     if (!isLowHP) return;
 
-    const bonus = Number(crit?.bonus || this.forcedCritBonus);
-    const critBonusFactor = bonus / 100;
-
     return {
       crit: {
         ...(crit || {}),
         didCrit: true,
         forced: true,
         disabled: false,
-        bonus,
-        critBonusFactor,
-        critExtra: damage * critBonusFactor,
+        bonus: Number(crit?.bonus || this.forcedCritBonus),
       },
     };
   },
