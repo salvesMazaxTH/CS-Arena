@@ -27,6 +27,10 @@ export default {
     if (owner.runtime.remainSpent) return;
     if (owner.HP - damage > 0) return;
 
+    // Her sister's binding answers the same lethal hit, and takes precedence.
+    if (owner.runtime.hookEffects?.some((e) => e.key === "twin_departure"))
+      return;
+
     owner.runtime.remainSpent = true;
     // Must outlive this hook: the finishing step reads it after the damage lands.
     owner.runtime.preventFinishingUntilTurn = context.currentTurn + 1;

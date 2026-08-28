@@ -1,7 +1,7 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
+import { findTwin } from "../pairs/twinBond.js";
 
-const TWIN_KEY = "laiserisa";
 const SISTER_KEYS = ["laisaelis", "laiserisa"];
 
 const laisaelisSkills = [
@@ -30,14 +30,7 @@ const laisaelisSkills = [
     targetSpec: [{ type: "select:any", excludesKeys: SISTER_KEYS }],
 
     resolve({ user, targets, context }) {
-      const source = targets.any;
-
-      if (!source || SISTER_KEYS.includes(source.championKey)) {
-        return {
-          log: `${formatChampionName(user)} finds nothing there worth echoing.`,
-        };
-      }
-
+      const [source] = targets;
       const echoScale = this.echoScale;
       const skillName = this.name;
       const fadesAtTurn = context.currentTurn + 1 + this.echoDuration;
@@ -55,6 +48,7 @@ const laisaelisSkills = [
           onSpawn: (echo, spawnContext) => {
             echo.name = `Echo of ${source.name}`;
             echo.runtime.leavesNoDeath = true;
+            echo.runtime.manifestEcho = true;
             echo.momentum = source.momentum;
 
             for (const modifier of source.statModifiers) {
@@ -127,7 +121,7 @@ const laisaelisSkills = [
     targetSpec: ["select:ally"],
 
     resolve({ user, targets, context }) {
-      const ally = targets.ally ?? user;
+      const [ally = user] = targets;
 
       ally.applyStatusEffect("debuffImmunity", this.wardDuration, context, {
         sourceId: user.id,
@@ -161,10 +155,7 @@ const laisaelisSkills = [
     targetSpec: ["self"],
 
     resolve({ user, context = {} }) {
-      const twin = context.aliveChampions.find(
-        (champion) =>
-          champion.team === user.team && champion.championKey === TWIN_KEY,
-      );
+      const twin = findTwin(user, context);
 
       if (!twin) {
         return {

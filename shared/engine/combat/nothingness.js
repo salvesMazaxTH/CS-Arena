@@ -78,15 +78,36 @@ export class Nothingness {
   }
 
   /** Everyone whose stay is over; one that finds no free slot simply stays overdue. */
-  static processDueReturns(combat, context = null) {
-    const due = [...combat.inactiveChampions.values()].filter(
-      (champion) =>
-        this.isVanished(champion) &&
-        champion.runtime.nothingness.returnAtTurn <= combat.currentTurn,
+  static processDueReturns(combat, context = null, { maxPerTeam = 3 } = {}) {
+    const vanished = [...combat.inactiveChampions.values()].filter((champion) =>
+      this.isVanished(champion),
     );
 
+    const isDue = (champion) =>
+      champion.runtime.nothingness.returnAtTurn <= combat.currentTurn;
+
+    const due = vanished.filter((champion) => {
+      if (!isDue(champion)) return false;
+
+      const groupId = champion.runtime.nothingness.returnState?.groupId;
+      if (!groupId) return true;
+
+      const group = vanished.filter(
+        (member) => member.runtime.nothingness.returnState?.groupId === groupId,
+      );
+
+      return (
+        group.every(isDue) &&
+        combat.canSpawnOnTeam(champion.team, maxPerTeam, {
+          requiredSlots: group.length,
+        })
+      );
+    });
+
     return due
-      .map((champion) => this.recall(combat, champion.id, { context }))
+      .map((champion) =>
+        this.recall(combat, champion.id, { context, maxPerTeam }),
+      )
       .filter(Boolean);
   }
 

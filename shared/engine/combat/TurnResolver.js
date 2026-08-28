@@ -9,6 +9,7 @@ import {
   getClaimPoints,
 } from "./claim.js";
 import { snapshotChampions } from "./snapshotChampions.js";
+import { TargetFilter } from "./targetFilter.js";
 
 const RESOURCE_DEBUG_TRUE_VALUES = new Set(["1", "true", "yes", "on"]);
 
@@ -946,7 +947,7 @@ export class TurnResolver {
     const targets =
       this._resolveTauntTargets(user, skill, action, context, isUnavailable) ??
       this._resolveAoETargets(user, skill, isUnavailable) ??
-      this._resolveDirectTargets(user, action, isUnavailable);
+      this._resolveDirectTargets(user, skill, action, isUnavailable);
 
     return targets && Object.keys(targets).length > 0 ? targets : null;
   }
@@ -1046,31 +1047,31 @@ export class TurnResolver {
     return targets;
   }
 
-  _resolveDirectTargets(user, action, isUnavailable) {
+  _resolveDirectTargets(user, skill, action, isUnavailable) {
     if (!action?.targetIds) return null;
 
+    const targetSpec = Array.isArray(skill?.targetSpec) ? skill.targetSpec : [];
     const targets = {};
+
     for (const role in action.targetIds) {
       const target = this.combat.activeChampions.get(action.targetIds[role]);
+      const spec = TargetFilter.specForRole(targetSpec, role);
 
-      if (!isUnavailable(target) && this._roleAcceptsTarget(role, user, target)) {
+      if (!spec) {
+        console.warn(
+          `[TARGETS] ${user.name} sent role "${role}", which ${skill?.name} does not ask for.`,
+        );
+        continue;
+      }
+
+      if (!isUnavailable(target) && TargetFilter.accepts(spec, user, target)) {
         targets[role] = target;
       } else if (role === "self") {
         targets[role] = user;
       }
     }
+
     return targets;
-  }
-
-  /** The client picks the target, so the side it claims is checked here too. */
-  _roleAcceptsTarget(role, user, target) {
-    if (role === "self") return target.id === user.id;
-    if (role.startsWith("ally")) return target.team === user.team;
-    if (role.startsWith("enemy")) return target.team !== user.team;
-    if (role === "any") return true;
-
-    console.warn(`[TARGETS] ${user.name} sent an unknown target role: ${role}.`);
-    return false;
   }
 
   // ============================================================
