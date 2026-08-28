@@ -70,7 +70,11 @@ const avarikSkills = [
     resolve({ user, context = {} }) {
       const healAmount = (user.maxHP * this.healPercent) / 100;
 
-      new HealEvent({ target: user, amount: healAmount, context }).execute();
+      const restored = new HealEvent({
+        target: user,
+        amount: healAmount,
+        context,
+      }).execute();
 
       user.runtime ??= {};
       user.runtime.hookEffects ??= [];
@@ -91,8 +95,7 @@ const avarikSkills = [
             onActionResolved: "actionSource",
           },
 
-          onActionResolved({ owner, actionSource, skill }) {
-            if (actionSource !== owner) return;
+          onActionResolved({ owner, skill }) {
             if (skill?.key !== CLAIM_ACTION_KEY) return;
 
             owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
@@ -110,7 +113,7 @@ const avarikSkills = [
       }
 
       return {
-        log: `${formatChampionName(user)} swallowed a slab of bedrock, restoring ${Math.floor(healAmount)} HP and setting <b>Glutton's Toll</b> on his next Claim.`,
+        log: `${formatChampionName(user)} swallowed a slab of bedrock, restoring ${restored} HP and setting <b>Glutton's Toll</b> on his next Claim.`,
       };
     },
   },
@@ -155,13 +158,10 @@ const avarikSkills = [
       const results = Array.isArray(result) ? result : [result];
       const hitSuccess = results.some((r) => !r?.evaded && !r?.immune);
 
-      if (!hitSuccess) return results;
+      if (!hitSuccess || !enemy.alive) return results;
 
-      // The hoard is weighed at the moment it lands, so the bonus reads
-      // Avarik's HP after the strike has already resolved.
-      const hoardDamage = Math.floor(
-        (user.HP * this.currentHPPercent) / 100,
-      );
+      // Weighed after the strike resolves, so the bonus reads Avarik's HP now.
+      const hoardDamage = Math.floor((user.HP * this.currentHPPercent) / 100);
 
       if (hoardDamage <= 0) return results;
 

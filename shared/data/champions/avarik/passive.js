@@ -27,14 +27,9 @@ export default {
     The Edict falls silent while his elder brother ${AVARION_NAME} stands on the field, on either side.`;
   },
 
-  // No hookScope: the Edict is a law over the whole field, not a reaction to
-  // something happening to Avarik, so it has to be consulted on every instance
-  // of damage rather than only on the ones he deals or takes.
-  //
-  // `onBeforeDmgTaking` is the last hook phase before the damage is applied,
-  // which makes it the authoritative place to clamp — and the pipeline skips it
-  // entirely on Absolute Damage and on DoT/nested damage, which is exactly the
-  // set of damage the Edict does not reach.
+  // Deliberately unscoped: the Edict judges every hit on the field, not only
+  // Avarik's own. onBeforeDmgTaking is the clamp point and is already skipped
+  // for Absolute and DoT/nested damage — exactly what the Edict must not touch.
   onBeforeDmgTaking({ owner, attacker, damage, context }) {
     if (!(damage > this.edictDamage)) return;
 

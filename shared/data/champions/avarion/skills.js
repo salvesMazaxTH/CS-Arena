@@ -101,7 +101,7 @@ const avarionSkills = [
         duration: this.attackBonusDuration,
         isPercent: true,
         context,
-        statModifierSrc: "misers_toll",
+        statModifierSrc: user,
       });
 
       user.runtime ??= {};
