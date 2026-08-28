@@ -25,6 +25,8 @@ export class TargetFilter {
       return false;
 
     if (spec.runtimeFlag && !candidate.runtime?.[spec.runtimeFlag]) return false;
+    if (spec.excludesRuntimeFlag && candidate.runtime?.[spec.excludesRuntimeFlag])
+      return false;
 
     return true;
   }
