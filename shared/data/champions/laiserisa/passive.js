@@ -65,7 +65,7 @@ export default {
       });
 
       return {
-        log: `[Passive - <b>${this.name}</b>] ${formatChampionName(owner)} slips into the Nothingness.`,
+        log: `[Passive - <b>${this.name}</b>] ${formatChampionName(owner)} lets go.`,
       };
     }
 
@@ -78,9 +78,15 @@ export default {
     owner.HP = 0;
     owner.alive = false;
 
-    return {
-      log: `[Passive - <b>${this.name}</b>] ${formatChampionName(owner)} steps back out of the Nothingness, finds ${formatChampionName(twin)} gone, and has nothing left to remain for.`,
-    };
+    const orphaned = `[Passive - <b>${this.name}</b>] ${formatChampionName(owner)} steps back out of the Nothingness, finds ${formatChampionName(twin)} gone, and has nothing left to remain for.`;
+
+    context.registerDialog({
+      message: orphaned,
+      sourceId: owner.id,
+      targetId: owner.id,
+    });
+
+    return { log: orphaned };
   },
 
   onChampionDeath(payload) {

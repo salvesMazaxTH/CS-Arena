@@ -27,7 +27,11 @@ const laiserisaSkills = [
     },
 
     targetSpec: [
-      { type: "select:any", entityType: "minion", runtimeFlag: "manifestEcho" },
+      {
+        type: "select:any",
+        entityType: "minion",
+        requiresRuntimeFlag: "manifestEcho",
+      },
     ],
 
     resolve({ user, targets, context, resolver }) {
@@ -85,9 +89,15 @@ const laiserisaSkills = [
         ruptureSourceId: user.id,
       });
 
-      return {
-        log: `${formatChampionName(user)} lets ${formatChampionName(target)} stop being, for a while.`,
-      };
+      const message = `<b>${this.name}</b> — ${formatChampionName(user)} lets ${formatChampionName(target)} stop being, for a while.`;
+
+      context.registerDialog({
+        message,
+        sourceId: user.id,
+        targetId: target.id,
+      });
+
+      return { log: message };
     },
   },
 

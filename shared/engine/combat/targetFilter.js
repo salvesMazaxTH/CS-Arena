@@ -1,34 +1,46 @@
 /** Who may fill a targetSpec role. The picker offers and the server accepts by
  *  this same rule, so a target the UI shows can never be refused on resolution. */
 export class TargetFilter {
-  /** The side a spec targets: "ally", "enemy", "any" or "self". */
+  /** The side a spec aims at, dropping any prefix: "select:ally" and "all:ally"
+   *  both aim at "ally". */
   static sideOf(spec) {
     const type = typeof spec === "string" ? spec : spec.type;
     return type.split(":").pop();
   }
 
-  static accepts(spec, user, candidate) {
-    if (!candidate?.alive) return false;
+  static matchesSide(spec, user, candidate) {
+    switch (this.sideOf(spec)) {
+      case "self":
+        return candidate.id === user.id;
+      case "ally":
+        return candidate.team === user.team;
+      case "enemy":
+        return candidate.team !== user.team;
+      default:
+        return true;
+    }
+  }
 
-    const side = this.sideOf(spec);
-    if (side === "ally" && candidate.team !== user.team) return false;
-    if (side === "enemy" && candidate.team === user.team) return false;
-    if (side === "self" && candidate.id !== user.id) return false;
-
+  static matchesFilters(spec, user, candidate) {
     if (spec.excludesSelf && candidate.id === user.id) return false;
     if (spec.excludesKeys?.includes(candidate.championKey)) return false;
 
-    if (
-      spec.entityType &&
-      (candidate.entityType ?? "champion") !== spec.entityType
-    )
-      return false;
+    const entityType = candidate.entityType ?? "champion";
+    if (spec.entityType && entityType !== spec.entityType) return false;
 
-    if (spec.runtimeFlag && !candidate.runtime?.[spec.runtimeFlag]) return false;
-    if (spec.excludesRuntimeFlag && candidate.runtime?.[spec.excludesRuntimeFlag])
-      return false;
+    const flags = candidate.runtime ?? {};
+    if (spec.requiresRuntimeFlag && !flags[spec.requiresRuntimeFlag]) return false;
+    if (spec.excludesRuntimeFlag && flags[spec.excludesRuntimeFlag]) return false;
 
     return true;
+  }
+
+  static accepts(spec, user, candidate) {
+    return (
+      !!candidate?.alive &&
+      this.matchesSide(spec, user, candidate) &&
+      this.matchesFilters(spec, user, candidate)
+    );
   }
 
   static candidates(spec, user, champions) {
