@@ -2,29 +2,32 @@ import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 
-// Pushes the flamethrower's self-inflicted overheat recoil onto the extra
-// damage queue. Always fires on the skills that use it — the gun overheats
-// whether or not the shot actually connects.
-function queueWeaponOverheat({ user, baseDamage, recoilPercent, context }) {
-  const recoilDamage = baseDamage * (recoilPercent / 100);
+// The flamethrower overheats every time the trigger is pulled, so the recoil is
+// its own unconditional hit rather than a reaction queued off the shot (which
+// would be dropped whenever the shot is dodged or hits an immune target). Depth
+// 1 keeps it a nested event: no cascade, and Redline Rapture opts in to it.
+function applyWeaponOverheat({ user, baseDamage, recoilPercent, context }) {
+  const recoilDamage = Math.floor(baseDamage * (recoilPercent / 100));
+  if (recoilDamage <= 0) return [];
 
-  context.extraDamageQueue ??= [];
-  context.extraDamageQueue.push({
-    type: "magical",
-    mode: "absolute",
+  context.registerDialog?.({
+    message: `${formatChampionName(user)}'s flamethrower redlines and scorches her own hands for ${recoilDamage}!`,
+    sourceId: user.id,
+    targetId: user.id,
+  });
+
+  const result = new DamageEvent({
     baseDamage: recoilDamage,
     attacker: user,
     defender: user,
-    skill: {
-      key: "weapon_overheat",
-      name: "Weapon Overheat",
-      suppressLog: true,
-    },
-    dialog: {
-      message: `${formatChampionName(user)}'s flamethrower redlines and scorches her own hands for ${Math.floor(recoilDamage)}!`,
-      duration: 1000,
-    },
-  });
+    skill: { key: "weapon_overheat", name: "Weapon Overheat", suppressLog: true },
+    type: "magical",
+    mode: DamageEvent.Modes.ABSOLUTE,
+    context: { ...context, damageDepth: 1 },
+    allChampions: context?.allChampions,
+  }).execute();
+
+  return Array.isArray(result) ? result : [result];
 }
 
 const irinaSkills = [
@@ -113,15 +116,6 @@ const irinaSkills = [
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
 
-      // Queued before execute() so the main hit's own processExtraQueue step
-      // (run at the end of its execute()) picks up the recoil.
-      queueWeaponOverheat({
-        user,
-        baseDamage,
-        recoilPercent: this.recoilPercent,
-        context,
-      });
-
       const result = new DamageEvent({
         baseDamage,
         attacker: user,
@@ -132,13 +126,23 @@ const irinaSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      const hitResult = Array.isArray(result) ? result[0] : result;
+      const results = Array.isArray(result) ? [...result] : [result];
+      const hitResult = results[0];
+
+      results.push(
+        ...applyWeaponOverheat({
+          user,
+          baseDamage,
+          recoilPercent: this.recoilPercent,
+          context,
+        }),
+      );
 
       if (!hitResult?.evaded && !hitResult?.immune) {
         enemy.applyStatusEffect("burning", this.burnDuration, context);
       }
 
-      return result;
+      return results;
     },
   },
 
@@ -171,13 +175,6 @@ const irinaSkills = [
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
 
-      queueWeaponOverheat({
-        user,
-        baseDamage,
-        recoilPercent: this.recoilPercent,
-        context,
-      });
-
       const result = new DamageEvent({
         baseDamage,
         attacker: user,
@@ -188,13 +185,23 @@ const irinaSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      const hitResult = Array.isArray(result) ? result[0] : result;
+      const results = Array.isArray(result) ? [...result] : [result];
+      const hitResult = results[0];
+
+      results.push(
+        ...applyWeaponOverheat({
+          user,
+          baseDamage,
+          recoilPercent: this.recoilPercent,
+          context,
+        }),
+      );
 
       if (!hitResult?.evaded && !hitResult?.immune) {
         enemy.applyStatusEffect("burning", this.burnDuration, context);
       }
 
-      return result;
+      return results;
     },
   },
 ];

@@ -14,16 +14,15 @@ export default {
     onAfterDmgTaking: "defender",
   },
 
-  // The recoil is nested damage (queued via extraDamageQueue), which the
-  // engine blocks reactive hooks from by default.
+  // The recoil fires at depth 1; the engine blocks reactive hooks on nested
+  // damage by default, so opt back in.
   hookPolicies: {
     onAfterDmgTaking: {
       allowOnNestedDamage: true,
     },
   },
 
-  onAfterDmgTaking({ owner, defender, skill, context }) {
-    if (defender !== owner) return;
+  onAfterDmgTaking({ owner, skill, context }) {
     if (skill?.key !== "weapon_overheat") return;
 
     owner.modifyStat({

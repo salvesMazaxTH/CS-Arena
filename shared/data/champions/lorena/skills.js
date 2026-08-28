@@ -48,7 +48,7 @@ const lorenaSkills = [
 
       // The mark only sticks if the shot actually connects.
       if (!hitResult?.evaded && !hitResult?.immune) {
-        enemy.runtime.lorenaMarkedBy = user;
+        enemy.runtime.lorenaMarked = true;
       }
 
       return result;
@@ -123,7 +123,7 @@ const lorenaSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
-      const marked = enemy.runtime.lorenaMarkedBy === user;
+      const marked = !!enemy.runtime.lorenaMarked;
 
       return new DamageEvent({
         baseDamage,
@@ -131,7 +131,7 @@ const lorenaSkills = [
         defender: enemy,
         skill: this,
         type: "physical",
-        mode: marked ? "piercing" : "standard",
+        mode: marked ? "piercing" : undefined,
         piercingPercentage: marked ? this.markedPiercingPercentage : undefined,
         context,
         allChampions: context?.allChampions,
