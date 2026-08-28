@@ -10,10 +10,10 @@ export default {
 
   hookScope: {
     onBeforeDmgDealing: "attacker",
-    onStatusEffectIncoming: undefined,
+    onStatusEffectApplied: undefined,
   },
 
-  onBeforeDmgDealing({ attacker, owner, defender, crit, damage }) {
+  onBeforeDmgDealing({ attacker, owner, defender, crit }) {
     if (attacker !== owner) return;
     if (!defender?.maxHP) return;
 
@@ -24,18 +24,13 @@ export default {
 
     if (!isLowHP) return;
 
-    const bonus = Number(crit?.bonus || this.forcedCritBonus);
-    const critBonusFactor = bonus / 100;
-
     return {
       crit: {
         ...(crit || {}),
         didCrit: true,
         forced: true,
         disabled: false,
-        bonus,
-        critBonusFactor,
-        critExtra: damage * critBonusFactor,
+        bonus: Number(crit?.bonus || this.forcedCritBonus),
       },
     };
   },
@@ -46,11 +41,10 @@ export default {
     And whenever an enemy champion becomes Frozen, the ice closes on them at his word for ${this.passiveDamage} Absolute Damage.`;
   },
 
-  onStatusEffectIncoming({ target, statusEffect, context, owner }) {
+  onStatusEffectApplied({ target, statusEffect, context, owner }) {
     if (statusEffect.key !== "frozen") return;
     if (target.team === owner.team) return;
     if (!owner.alive) return;
-    if (target.hasStatusEffect?.("frozen")) return;
     if (!context?.allChampions) return;
 
     context.registerDialog?.({

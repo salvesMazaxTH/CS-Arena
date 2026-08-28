@@ -3,8 +3,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
 
-// With Reinforced Plating, stores ${this.storageShieldPercent}% instead.
-
 export default {
   key: "cataclysmic_reactor",
   name: "Cataclysmic Reactor",
@@ -21,13 +19,13 @@ export default {
 
     He takes +${this.damageTakenBonusPercent}% bonus damage (does not apply to absolute damage and DoT).
 
-    ${this.storageBasePercent}% of the damage taken is stored (Max.: ${this.storageCap}).
+    ${this.storageBasePercent}% of the damage taken is stored (Max.: ${this.storageCap}). While Reinforced Plating holds, that rate rises to ${this.storageShieldPercent}%.
 
     Stored Damage: <b>${stored > 0 ? stored : 0}</b>
 
     Reactor Overload:
-    The core never vents what it has just unleashed. Whenever the Barão uses a skill, he becomes Stunned on the following turn.
-    His Basic Attack and his CLAIM demand nothing from the reactor, and never leave him Stunned.
+    The core never vents what it has just unleashed. Whenever the Barão uses a skill, he is left Inert on the following turn.
+    His Basic Attack and his CLAIM demand nothing from the reactor, and never leave him Inert.
 
     Final Blast:
     When the Barão uses his Ultimate, he deals bonus damage equal to his total Stored Damage and resets it to 0.`;
@@ -48,37 +46,23 @@ export default {
     };
   },
 
-  // 🔴 Stores damage taken (30% or 40% while shielded)
   onAfterDmgTaking({ attacker, defender, owner, damage, context }) {
     if (!damage || damage <= 0) return;
 
-    /* console.log(
-      `[${owner.name} - Cataclysmic Reactor] Damage taken: ${damage}`,
-    );
-    */
+    const platingHolds =
+      (owner.runtime.reinforcedPlatingUntilTurn ?? 0) > context.currentTurn;
 
-    const storageRate =
-      /* owner.hasStatusEffect?.("reinforced_plating")
+    const storageRate = platingHolds
       ? this.storageShieldPercent / 100
-      : */ this.storageBasePercent / 100;
+      : this.storageBasePercent / 100;
 
     const stored = damage * storageRate;
-
-    /* console.log(
-      `[${owner.name} - Cataclysmic Reactor] Stored Damage: ${stored} (Rate: ${storageRate * 100}%)`,
-    );
-    */
 
     owner.runtime = owner.runtime || {};
     owner.runtime.storedDamage = Math.min(
       this.storageCap,
       (owner.runtime.storedDamage || 0) + stored,
     );
-
-    /* console.log(
-      `[${owner.name} - Cataclysmic Reactor] Total Stored Damage: ${owner.runtime.storedDamage}`,
-    );
-    */
   },
 
   hookScope: {
@@ -87,12 +71,12 @@ export default {
   },
 
   // Actions that never overload the reactor: the Basic Attack and the CLAIM.
-  overloadExemptSkillKeys: ["basic_attack", CLAIM_ACTION_KEY],
+  overloadExemptSkillKeys: ["basic_strike", CLAIM_ACTION_KEY],
 
-  // 🔴 After using any ability (except Basic Attack and CLAIM), becomes Stunned on the
-  // NEXT turn. The Stun must not be applied here: actions resolve at the end of
-  // the turn, so a Stun applied on the spot would either be wasted (this turn's
-  // action is already resolved) or linger into the turn after it. Instead it is
+  // 🔴 After using any ability (except Basic Attack and CLAIM), is left Inert on the
+  // NEXT turn. It must not be applied here: actions resolve at the end of
+  // the turn, so applying it on the spot would either waste it (this turn's
+  // action is already resolved) or let it linger into the turn after. Instead it is
   // scheduled for the next turn, where handleStartTurn applies it with a
   // duration of 1 — long enough to deny that turn's action, gone by the
   // following start-of-turn purge.
@@ -121,14 +105,14 @@ export default {
       turnToHappen,
       payload: {
         targetId: owner.id,
-        statusEffectKey: "stunned",
+        statusEffectKey: "inert",
         duration: 1,
-        dialog: `${formatChampionName(owner)} is <b>Stunned</b> by the <b>Reactor Overload</b>!`,
+        dialog: `${formatChampionName(owner)} is left <b>Inert</b> by the <b>Reactor Overload</b>!`,
       },
     });
 
     return {
-      log: `${formatChampionName(owner)} suffered <b>Reactor Overload</b> and will become <b>Stunned</b> next turn!`,
+      log: `${formatChampionName(owner)} suffered <b>Reactor Overload</b> and will be left <b>Inert</b> next turn!`,
     };
   },
 };

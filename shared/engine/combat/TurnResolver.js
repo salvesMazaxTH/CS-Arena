@@ -1,12 +1,15 @@
 import { formatChampionName } from "../../ui/formatters.js";
 import { getHardCCActionDenial } from "../../core/championStatus.js";
 import { emitCombatEvent } from "./combatEvents.js";
+import { SpawnProtection } from "./spawnProtection.js";
+import { Nothingness } from "./nothingness.js";
 import {
   CLAIM_ACTION_KEY,
   CLAIM_MIN_MOMENTUM,
   getClaimPoints,
 } from "./claim.js";
 import { snapshotChampions } from "./snapshotChampions.js";
+import { TargetFilter } from "./targetFilter.js";
 
 const RESOURCE_DEBUG_TRUE_VALUES = new Set(["1", "true", "yes", "on"]);
 
@@ -146,6 +149,14 @@ export class TurnResolver {
         actionResults,
         turnExecutionMap,
       );
+
+      for (const recalled of Nothingness.processRuptures(this.combat, context)) {
+        context.registerDialog({
+          message: recalled.log,
+          sourceId: recalled.champion.id,
+          targetId: recalled.champion.id,
+        });
+      }
     }
 
     const deathContext = this.createBaseContext({ sourceId: null });
@@ -222,14 +233,23 @@ export class TurnResolver {
   //  DEATH PROCESSING
   // ============================================================
 
+  // Re-swept until stable, because a death hook may kill someone the pass
+  // already walked over — the sisters' shared bond does exactly that.
   processChampionDeaths(context = null) {
     const results = [];
-    for (const champ of this.combat.activeChampions.values()) {
-      if (!champ.alive) {
+    let removedAny = true;
+
+    while (removedAny) {
+      removedAny = false;
+
+      for (const champ of this.combat.activeChampions.values()) {
+        if (champ.alive) continue;
+
         const result = this.match.removeChampionFromGame(champ.id);
         if (result) results.push(result);
+        removedAny = true;
 
-        if (context) {
+        if (context && !champ.runtime?.leavesNoDeath) {
           // The dead champion is already out of activeChampions, so it is
           // appended explicitly: passives that react to their OWN death (such
           // as Jeff's revival) must still be reached, and it is the only hook
@@ -242,6 +262,7 @@ export class TurnResolver {
         }
       }
     }
+
     return results;
   }
 
@@ -268,7 +289,7 @@ export class TurnResolver {
     }
 
     // 2. valida ação (hooks)
-    const denial = this.canExecuteAction(user, action);
+    const denial = this.canExecuteAction(user, action, context);
     if (denial?.denied) {
       context.registerDialog({
         message: denial.message || `${formatChampionName(user)} não pode agir.`,
@@ -523,8 +544,11 @@ export class TurnResolver {
   //  VALIDAÇÃO DE AÇÃO (hooks podem negar)
   // ============================================================
 
-  canExecuteAction(user, action) {
+  canExecuteAction(user, action, context = null) {
     if (!user || !user.alive) return { denied: true };
+
+    const takingTheField = SpawnProtection.actionDenial(user);
+    if (takingTheField) return takingTheField;
 
     const hardCCDenial = getHardCCActionDenial(user);
     if (hardCCDenial) {
@@ -564,6 +588,7 @@ export class TurnResolver {
         actionSource: user,
         skill: action?.skill,
         target: mainTarget,
+        context,
       },
       this.combat.activeChampions,
       {
@@ -922,7 +947,7 @@ export class TurnResolver {
     const targets =
       this._resolveTauntTargets(user, skill, action, context, isUnavailable) ??
       this._resolveAoETargets(user, skill, isUnavailable) ??
-      this._resolveDirectTargets(user, action, isUnavailable);
+      this._resolveDirectTargets(user, skill, action, isUnavailable);
 
     return targets && Object.keys(targets).length > 0 ? targets : null;
   }
@@ -1022,18 +1047,30 @@ export class TurnResolver {
     return targets;
   }
 
-  _resolveDirectTargets(user, action, isUnavailable) {
+  _resolveDirectTargets(user, skill, action, isUnavailable) {
     if (!action?.targetIds) return null;
 
+    const targetSpec = Array.isArray(skill?.targetSpec) ? skill.targetSpec : [];
     const targets = {};
+
     for (const role in action.targetIds) {
       const target = this.combat.activeChampions.get(action.targetIds[role]);
-      if (!isUnavailable(target)) {
+      const spec = TargetFilter.specForRole(targetSpec, role);
+
+      if (!spec) {
+        console.warn(
+          `[TARGETS] ${user.name} sent role "${role}", which ${skill?.name} does not ask for.`,
+        );
+        continue;
+      }
+
+      if (!isUnavailable(target) && TargetFilter.accepts(spec, user, target)) {
         targets[role] = target;
       } else if (role === "self") {
         targets[role] = user;
       }
     }
+
     return targets;
   }
 
@@ -1131,10 +1168,8 @@ export class TurnResolver {
         });
       },
 
-      // Hooks emitted from inside a registry (onAfterHealing, for one) have
-      // nowhere to return their logs to, since nothing reads the emit's result.
-      // Routing them through registerResult puts them in the action's results,
-      // which is what the battle log is built from.
+      // A hook emitted from inside a registry (onBuffingStat) can't return its
+      // logs anywhere; this routes them into the action results the log reads.
       registerHookLogs(hookResults) {
         for (const hookResult of hookResults) {
           if (hookResult?.log) this.registerResult({ log: hookResult.log });
@@ -1159,6 +1194,10 @@ export class TurnResolver {
 
       getAdjacentChampions(target, { side } = {}) {
         return combat.getAdjacentChampions(target, { side });
+      },
+
+      getChampionAtSlot(team, slot) {
+        return combat.getChampionAtSlot(team, slot);
       },
 
       // nextEventIndex() {
@@ -1226,6 +1265,7 @@ export class TurnResolver {
           evaded: flags?.evaded,
           immune: !!flags?.immune,
           immuneMessage: flags?.immuneMessage ?? null,
+          immuneQuiet: !!flags?.immuneQuiet,
           shieldBlocked: !!flags?.shieldBlocked,
           finishing: hasFinishing,
           finishingType,
@@ -1264,23 +1304,6 @@ export class TurnResolver {
 
         this.visual.healEvents.push(event);
         this._lastEventRef = event; // reference for dialogs possibly related to this heal
-
-        // 🔥 Fires the heal hook
-        this.registerHookLogs(
-          emitCombatEvent(
-            "onAfterHealing",
-            {
-              healSrc: sourceChamp || null,
-              healTarget: target,
-              amount: value,
-              context: this,
-
-              healType: "normal",
-              isLifesteal: false,
-            },
-            this.allChampions,
-          ),
-        );
       },
 
       registerLifesteal({
@@ -1300,23 +1323,6 @@ export class TurnResolver {
         target?.addHealingReceived?.(value);
 
         this._lastEventRef = null;
-
-        this.registerHookLogs(
-          emitCombatEvent(
-            "onAfterHealing",
-            {
-              healSrc: sourceChamp || null,
-              healTarget: target,
-              amount: value,
-              context: this,
-
-              healType: "lifesteal",
-              isLifesteal: true,
-              fromTargetId,
-            },
-            this.allChampions,
-          ),
-        );
 
         const event = {
           seq: this.visual.seq++,
@@ -1364,16 +1370,18 @@ export class TurnResolver {
           this._lastEventRef = null; // negative changes don't generate a visual event, so clear the reference to avoid wrong dialog associations
         }
 
-        emitCombatEvent(
-          "onBuffingStat",
-          {
-            buffSrc: sourceChamp || null,
-            buffTarget: target,
-            statName,
-            amount: value,
-            context: this,
-          },
-          this.allChampions,
+        this.registerHookLogs(
+          emitCombatEvent(
+            "onBuffingStat",
+            {
+              buffSrc: sourceChamp || null,
+              buffTarget: target,
+              statName,
+              amount: value,
+              context: this,
+            },
+            this.allChampions,
+          ),
         );
       },
 

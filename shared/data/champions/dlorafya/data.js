@@ -9,5 +9,5 @@ export default {
 
   elementalAffinities: ["fire"],
   classKey: "mage",
-  species: ["divinity", "celestial"],
+  species: ["divinity", "celestial", "magickin"],
 };

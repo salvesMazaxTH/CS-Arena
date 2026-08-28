@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 export default {
   key: "unyielding_mass",
@@ -9,7 +10,7 @@ export default {
   defensePerHealingStep: 75,
   shieldPercentage: 0.075,
   description() {
-    return `Whenever Tharox takes damage, he gains 1 Inertia stack. At ${this.stacksNeeded}, consume them and gain +${this.defBonus} permanent Defense. Additionally, he heals for ${this.healingPerMaxHP * 100}% of his Max HP for every ${this.defensePerHealingStep} Defense he has and gains a shield equivalent to ${this.shieldPercentage * 100}% of his Max HP.`;
+    return `Whenever Tharox is struck, he gains 1 Inertia stack. At ${this.stacksNeeded}, consume them and gain +${this.defBonus} permanent Defense. Additionally, he heals for ${this.healingPerMaxHP * 100}% of his Max HP for every ${this.defensePerHealingStep} Defense he has and gains a shield equivalent to ${this.shieldPercentage * 100}% of his Max HP.`;
   },
 
   hookScope: {
@@ -17,7 +18,7 @@ export default {
   },
 
   onAfterDmgTaking({ attacker, defender, owner, damage, context }) {
-    if (damage <= 0) return;
+    if (damage <= 0 || attacker.id === owner.id) return;
 
     owner.runtime.tharoxInerciaStacks =
       (owner.runtime.tharoxInerciaStacks || 0) + 1;
@@ -37,16 +38,19 @@ export default {
       isPermanent: true,
     });
 
-    // Cura 3% do HP máximo para cada 50 de Defesa.
     const defenseMultipliers = Math.floor(owner.Defense / this.defensePerHealingStep);
     const healingAmount =
       owner.maxHP * this.healingPerMaxHP * defenseMultipliers;
 
     if (healingAmount > 0) {
-      owner.heal(healingAmount, context, owner);
+      new HealEvent({
+        target: owner,
+        amount: healingAmount,
+        context,
+        source: owner,
+      }).execute();
     }
 
-    // Escudo equivalente a 7,5% do HP máximo.
     const shieldAmount = owner.maxHP * this.shieldPercentage;
 
     owner.addShield(shieldAmount, 0, context, "regular");

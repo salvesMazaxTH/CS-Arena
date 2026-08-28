@@ -27,7 +27,10 @@ function hideOverlay(el) {
 // ============================================================
 
 import { championDB } from "/shared/data/championDB.js";
+import { DuoLayout, duoDB, getDuoForCore } from "/shared/data/duos.js";
+import { isChampionDraftable } from "/shared/data/draftEligibility.js";
 import { Champion } from "/shared/core/Champion.js";
+import { SpawnProtection } from "/shared/engine/combat/spawnProtection.js";
 import { StatusIndicator } from "../../shared/ui/statusIndicator.js";
 import { createCombatAnimationManager } from "./animation/animsAndLogManager.js";
 import { syncChampionVFX } from "../../shared/vfx/vfxManager.js";
@@ -1081,9 +1084,15 @@ function renderLineupChipContent(champion, slotIndex) {
   `;
 }
 
-function attachChampionCardInteractions(card, championKey, fromSlotIndex = -1) {
-  card.title =
-    "Tap the button for species | long press or right-click to flip";
+function attachChampionCardInteractions(
+  card,
+  championKey,
+  fromSlotIndex = -1,
+  duo = null,
+) {
+  card.title = duo
+    ? `${duo.name} take ${duo.cores.length} line-up slots and always enter the battlefield together`
+    : "Tap the button for species | long press or right-click to flip";
 
   const flipCard = () => {
     card.classList.toggle("is-flipped");
@@ -1152,11 +1161,12 @@ function attachChampionCardInteractions(card, championKey, fromSlotIndex = -1) {
       card.classList.remove("is-flipped");
       return;
     }
-    handleChampionCardClick(championKey);
+    if (duo) handleDuoCardClick(duo);
+    else handleChampionCardClick(championKey);
   });
 
   card.addEventListener("dragstart", (event) =>
-    handleDragStart(event, championKey, fromSlotIndex),
+    handleDragStart(event, duo ? duo.key : championKey, fromSlotIndex),
   );
   card.addEventListener("contextmenu", (event) => {
     event.preventDefault();
@@ -1164,19 +1174,25 @@ function attachChampionCardInteractions(card, championKey, fromSlotIndex = -1) {
   });
 }
 
-/** Whether a champion may be picked during draft (released/enabled, not a minion). */
+/** A draftable champion that also gets a card of its own in the grid. */
 function isDraftSelectable(champion) {
-  if (!champion || (champion.entityType ?? "champion") !== "champion") {
-    return false;
-  }
-  if (champion.selectable === false) return false;
-  if (
-    (champion.unreleased === true || champion.disabled === true) &&
-    !editMode.unavailableChampions
-  ) {
-    return false;
-  }
-  return true;
+  if (!isChampionDraftable(champion, editMode)) return false;
+
+  return champion.hiddenFromDraftGrid !== true;
+}
+
+function duoLayout() {
+  return new DuoLayout(selectedChampions, TEAM_SIZE);
+}
+
+// A duo card is offered whenever every core behind it is draftable and has no
+// card of its own to be picked from.
+function isDuoOffered(duo) {
+  return duo.cores.every((coreKey) => {
+    const core = championDB[coreKey];
+    if (!core || core.hiddenFromDraftGrid !== true) return false;
+    return isChampionDraftable(core, editMode);
+  });
 }
 
 function renderAvailableChampions() {
@@ -1199,7 +1215,65 @@ function renderAvailableChampions() {
     availableChampionsGrid.appendChild(card);
   });
 
+  Object.values(duoDB)
+    .filter(isDuoOffered)
+    .forEach((duo) => {
+      const card = document.createElement("div");
+      card.classList.add("champion-card", "duo-card");
+      card.dataset.duoKey = duo.key;
+      card.draggable = true;
+
+      card.innerHTML = renderDuoCardContent(duo);
+      attachChampionCardInteractions(card, duo.cores[0], -1, duo);
+
+      availableChampionsGrid.appendChild(card);
+    });
+
   updateSelectedChampionsUI();
+}
+
+function renderDuoCardContent(duo) {
+  const cores = duo.cores
+    .map(
+      (coreKey) =>
+        `<span class="champion-species-chip">${escapeHtml(championDB[coreKey].name)}</span>`,
+    )
+    .join("");
+
+  return `
+    <div class="champion-card-inner">
+      <div class="champion-card-face champion-card-front">
+        <img class="champion-card-portrait" src="${duo.portrait}" alt="${escapeHtml(duo.name)}">
+        <h3>${escapeHtml(duo.name)}</h3>
+        <div class="champion-identity-row">
+          <span class="duo-slot-cost">${duo.cores.length} slots</span>
+        </div>
+        <div class="duo-core-list">${cores}</div>
+      </div>
+    </div>
+  `;
+}
+
+function handleDuoCardClick(duo) {
+  if (playerTeamConfirmed) return;
+
+  const layout = duoLayout();
+
+  if (layout.at(selectedChampions.indexOf(duo.cores[0]))) {
+    layout.remove(duo);
+  } else {
+    const start = layout.findPlacement(duo);
+    if (start === -1) {
+      alert(
+        `${duo.name} need one free block of slots: ${layout.blockLabels(duo)}.`,
+      );
+      return;
+    }
+    layout.place(duo, start);
+  }
+
+  updateSelectedChampionsUI();
+  renderEmblemSelectionUI();
 }
 
 // --- Click on champion card ---
@@ -1268,13 +1342,36 @@ function updateSelectedChampionsUI() {
   selectedChampionsSlots.innerHTML = "";
   let allSlotsFilled = true;
 
-  selectedChampions.forEach((championKey, index) => {
+  const layout = duoLayout();
+
+  for (let index = 0; index < selectedChampions.length; index += 1) {
+    const championKey = selectedChampions[index];
+    const placement = layout.at(index);
+
     const slot = document.createElement("div");
     slot.classList.add("champion-slot");
     slot.dataset.slotIndex = index;
     slot.addEventListener("dragover", handleDragOver);
     slot.addEventListener("drop", handleDrop);
     slot.addEventListener("dragleave", handleDragLeave);
+    selectedChampionsSlots.appendChild(slot);
+
+    if (placement && placement.start === index) {
+      const { duo } = placement;
+      slot.classList.add("has-champion", "duo-occupied");
+      slot.style.gridColumn = `span ${duo.cores.length}`;
+
+      const card = document.createElement("div");
+      card.classList.add("champion-card", "duo-card");
+      card.dataset.duoKey = duo.key;
+      card.draggable = true;
+      card.innerHTML = renderDuoCardContent(duo);
+      attachChampionCardInteractions(card, duo.cores[0], index, duo);
+      slot.appendChild(card);
+
+      index += duo.cores.length - 1;
+      continue;
+    }
 
     if (championKey) {
       const champion = championDB[championKey];
@@ -1290,16 +1387,19 @@ function updateSelectedChampionsUI() {
       allSlotsFilled = false;
       slot.textContent = `Slot ${index + 1}`;
     }
-
-    selectedChampionsSlots.appendChild(slot);
-  });
+  }
 
   // Mark the cards in the available grid as selected
   document
     .querySelectorAll(".available-champions-grid .champion-card")
     .forEach((card) => {
-      const key = card.dataset.championKey;
-      card.classList.toggle("selected", selectedChampions.includes(key));
+      const { championKey, duoKey } = card.dataset;
+      const isSelected = duoKey
+        ? duoDB[duoKey].cores.every((coreKey) =>
+            selectedChampions.includes(coreKey),
+          )
+        : selectedChampions.includes(championKey);
+      card.classList.toggle("selected", isSelected);
     });
 
   autofillTeamBtn.disabled =
@@ -1323,6 +1423,10 @@ let firstChoiceSelected = null;
 let firstChoiceResolved = false; // true once the first champion has been decided; chips stop opening the 1v1 overlay
 const materializedLineupChampions = new Set();
 
+// Where each line-up champion of either team stands, decided by the server.
+let lineupStatuses = {};
+let enemyLineupStatuses = {};
+
 // --- Manual mid-match summon from lineup ---
 // Eligibility (slot free, once per turn) is server-authoritative; this only
 // tracks a request in flight so we don't double-submit while awaiting a reply.
@@ -1338,28 +1442,66 @@ const firstChoiceOverlay = document.getElementById("firstChoiceOverlay");
 const firstChoiceChips = document.getElementById("firstChoiceChips");
 const firstChoiceCancel = document.getElementById("firstChoiceCancel");
 
+// A duo's cores collapse into a single entry: they are summoned as one, so
+// offering two chips that do the same thing would misrepresent the action.
+function lineupEntries(championKeys) {
+  const entries = [];
+  const seenDuos = new Set();
+
+  championKeys.forEach((championKey, index) => {
+    const duo = getDuoForCore(championKey);
+
+    if (!duo) {
+      entries.push({ index, championKey });
+      return;
+    }
+
+    if (seenDuos.has(duo.key)) return;
+    seenDuos.add(duo.key);
+    entries.push({ index, championKey: duo.cores[0], duo });
+  });
+
+  return entries;
+}
+
+function lineupEntryStatus({ championKey, duo }) {
+  const keys = duo ? duo.cores : [championKey];
+  if (!keys.length) return "reserve";
+
+  const statuses = keys.map((key) => lineupStatuses[key] ?? "reserve");
+
+  if (statuses.includes("nothingness")) return "nothingness";
+  if (statuses.every((status) => status === "dead")) return "dead";
+  return statuses.every((status) => status === "reserve") ? "reserve" : "field";
+}
+
 function renderLineupBanner() {
   if (!lineupBanner || !lineupChips) return;
   lineupChips.innerHTML = "";
   let hasAny = false;
-  (playerRoster || []).forEach((champKey, idx) => {
+  lineupEntries(playerRoster || []).forEach((entry) => {
+    const { index: idx, championKey: champKey, duo } = entry;
+
     const chip = document.createElement("div");
     chip.className = "lineup-chip";
     chip.dataset.index = idx;
     chip.dataset.championKey = champKey || "";
-    chip.title = champKey
-      ? championDB[champKey]?.name || champKey
-      : `Slot ${idx + 1}`;
+    chip.title = duo
+      ? `${duo.name} — summoned together, and they need ${duo.cores.length} free spaces`
+      : champKey
+        ? championDB[champKey]?.name || champKey
+        : `Slot ${idx + 1}`;
     chip.classList.toggle(
       "selected",
-      !!champKey && champKey === firstChoiceSelected,
-    );
-    chip.classList.toggle(
-      "materialized",
       !!champKey &&
-        playerTeam !== null &&
-        materializedLineupChampions.has(`${playerTeam}:${champKey}`),
+        (duo ? duo.cores.includes(firstChoiceSelected) : champKey === firstChoiceSelected),
     );
+    chip.classList.toggle("duo-chip", !!duo);
+
+    const status = lineupEntryStatus(entry);
+    chip.classList.toggle("materialized", status !== "reserve");
+    chip.classList.toggle("is-dead", status === "dead");
+    chip.classList.toggle("in-nothingness", status === "nothingness");
     chip.classList.toggle(
       "summon-locked",
       firstChoiceResolved &&
@@ -1368,7 +1510,10 @@ function renderLineupBanner() {
         pendingSummonChampionKey === champKey,
     );
 
-    if (champKey && championDB[champKey]) {
+    if (duo) {
+      chip.innerHTML = renderLineupChipContent(duo, idx);
+      hasAny = true;
+    } else if (champKey && championDB[champKey]) {
       chip.innerHTML = renderLineupChipContent(championDB[champKey], idx);
       hasAny = true;
     } else {
@@ -1457,8 +1602,8 @@ function openSummonReminder(championKeys) {
   summonReminderChips.classList.remove("is-busy");
   summonReminderChips.innerHTML = "";
 
-  championKeys.forEach((championKey) => {
-    const champion = championDB[championKey];
+  lineupEntries(championKeys).forEach(({ championKey, duo }) => {
+    const entity = duo ?? championDB[championKey];
 
     const button = document.createElement("button");
     button.type = "button";
@@ -1467,8 +1612,8 @@ function openSummonReminder(championKeys) {
     button.setAttribute("role", "listitem");
 
     button.innerHTML = `
-      <span class="lineup-chip">${renderLineupChipContent(champion, 0)}</span>
-      <span class="summon-reminder-chip-name">${escapeHtml(champion.name || championKey)}</span>
+      <span class="lineup-chip">${renderLineupChipContent(entity, 0)}</span>
+      <span class="summon-reminder-chip-name">${escapeHtml(entity.name || championKey)}</span>
     `;
 
     button.addEventListener("click", () => summonFromReminder(button));
@@ -1620,21 +1765,16 @@ function syncMaterializedLineupChampions(gameStateChampions = []) {
 
   if (!lineupChips || playerTeam === null) return;
 
-  Array.from(lineupChips.children).forEach((chip) => {
-    const championKey = chip.dataset.championKey;
-    if (!championKey) return;
-    chip.classList.toggle(
-      "materialized",
-      materializedLineupChampions.has(`${playerTeam}:${championKey}`),
-    );
-  });
+  renderLineupBanner();
 }
 
 function resetLineupMaterializationState() {
   materializedLineupChampions.clear();
+  lineupStatuses = {};
+  enemyLineupStatuses = {};
   if (!lineupChips) return;
   Array.from(lineupChips.children).forEach((chip) => {
-    chip.classList.remove("materialized");
+    chip.classList.remove("materialized", "is-dead", "in-nothingness");
   });
 }
 
@@ -1692,6 +1832,29 @@ function handleDrop(e) {
   const targetSlotIndex = parseInt(e.currentTarget.dataset.slotIndex);
   if (isNaN(targetSlotIndex)) return;
 
+  const layout = duoLayout();
+  const droppedDuo = duoDB[droppedChampionKey];
+
+  if (droppedDuo) {
+    const span = droppedDuo.cores.length;
+    const previous = layout.at(selectedChampions.indexOf(droppedDuo.cores[0]));
+
+    if (previous) layout.remove(droppedDuo);
+
+    const start = targetSlotIndex - (targetSlotIndex % span);
+    if (layout.canPlaceAt(droppedDuo, start)) layout.place(droppedDuo, start);
+    else if (previous) layout.place(droppedDuo, previous.start);
+
+    finishDrag();
+    return;
+  }
+
+  // A single champion may not land on half a duo: that would split the pair.
+  if (layout.at(targetSlotIndex)) {
+    finishDrag();
+    return;
+  }
+
   if (selectedChampions[targetSlotIndex] === null) {
     // Dropping in empty slot
     if (draggedFromSlotIndex === -1) {
@@ -1714,6 +1877,10 @@ function handleDrop(e) {
     }
   }
 
+  finishDrag();
+}
+
+function finishDrag() {
   document
     .querySelector(".champion-card.dragging")
     ?.classList.remove("dragging");
@@ -1994,12 +2161,15 @@ function renderLineupBanners(lineupsByTeam = {}) {
     .map((champKey, idx) => {
       const champion = champKey ? championDB[champKey] : null;
 
-      const isMaterialized =
-        !!champKey &&
-        materializedLineupChampions.has(`${enemyTeam}:${champKey}`);
+      const status = champKey
+        ? (enemyLineupStatuses[champKey] ?? "reserve")
+        : "reserve";
+      const isMaterialized = status !== "reserve";
 
       const chipClass = `lineup-chip${
         isMaterialized ? " materialized" : " unrevealed"
+      }${status === "dead" ? " is-dead" : ""}${
+        status === "nothingness" ? " in-nothingness" : ""
       }`;
 
       if (!isMaterialized) {
@@ -2053,6 +2223,10 @@ socket.on("gameStateUpdate", (gameState) => {
       canSummon: false,
       champions: [],
     };
+
+    lineupStatuses = gameState?.lineupStatus?.[playerTeam] ?? {};
+    enemyLineupStatuses =
+      gameState?.lineupStatus?.[playerTeam === 1 ? 2 : 1] ?? {};
   }
 
   syncMaterializedLineupChampions(gameState?.champions || []);
@@ -2218,6 +2392,7 @@ function isChampionAutoSkippedInActionBar(champion) {
   if (!editMode.actMultipleTimesPerTurn && champion.hasActedThisTurn === true) {
     return true;
   }
+  if (SpawnProtection.isActive(champion)) return true;
   if (champion.actionBlockedByHardCC === true) return true;
   return champion.isActionBlockedByHardCC?.() === true;
 }

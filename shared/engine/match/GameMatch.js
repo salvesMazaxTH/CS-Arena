@@ -1,6 +1,10 @@
 import { getClaimMaxPoints } from "../combat/claim.js";
 import { championDB } from "../../data/championDB.js";
+import { getDuoForCore } from "../../data/duos.js";
+import { SpawnProtection } from "../combat/spawnProtection.js";
+import { Nothingness } from "../combat/nothingness.js";
 import { Champion } from "../../core/Champion.js";
+import { roundToFive } from "../../core/championCombat.js";
 import { generateId } from "../../utils/id.js";
 import { emitCombatEvent } from "../combat/combatEvents.js";
 import { formatChampionName } from "../../ui/formatters.js";
@@ -12,6 +16,10 @@ import {
 // Sanity ceiling for the minion slot search. Minions have no rule-level cap;
 // this only keeps the lookup from running away if something goes wrong.
 const MAX_MINION_SLOTS = 24;
+
+// Percentage stats are left alone: they are already small and rounding to five
+// would distort them.
+const SCALABLE_STATS = ["HP", "Attack", "Defense", "Speed"];
 
 class LobbyState {
   constructor(match) {
@@ -290,14 +298,18 @@ class CombatState {
    * slots and have no cap of their own, so a team already fielding three
    * minions can still summon three champions.
    */
-  canSpawnOnTeam(team, maxPerTeam = 3, { entityType = "champion" } = {}) {
+  canSpawnOnTeam(
+    team,
+    maxPerTeam = 3,
+    { entityType = "champion", requiredSlots = 1 } = {},
+  ) {
     if (entityType === "minion") return true;
 
     const championsOnField = this.getTeamChampions(team, {
       alive: true,
     }).filter((champion) => champion.entityType !== "minion");
 
-    return championsOnField.length < maxPerTeam;
+    return championsOnField.length + requiredSlots <= maxPerTeam;
   }
 
   /**
@@ -388,14 +400,24 @@ class CombatState {
     trackSnapshot = true,
     maxPerTeam = 3,
     spawnProtection = true,
+    asEntityType = null,
+    statScale = 1,
   } = {}) {
-    const baseData = championDB[championKey];
-    if (!baseData) {
+    const dbData = championDB[championKey];
+    if (!dbData) {
       console.warn(`[SPAWN] Aborted: "${championKey}" is not in the championDB.`);
       return null;
     }
 
-    const entityType = baseData.entityType ?? "champion";
+    const entityType = asEntityType ?? dbData.entityType ?? "champion";
+
+    const scaledStats = {};
+    if (statScale !== 1) {
+      for (const stat of SCALABLE_STATS) {
+        scaledStats[stat] = roundToFive(dbData[stat] * statScale);
+      }
+    }
+    const baseData = { ...dbData, entityType, ...scaledStats };
 
     // The field cap counts champions only; minions go straight through.
     if (!this.canSpawnOnTeam(team, maxPerTeam, { entityType })) {
@@ -428,6 +450,10 @@ class CombatState {
     const id = generateId(championKey);
     const newChampion = Champion.fromBaseData(baseData, id, team, { combatSlot });
     newChampion.championKey = championKey;
+
+    if (spawnProtection !== false && entityType === "champion") {
+      SpawnProtection.grant(newChampion);
+    }
 
     this.registerChampion(newChampion, { trackSnapshot });
 
@@ -463,7 +489,8 @@ class CombatState {
 
   /**
    * Applies a champion mutation request (restore / transform / revertTransform /
-   * swap) and returns { champion, log? }, or null when it cannot be applied.
+   * vanish / recallFromNothingness / swap) and returns { champion, log? }, or
+   * null when it cannot be applied.
    * On transform, schedules the matching revert. Sockets are the server's job.
    */
   mutateChampion(
@@ -475,10 +502,26 @@ class CombatState {
       hpMode = "preserveRatio",
       statMode = "deltaFromBase",
       expectedToken = null,
+      entryDamage = 0,
+      turns = 1,
+      returnState = null,
+      ruptureSourceId = null,
     } = {},
     options = {},
   ) {
     const mutationContext = options?.context ?? null;
+
+    if (mode === "vanish") {
+      return Nothingness.send(this, targetId, {
+        turns,
+        returnState,
+        ruptureSourceId,
+      });
+    }
+
+    if (mode === "recallFromNothingness") {
+      return Nothingness.recall(this, targetId, { context: mutationContext });
+    }
 
     if (mode === "restore") {
       const restored = this.restoreInactive(targetId);
@@ -554,6 +597,14 @@ class CombatState {
     // Which champion this one replaced — read by the replacement's on-death passive.
     newChampion.runtime.swappedFrom = targetId;
 
+    // A replacement that steps into an incoming blow carries it in, never dead on arrival.
+    if (entryDamage > 0) {
+      newChampion.HP = Math.max(
+        1,
+        newChampion.maxHP - Math.round(entryDamage),
+      );
+    }
+
     this.registerChampion(newChampion, { trackSnapshot: true });
 
     return { champion: newChampion };
@@ -586,7 +637,9 @@ class CombatState {
       (this.playerScores[victimSlot] || 0) -
       (this.playerScores[scoringSlot] || 0);
     const comebackBonus = !isMinion && scoreDeficit >= 10 ? 2 : 0;
-    const killPoints = claimValueAtDeath + deathBonus + comebackBonus;
+    const killPoints = champion.runtime?.leavesNoDeath
+      ? 0
+      : claimValueAtDeath + deathBonus + comebackBonus;
 
     let scoreAwarded = false;
 
@@ -1022,19 +1075,24 @@ export class GameMatch {
       const team = this.getPlayerTeam(socketId);
       choices.push({ championKey, team });
 
-      // Spawna o campeão escolhido usando a função injetada
-      spawnChampionFn({
-        championKey,
-        team,
-        combatSlot: 0, // Ambos começam no slot 0
-        trackSnapshot: true,
-        spawnProtection: false,
+      // Picking one half of a duo brings its whole line-up in.
+      const entering = getDuoForCore(championKey)?.cores ?? [championKey];
+
+      entering.forEach((key, offset) => {
+        spawnChampionFn({
+          championKey: key,
+          team,
+          combatSlot: offset,
+          trackSnapshot: true,
+          spawnProtection: false,
+        });
       });
 
-      // Remove o campeão da fila de reserva
       const reserve = this.combat.reserveQueues.get(team) || [];
-      const newReserve = reserve.filter((key) => key !== championKey);
-      this.combat.reserveQueues.set(team, newReserve);
+      this.combat.reserveQueues.set(
+        team,
+        reserve.filter((key) => !entering.includes(key)),
+      );
     });
 
     return { choices };

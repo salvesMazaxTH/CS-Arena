@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const raliaSkills = [
   // ========================
@@ -147,7 +148,11 @@ const raliaSkills = [
 
       // Log what she actually recovered, which is less than she asked for when
       // the heal runs into her HP ceiling.
-      const healed = user.heal(healingAmount, context);
+      const healed = new HealEvent({
+        target: user,
+        amount: healingAmount,
+        context,
+      }).execute();
 
       if (healed > 0) {
         // Extend the engine's log instead of replacing it.

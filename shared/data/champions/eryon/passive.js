@@ -1,33 +1,44 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
-function _processResonance(owner, threshold, momentumGain, context, resolver) {
-  let procs = 0;
+function onResourceChanged({ owner, target, amount, context, resolver }) {
+  if (owner.team !== target.team) return;
+  if (target.id === owner.id) return;
+  if (amount <= 0) return;
 
-  while ((owner.runtime.resonanceStacks || 0) >= threshold) {
+  owner.runtime.resonanceStacks = Math.min(
+    this.stacksCap,
+    (owner.runtime.resonanceStacks ?? 0) + amount,
+  );
+
+  let converted = false;
+
+  if (owner.runtime.resonanceStacks >= this.stacksCap) {
     const ally = context.aliveChampions
       .filter((c) => c.team === owner.team && c.id !== owner.id)
       .sort((a, b) => a.momentum - b.momentum)[0];
 
-    if (!ally) break;
+    if (ally) {
+      owner.runtime.resonanceStacks -= this.stacksCap;
 
-    owner.runtime.resonanceStacks -= threshold;
-
-    if (resolver?.applyResourceChange) {
       resolver.applyResourceChange({
         target: ally,
-        amount: momentumGain,
+        amount: this.momentumGain,
         context,
         sourceId: owner.id,
         debugLabel: "eryon_resonance_grant",
       });
-    } else {
-      ally.addMomentum(momentumGain);
-    }
 
-    procs++;
+      converted = true;
+    }
   }
 
-  return procs;
+  const summary = converted
+    ? `converted Resonance. Remaining stacks: ${owner.runtime.resonanceStacks}`
+    : `gained ${amount} Resonance. Current stacks: ${owner.runtime.resonanceStacks}`;
+
+  return {
+    log: `<b>[PASSIVE — Eryonic Resonance]</b> ${formatChampionName(owner)} ${summary}`,
+  };
 }
 
 export default {
@@ -52,73 +63,6 @@ export default {
     onResourceSpend: undefined,
   },
 
-  onResourceGain({ owner, target, amount, context, resolver }) {
-    if (owner.team !== target.team) return;
-    if (target.id === owner.id) return;
-    if (amount <= 0) return;
-
-    owner.runtime.resonanceStacks ??= 0;
-    owner.runtime.resonanceStacks += amount;
-
-    const procs = _processResonance(
-      owner,
-      this.stacksCap,
-      this.momentumGain,
-      context,
-      resolver,
-    );
-
-    if (procs > 0) {
-      return {
-        log: `<b>[PASSIVE — Eryonic Resonance]</b> ${formatChampionName(
-          owner,
-        )} converted Resonance ${procs}x. Remaining stacks: ${
-          owner.runtime.resonanceStacks
-        }`,
-      };
-    }
-
-    return {
-      log: `<b>[PASSIVE — Eryonic Resonance]</b> ${formatChampionName(
-        owner,
-      )} gained ${amount} Resonance. Current stacks: ${
-        owner.runtime.resonanceStacks
-      }`,
-    };
-  },
-
-  onResourceSpend({ owner, target, amount, context, resolver }) {
-    if (owner.team !== target.team) return;
-    if (target.id === owner.id) return;
-    if (amount <= 0) return;
-
-    owner.runtime.resonanceStacks ??= 0;
-    owner.runtime.resonanceStacks += amount;
-
-    const procs = _processResonance(
-      owner,
-      this.stacksCap,
-      this.momentumGain,
-      context,
-      resolver,
-    );
-
-    if (procs > 0) {
-      return {
-        log: `<b>[PASSIVE — Eryonic Resonance]</b> ${formatChampionName(
-          owner,
-        )} converted Resonance ${procs}x. Remaining stacks: ${
-          owner.runtime.resonanceStacks
-        }`,
-      };
-    }
-
-    return {
-      log: `<b>[PASSIVE — Eryonic Resonance]</b> ${formatChampionName(
-        owner,
-      )} gained ${amount} Resonance. Current stacks: ${
-        owner.runtime.resonanceStacks
-      }`,
-    };
-  },
+  onResourceGain: onResourceChanged,
+  onResourceSpend: onResourceChanged,
 };

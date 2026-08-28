@@ -1,7 +1,8 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const GLUTTONS_TOLL_HOOK_KEY = "gluttons_toll_hook";
 
@@ -69,7 +70,11 @@ const avarikSkills = [
     resolve({ user, context = {} }) {
       const healAmount = (user.maxHP * this.healPercent) / 100;
 
-      user.heal(healAmount, context);
+      const restored = new HealEvent({
+        target: user,
+        amount: healAmount,
+        context,
+      }).execute();
 
       user.runtime ??= {};
       user.runtime.hookEffects ??= [];
@@ -81,7 +86,8 @@ const avarikSkills = [
           (he) => he.key === GLUTTONS_TOLL_HOOK_KEY,
         )
       ) {
-        user.runtime.hookEffects.push({
+        user.addHookEffect({
+          type: "buff",
           key: GLUTTONS_TOLL_HOOK_KEY,
           group: "skill",
           hookScope: {
@@ -89,8 +95,7 @@ const avarikSkills = [
             onActionResolved: "actionSource",
           },
 
-          onActionResolved({ owner, actionSource, skill }) {
-            if (actionSource !== owner) return;
+          onActionResolved({ owner, skill }) {
             if (skill?.key !== CLAIM_ACTION_KEY) return;
 
             owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
@@ -104,11 +109,11 @@ const avarikSkills = [
               log: `${formatChampionName(owner)} collected <b>Glutton's Toll</b> from his own Claim, seizing ${bonusClaimPoints} additional point(s).`,
             };
           },
-        });
+        }, context);
       }
 
       return {
-        log: `${formatChampionName(user)} swallowed a slab of bedrock, restoring ${Math.floor(healAmount)} HP and setting <b>Glutton's Toll</b> on his next Claim.`,
+        log: `${formatChampionName(user)} swallowed a slab of bedrock, restoring ${restored} HP and setting <b>Glutton's Toll</b> on his next Claim.`,
       };
     },
   },
@@ -153,13 +158,10 @@ const avarikSkills = [
       const results = Array.isArray(result) ? result : [result];
       const hitSuccess = results.some((r) => !r?.evaded && !r?.immune);
 
-      if (!hitSuccess) return results;
+      if (!hitSuccess || !enemy.alive) return results;
 
-      // The hoard is weighed at the moment it lands, so the bonus reads
-      // Avarik's HP after the strike has already resolved.
-      const hoardDamage = Math.floor(
-        (user.HP * this.currentHPPercent) / 100,
-      );
+      // Weighed after the strike resolves, so the bonus reads Avarik's HP now.
+      const hoardDamage = Math.floor((user.HP * this.currentHPPercent) / 100);
 
       if (hoardDamage <= 0) return results;
 

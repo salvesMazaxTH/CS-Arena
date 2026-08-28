@@ -10,9 +10,8 @@ import gryskarchu from "./gryskarchu/index.js";
 import node_sparckina_07 from "./node_sparckina_07/index.js";
 import kai from "./kai/index.js";
 import barao_estrondoso from "./barao_estrondoso/index.js";
-/* import laisaelis from "./laisaelis/index.js";
+import laisaelis from "./laisaelis/index.js";
 import laiserisa from "./laiserisa/index.js";
-import laisaelis_laiserisa from "./laisaelis_laiserisa/index.js"; */
 import blyskartri from "./blyskartri/index.js";
 import elias_cross from "./elias_cross/index.js";
 import nythera from "./nythera/index.js";
@@ -46,6 +45,7 @@ import alexa_neruvya from "./alexa_neruvya/index.js";
 import alexa_neruvya_primordial from "./alexa_neruvya_primordial/index.js";
 import lorena from "./lorena/index.js";
 import irina_lancachamas from "./irina_lancachamas/index.js";
+import dorian from "./dorian/index.js";
 
 const championDB = {
   ralia,
@@ -59,9 +59,8 @@ const championDB = {
   gryskarchu,
   node_sparckina_07,
   kai,
-  /* laisaelis,
+  laisaelis,
   laiserisa,
-  laisaelis_laiserisa, */
   barao_estrondoso,
   blyskartri,
   elias_cross,
@@ -96,6 +95,7 @@ const championDB = {
   alexa_neruvya_primordial,
   lorena,
   irina_lancachamas,
+  dorian,
 };
 
 export default championDB;

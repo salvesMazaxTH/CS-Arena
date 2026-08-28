@@ -1,5 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
 
 const sabrinaSkills = [
   // =========================
@@ -89,7 +89,6 @@ const sabrinaSkills = [
       }).execute();
 
       if (!result?.evaded && !result?.immune && isChilled) {
-        target.removeStatusEffect("chilled");
         target.applyStatusEffect("frozen", this.freezeDuration, context);
       }
 
@@ -161,7 +160,6 @@ const sabrinaSkills = [
       }).execute();
 
       if (!iceResult?.evaded && !iceResult?.immune && wasChilledOnImpact) {
-        target.removeStatusEffect("chilled");
         target.applyStatusEffect("frozen", this.freezeDuration, context);
       }
 

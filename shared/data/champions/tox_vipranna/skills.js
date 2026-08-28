@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import basicStrike from "../basicStrike.js";
+import basicStrike from "../generic/basicStrike.js";
 
 const toxViprannaSkills = [
   // ========================
@@ -118,7 +118,8 @@ const toxViprannaSkills = [
         (e) => e.key !== "toxic_coating_retaliation",
       );
 
-      user.runtime.hookEffects.push({
+      user.addHookEffect({
+        type: "buff",
         key: "toxic_coating_retaliation",
         expiresAtTurn: activatedTurn + this.auraDuration,
         poisonedStacks: this.poisonedStacks,
@@ -147,7 +148,7 @@ const toxViprannaSkills = [
             )}.`,
           };
         },
-      });
+      }, context);
 
       context.registerDialog?.({
         message: `${formatChampionName(

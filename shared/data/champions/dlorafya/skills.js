@@ -1,6 +1,11 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
+
+// Every Burning D'Lorafya inflicts ticks for this multiple of a normal Burn.
+export const DLORAFYA_BURN_DAMAGE_MULTIPLIER = 2;
+
+const burnMetadata = { damageMultiplier: DLORAFYA_BURN_DAMAGE_MULTIPLIER };
 
 const dlorafyaSkills = [
   // =========================
@@ -52,7 +57,12 @@ const dlorafyaSkills = [
       if (!result?.evaded && !result?.immune && enemy.alive) {
         // Burning does not stack, so a refresh needs the old instance gone.
         if (wasBurning) enemy.removeStatusEffect("burning");
-        enemy.applyStatusEffect("burning", this.burnDuration, context);
+        enemy.applyStatusEffect(
+          "burning",
+          this.burnDuration,
+          context,
+          burnMetadata,
+        );
       }
 
       return result;
@@ -101,7 +111,12 @@ const dlorafyaSkills = [
         if (enemy.hasStatusEffect("burning")) {
           enemy.removeStatusEffect("burning");
         }
-        enemy.applyStatusEffect("burning", this.burnDuration, context);
+        enemy.applyStatusEffect(
+          "burning",
+          this.burnDuration,
+          context,
+          burnMetadata,
+        );
       }
 
       const burningEnemies = (context.aliveChampions ?? [])
@@ -213,7 +228,12 @@ const dlorafyaSkills = [
           if (target.hasStatusEffect("burning")) {
             target.removeStatusEffect("burning");
           }
-          target.applyStatusEffect("burning", this.burnDuration, context);
+          target.applyStatusEffect(
+            "burning",
+            this.burnDuration,
+            context,
+            burnMetadata,
+          );
         }
       }
 

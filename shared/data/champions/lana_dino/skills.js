@@ -1,7 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../totalBlock.js";
-import basicStrike from "../basicStrike.js";
+import totalBlock from "../generic/totalBlock.js";
+import basicStrike from "../generic/basicStrike.js";
 
 const tutuSkills = [
   totalBlock,

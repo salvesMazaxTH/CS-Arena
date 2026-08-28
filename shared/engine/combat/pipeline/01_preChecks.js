@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { emitCombatEvent } from "../combatEvents.js";
+import { SpawnProtection } from "../spawnProtection.js";
 
 export function preChecks(event) {
   /*     console.log("DEBUG ATTACKER:", event.attacker);
@@ -13,6 +14,14 @@ export function preChecks(event) {
     (activeChampions instanceof Map && !activeChampions.has(event.defender.id))
   ) {
     return _buildInactiveTargetResult(event);
+  }
+
+  if (SpawnProtection.isActive(event.defender)) {
+    return _buildImmuneResult(
+      event,
+      SpawnProtection.unreachableMessage(event.defender),
+      { quiet: true },
+    );
   }
 
   // 1️⃣ IMUNIDADE
@@ -73,15 +82,17 @@ export function preChecks(event) {
         flags: { evaded: true },
       });
 
-      emitCombatEvent(
-        "onEvade",
-        {
-          attacker: event.attacker,
-          defender: event.defender,
-          damage: event.damage,
-          context: event.context,
-        },
-        event.allChampions,
+      event.context.registerHookLogs(
+        emitCombatEvent(
+          "onEvade",
+          {
+            attacker: event.attacker,
+            defender: event.defender,
+            damage: event.damage,
+            context: event.context,
+          },
+          event.allChampions,
+        ),
       );
 
       return {
@@ -160,7 +171,11 @@ function _rollEvasion({ attacker, defender, context, debugMode }) {
   };
 }
 
-function _buildImmuneResult(event, customMessage = null) {
+function _buildImmuneResult(
+  event,
+  customMessage = null,
+  { quiet = false } = {},
+) {
   // Usamos as propriedades que já existem na instância
   const targetName = formatChampionName(event.defender);
   const username = event.attacker ? formatChampionName(event.attacker) : null;
@@ -170,7 +185,7 @@ function _buildImmuneResult(event, customMessage = null) {
     target: event.defender,
     amount: 0,
     sourceId: event.attacker?.id ?? null,
-    flags: { immune: true, immuneMessage: customMessage },
+    flags: { immune: true, immuneMessage: customMessage, immuneQuiet: quiet },
   });
 
   const log = customMessage

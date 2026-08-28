@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const naelthosSkills = [
   // ========================
@@ -33,7 +34,6 @@ const naelthosSkills = [
 
       const results = [];
 
-      // 🗡️ Damage to enemy (if still alive)
       if (enemy) {
         const damageResult = new DamageEvent({
           baseDamage,
@@ -50,37 +50,38 @@ const naelthosSkills = [
         results.push(...damageResults);
       }
       let allyLog = "";
-      let statLog = "";
 
-      const moreInjuredAlly = context.aliveChampions
-        .filter((champ) => champ.team === user.team)
+      const mostWoundedAlly = context.aliveChampions
+        .filter((champ) => champ.team === user.team && champ !== user)
         .sort((a, b) => a.HP / a.maxHP - b.HP / b.maxHP)[0];
-      const ally = moreInjuredAlly || null;
 
-      // 💧 Heal ally (if available)
-      if (ally) {
-        ally.heal(healAmount, context, user);
-        const debuffStatusEffects = ally.getStatusEffects({ type: "debuff" });
+      if (mostWoundedAlly) {
+        const restored = new HealEvent({
+          target: mostWoundedAlly,
+          amount: healAmount,
+          context,
+          source: user,
+        }).execute();
+        const debuffStatusEffects = mostWoundedAlly.getStatusEffects({
+          type: "debuff",
+        });
 
         debuffStatusEffects.forEach((statusEffect) => {
-          ally.removeStatusEffect(statusEffect.key);
+          mostWoundedAlly.removeStatusEffect(statusEffect.key);
         });
 
         const userName = formatChampionName(user);
-        const allyName = formatChampionName(ally);
+        const allyName = formatChampionName(mostWoundedAlly);
         const purificationLog = debuffStatusEffects.length
           ? ` and purifies ${allyName} of ${debuffStatusEffects.length} negative effect(s)`
           : "";
 
-        allyLog = `${userName} restores ${healAmount} HP to ${allyName}${purificationLog}. ${allyName} is now at ${ally.HP}/${ally.maxHP} HP.`;
+        allyLog = `${userName} restores ${restored} HP to ${allyName}${purificationLog}. ${allyName} is now at ${mostWoundedAlly.HP}/${mostWoundedAlly.maxHP} HP.`;
       } else {
-        const userName = formatChampionName(user);
-        allyLog = `${userName} reaches for an ally to mend, but finds none.`;
+        allyLog = `${formatChampionName(user)} reaches for an ally to mend, but finds none.`;
       }
 
-      results.push({
-        log: `${allyLog} ${statLog}`,
-      });
+      results.push({ log: allyLog });
 
       return results;
     },
@@ -107,6 +108,7 @@ const naelthosSkills = [
       user.runtime.hookEffects ??= [];
 
       const hookEffect = {
+        type: "buff",
         key: "aquatic_form_hook",
         group: "skill",
         form: "aquatic_form",
@@ -156,7 +158,7 @@ const naelthosSkills = [
         },
       };
 
-      user.runtime.hookEffects.push(hookEffect);
+      user.addHookEffect(hookEffect, context);
       user.runtime.form = "aquatic_form"; // Drives the visual effect.
 
       const userName = formatChampionName(user);
@@ -177,7 +179,6 @@ const naelthosSkills = [
     hpPerStack: 45,
     bonusPerStack: 20,
     maxBonus: 400,
-    damageMode: "standard",
     contact: false,
     isUltimate: true,
     momentumCost: 58,
@@ -209,9 +210,7 @@ const naelthosSkills = [
       const uses = (user.runtime.primordialSeaUses ??= 0);
       const factor = (this.hpFactor / 100) * this.hpDecayPerUse ** uses;
 
-      const amount = user.baseHP * factor;
-
-      user.modifyHP(amount, {
+      const { appliedAmount } = user.modifyHP(user.baseHP * factor, {
         context,
         affectMax: true,
         isPermanent: true,
@@ -219,7 +218,9 @@ const naelthosSkills = [
 
       user.runtime.primordialSeaUses = uses + 1;
 
-      // Applies the damage modifier for the effect's duration (current turn included).
+      user.damageModifiers = user.damageModifiers.filter(
+        (mod) => mod.id !== "rising_sea",
+      );
       user.addDamageModifier({
         id: "rising_sea",
         expiresAtTurn: currentTurn + this.effectDuration,
@@ -235,7 +236,7 @@ const naelthosSkills = [
       const userName = formatChampionName(user);
       return [
         {
-          log: `${userName} invokes the Primordial Sea! Max HP increased; the <b>Rising Sea</b> carries his attacks for ${this.effectDuration} turn(s).`,
+          log: `${userName} invokes the Primordial Sea! Max HP +${appliedAmount}; the <b>Rising Sea</b> carries his attacks for ${this.effectDuration} turn(s).`,
         },
       ];
     },

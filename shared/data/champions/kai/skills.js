@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import basicStrike from "../basicStrike.js";
+import basicStrike from "../generic/basicStrike.js";
+import kindledFists from "./passive.js";
 
 const kaiSkills = [
   basicStrike,
@@ -38,7 +39,6 @@ const kaiSkills = [
     contact: false,
     damageReduction: 25,
     counterAtkDmg: 15,
-    flamingFistsBonus: 35,
     stanceDuration: 2,
     burnDuration: 2,
     priority: 2,
@@ -49,7 +49,7 @@ const kaiSkills = [
 
       Anyone who strikes him in contact is answered on the spot with ${this.counterAtkDmg} piercing damage and left Burning.
 
-      The moment Kai deals damage, the stance catches: Living Ember burns for ${this.stanceDuration} turn(s), his attacks deal +${this.flamingFistsBonus} bonus damage and always apply Burning.`;
+      The moment Kai deals damage, the stance catches: Living Ember burns for ${this.stanceDuration} turn(s), his attacks deal +${kindledFists.livingEmberBonusDamage} bonus damage and always apply Burning.`;
     },
 
     targetSpec: ["self"],
@@ -65,6 +65,7 @@ const kaiSkills = [
       user.runtime.fireStance = "emberStance";
 
       const effect = {
+        type: "buff",
         key: "living_ember_stance",
         state: "emberStance", // "emberStance" → "livingEmber"
         expiresAtTurn: context.currentTurn + stanceDuration,
@@ -107,7 +108,7 @@ const kaiSkills = [
           };
         },
 
-        onAfterDmgDealing({ attacker, defender, owner, damage, context }) {
+        onAfterDmgDealing({ attacker, owner, damage, context }) {
           if (attacker !== owner) return;
           if (damage <= 0) return;
 
@@ -124,19 +125,6 @@ const kaiSkills = [
               log: "🔥 Living Ember flares to life!",
             };
           }
-
-          // 🔥 ACTIVE EFFECT
-          if (this.state === "livingEmber") {
-            if (!defender?.applyStatusEffect) return;
-
-            defender.applyStatusEffect("burning", burnDuration, context, {
-              source: owner,
-            });
-
-            return {
-              log: `${formatChampionName(defender)} is Burning (Living Ember)!`,
-            };
-          }
         },
 
         // 🔥 AUTOMATIC REMOVAL
@@ -148,12 +136,12 @@ const kaiSkills = [
         },
       };
 
-      user.runtime.hookEffects.push(effect);
+      user.addHookEffect(effect, context);
 
       // Damage reduction granted by the stance.
       user.applyDamageReduction({
         amount: this.damageReduction,
-        duration: 1,
+        duration: this.stanceDuration,
         context,
       });
 

@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { DLORAFYA_BURN_DAMAGE_MULTIPLIER } from "./skills.js";
 
 export default {
   key: "verdict_of_the_pyre",
@@ -20,7 +21,8 @@ export default {
       `<b>Judgment:</b> those who hide behind armor are judged by it. When D'Lorafya damages a target whose Defense is higher than his own, ` +
       `the hit becomes Piercing, ignoring <b>${this.piercingPerExcessPoint}%</b> of the target's Defense for each point of Defense it has above his ` +
       `(max <b>${this.piercingCap}%</b>). If the target is <b>Burning</b>, the cap is lifted to <b>${this.piercingCapVsBurning}%</b>, and at full judgment the hit becomes <b>Absolute</b> — ignoring Defense <i>and</i> all damage reduction.<br>` +
-      `<b>Kindling:</b> the first time each turn D'Lorafya damages a Burning enemy with Fire, he gains <b>+${this.emberAttackGain} Attack</b> for ${this.emberDuration} turn(s) (stacking).`
+      `<b>Kindling:</b> the first time each turn D'Lorafya damages a Burning enemy with Fire, he gains <b>+${this.emberAttackGain} Attack</b> for ${this.emberDuration} turn(s) (stacking).<br>` +
+      `<b>Divine Flame:</b> the fire he sets is no mortal flame — his Burning sears for <b>${DLORAFYA_BURN_DAMAGE_MULTIPLIER}x</b> the damage of an ordinary Burn each turn.`
     );
   },
 

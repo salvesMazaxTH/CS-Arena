@@ -1,6 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
-import basicShot from "../basicShot.js";
+import basicShot from "../generic/basicShot.js";
 
 const vulnaraSkills = [
   // ========================
@@ -128,9 +128,10 @@ const vulnaraSkills = [
     priority: 0,
 
     arrows: 3,
+    burnDuration: 2,
 
     description() {
-      return `Vulnara draws and looses ${this.arrows} arrows before the first one lands, all of them burning, all of them on the chosen target. Each arrow rolls for a critical hit on its own.`;
+      return `Vulnara draws and looses ${this.arrows} arrows before the first one lands, all of them burning, all of them on the chosen target. Each arrow rolls for a critical hit on its own, and every arrow that lands sets its target Burning for ${this.burnDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -153,6 +154,12 @@ const vulnaraSkills = [
         }).execute();
 
         const hitResults = Array.isArray(result) ? result : [result];
+        const mainDamage = hitResults[0];
+
+        if (!mainDamage?.evaded && !mainDamage?.immune) {
+          enemy.applyStatusEffect("burning", this.burnDuration, context);
+        }
+
         results.push(...hitResults);
       }
 

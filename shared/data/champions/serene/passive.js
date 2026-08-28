@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 export default {
   key: "grace_of_the_quietude",
@@ -19,16 +20,11 @@ export default {
     owner.runtime.sereneDamagedTurn = context.currentTurn;
   },
 
-  onActionResolved({ owner, actionSource, skill, context }) {
+  onActionResolved({ owner, actionSource, skill }) {
     if (!actionSource || actionSource.id !== owner.id) return;
 
     owner.runtime ??= {};
-    const previousSkillKey = owner.runtime.lastSereneSkillKey ?? null;
     owner.runtime.lastSereneSkillKey = skill?.key ?? null;
-
-    console.debug(
-      `[Serene:passive:onActionResolved] user=${owner.name} skill=${skill?.key ?? "N/A"} prevSkill=${previousSkillKey} nextSkill=${owner.runtime.lastSereneSkillKey} turn=${context?.currentTurn ?? "N/A"}`,
-    );
   },
 
   // Runs at the start of the turn.
@@ -42,10 +38,14 @@ export default {
     if (heal <= 0 || owner.HP >= owner.maxHP) return;
 
     const before = owner.HP;
-    owner.heal(heal, context);
+    const applied = new HealEvent({
+      target: owner,
+      amount: heal,
+      context,
+    }).execute();
 
     return {
-      log: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} restores ${heal} HP (${before} → ${owner.HP}).`,
+      log: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} restores ${applied} HP (${before} → ${owner.HP}).`,
     };
   },
 };

@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import basicShot from "../basicShot.js";
+import basicShot from "../generic/basicShot.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const sereneSkills = [
   // ========================
@@ -69,21 +70,12 @@ const sereneSkills = [
       const previousSkillKey = user.runtime.lastSereneSkillKey ?? null;
       user.runtime.sereneStreak ??= 0;
 
-      console.debug(
-        `[Serene:sigil_of_the_quietude] START turn=${context.currentTurn} execIdx=${context.executionIndex ?? "N/A"} user=${user.name} target=${enemy?.name} prevSkill=${previousSkillKey} prevStreak=${user.runtime.sereneStreak}`,
-      );
-
       // Streak: counts consecutive uses of Serene's own skill.
-      const isConsecutiveQuietudeUse = previousSkillKey === this.key;
-      if (isConsecutiveQuietudeUse) {
+      if (previousSkillKey === this.key) {
         user.runtime.sereneStreak += 1;
       } else {
         user.runtime.sereneStreak = 1;
       }
-
-      console.debug(
-        `[Serene:sigil_of_the_quietude] STREAK turn=${context.currentTurn} consecutiveBySkill=${isConsecutiveQuietudeUse} streakNow=${user.runtime.sereneStreak}`,
-      );
 
       const baseDamage = enemy.maxHP * (this.hpDamagePercent / 100);
       const result = new DamageEvent({
@@ -107,18 +99,11 @@ const sereneSkills = [
         stunSuccess = stunRoll < 0.5;
       }
 
-      console.debug(
-        `[Serene:sigil_of_the_quietude] STUN_CHECK streak=${user.runtime.sereneStreak} roll=${stunRoll ?? "N/A"} success=${stunSuccess} evaded=${Boolean(result?.evaded)} immune=${Boolean(result?.immune)}`,
-      );
-
       if (!result?.evaded && !result?.immune && stunSuccess) {
         const stunned = enemy.applyStatusEffect(
           "stunned",
           this.stunDuration,
           context,
-        );
-        console.debug(
-          `[Serene:sigil_of_the_quietude] APPLY_STUN attempted=true applied=${Boolean(stunned)} target=${enemy?.name}`,
         );
         if (stunned && stunned.log && result?.log) {
           result.log += `\n${formatChampionName(enemy)} is drawn into the Quietude!`;
@@ -134,14 +119,7 @@ const sereneSkills = [
         result.log =
           (result.log || "") +
           `\n${formatChampionName(enemy)} resists the Stun!`;
-        console.debug(
-          `[Serene:sigil_of_the_quietude] APPLY_STUN attempted=true applied=false reason=roll_failed target=${enemy?.name}`,
-        );
       }
-
-      console.debug(
-        `[Serene:sigil_of_the_quietude] END turn=${context.currentTurn} streak=${user.runtime.sereneStreak} resultLogPresent=${Boolean(result?.log)}`,
-      );
 
       return result;
     },
@@ -153,7 +131,8 @@ const sereneSkills = [
 
     damageReduction: 30,
     reductionDuration: 2,
-    surviveHP: 75,
+    surviveHP: 1,
+    reviveHealPercent: 25,
     auraDuration: 2,
     immunityDuration: 1,
 
@@ -167,7 +146,7 @@ const sereneSkills = [
     description() {
       return `Serene crosses into the Quietude and stands at the Threshold of Existence, where the newly dead have not yet finished dying. What she carries back settles over her and her allies as ${this.damageReduction}% damage reduction for ${this.reductionDuration} turn(s).
 
-      While that stillness lingers (${this.auraDuration} turn(s)), the first ally who would take lethal damage is held at the Threshold instead: they survive with ${this.surviveHP} HP and become Immune for ${this.immunityDuration} turn(s), spending the aura and dispelling it for the whole team.`;
+      While that stillness lingers (${this.auraDuration} turn(s)), the first ally who would take lethal damage is held at the Threshold instead: they survive with ${this.surviveHP} HP and become Immune for ${this.immunityDuration} turn(s), spending the aura and dispelling it for the whole team. At the start of the next turn, they come back across and are restored by ${this.reviveHealPercent}% of their Max HP.`;
     },
 
     targetSpec: ["self"],
@@ -197,8 +176,11 @@ const sereneSkills = [
         ally.runtime.hookEffects ??= [];
 
         const surviveHP = this.surviveHP;
+        const immunityDuration = this.immunityDuration;
+        const reviveHealPercent = this.reviveHealPercent;
 
         const effect = {
+          type: "buff",
           key: "epiphany_threshold",
           group: "epiphany",
           ownerId,
@@ -215,20 +197,24 @@ const sereneSkills = [
             // Not lethal: the Threshold stays shut.
             if (owner.HP - damage > 0) return;
 
-            owner.runtime.preventFinishing = true;
-
-            if (owner.hasStatusEffect("absoluteImmunity")) return;
+            // Must outlive this hook: the finishing step reads it after the
+            // damage lands.
+            owner.runtime.preventFinishingUntilTurn = context.currentTurn + 1;
 
             const lockedHP = surviveHP;
 
             const adjustedDamage = Math.max(owner.HP - lockedHP, 0);
 
-            // Force the final HP value.
-            owner.HP = Math.max(owner.HP - adjustedDamage, lockedHP);
-
-            owner.applyStatusEffect("absoluteImmunity", 1, context, {
-              source: "epiphany",
-            });
+            // The Immunity has to cover the next turn's onTurnStart, where a
+            // DoT tick would otherwise finish off a champion sitting at 1 HP
+            // before the return heal below runs. Status effects are only
+            // purged after that hook phase, so a duration of 1 spans it.
+            owner.applyStatusEffect(
+              "absoluteImmunity",
+              immunityDuration,
+              context,
+              { source: "epiphany" },
+            );
 
             const allies = context.aliveChampions.filter(
               (c) => c.team === owner.team,
@@ -238,8 +224,33 @@ const sereneSkills = [
               champ.runtime.hookEffects = champ.runtime.hookEffects.filter(
                 (e) => e.key !== "epiphany_threshold",
               );
-              delete champ.runtime.preventFinishing;
             }
+
+            owner.addHookEffect({
+              type: "buff",
+              key: "epiphany_return",
+              group: "epiphany",
+              ownerId,
+              expiresAtTurn: context.currentTurn + 1,
+
+              onTurnStart({ owner, context }) {
+                const heal = Math.floor(
+                  owner.maxHP * (reviveHealPercent / 100),
+                );
+                const applied = new HealEvent({
+                  target: owner,
+                  amount: heal,
+                  context,
+                }).execute();
+                if (applied <= 0) return;
+
+                context.registerDialog({
+                  message: `${formatChampionName(owner)} crosses back from the Threshold, restored by ${applied} HP!`,
+                  sourceId: owner.id,
+                  targetId: owner.id,
+                });
+              },
+            }, context);
 
             context.registerDialog({
               message: `${formatChampionName(owner)} is held at the Threshold, and death lets go!`,
@@ -254,7 +265,7 @@ const sereneSkills = [
           },
         };
 
-        ally.runtime.hookEffects.push(effect);
+        ally.addHookEffect(effect, context);
       });
 
       return {

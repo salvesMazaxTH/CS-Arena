@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const tharoxSkills = [
   // ========================
@@ -52,15 +53,15 @@ const tharoxSkills = [
         });
 
         return {
-          log: `${formatChampionName(user)}  <b>Primeval Taunt</b>. But failed. Taunt Streak reset.`,
+          log: `${formatChampionName(user)} used <b>Primeval Taunt</b>, but it failed. Taunt Streak reset.`,
         };
       }
-
-      user.runtime.lastTauntTurn = context.currentTurn;
 
       if (!context.currentTurn) {
         throw new Error("Context must include currentTurn for Primeval Taunt.");
       }
+
+      user.runtime.lastTauntTurn = context.currentTurn;
 
       // if it was successful, increment the tauntStreak for the next attempt
       user.runtime.tauntStreak += 1;
@@ -93,12 +94,13 @@ const tharoxSkills = [
   {
     key: "carapace_impact",
     name: "Carapace Impact",
-    bf: 0,
+    maxDefScaling: 95,
+    minDefScaling: 40,
     damageMode: "standard",
     contact: true,
     priority: 0,
     description() {
-      return `Tharox crashes into the enemy with the overwhelming weight of his stone-like frame, dealing damage equal to ${this.defScaling}% of his Defense. The more wounded he becomes, the less force he can bring to bear — his devastating strength waning as his colossal body begins to falter.`;
+      return `Tharox crashes into the chosen target with the overwhelming weight of his stone-like frame, dealing damage equal to ${this.maxDefScaling}% of his Defense at full health. The more wounded he becomes, the less force he can bring to bear — his devastating strength waning down to ${this.minDefScaling}% as his colossal body begins to falter.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -166,6 +168,10 @@ const tharoxSkills = [
       const userName = formatChampionName(user);
       const expiresAtTurn = context.currentTurn + this.effectDuration;
 
+      // `this` inside a hookEffect is the hook, not the skill.
+      const defBonusWhileShielded = this.defBonusWhileShielded;
+      const healingUponShieldBreakPercent = this.healingUponShieldBreakPercent;
+
       // Remove any previous SupremeShield of the Apotheosis.
       if (Array.isArray(user.runtime?.shields)) {
         user.runtime.shields = user.runtime.shields.filter(
@@ -199,7 +205,12 @@ const tharoxSkills = [
       const proportionalHeal = Math.max(0, user.Defense - user.baseDefense);
 
       if (proportionalHeal > 0) {
-        user.heal(proportionalHeal, context, user);
+        new HealEvent({
+          target: user,
+          amount: proportionalHeal,
+          context,
+          source: user,
+        }).execute();
       }
 
       // SupremeShield.
@@ -209,7 +220,8 @@ const tharoxSkills = [
       });
 
       // Hook of the Apotheosis.
-      user.runtime.hookEffects.push({
+      user.addHookEffect({
+        type: "buff",
         key: "apotheosis-of-the-monolith",
         name: "Apotheosis of the Monolith",
         expiresAtTurn,
@@ -235,7 +247,7 @@ const tharoxSkills = [
 
           if (!supremeShield) return;
 
-          const defenseBonus = this.defBonusWhileShielded;
+          const defenseBonus = defBonusWhileShielded;
 
           return {
             // Explicitly makes the bonus available for effects that
@@ -271,10 +283,15 @@ const tharoxSkills = [
 
           const healingAmount =
             Math.max(0, defender.Defense - defender.baseDefense) *
-            (this.healingUponShieldBreakPercent / 100);
+            (healingUponShieldBreakPercent / 100);
 
           if (healingAmount > 0) {
-            defender.heal(healingAmount, context, defender);
+            new HealEvent({
+              target: defender,
+              amount: healingAmount,
+              context,
+              source: defender,
+            }).execute();
           }
 
           defender.runtime.hookEffects = defender.runtime.hookEffects.filter(
@@ -298,10 +315,16 @@ const tharoxSkills = [
 
           // If it was not broken by damage, the healing occurs at the start of the turn, right after the natural expiration.
           if (!state?.brokenByDamage) {
-            const healingAmount = this.defBonusWhileShielded * 0.25;
+            const healingAmount =
+              defBonusWhileShielded * (healingUponShieldBreakPercent / 100);
 
             if (healingAmount > 0) {
-              owner.heal(healingAmount, context, owner);
+              new HealEvent({
+                target: owner,
+                amount: healingAmount,
+                context,
+                source: owner,
+              }).execute();
             }
           }
 
@@ -313,7 +336,7 @@ const tharoxSkills = [
             (hook) => hook.key !== "apotheosis-of-the-monolith",
           );
         },
-      });
+      }, context);
 
       return {
         log:

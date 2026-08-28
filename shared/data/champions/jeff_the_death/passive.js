@@ -5,16 +5,8 @@ const BUFFS_PER_DEATH = [
   { stat: "Defense", amount: 30, isPercent: true },
 ];
 
-/**
- * Queues Jeff's return for the start of the next turn.
- *
- * Called from two places on purpose: `onAfterDmgTaking` covers deaths dealt by
- * a DamageEvent, and `onChampionDeath` covers everything else (executions that
- * set `alive = false` directly, for instance). The `revivalScheduledForTurn`
- * flag makes the second call a no-op when the first one already ran.
- *
- * @returns {boolean} whether a revival was scheduled by this call
- */
+// Called from both death hooks; revivalScheduledForTurn makes the second
+// call a no-op.
 function scheduleRevival(champion, context, passiveName) {
   if (!champion || typeof context?.schedule !== "function") {
     console.warn(
@@ -31,10 +23,6 @@ function scheduleRevival(champion, context, passiveName) {
 
   champion.runtime.deathCounter ??= 0;
   champion.runtime.deathCounter++;
-
-  console.log(
-    `[Passive - Jeff] Scheduling revival for Turn ${turnToHappen} (${champion.id}).`,
-  );
 
   context.schedule({
     type: "spawnChampion",
@@ -151,11 +139,6 @@ export default {
     if (defender !== owner) return;
     if (defender.HP > 0) return;
 
-    console.log(
-      "[Passive - Jeff] The Jeff Does Not End activated for",
-      defender.id,
-    );
-
     scheduleRevival(defender, context, this.name);
   },
 
@@ -171,12 +154,6 @@ export default {
     if (!owner.alive) return;
 
     // Whenever any character dies, Jeff gains the buffs.
-    console.log(
-      `[Passive - Jeff] Buffing Jeff for the death of ${
-        deadChampion?.name ?? "someone"
-      }.`,
-    );
-
     BUFFS_PER_DEATH.forEach((buff) => {
       owner.modifyStat({
         statName: buff.stat,

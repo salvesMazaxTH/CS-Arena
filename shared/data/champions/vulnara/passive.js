@@ -1,7 +1,6 @@
 export default {
   key: "ascendant_flame",
   name: "Ascendant Flame",
-  critCap: 95,
   enhancedCritBonus: 70,
   atkBuff: 5,
   description() {

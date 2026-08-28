@@ -4,7 +4,7 @@ import {
   CLAIM_ACTION_KEY,
   getClaimPoints,
 } from "../../../engine/combat/claim.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
 
 const MISERS_TOLL_HOOK_KEY = "misers_toll_hook";
 
@@ -101,7 +101,7 @@ const avarionSkills = [
         duration: this.attackBonusDuration,
         isPercent: true,
         context,
-        statModifierSrc: "misers_toll",
+        statModifierSrc: user,
       });
 
       user.runtime ??= {};
@@ -112,7 +112,8 @@ const avarionSkills = [
       if (
         !user.runtime.hookEffects.some((he) => he.key === MISERS_TOLL_HOOK_KEY)
       ) {
-        user.runtime.hookEffects.push({
+        user.addHookEffect({
+          type: "buff",
           key: MISERS_TOLL_HOOK_KEY,
           group: "skill",
           // No hookScope: the toll watches the enemy's Claim, not Avarion's
@@ -166,7 +167,7 @@ const avarionSkills = [
               log: `${formatChampionName(owner)} levied <b>Miser's Toll</b> on ${formatChampionName(actionSource)}'s Claim, diverting ${collected} point(s) to his own ledger.`,
             };
           },
-        });
+        }, context);
       }
 
       return {

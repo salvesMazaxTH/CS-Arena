@@ -1,6 +1,5 @@
-// shared/champions/aren_marevoth/passive.js
-
 import { formatChampionName } from "../../../ui/formatters.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 export default {
   key: "deep_transfiguration",
@@ -35,9 +34,6 @@ export default {
 
       if (lastTriggerTurn === context.currentTurn) return;
 
-      owner.runtime.deepTransfigurationLastTriggerTurn =
-        context.currentTurn;
-
       const debuffStatusEffects = owner.getStatusEffects({
         type: "debuff",
       });
@@ -45,13 +41,18 @@ export default {
       // Only activates if there is a debuff to remove.
       if (!debuffStatusEffects.length) return;
 
+      owner.runtime.deepTransfigurationLastTriggerTurn = context.currentTurn;
+
       const removedDebuff = debuffStatusEffects[0];
 
       owner.removeStatusEffect(removedDebuff.key);
 
-      const healingAmount = owner.maxHP * this.healPercent;
-
-      owner.heal(healingAmount, context, owner);
+      const restored = new HealEvent({
+        target: owner,
+        amount: owner.maxHP * this.healPercent,
+        context,
+        source: owner,
+      }).execute();
 
       owner.runtime.deepTransfigurationNextAttackBonus = true;
 
@@ -60,15 +61,13 @@ export default {
           `<b>[Passive - Deep Transfiguration]</b> ` +
           `${formatChampionName(owner)} crossed the 50% HP threshold, ` +
           `removed ${removedDebuff.name ?? removedDebuff.key}, ` +
-          `restored ${Math.floor(healingAmount)} HP ` +
+          `restored ${restored} HP ` +
           `and empowered his next attack.`,
       };
     }
   },
 
-  onBeforeDmgDealing({ owner, damage, context }) {
-    if (owner !== context.attacker) return;
-
+  onBeforeDmgDealing({ owner, damage }) {
     const state =
       owner.runtime?.deepTransfigurationNextAttackBonus;
 

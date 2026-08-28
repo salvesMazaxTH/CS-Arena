@@ -10,8 +10,11 @@ import burning from "./burning.js";
 import bleeding from "./bleeding.js";
 import poisoned from "./poisoned.js";
 import absoluteImmunity from "./absoluteImmunity.js";
+import debuffImmunity from "./debuffImmunity.js";
 import conductor from "./conductor.js";
 import invisible from "./invisible.js";
+import concealed from "./concealed.js";
+import healBlock from "./healBlock.js";
 
 export const StatusEffectsRegistry = {
   paralyzed,
@@ -23,7 +26,16 @@ export const StatusEffectsRegistry = {
   burning,
   bleeding,
   absoluteImmunity,
+  debuffImmunity,
   conductor,
   invisible,
+  concealed,
   poisoned,
+  healBlock,
 };
+
+export const EvolvedStatusByBase = Object.fromEntries(
+  Object.values(StatusEffectsRegistry)
+    .filter((definition) => definition.evolvesFrom)
+    .map((definition) => [definition.evolvesFrom, definition.key]),
+);

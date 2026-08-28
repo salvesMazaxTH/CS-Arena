@@ -854,6 +854,8 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   async function animateImmune(effect) {
+    if (effect.immuneQuiet) return;
+
     const { targetId, immuneMessage } = effect;
     const message = immuneMessage || `${championName(targetId)} is <b>Immune!</b>`;
     await showDialog(message);
@@ -1342,10 +1344,10 @@ export function createCombatAnimationManager(deps) {
       };
     }
 
-    // Runtime hook keys (data-only, safe for client UI)
-    if (Array.isArray(snap.runtimeHookEffectKeys)) {
+    // Runtime hook data (data-only, safe for client UI)
+    if (Array.isArray(snap.runtimeHookEffectData)) {
       champion.runtime ??= {};
-      champion.runtime.hookEffectKeys = snap.runtimeHookEffectKeys;
+      champion.runtime.hookEffectData = snap.runtimeHookEffectData;
     }
 
     if (snap.actionBlockedByHardCC !== undefined) {

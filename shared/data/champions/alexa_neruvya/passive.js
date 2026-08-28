@@ -1,7 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
-const MAX_CRIT_CHANCE = 95;
-
 export default {
   key: "the_grace_that_remains",
   name: "The Grace That Remains",
@@ -18,7 +16,7 @@ export default {
 
   hookScope: {
     onBeforeDmgDealing: "attacker",
-    onBeforeHealing: "source",
+    onBeforeHealing: "healSrc",
   },
 
   // Her Critical is reserved for mending, so damage criticals are unmade.
@@ -28,16 +26,15 @@ export default {
     return { crit: { ...crit, didCrit: false, bonus: 0, critExtra: 0 } };
   },
 
-  onBeforeHealing({ owner, target, amount, context }) {
-    if (amount <= 0) return;
+  onBeforeHealing({ owner, healTarget, amount, context }) {
+    if (amount <= 0 || healTarget.HP >= healTarget.maxHP) return;
 
-    const chance = Math.min(owner.Critical, MAX_CRIT_CHANCE);
-    if (Math.random() * 100 >= chance) return;
+    if (Math.random() * 100 >= owner.Critical) return;
 
     context.registerDialog({
-      message: `💧 The tide runs deep — ${formatChampionName(target)} is mended beyond measure!`,
+      message: `💧 The tide runs deep — ${formatChampionName(healTarget)} is mended beyond measure!`,
       sourceId: owner.id,
-      targetId: target.id,
+      targetId: healTarget.id,
     });
 
     // The sharpest ally takes the surge; ties fall to Attack, then to chance.

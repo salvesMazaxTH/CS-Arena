@@ -54,10 +54,10 @@ export const enchanterWard = {
     }
   },
 
-  onBeforeHealing({ source, amount, owner }) {
+  onBeforeHealing({ healSrc, amount, owner }) {
     if (!amount || amount <= 0) return;
-    if (source?.team !== owner?.team) return;
-    if (!isEnchanter(source)) return;
+    if (healSrc?.team !== owner?.team) return;
+    if (!isEnchanter(healSrc)) return;
 
     return {
       amount: Math.round(amount * 1.15),

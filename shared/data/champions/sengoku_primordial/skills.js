@@ -1,5 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
 
 const sengokuPrimordialSkills = [
   totalBlock,
@@ -34,6 +34,7 @@ const sengokuPrimordialSkills = [
     name: "Cataclysmic Breath",
     bf: 130,
     damageMode: "standard",
+    element: "fire",
     contact: false,
     isUltimate: true,
     momentumCost: 33,

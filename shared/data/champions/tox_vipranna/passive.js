@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 export default {
   key: "toxic_metabolism",
@@ -29,7 +30,11 @@ export default {
     if (healAmount <= 0) return;
 
     const before = owner.HP;
-    const healed = owner.heal(healAmount, context);
+    const healed = new HealEvent({
+      target: owner,
+      amount: healAmount,
+      context,
+    }).execute();
 
     if (healed <= 0) return;
 

@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 export default {
   key: "echoes_of_vitality",
@@ -24,12 +25,18 @@ export default {
     if (healSrc.id === owner.id) return;
 
     const heal = Math.floor(amount * (this.lifeStealHealPercent / 100));
-    if (heal <= 0 || owner.HP >= owner.maxHP) return;
+    if (heal <= 0) return;
 
-    owner.heal(heal, context);
+    const restored = new HealEvent({
+      target: owner,
+      amount: heal,
+      context,
+    }).execute();
+
+    if (restored <= 0) return;
 
     return {
-      log: `↳ [PASSIVE — ${this.name}] ${formatChampionName(owner)} drinks in the vital echo of ${formatChampionName(healSrc)} (+${heal} HP).`,
+      log: `↳ [PASSIVE — ${this.name}] ${formatChampionName(owner)} drinks in the vital echo of ${formatChampionName(healSrc)} (+${restored} HP).`,
     };
   },
 

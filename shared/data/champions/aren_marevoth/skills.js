@@ -1,8 +1,9 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
 import { applyTide, consumeTide, getTideStacks } from "./tide.js";
 import { getClaimPoints } from "../../../engine/combat/claim.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const arenMarevothSkills = [
   // ========================
@@ -22,8 +23,12 @@ const arenMarevothSkills = [
     priority: 0,
     element: "water",
 
+    tideThreshold: 2,
+    tideBonusDamage: 10,
+    buffsRemoved: 2,
+
     description() {
-      return `When this ability hits a target, it applies Tide to them. When it hits a target with 2 or more Tide, consume all Tide on that target to deal 10 absolute damage and remove 2 buffs from them.`;
+      return `When this ability hits a target, it applies Tide to them. When it hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} absolute damage and remove ${this.buffsRemoved} buffs from them.`;
     },
 
     targetSpec: ["enemy"],
@@ -48,11 +53,11 @@ const arenMarevothSkills = [
       const hitSuccess = results.some((r) => !r?.evaded && !r?.immune);
 
       if (hitSuccess) {
-        if (currentTideStacks >= 2) {
+        if (currentTideStacks >= this.tideThreshold) {
           consumeTide(enemy);
 
           const bonusResult = new DamageEvent({
-            baseDamage: 10,
+            baseDamage: this.tideBonusDamage,
             attacker: user,
             defender: enemy,
             skill: this,
@@ -68,18 +73,18 @@ const arenMarevothSkills = [
           results.push(...bonusResults);
 
           const buffs = enemy.getStatusEffects({ type: "buff" });
-          const buffsToRemove = buffs.slice(0, 2);
+          const buffsToRemove = buffs.slice(0, this.buffsRemoved);
           for (const buff of buffsToRemove) {
             enemy.removeStatusEffect(buff.key);
           }
 
           context.registerDialog?.({
-            message: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing 10 absolute damage and removing ${buffsToRemove.length} buff(s)!`,
+            message: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing ${this.tideBonusDamage} absolute damage and removing ${buffsToRemove.length} buff(s)!`,
             sourceId: user.id,
             targetId: enemy.id,
           });
         } else {
-          applyTide(enemy);
+          applyTide(enemy, context);
         }
       }
 
@@ -97,13 +102,19 @@ const arenMarevothSkills = [
     priority: 0,
     element: "water",
 
+    healPercent: 10,
+    bonusClaimPoints: 1,
+
     description() {
-      return `Gain Spellshield. The next time this champion uses Claim, restore 10% of his Max HP and gain 1 additional point.`;
+      return `Gain Spellshield. The next time this champion uses Claim, restore ${this.healPercent}% of his Max HP and gain ${this.bonusClaimPoints} additional point.`;
     },
 
     targetSpec: ["self"],
 
     resolve({ user, context = {} }) {
+      const healPercent = this.healPercent;
+      const bonusClaimPoints = this.bonusClaimPoints;
+
       user.addShield(1, 0, context, "spell");
 
       user.runtime ??= {};
@@ -114,7 +125,8 @@ const arenMarevothSkills = [
           (he) => he.key === "blessing_of_the_ocean_depths_hook",
         )
       ) {
-        user.runtime.hookEffects.push({
+        user.addHookEffect({
+          type: "buff",
           key: "blessing_of_the_ocean_depths_hook",
           group: "skill",
           hookScope: {
@@ -129,17 +141,21 @@ const arenMarevothSkills = [
               (he) => he.key !== "blessing_of_the_ocean_depths_hook",
             );
 
-            const healAmount = owner.maxHP * 0.1;
-            owner.heal(healAmount, context, owner);
+            const restored = new HealEvent({
+              target: owner,
+              amount: owner.maxHP * (healPercent / 100),
+              context,
+              source: owner,
+            }).execute();
 
             return {
-              log: `${formatChampionName(owner)} restored ${Math.floor(healAmount)} HP and gained 1 additional Claim point from Blessing of the Ocean Depths.`,
+              log: `${formatChampionName(owner)} restored ${restored} HP and gained ${bonusClaimPoints} additional Claim point from Blessing of the Ocean Depths.`,
               type: "score",
-              amount: 1,
+              amount: bonusClaimPoints,
               scoringSlot: owner.team - 1,
             };
           },
-        });
+        }, context);
       }
 
       return {
@@ -155,6 +171,12 @@ const arenMarevothSkills = [
     key: "abyssal_depths",
     name: "Abyssal Depths",
     bf: 100,
+    tideThreshold: 2,
+    tideBonusDamage: 30,
+    buffsRemoved: 4,
+    claimPointsRequired: 5,
+    maxHPBonusPercent: 12,
+    maxHPBonusStacks: 3,
     contact: false,
     damageMode: "standard",
     isUltimate: true,
@@ -163,7 +185,7 @@ const arenMarevothSkills = [
     element: "water",
 
     description() {
-      return `When this ability hits a target with 2 or more Tide, consume all Tide on that target to deal 30 absolute damage and remove 4 buffs from them.\n\nThe next time this champion uses Claim while possessing 5 or more Value Points, increase his Max HP by 12% permanently. Max: +36%.`;
+      return `When this ability hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} absolute damage and remove ${this.buffsRemoved} buffs from them.\n\nThe next time this champion uses Claim while possessing ${this.claimPointsRequired} or more Value Points, increase his Max HP by ${this.maxHPBonusPercent}% permanently. Max: +${this.maxHPBonusPercent * this.maxHPBonusStacks}%.`;
     },
 
     targetSpec: ["enemy"],
@@ -173,6 +195,9 @@ const arenMarevothSkills = [
       const baseDamage = (user.Attack * this.bf) / 100;
 
       const currentTideStacks = getTideStacks(enemy);
+      const claimPointsRequired = this.claimPointsRequired;
+      const maxHPBonusPercent = this.maxHPBonusPercent;
+      const maxHPBonusStacks = this.maxHPBonusStacks;
 
       const result = new DamageEvent({
         baseDamage,
@@ -187,11 +212,11 @@ const arenMarevothSkills = [
       const results = Array.isArray(result) ? result : [result];
       const hitSuccess = results.some((r) => !r?.evaded && !r?.immune);
 
-      if (hitSuccess && currentTideStacks >= 2) {
+      if (hitSuccess && currentTideStacks >= this.tideThreshold) {
         consumeTide(enemy);
 
         const bonusResult = new DamageEvent({
-          baseDamage: 30,
+          baseDamage: this.tideBonusDamage,
           attacker: user,
           defender: enemy,
           skill: this,
@@ -207,13 +232,13 @@ const arenMarevothSkills = [
         results.push(...bonusResults);
 
         const buffs = enemy.getStatusEffects({ type: "buff" });
-        const buffsToRemove = buffs.slice(0, 4);
+        const buffsToRemove = buffs.slice(0, this.buffsRemoved);
         for (const buff of buffsToRemove) {
           enemy.removeStatusEffect(buff.key);
         }
 
         context.registerDialog?.({
-          message: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing 30 absolute damage and removing ${buffsToRemove.length} buff(s)!`,
+          message: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing ${this.tideBonusDamage} absolute damage and removing ${buffsToRemove.length} buff(s)!`,
           sourceId: user.id,
           targetId: enemy.id,
         });
@@ -225,7 +250,8 @@ const arenMarevothSkills = [
       if (
         !user.runtime.hookEffects.some((he) => he.key === "abyssal_depths_hook")
       ) {
-        user.runtime.hookEffects.push({
+        user.addHookEffect({
+          type: "buff",
           key: "abyssal_depths_hook",
           group: "skill",
           hookScope: {
@@ -240,27 +266,31 @@ const arenMarevothSkills = [
               context?.preActionClaimPoints ??
               getClaimPoints(owner, context?.currentTurn);
 
-            if (claimPoints >= 4) {
-              owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
-                (he) => he.key !== "abyssal_depths_hook",
-              );
+            if (claimPoints < claimPointsRequired) return;
 
-              owner.runtime.abyssalDepthsHpStacks =
-                owner.runtime.abyssalDepthsHpStacks || 0;
+            owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
+              (he) => he.key !== "abyssal_depths_hook",
+            );
 
-              if (owner.runtime.abyssalDepthsHpStacks < 3) {
-                owner.runtime.abyssalDepthsHpStacks += 1;
-                const hpBonus = Math.round(owner.baseHP * 0.12);
-                owner.maxHP += hpBonus;
-                owner.HP += hpBonus;
+            owner.runtime.abyssalDepthsHpStacks ??= 0;
 
-                return {
-                  log: `${formatChampionName(owner)} triggered Abyssal Depths (5+ Value Points), permanently increasing Max HP by 12% (+${hpBonus} HP)! (${owner.runtime.abyssalDepthsHpStacks}/3)`,
-                };
-              }
-            }
+            if (owner.runtime.abyssalDepthsHpStacks >= maxHPBonusStacks) return;
+
+            owner.runtime.abyssalDepthsHpStacks += 1;
+
+            const hpBonus = Math.round(owner.baseHP * (maxHPBonusPercent / 100));
+
+            owner.modifyHP(hpBonus, {
+              context,
+              affectMax: true,
+              isPermanent: true,
+            });
+
+            return {
+              log: `${formatChampionName(owner)} triggered Abyssal Depths (${claimPointsRequired}+ Value Points), permanently increasing Max HP by ${maxHPBonusPercent}% (+${hpBonus} HP)! (${owner.runtime.abyssalDepthsHpStacks}/${maxHPBonusStacks})`,
+            };
           },
-        });
+        }, context);
       }
 
       return results;

@@ -20,7 +20,8 @@ export default {
     onEvade: undefined,
   },
 
-  onBuffingStat({ owner, statName, buffSrc, buffTarget, context }) {
+  onBuffingStat({ owner, statName, amount, buffSrc, buffTarget, context }) {
+    if (amount <= 0) return;
     if (!buffSrc || buffSrc.team !== owner.team) return;
     if (!buffTarget || buffTarget.team !== owner.team) return;
 
@@ -40,7 +41,7 @@ export default {
   },
 
   onEvade({ owner, defender, context }) {
-    if (!defender || defender.team !== owner.team) return;
+    if (defender.id !== owner.id) return;
 
     const stackResult = this._addStack({
       owner,
@@ -94,6 +95,8 @@ export default {
             (c) => c.team !== owner.team && c.HP > 0,
           )
         : [];
+
+    if (!enemies.length) return;
 
     const lowestHealthEnemy = enemies.reduce((a, b) => {
       if (a.HP < b.HP) return a;

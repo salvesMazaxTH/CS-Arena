@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
 import { MAX_AMMO, getAmmo, fireBullets } from "./ammo.js";
 
 const zyrelleSkills = [
@@ -102,7 +102,7 @@ const zyrelleSkills = [
     key: "reckless_reload",
     name: "Reckless Reload",
 
-    defensePenaltyPercent: 50,
+    defensePenaltyPercent: 35,
     vulnerabilityPercent: 10,
     duration: 2,
 
@@ -136,7 +136,8 @@ const zyrelleSkills = [
       user.runtime.hookEffects = user.runtime.hookEffects.filter(
         (hook) => hook.key !== "reckless_reload_exposure",
       );
-      user.runtime.hookEffects.push({
+      user.addHookEffect({
+        type: "debuff",
         key: "reckless_reload_exposure",
         name: "Reckless Reload",
         expiresAtTurn: context.currentTurn + this.duration,
@@ -149,7 +150,7 @@ const zyrelleSkills = [
           if (defender !== user) return;
           return { damage: damage * (1 + vulnerabilityPercent / 100) };
         },
-      });
+      }, context);
 
       return {
         log: `${formatChampionName(user)} slams in a full reload (${MAX_AMMO}/${MAX_AMMO}), but leaves herself exposed!`,

@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const rakhanaSkills = [
   // =========================
@@ -26,7 +27,7 @@ const rakhanaSkills = [
     description() {
       return `Strikes an enemy with a powerful iron-infused palm.
 
-      If Rakhana has a Shield when this ability hits, she consumes the Shield to stun the target for ${this.stunDuration} turn and restores HP equal to ${this.shieldPercent}% of her Max HP.
+      If any Shield is on her when this ability hits, she consumes it to stun the target for ${this.stunDuration} turn and restores HP equal to ${this.shieldPercent}% of her Max HP.
 
       Otherwise, she gains a Shield equal to ${this.shieldPercent}% of her Max HP after dealing damage.`;
     },
@@ -38,13 +39,10 @@ const rakhanaSkills = [
 
       const baseDamage = (user.Attack * this.bf) / 100;
 
-      // Initialize shields array if needed
       user.runtime ??= {};
       user.runtime.shields ??= [];
 
-      const hadShield =
-        Array.isArray(user.runtime.shields) &&
-        user.runtime.shields.length > 0;
+      const hadShield = user.runtime.shields.length > 0;
 
       const result = new DamageEvent({
         baseDamage,
@@ -58,21 +56,24 @@ const rakhanaSkills = [
 
       const results = Array.isArray(result) ? result : [result];
 
-      const hitSuccess = results.some(
-        (result) => !result?.evaded && !result?.immune,
-      );
+      // Reflects and counter-attacks ride along in `results` aimed back at her.
+      const mainResult = results.find((entry) => entry.targetId === enemy.id);
 
-      if (!hitSuccess) return results;
+      if (mainResult.evaded || mainResult.immune) return results;
 
       const value = Math.floor(
         user.maxHP * (this.shieldPercent / 100),
       );
 
       if (hadShield) {
-        // Remove only the first shield
         user.runtime.shields.splice(0, 1);
 
-        user.heal(value, context, user);
+        new HealEvent({
+          target: user,
+          amount: value,
+          context,
+          source: user,
+        }).execute();
 
         enemy.applyStatusEffect(
           "stunned",
@@ -118,7 +119,7 @@ const rakhanaSkills = [
     description() {
       return `Rakhana enters a defensive stance and gains a Shield equal to ${this.shieldPercent}% of her Max HP for this turn.
 
-      The first time she takes damage from a direct attack while the Shield is active, she reduces that damage by 50% and reflects the prevented damage back to the attacker.
+      The first time she is struck while the Shield is active, she reduces that damage by 50% and reflects the prevented damage back to the attacker.
 
       If the incoming attack is Contact, she also stuns the attacker for 1 turn.`;
     },
@@ -139,24 +140,28 @@ const rakhanaSkills = [
         (e) => e.key !== "silver_mirror_reflect",
       );
 
-      user.runtime.hookEffects.push({
+      const reflectPercent = this.reflectPercent;
+      let spent = false;
+
+      user.addHookEffect({
+        type: "buff",
         key: "silver_mirror_reflect",
         expiresAtTurn: context.currentTurn + this.duration,
 
         hookScope: {
-          onAfterDmgTaking: "defender",
+          onBeforeDmgTaking: "defender",
         },
 
         name: "Silver Mirror (Reflection)",
 
-        onAfterDmgTaking({
+        onBeforeDmgTaking({
           defender,
           attacker,
           damage,
           skill,
           context,
         }) {
-          if (context.damageDepth > 0) return;
+          if (context.damageDepth > 0 || spent) return;
 
           const shieldActive =
             Array.isArray(defender.runtime?.shields) &&
@@ -164,8 +169,10 @@ const rakhanaSkills = [
 
           if (!shieldActive) return;
 
-          const reducedDamage = Math.floor(damage * 0.5);
-          const reflectedDamage = Math.floor(damage * 0.5);
+          spent = true;
+
+          const reflectedDamage = Math.floor(damage * (reflectPercent / 100));
+          const reducedDamage = damage - reflectedDamage;
 
           context.registerDialog?.({
             message: `<b>[${this.name}]</b> ${formatChampionName(
@@ -221,7 +228,7 @@ const rakhanaSkills = [
             )} reduces incoming damage by 50% and reflects ${reflectedDamage} damage!`,
           };
         },
-      });
+      }, context);
 
       context.registerDialog?.({
         message: `${formatChampionName(

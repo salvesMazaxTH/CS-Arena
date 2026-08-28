@@ -1,4 +1,5 @@
 import { StatusEffect } from "../../core/StatusEffect.js";
+import { ElementalInteractions } from "../../engine/combat/ElementalInteractions.js";
 
 const conductor = {
   key: "conductor",
@@ -8,6 +9,7 @@ const conductor = {
 
   hookScope: {
     onBeforeDmgTaking: "defender",
+    onAfterDmgTaking: "defender",
   },
 
   onBeforeDmgTaking({ defender, damage, context, skill }) {
@@ -16,6 +18,12 @@ const conductor = {
     damage = Math.round(damage * 1.2);
 
     return { damage };
+  },
+
+  onAfterDmgTaking({ defender, damage, element, context }) {
+    if (damage <= 0 || element !== "water") return;
+
+    return ElementalInteractions.onConductorSoaked({ target: defender, context });
   },
 
   createInstance({ owner, duration, context, metadata }) {
@@ -31,6 +39,7 @@ const conductor = {
         subtypes: this.subtypes,
         hookScope: this.hookScope,
         onBeforeDmgTaking: this.onBeforeDmgTaking,
+        onAfterDmgTaking: this.onAfterDmgTaking,
       },
     });
   },

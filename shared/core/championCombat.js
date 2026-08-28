@@ -5,6 +5,30 @@ export function roundToFive(x) {
   return Math.round(x / 5) * 5;
 }
 
+/** The single door into runtime.hookEffects, so an effect can be turned away
+ * before it lands. Every hookEffect declares type "buff", "debuff" or "neutral". */
+export function addHookEffect(champion, hookEffect, context) {
+  const results = emitCombatEvent(
+    "onHookEffectIncoming",
+    { target: champion, hookEffect, context },
+    context.allChampions,
+  );
+
+  const cancelled = results.find((result) => result?.cancel);
+
+  if (cancelled) {
+    context.registerDialog({
+      message: cancelled.message,
+      sourceId: champion.id,
+      targetId: champion.id,
+    });
+    return false;
+  }
+
+  champion.runtime.hookEffects.push(hookEffect);
+  return true;
+}
+
 /** Push a shield onto the champion's runtime. type: "regular" | "spell" | "supreme". */
 export function addShield(
   champion,
@@ -210,6 +234,7 @@ export function applyStatModifier(
   {
     statName,
     amount,
+    percentAmount = null,
     duration = 1,
     context,
     isPermanent = false,
@@ -255,6 +280,7 @@ export function applyStatModifier(
     champion.statModifiers.push({
       statName: statName,
       amount: amount,
+      percentAmount: percentAmount,
       ignoreMinimum: ignoreMinimum,
       expiresAtTurn: currentTurn + duration,
       isPermanent: isPermanent,
@@ -322,6 +348,7 @@ function _applyStatChange(champion, config, rawAmount) {
   return applyStatModifier(champion, {
     statName,
     amount: effectiveAmount,
+    percentAmount: isPercent ? rawAmount : null,
     duration,
     context,
     isPermanent,
@@ -530,85 +557,22 @@ export function takeDamage(champion, amount, context) {
   }
 }
 
-/** Heal the champion, running onBeforeHealing hooks; returns the amount actually healed. */
-export function heal(
-  champion,
-  amount,
-  context,
-  source = champion,
-  options = {},
-) {
+/** Restore HP up to maxHP; returns the amount actually restored. */
+export function heal(champion, amount) {
   if (!champion.alive) return 0;
-
-  const ctx = context || champion.runtime?.currentContext;
-
-  const payload = {
-    source,
-    target: champion,
-    amount,
-
-    context: ctx,
-
-    healType: options?.type || "normal",
-    isLifesteal: options?.type === "lifesteal",
-
-    fromTargetId: options?.fromTargetId ?? null,
-  };
-
-  // Normalize the initial value before hooks run.
-  if (payload.amount > 0) {
-    payload.amount = Math.max(Math.floor(payload.amount), 1);
-  }
-
-  // Let hooks modify the heal before it lands.
-  const beforeResults =
-    emitCombatEvent("onBeforeHealing", payload, ctx?.allChampions) || [];
-
-  for (const result of beforeResults) {
-    if (!result) continue;
-
-    // Explicit override of the final heal value.
-    if (typeof result.amount === "number") {
-      payload.amount = result.amount;
-    }
-  }
-
-  // Safety clamp after modifications.
-  payload.amount = Math.max(0, Math.floor(payload.amount));
-
-  amount = payload.amount;
 
   const before = champion.HP;
 
-  champion.HP = Math.min(champion.HP + amount, champion.maxHP);
+  champion.HP = Math.min(
+    champion.HP + Math.max(0, Math.floor(amount)),
+    champion.maxHP,
+  );
 
-  const healed = Math.max(0, champion.HP - before);
-
-  if (healed <= 0) return 0;
-
-  const isLifesteal = options?.type === "lifesteal";
-
-  if (isLifesteal && ctx?.registerLifesteal) {
-    ctx.registerLifesteal({
-      target: champion,
-      amount: healed,
-      sourceId: source?.id,
-      fromTargetId: options?.fromTargetId ?? null,
-    });
-  } else if (ctx?.registerHeal) {
-    ctx.registerHeal({
-      target: champion,
-      amount: healed,
-      sourceId: source?.id,
-    });
-  }
-
-  return healed;
+  return Math.max(0, champion.HP - before);
 }
 
 /** Drop expired stat modifiers, recompute affected stats from base; returns reverted stats. */
 export function purgeExpiredStatModifiers(champion, currentTurn) {
-  const revertedStats = [];
   const affectedStats = new Set();
   const remaining = [];
 
@@ -622,7 +586,39 @@ export function purgeExpiredStatModifiers(champion, currentTurn) {
 
   champion.statModifiers = remaining;
 
-  // Recalculate each affected stat from base, reapplying remaining modifiers
+  const revertedStats = _recomputeStats(champion, remaining, affectedStats);
+
+  champion.tauntEffects = champion.tauntEffects.filter(
+    (effect) => effect.expiresAtTurn > currentTurn,
+  );
+
+  champion.damageReductionModifiers = champion.damageReductionModifiers.filter(
+    (modifier) => modifier.expiresAtTurn > currentTurn,
+  );
+
+  return revertedStats;
+}
+
+export function revertStatModifiersFromStatus(champion, statusKey) {
+  const affectedStats = new Set();
+  const remaining = [];
+
+  for (const modifier of champion.statModifiers) {
+    if (modifier.statusKey === statusKey) {
+      affectedStats.add(modifier.statName);
+    } else {
+      remaining.push(modifier);
+    }
+  }
+
+  champion.statModifiers = remaining;
+
+  return _recomputeStats(champion, remaining, affectedStats);
+}
+
+function _recomputeStats(champion, remaining, affectedStats) {
+  const revertedStats = [];
+
   for (const statName of affectedStats) {
     const baseKey = statName === "maxHP" ? "baseHP" : `base${statName}`;
     const baseValue = champion[baseKey];
@@ -655,14 +651,6 @@ export function purgeExpiredStatModifiers(champion, currentTurn) {
       });
     }
   }
-
-  champion.tauntEffects = champion.tauntEffects.filter(
-    (effect) => effect.expiresAtTurn > currentTurn,
-  );
-
-  champion.damageReductionModifiers = champion.damageReductionModifiers.filter(
-    (modifier) => modifier.expiresAtTurn > currentTurn,
-  );
 
   return revertedStats;
 }

@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import basicStrike from "../basicStrike.js";
+import basicStrike from "../generic/basicStrike.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const naelysSkills = [
   // ========================
@@ -52,10 +53,20 @@ const naelysSkills = [
         results.push(...damageResults);
       }
 
-      const selfHealApplied = user.heal(this.selfHealAmount, context, user);
+      const selfHealApplied = new HealEvent({
+        target: user,
+        amount: this.selfHealAmount,
+        context,
+        source: user,
+      }).execute();
 
       if (ally) {
-        const allyHealApplied = ally.heal(this.allyHealAmount, context, user);
+        const allyHealApplied = new HealEvent({
+          target: ally,
+          amount: this.allyHealAmount,
+          context,
+          source: user,
+        }).execute();
       }
 
       results.push({
@@ -100,6 +111,7 @@ const naelysSkills = [
       user.runtime.hookEffects ??= [];
 
       const effect = {
+        type: "buff",
         key: "mass_of_the_raging_sea",
         expiresAtTurn: context.currentTurn + 2,
         lastTriggerTurn: null,
@@ -155,7 +167,7 @@ const naelysSkills = [
         },
       };
 
-      user.runtime.hookEffects.push(effect);
+      user.addHookEffect(effect, context);
 
       user.applyDamageReduction({
         amount: this.damageReduction,

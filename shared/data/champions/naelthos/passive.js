@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 export default {
   key: "returning_sea",
@@ -7,7 +8,7 @@ export default {
   hpPerStack: 25,
   maxHeal: 35,
   description() {
-    return `The sea always comes back for Naelthos. Whenever he takes damage (damage over time excluded), the tide returns to him and he restores ${this.healPerStack} HP for every ${this.hpPerStack} HP lost in that hit, up to ${this.maxHeal} HP per hit.`;
+    return `The sea always comes back for Naelthos. Whenever he is struck, the tide returns to him and he restores ${this.healPerStack} HP for every ${this.hpPerStack} HP lost in that hit, up to ${this.maxHeal} HP per hit.`;
   },
 
   hookScope: {
@@ -29,7 +30,7 @@ export default {
 
     if (heal <= 0) return;
 
-    owner.heal(heal, context);
+    new HealEvent({ target: owner, amount: heal, context }).execute();
 
     const ownerName = formatChampionName(owner);
     return {

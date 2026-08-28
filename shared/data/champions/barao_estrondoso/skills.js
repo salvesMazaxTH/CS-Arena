@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import basicStrike from "../basicStrike.js";
+import basicStrike from "../generic/basicStrike.js";
 
 const baraoEstrondosoSkills = [
   // ========================
@@ -29,7 +29,7 @@ const baraoEstrondosoSkills = [
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
 
-      const result = new DamageEvent({
+      return new DamageEvent({
         baseDamage,
         attacker: user,
         defender: enemy,
@@ -38,12 +38,6 @@ const baraoEstrondosoSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
-
-      if (result.totalDamage > 0 && user.runtime) {
-        user.runtime.storedDamage = 0; // Resets Stored Damage after the attack
-      }
-
-      return result;
     },
   },
 
@@ -63,7 +57,8 @@ const baraoEstrondosoSkills = [
     targetSpec: ["self"],
 
     resolve({ user, context }) {
-      /* user.applyStatusEffect("reinforced_plating", 2, context); */
+      user.runtime.reinforcedPlatingUntilTurn =
+        context.currentTurn + this.defBuffDuration;
 
       user.modifyStat({
         statName: "Defense",

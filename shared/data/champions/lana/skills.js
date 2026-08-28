@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
 
 const lanaSkills = [
   // ========================
@@ -28,9 +28,15 @@ const lanaSkills = [
       const lastUsed = user.runtime.lastUsedDontYouDare ?? -Infinity;
 
       if (context.currentTurn - lastUsed <= 1) {
-        return {
-          message: `${formatChampionName(user)} tries to shout again, but <b>Don't You Dare!</b> was already used last turn!`,
-        };
+        const failure = `${formatChampionName(user)} tries to shout again, but <b>Don't You Dare!</b> was already used last turn!`;
+
+        context.registerDialog({
+          message: failure,
+          sourceId: user.id,
+          targetId: enemy.id,
+        });
+
+        return { log: failure };
       }
 
       user.runtime.lastUsedDontYouDare = context.currentTurn;
@@ -41,10 +47,10 @@ const lanaSkills = [
       const hookKey = `dont_you_dare_${user.id}`;
 
       // Register the hook that blocks the next action.
-      enemy.runtime.hookEffects.push({
+      enemy.addHookEffect({
+        type: "debuff",
         key: hookKey,
         group: "skill_effect",
-        duration: 1,
 
         hookScope: {
           onValidateAction: "actionSource",
@@ -60,10 +66,10 @@ const lanaSkills = [
             message: `${formatChampionName(actionSource)} freezes up! Their action is blocked!`,
           };
         },
-      });
+      }, context);
 
       return {
-        message: `${formatChampionName(enemy)} will not be able to act next!`,
+        log: `${formatChampionName(enemy)} will not be able to act next!`,
       };
     },
   },

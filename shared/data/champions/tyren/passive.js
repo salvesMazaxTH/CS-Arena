@@ -13,7 +13,7 @@ export default {
   description() {
     return `Tyren's Living Steel adapts to the nature of the force that strikes him.
 
-    The first time each turn Tyren takes damage, his body automatically restructures itself in response to the impact, granting a shield equal to ${this.shieldPercent}% of the damage received.
+    The first time each turn Tyren is struck, his body automatically restructures itself in response to the impact, granting a shield equal to ${this.shieldPercent}% of the damage received.
 
     Physical Damage causes his steel to harden, granting a regular Shield and empowering his next damaging attack to deal ${this.bonusDamagePercent}% increased damage.
 

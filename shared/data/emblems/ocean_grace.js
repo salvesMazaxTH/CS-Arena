@@ -61,12 +61,12 @@ export const oceanGrace = {
     }
   },
 
-  onBeforeHealing({ source, target, amount, owner }) {
+  onBeforeHealing({ healSrc, healTarget, amount, owner }) {
     if (!amount || amount <= 0) return;
 
     if (
-      source?.team === owner?.team ||
-      target?.team === owner?.team
+      healSrc?.team === owner?.team ||
+      healTarget?.team === owner?.team
     ) {
       return {
         amount: Math.round(

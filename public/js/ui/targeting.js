@@ -1,3 +1,5 @@
+import { TargetFilter } from "../../../shared/engine/combat/targetFilter.js";
+
 /**
  * Client-side target selection for a skill: reads the champions on the field and
  * opens a picker overlay when the player must choose. Returns the chosen targets;
@@ -90,13 +92,9 @@ export function createTargeting({ getActiveChampions, removeSkillOverlay }) {
 
     // SELECT ALLY (manual selection)
     if (role === "select:ally") {
-      let candidates = championsInField.filter((c) => c.team === user.team);
-
-      if (spec.excludesSelf) {
-        candidates = candidates.filter((c) => c.id !== user.id);
-      }
-
-      candidates = byFieldOrder(filterUnique(candidates));
+      const candidates = byFieldOrder(
+        filterUnique(TargetFilter.candidates(spec, user, championsInField)),
+      );
 
       const target = await createTargetSelectionOverlay(
         candidates,
@@ -110,6 +108,24 @@ export function createTargeting({ getActiveChampions, removeSkillOverlay }) {
       return { ally: target };
     }
 
+    // SELECT ANY (manual selection, either team)
+    if (role === "select:any") {
+      const candidates = byFieldOrder(
+        filterUnique(TargetFilter.candidates(spec, user, championsInField)),
+      );
+
+      const target = await createTargetSelectionOverlay(
+        candidates,
+        "Choose a Target",
+      );
+
+      if (target === null) return null;
+      if (target === undefined) return undefined;
+
+      chosenTargets.add(target.id);
+      return { any: target };
+    }
+
     // ALLY/ENEMY GLOBAL (no selection, affects all champions of the type)
     if (role === "all:ally" || role === "all" || role === "all:enemy") return {};
 
@@ -119,8 +135,9 @@ export function createTargeting({ getActiveChampions, removeSkillOverlay }) {
 
       const index = enemyCounter.count;
 
-      let candidates = championsInField.filter((c) => c.team !== user.team);
-      candidates = byFieldOrder(filterUnique(candidates));
+      const candidates = byFieldOrder(
+        filterUnique(TargetFilter.candidates(spec, user, championsInField)),
+      );
 
       const target = await createTargetSelectionOverlay(
         candidates,

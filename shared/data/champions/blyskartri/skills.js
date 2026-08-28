@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import basicStrike from "../basicStrike.js";
+import basicStrike from "../generic/basicStrike.js";
 
 const blyskartriSkills = [
   basicStrike,
@@ -97,7 +97,8 @@ const blyskartriSkills = [
 
       const piercingDamageBonus = this.piercingDamageBonus;
 
-      ally.runtime.hookEffects.push({
+      ally.addHookEffect({
+        type: "buff",
         key: "vital_conductance_counter",
         expiresAtTurn: context.currentTurn + this.buffsDuration,
 
@@ -107,7 +108,7 @@ const blyskartriSkills = [
 
         // owner = the buffed ally
         onEvade({ attacker, owner, context }) {
-          if (!attacker || !attacker.alive) return;
+          if (!attacker?.alive || !user.alive) return;
 
           new DamageEvent({
             baseDamage: piercingDamageBonus,
@@ -135,7 +136,7 @@ const blyskartriSkills = [
             log: counterLog,
           };
         },
-      });
+      }, context);
 
       return {
         log: `${formatChampionName(user)} strengthens ${formatChampionName(ally)}.`,
@@ -172,47 +173,71 @@ const blyskartriSkills = [
     resolve({ user, targets, context = {} }) {
       const [ally] = targets;
 
-      const alreadyHasModifier = ally
-        .getDamageModifiers()
-        .some((mod) => mod.id === "infinite_horizon");
-
-      if (alreadyHasModifier) {
-        return {
-          log: `${formatChampionName(ally)} is already under the effect of Infinite Horizon.`,
-        };
-      }
+      ally.damageModifiers = ally.damageModifiers.filter(
+        (mod) => mod.id !== "infinite_horizon",
+      );
 
       ally.addDamageModifier({
         id: "infinite_horizon",
         expiresAtTurn: context.currentTurn + this.effectDuration,
-        apply: ({ baseDamage, attacker, defender }, eventContext = {}) => {
-          // Speed bonus.
-          const speed = attacker.Speed;
-          const stacks = Math.floor(speed / this.speedPerStack);
-          let resultDamage = baseDamage;
-          if (stacks > 0) {
-            const bonusPercent = stacks * this.dmgBonus;
-            const bonusDamage = baseDamage * (bonusPercent / 100);
-            resultDamage += bonusDamage;
-          }
+        apply: ({ baseDamage, attacker, skill }) => {
+          // Its own overtake strike is a flat bonus, so it must not scale twice.
+          if (skill?.key === "infinite_horizon_overtake") return baseDamage;
 
-          // Piercing bonus when the ally acts before the direct target.
-          const execIdx = eventContext.executionIndex ?? context.executionIndex;
-          const turnMap =
-            eventContext.turnExecutionMap ?? context.turnExecutionMap;
-          const targetIdx = turnMap?.get(defender?.id);
+          const steps = Math.floor(attacker.Speed / this.speedPerStack);
 
-          const actedBeforeTarget =
-            execIdx !== undefined &&
-            (targetIdx === undefined || execIdx < targetIdx);
-
-          if (actedBeforeTarget) {
-            resultDamage += this.piercingDamageBonus || 0;
-          }
-
-          return resultDamage;
+          return baseDamage * (1 + (steps * this.dmgBonus) / 100);
         },
       });
+
+      const piercingDamageBonus = this.piercingDamageBonus;
+
+      ally.runtime.hookEffects ??= [];
+      ally.runtime.hookEffects = ally.runtime.hookEffects.filter(
+        (hook) => hook.key !== "infinite_horizon_overtake",
+      );
+
+      ally.addHookEffect({
+        type: "buff",
+        key: "infinite_horizon_overtake",
+        name: "Infinite Horizon",
+        expiresAtTurn: context.currentTurn + this.effectDuration,
+
+        hookScope: {
+          onAfterDmgDealing: "attacker",
+        },
+
+        onAfterDmgDealing({ attacker, defender, damage, context }) {
+          if (damage <= 0 || !defender.alive) return;
+          if (defender.team === attacker.team) return;
+
+          // Both must have acted this turn for one of them to have been first.
+          const moverIndex = context.turnExecutionMap?.get(attacker.id);
+          const targetIndex = context.turnExecutionMap?.get(defender.id);
+
+          if (moverIndex === undefined || targetIndex === undefined) return;
+          if (moverIndex >= targetIndex) return;
+
+          const overtake = `${formatChampionName(attacker)} strikes ahead of ${formatChampionName(defender)}'s defence!`;
+
+          context.extraDamageQueue.push({
+            baseDamage: piercingDamageBonus,
+            mode: DamageEvent.Modes.PIERCING,
+            piercingPercentage: 100,
+            attacker,
+            defender,
+            type: "physical",
+            skill: {
+              key: "infinite_horizon_overtake",
+              name: "Infinite Horizon",
+              contact: false,
+            },
+            dialog: { message: overtake, duration: 1000 },
+          });
+
+          return { log: overtake };
+        },
+      }, context);
 
       return {
         log: `${formatChampionName(user)} opens the Horizon for ${formatChampionName(ally)}!`,

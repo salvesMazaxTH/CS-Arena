@@ -114,6 +114,14 @@
     transform 220ms ease;
 }
 
+.champion.is-concealed .portrait img {
+  opacity: 0.72;
+  filter: grayscale(0.4) contrast(0.9) brightness(0.9);
+  transition:
+    opacity 220ms ease,
+    filter 220ms ease;
+}
+
 /* Lightning hit effect (applied to champion portrait on hit) */
 
 .lightning-hit {

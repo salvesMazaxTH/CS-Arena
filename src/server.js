@@ -27,6 +27,10 @@ import { GameMatch } from "../shared/engine/match/GameMatch.js";
 import { Player } from "../shared/engine/match/Player.js";
 
 import { championDB } from "../shared/data/championDB.js";
+import { findBrokenDuo, getDuoForCore } from "../shared/data/duos.js";
+import { isChampionDraftable } from "../shared/data/draftEligibility.js";
+import { SpawnProtection } from "../shared/engine/combat/spawnProtection.js";
+import { Nothingness } from "../shared/engine/combat/nothingness.js";
 import { Champion } from "../shared/core/Champion.js";
 import { formatChampionName } from "../shared/ui/formatters.js";
 
@@ -64,6 +68,8 @@ const editMode = {
   alwaysEvade: false, // Force evasion on every attack. (SERVER-ONLY)
   executionOverride: null, // null = normal; number = forced threshold (1 = 100%, 0.5 = 50%)
   freeCostSkills: false, // Skills cost no resource. (SERVER-ONLY)
+  unrestrictedSummon: false, // Summon line-up champions from turn 1 and more than once per turn (field cap still applies).
+  summonWithoutSpawnProtection: false, // Line-up summons enter with no spawn protection at all.
 };
 
 const TEAM_SIZE = 8;
@@ -110,8 +116,16 @@ let waitingForAnimations = false;
  * Mirrors the rules enforced by the "summonFromLineup" handler so the client can
  * remind the player about an unused summon without re-deriving them and drifting.
  */
+/** The champions that actually arrive when `championKey` is summoned. */
+function resolveSummonGroup(championKey) {
+  return getDuoForCore(championKey)?.cores ?? [championKey];
+}
+
 function getLineupSummonAvailability(team) {
-  if (match.getCurrentTurn() === 1 || match.hasSummonedThisTurn(team)) {
+  if (
+    !editMode.unrestrictedSummon &&
+    (match.getCurrentTurn() === 1 || match.hasSummonedThisTurn(team))
+  ) {
     return { canSummon: false, champions: [] };
   }
 
@@ -121,8 +135,12 @@ function getLineupSummonAvailability(team) {
     const baseData = championDB[championKey];
     if (!baseData) return false;
 
+    const entering = resolveSummonGroup(championKey);
+    if (!entering.every((key) => reserve.includes(key))) return false;
+
     return match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM, {
       entityType: baseData.entityType ?? "champion",
+      requiredSlots: entering.length,
     });
   });
 
@@ -172,10 +190,12 @@ function getGameState(extraChampions = [], { viewerTeam = null } = {}) {
   const lineups = {};
   const playerEmblems = {};
   const lineupSummons = {};
+  const lineupStatus = {};
   for (const player of match.players) {
     if (!player) continue;
     lineups[player.team] = player.selectedChampionKeys || [];
     lineupSummons[player.team] = getLineupSummonAvailability(player.team);
+    lineupStatus[player.team] = getLineupStatuses(player.team, viewerTeam);
     playerEmblems[player.team] = Array.isArray(player.emblems)
       ? player.emblems
           .map((emblem) => (typeof emblem === "string" ? emblem : emblem?.key))
@@ -189,7 +209,40 @@ function getGameState(extraChampions = [], { viewerTeam = null } = {}) {
     lineups,
     playerEmblems,
     lineupSummons,
+    lineupStatus,
   };
+}
+
+/** Where each of a team's line-up champions stands, as this viewer may see it. */
+function getLineupStatuses(team, viewerTeam) {
+  const statuses = {};
+
+  for (const championKey of match.combat.reserveQueues.get(team) || []) {
+    statuses[championKey] = "reserve";
+  }
+
+  for (const champion of match.combat.deadChampions.values()) {
+    if (champion.team === team) statuses[champion.championKey] = "dead";
+  }
+
+  for (const champion of match.combat.inactiveChampions.values()) {
+    if (champion.team !== team) continue;
+
+    statuses[champion.championKey] = Nothingness.isVanished(champion)
+      ? "nothingness"
+      : "field";
+  }
+
+  for (const champion of match.combat.activeChampions.values()) {
+    if (champion.team !== team) continue;
+
+    // A concealed summon must still read as untouched reserve to the opponent.
+    statuses[champion.championKey] = isConcealedFromViewer(champion, viewerTeam)
+      ? "reserve"
+      : "field";
+  }
+
+  return statuses;
 }
 
 /** Team of the player behind a socket, or null when the socket is not playing. */
@@ -222,23 +275,11 @@ function broadcastGameState(extraChampions = []) {
 //  CHAMPION MANAGEMENT
 // ============================================================
 
-/** Whether a champion may be picked during draft (released, enabled, not a minion). */
-function isChampionSelectableInDraft(championData) {
-  if (!championData) return false;
-  if ((championData.entityType ?? "champion") !== "champion") return false;
-  if (championData.selectable === false) return false;
-  if (championData.unreleased === true && !editMode.unavailableChampions)
-    return false;
-  if (championData.disabled === true && !editMode.unavailableChampions)
-    return false;
-
-  return true;
-}
-
 function getRandomChampionKey(excludeKeys = []) {
   const availableKeys = Object.keys(championDB).filter((key) => {
     if (excludeKeys.includes(key)) return false;
-    return isChampionSelectableInDraft(championDB[key]);
+    if (championDB[key].hiddenFromDraftGrid === true) return false;
+    return isChampionDraftable(championDB[key], editMode);
   });
   if (availableKeys.length === 0) return null;
   return availableKeys[Math.floor(Math.random() * availableKeys.length)];
@@ -264,30 +305,51 @@ function fillRandomChampionSelection(currentSelection = [], fillAll = false) {
   return nextSelection.slice(0, TEAM_SIZE);
 }
 
-/** Cosmetic winter portrait swap, applied on spawn when the asset exists on disk. */
-function applySeasonalSkin(champion) {
-  if (Math.random() > 0.675) return;
+const PORTRAITS_DIR = path.join(process.cwd(), "public", "assets", "portraits");
 
-  const fileName = champion.portrait.split("/").pop();
-  if (!fileName) return;
+function portraitBaseName(champion) {
+  return champion.portrait.split("/").pop().replace(".webp", "");
+}
 
-  const baseName = fileName.replace(".webp", "");
-  const absolutePath = path.join(
-    process.cwd(),
-    "public",
-    "assets",
-    "portraits",
-    `${baseName}_curtindo_o_inverno.webp`,
-  );
+/** Winter portrait for this champion when the roll hits and the asset exists; else null. */
+function rollSeasonalSkin(champion) {
+  if (Math.random() > 0.675) return null;
 
-  if (fs.existsSync(absolutePath)) {
-    champion.portrait = `/assets/portraits/${baseName}_curtindo_o_inverno.webp`;
+  const skinFile = `${portraitBaseName(champion)}_curtindo_o_inverno.webp`;
+  return fs.existsSync(path.join(PORTRAITS_DIR, skinFile))
+    ? `/assets/portraits/${skinFile}`
+    : null;
+}
+
+/** A random hand-authored alt portrait for this champion when the roll hits; else null. */
+function rollAltSkin(champion) {
+  if (Math.random() > 0.35) return null;
+
+  const baseName = portraitBaseName(champion);
+  const altSkins = [];
+  for (let index = 1; ; index += 1) {
+    const skinFile = `${baseName}_alt_skin_${index}.webp`;
+    if (!fs.existsSync(path.join(PORTRAITS_DIR, skinFile))) break;
+    altSkins.push(skinFile);
   }
+  if (altSkins.length === 0) return null;
+
+  return `/assets/portraits/${altSkins[Math.floor(Math.random() * altSkins.length)]}`;
+}
+
+/** Server-only cosmetic portrait swap on spawn; a coin flip settles it when both skins roll in. */
+function applyCosmeticSkin(champion) {
+  const seasonal = rollSeasonalSkin(champion);
+  const alt = rollAltSkin(champion);
+
+  const chosen =
+    seasonal && alt ? (Math.random() < 0.5 ? seasonal : alt) : seasonal ?? alt;
+  if (chosen) champion.portrait = chosen;
 }
 
 /**
  * Spawns a champion through the combat model (which enforces the field cap and
- * fires onChampionAdded), applies the server-only seasonal skin, and — when
+ * fires onChampionAdded), applies the server-only cosmetic skins, and — when
  * emitState — broadcasts the new state. Returns the instance, or null when it
  * could not be spawned.
  */
@@ -298,7 +360,7 @@ function spawnChampion({ emitState = true, ...spawnOpts } = {}) {
   });
   if (!champion) return null;
 
-  applySeasonalSkin(champion);
+  applyCosmeticSkin(champion);
   if (emitState) broadcastGameState();
 
   return champion;
@@ -749,18 +811,14 @@ function handleStartTurn() {
 
   const deathResults = resolver.processChampionDeaths(turnStartContext);
 
-  for (const death of deathResults) {
-    emitChampionDeath(death);
-  }
-
-  // Start-of-turn hooks (e.g. Jeff's Inevitabilidade da Morte) can kill the
-  // last real champion outside the regular end-turn action flow.
-  emitGameOverIfNeeded();
-
   // Purge expired effects.
   match.combat.activeChampions.forEach((champion) => {
+    SpawnProtection.clear(champion);
     champion.purgeExpiredStatModifiers(match.combat.currentTurn);
-    champion.purgeExpiredStatusEffects(match.combat.currentTurn);
+    champion.purgeExpiredStatusEffects(
+      match.combat.currentTurn,
+      turnStartContext,
+    );
     champion.purgeExpiredHookEffects(match.combat.currentTurn);
   });
 
@@ -768,6 +826,18 @@ function handleStartTurn() {
   match.combat.activeChampions.forEach((champion) => {
     applyGlobalMomentumRegen(champion, turnStartContext, resolver);
   });
+
+  // After the purge, or the sweep would strip the arrival state they land with.
+  for (const recalled of Nothingness.processDueReturns(
+    match.combat,
+    turnStartContext,
+  )) {
+    turnStartContext.registerDialog({
+      message: recalled.log,
+      sourceId: recalled.champion.id,
+      targetId: recalled.champion.id,
+    });
+  }
 
   // Clear the runtime context.
   match.combat.activeChampions.forEach((champ) => {
@@ -779,6 +849,16 @@ function handleStartTurn() {
     skill: { key: "turn_start", name: "Turn Start" },
     context: turnStartContext,
   });
+
+  // The removal must reach the client after the envelope, or the champion
+  // leaves the DOM before its own damage animation gets to play.
+  for (const death of deathResults) {
+    emitChampionDeath(death);
+  }
+
+  // Start-of-turn hooks (e.g. Jeff's Inevitabilidade da Morte) can kill the
+  // last real champion outside the regular end-turn action flow.
+  emitGameOverIfNeeded();
 
   io.emit("turnUpdate", match.combat.currentTurn);
   broadcastGameState();
@@ -1243,13 +1323,22 @@ io.on("connection", (socket) => {
       }
 
       // Server-authoritative validation: reject invalid keys.
-      const invalidKey = selectedChampionKeys.find((key) => {
-        const data = championDB[key];
-        return !isChampionSelectableInDraft(data);
-      });
+      const invalidKey = selectedChampionKeys.find(
+        (key) => !isChampionDraftable(championDB[key], editMode),
+      );
 
       if (invalidKey) {
         socket.emit("actionFailed", `Invalid champion in selection: ${invalidKey}`);
+        return;
+      }
+
+      const brokenDuo = findBrokenDuo(selectedChampionKeys);
+
+      if (brokenDuo) {
+        socket.emit(
+          "actionFailed",
+          `${brokenDuo.name} can only be taken together, never one without the other.`,
+        );
         return;
       }
 
@@ -1293,23 +1382,27 @@ io.on("connection", (socket) => {
 
     const team = player.team;
 
-    // Line-up summons are blocked on the first turn.
-    if (match.getCurrentTurn() === 1) {
-      return socket.emit(
-        "actionFailed",
-        "You cannot summon line-up champions on the first turn.",
-      );
-    }
+    if (!editMode.unrestrictedSummon) {
+      // Line-up summons are blocked on the first turn.
+      if (match.getCurrentTurn() === 1) {
+        return socket.emit(
+          "actionFailed",
+          "You cannot summon line-up champions on the first turn.",
+        );
+      }
 
-    if (match.hasSummonedThisTurn(team)) {
-      return socket.emit(
-        "actionFailed",
-        "You have already summoned a line-up champion this turn.",
-      );
+      if (match.hasSummonedThisTurn(team)) {
+        return socket.emit(
+          "actionFailed",
+          "You have already summoned a line-up champion this turn.",
+        );
+      }
     }
 
     const reserve = match.combat.reserveQueues.get(team) || [];
-    if (!championKey || !reserve.includes(championKey)) {
+    const entering = championKey ? resolveSummonGroup(championKey) : [];
+
+    if (!entering.length || !entering.every((key) => reserve.includes(key))) {
       return socket.emit(
         "actionFailed",
         "That champion is not available to be summoned.",
@@ -1317,48 +1410,57 @@ io.on("connection", (socket) => {
     }
 
     // The field cap counts champions only — minions are always allowed in.
-    const summonEntityType = championDB[championKey]?.entityType ?? "champion";
+    const summonEntityType = championDB[championKey].entityType ?? "champion";
 
     if (
       !match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM, {
         entityType: summonEntityType,
+        requiredSlots: entering.length,
       })
     ) {
       return socket.emit(
         "actionFailed",
-        "There is no free space on the battlefield to summon more champions.",
+        entering.length > 1
+          ? `${getDuoForCore(championKey).name} enter together and need ${entering.length} free spaces on the battlefield.`
+          : "There is no free space on the battlefield to summon more champions.",
       );
     }
 
-    const spawned = spawnChampion({
-      championKey,
-      team,
-      trackSnapshot: true,
-      emitState: false,
-    });
-    if (!spawned) {
+    const spawnedGroup = entering.map((key) =>
+      spawnChampion({
+        championKey: key,
+        team,
+        trackSnapshot: true,
+        emitState: false,
+        spawnProtection: !editMode.summonWithoutSpawnProtection,
+      }),
+    );
+
+    if (spawnedGroup.some((spawned) => !spawned)) {
       return socket.emit("actionFailed", "This champion could not be summoned.");
     }
 
     match.combat.reserveQueues.set(
       team,
-      reserve.filter((key) => key !== championKey),
+      reserve.filter((key) => !entering.includes(key)),
     );
     match.markSummonedThisTurn(team);
 
     // The opponent is still choosing actions, so this reinforcement stays hidden
     // from them until the turn locks and resolution begins.
-    concealedSummonIds.add(spawned.id);
+    spawnedGroup.forEach((spawned) => concealedSummonIds.add(spawned.id));
 
     // Emitted only after the bookkeeping above, so the payload's summon
     // availability already reflects this summon.
     broadcastGameState();
 
-    match.logTurnEvent("championSummoned", {
-      championId: spawned.id,
-      championKey,
-      team,
-    });
+    spawnedGroup.forEach((spawned) =>
+      match.logTurnEvent("championSummoned", {
+        championId: spawned.id,
+        championKey: spawned.championKey,
+        team,
+      }),
+    );
   });
 
   socket.on("requestSkillUse", ({ userId, skillKey, targetId }) => {

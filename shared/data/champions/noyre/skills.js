@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import basicShot from "../basicShot.js";
+import basicShot from "../generic/basicShot.js";
 
 const noyreSkills = [
   // ========================
@@ -87,7 +87,8 @@ const noyreSkills = [
           (hook) => hook.key !== hookKey,
         );
 
-        target.runtime.hookEffects.push({
+        target.addHookEffect({
+        type: "debuff",
           key: hookKey,
           group: "skill_effect",
           expiresAtTurn: context.currentTurn + this.duration,
@@ -121,7 +122,7 @@ const noyreSkills = [
               log: `${formatChampionName(owner)} had their Momentum gain nullified!`,
             };
           },
-        });
+        }, context);
       }
 
       return {

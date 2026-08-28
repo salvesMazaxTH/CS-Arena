@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import basicStrike from "../basicStrike.js";
+import basicStrike from "../generic/basicStrike.js";
 
 const morakhanSkills = [
   // ========================
@@ -20,8 +20,7 @@ const morakhanSkills = [
     priority: 3,
 
     description() {
-      return `During this turn, after taking damage:
-      Gains a shield equivalent to ${this.shieldPercent}% of the damage taken.`;
+      return `During this turn, the first time he is struck he gains a shield equal to ${this.shieldPercent}% of the damage taken.`;
     },
 
     targetSpec: ["self"],
@@ -34,7 +33,8 @@ const morakhanSkills = [
         (e) => e.key !== "mantra_of_living_iron_shield",
       );
 
-      user.runtime.hookEffects.push({
+      user.addHookEffect({
+        type: "buff",
         hookScope: {
           onAfterDmgTaking: "defender",
         },
@@ -55,7 +55,7 @@ const morakhanSkills = [
             )} gained a ${shieldAmount} HP shield (${shieldPercent}% of the damage taken)!`,
           };
         },
-      });
+      }, context);
     },
   },
 
@@ -99,7 +99,8 @@ const morakhanSkills = [
           (e) => e.key !== "blessing_of_the_mountain_god_cc",
         );
 
-        ally.runtime.hookEffects.push({
+        ally.addHookEffect({
+          type: "buff",
           key: "blessing_of_the_mountain_god_cc",
           expiresAtTurn: context.currentTurn + this.duration,
 
@@ -122,7 +123,7 @@ const morakhanSkills = [
               };
             }
           },
-        });
+        }, context);
       }
 
       context.registerDialog({
@@ -161,6 +162,7 @@ const morakhanSkills = [
 
     resolve({ user, context }) {
       const effect = {
+        type: "buff",
         key: "mountain_stance",
 
         hookScope: {
@@ -245,7 +247,7 @@ const morakhanSkills = [
         (e) => e.key !== effect.key,
       );
 
-      user.runtime.hookEffects.push(effect);
+      user.addHookEffect(effect, context);
     },
   },
 ];

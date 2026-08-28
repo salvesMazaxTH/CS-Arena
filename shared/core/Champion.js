@@ -30,6 +30,7 @@ import {
   heal,
   purgeExpiredStatModifiers,
   purgeExpiredHookEffects,
+  addHookEffect,
   addDamageModifier,
   purgeExpiredModifiers,
   getDamageModifiers,
@@ -155,9 +156,9 @@ export class Champion {
       Object.assign(champ.runtime, baseData.initialRuntime);
     }
 
-    // INJETAR IMUNIDADE ELEMENTAL AUTOMÁTICA
     if (champ.elementalAffinities?.length) {
       champ.runtime.hookEffects.push({
+        type: "buff",
         key: "elemental_affinity_immunity",
         group: "system",
 
@@ -180,23 +181,6 @@ export class Champion {
         },
       });
     }
-
-    champ.runtime.hookEffects.push({
-      key: "spawn_protection",
-      group: "system",
-
-      hookScope: {
-        onChampionAdded: "champion",
-      },
-
-      onChampionAdded({ champion, context, spawnProtection = true }) {
-        if (spawnProtection === false) return;
-        if (champion?.entityType !== "champion") return;
-
-        champion.applyStatusEffect("inert", 1, context);
-        champion.applyStatusEffect("absoluteImmunity", 1, context);
-      },
-    });
 
     return champ;
   }
@@ -268,18 +252,19 @@ export class Champion {
         return clone;
       })(),
 
-      // Data-only keys for client-side indicator/UI logic.
+      // Data-only view of the hooks for client-side indicators.
       // Never serialize hook functions or full hook objects.
-      runtimeHookEffectKeys: (() => {
+      runtimeHookEffectData: (() => {
         const hooks = Array.isArray(this.runtime?.hookEffects)
           ? this.runtime.hookEffects
           : [];
 
         return hooks
-          .map((effect) =>
-            typeof effect?.key === "string" ? effect.key.toLowerCase() : null,
-          )
-          .filter(Boolean);
+          .filter((effect) => typeof effect?.key === "string")
+          .map((effect) => ({
+            key: effect.key.toLowerCase(),
+            stacks: effect.stacks ?? 0,
+          }));
       })(),
 
       actionBlockedByHardCC: this.isActionBlockedByHardCC(),
@@ -516,8 +501,12 @@ export class Champion {
     return removeStatusEffect(this, statusEffectKey);
   }
 
-  purgeExpiredStatusEffects(currentTurn) {
-    return purgeExpiredStatusEffects(this, currentTurn);
+  addHookEffect(hookEffect, context) {
+    return addHookEffect(this, hookEffect, context);
+  }
+
+  purgeExpiredStatusEffects(currentTurn, context) {
+    return purgeExpiredStatusEffects(this, currentTurn, context);
   }
 
   // ===============================
@@ -600,10 +589,8 @@ export class Champion {
     return takeDamage(this, amount, context);
   }
 
-  // `source` is who caused the healing, not who receives it — hooks such as
-  // Alexa Neruvya's Font key off it.
-  heal(amount, context, source = this, options = {}) {
-    return heal(this, amount, context, source, options);
+  heal(amount) {
+    return heal(this, amount);
   }
 
   addDamageModifier(mod) {

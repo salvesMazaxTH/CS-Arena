@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 export default {
   key: "fountain_of_life",
@@ -29,7 +30,11 @@ export default {
     const before = owner.HP;
 
     // Restore HP normally.
-    const applied = owner.heal(selfHealAmount, context);
+    const applied = new HealEvent({
+      target: owner,
+      amount: selfHealAmount,
+      context,
+    }).execute();
 
     if (applied <= 0) return;
 

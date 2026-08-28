@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import basicShot from "../basicShot.js";
+import basicShot from "../generic/basicShot.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 const alexaNeruvyaSkills = [
   // ========================
@@ -29,7 +30,12 @@ const alexaNeruvyaSkills = [
     resolve({ user, targets, context }) {
       const [ally] = targets;
 
-      const restored = ally.heal(this.healAmount, context, user);
+      const restored = new HealEvent({
+        target: ally,
+        amount: this.healAmount,
+        context,
+        source: user,
+      }).execute();
 
       const userName = formatChampionName(user);
       const allyName = formatChampionName(ally);
@@ -60,12 +66,18 @@ const alexaNeruvyaSkills = [
     resolve({ user, targets, context }) {
       const [ally] = targets;
 
-      const restored = ally.heal(this.healAmount, context, user);
-
+      // Cleansed first, so nothing left on them can suppress the mending.
       const debuffs = ally.getStatusEffects({ type: "debuff" });
       debuffs.forEach((statusEffect) =>
         ally.removeStatusEffect(statusEffect.key),
       );
+
+      const restored = new HealEvent({
+        target: ally,
+        amount: this.healAmount,
+        context,
+        source: user,
+      }).execute();
 
       const userName = formatChampionName(user);
       const allyName = formatChampionName(ally);
@@ -85,7 +97,7 @@ const alexaNeruvyaSkills = [
     key: "advent_of_the_colossal_tide",
     name: "Advent of the Colossal Tide",
 
-    bf: 45,
+    bf: 60,
     damageMode: "piercing",
     piercingPercentage: 80,
     contact: false,
@@ -115,7 +127,7 @@ const alexaNeruvyaSkills = [
 
       const damageResult = new DamageEvent({
         baseDamage,
-        mode: "piercing",
+        mode: DamageEvent.Modes.PIERCING,
         piercingPercentage: this.piercingPercentage,
         attacker: user,
         defender: enemy,
@@ -137,11 +149,19 @@ const alexaNeruvyaSkills = [
 
       if (healAmount > 0) {
         const allies = context.aliveChampions.filter(
-          (champ) => champ.team === user.team && champ.alive,
+          (champ) => champ.team === user.team,
         );
 
         allies.forEach((ally) => {
-          const restored = ally.heal(healAmount, context, user);
+          const restored = new HealEvent({
+            target: ally,
+            amount: healAmount,
+            context,
+            source: user,
+          }).execute();
+
+          if (restored <= 0) return;
+
           results.push({
             log: `The tide rolls back and restores ${restored} HP to ${formatChampionName(ally)}.`,
           });

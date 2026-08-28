@@ -9,44 +9,62 @@ const invisible = {
 
   description: "Cannot be targeted by enemies until its next action.",
 
-  hookScope: {
-    onValidateAction: "target",
-  },
-
-  // 🔒 Prevents the target from being targeted
   onValidateAction({ actionSource, owner, context }) {
     if (!actionSource || actionSource.id === owner.id) return;
 
     const message = `${formatChampionName(actionSource)} cannot find ${formatChampionName(owner)}.`;
-
     context?.registerDialog?.({
       message,
       sourceId: actionSource.id,
       targetId: owner.id,
     });
 
-    return {
-      deny: true,
-      message,
-    };
+    return { deny: true, message };
+  },
+
+  onActionResolved({ owner, context }) {
+    const instance = owner.statusEffects.get(this.key);
+    if (!instance || instance.appliedContext === context) return;
+
+    owner.removeStatusEffect(this.key);
+    context?.registerDialog?.({
+      message: `${formatChampionName(owner)} slips back into view.`,
+      sourceId: owner.id,
+    });
   },
 
   createInstance({ owner, duration, context, metadata }) {
-    return new StatusEffect({
+    // Break on the wearer's next action unless the caller opts out, in which
+    // case it just runs out its duration and can be acted through.
+    const breaksOnAction = metadata?.breaksOnAction !== false;
+
+    const hookScope = { onValidateAction: "target" };
+    const hooks = {
+      name: this.name,
+      type: this.type,
+      subtypes: this.subtypes,
+      description: this.description,
+      hookScope,
+      onValidateAction: this.onValidateAction,
+    };
+
+    if (breaksOnAction) {
+      hookScope.onActionResolved = "actionSource";
+      hooks.onActionResolved = this.onActionResolved;
+    }
+
+    const instance = new StatusEffect({
       key: this.key,
       duration,
       owner,
       context,
       metadata,
-      hooks: {
-        name: this.name,
-        type: this.type,
-        subtypes: this.subtypes,
-        description: this.description,
-        hookScope: this.hookScope,
-        onValidateAction: this.onValidateAction,
-      },
+      hooks,
     });
+
+    // Lets onActionResolved skip the very action that applied this effect.
+    instance.appliedContext = context;
+    return instance;
   },
 };
 

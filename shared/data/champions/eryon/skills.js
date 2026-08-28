@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import basicShot from "../basicShot.js";
+import basicShot from "../generic/basicShot.js";
 
 const eryonSkills = [
   // =========================
@@ -74,93 +74,48 @@ const eryonSkills = [
     priority: 0,
     contact: false,
 
+    bonusMomentum: 7,
+
     description() {
-      return `Drains all Momentum from allies and transfers it to a chosen ally, granting +7 bonus Momentum.`;
+      return `Drains all Momentum from allies and transfers it to a chosen ally, granting +${this.bonusMomentum} bonus Momentum.`;
     },
 
     targetSpec: ["select:ally"],
 
-    resolve({ user, targets, context }) {
+    resolve({ user, targets, context, resolver }) {
       const [target] = targets;
 
       const allies = context.aliveChampions.filter(
         (c) => c.team === user.team,
       );
 
-      let total = 0;
-
-      console.log(
-        "[ERYON][absolute_channeling] Skill started",
-      );
-
-      console.log(
-        "[ERYON][absolute_channeling] Channeling target:",
-        target?.name,
-        "(ID:",
-        target?.id,
-        ")",
-      );
+      let drained = 0;
 
       for (const ally of allies) {
-        if (ally.id === target.id) {
-          console.log(
-            "[ERYON][absolute_channeling] Skipping primary target:",
-            ally.name,
-          );
-          continue;
-        }
+        if (ally.id === target.id) continue;
+        if (ally.momentum <= 0) continue;
 
-        const amount = ally.momentum;
+        const { applied } = resolver.applyResourceChange({
+          target: ally,
+          amount: -ally.momentum,
+          context,
+          sourceId: user.id,
+          debugLabel: "eryon_channeling_drain",
+        });
 
-        console.log(
-          "[ERYON][absolute_channeling] Draining from:",
-          ally.name,
-          "momentum:",
-          amount,
-        );
-
-        if (amount <= 0) {
-          console.log(
-            "[ERYON][absolute_channeling] Nothing to drain from:",
-            ally.name,
-          );
-          continue;
-        }
-
-        ally.spendMomentum(amount);
-        total += amount;
-
-        console.log(
-          "[ERYON][absolute_channeling] Drained:",
-          amount,
-          "from",
-          ally.name,
-          "Total accumulated:",
-          total,
-        );
+        drained += Math.abs(applied);
       }
 
-      const finalGain = total + 7;
-
-      console.log(
-        "[ERYON][absolute_channeling] Total drained:",
-        total,
-        "+ bonus: 7 =",
-        finalGain,
-      );
-
-      target.addMomentum({
-        amount: finalGain,
+      resolver.applyResourceChange({
+        target,
+        amount: drained + this.bonusMomentum,
         context,
+        sourceId: user.id,
+        debugLabel: "eryon_channeling_grant",
       });
 
-      console.log(
-        "[ERYON][absolute_channeling] Target's final Momentum after transfer:",
-        target.momentum,
-      );
-
       return {
-        log: `${user.name} channeled energy to ${target.name}.`,
+        log: `${formatChampionName(user)} channeled ${drained + this.bonusMomentum} Momentum into ${formatChampionName(target)}.`,
       };
     },
   },
@@ -174,68 +129,54 @@ const eryonSkills = [
     name: "Eidolic Collapse",
 
     isUltimate: true,
-    momentumCost: 16,
+    momentumCost: 24,
     priority: -1,
     contact: false,
     targetSpec: ["all"],
 
-    damagePerUnit: 6,
-    maxConsume: 66,
+    damagePerUnit: 3,
+    maxConsume: 84,
 
     description() {
       return `Consumes all Momentum from the team (max. ${this.maxConsume}) and converts each point into ${this.damagePerUnit} damage, distributed randomly among an enemy and their adjacent allies.`;
     },
 
-    resolve({ user, context }) {
-      console.log(
-        "[ERYON][eidolic_collapse] Skill started",
-      );
-
+    resolve({ user, context, resolver }) {
       const allies = context.aliveChampions.filter(
         (c) => c.team === user.team,
       );
 
-      // 🔹 Build Momentum pool
-      let pool = [];
+      const pool = [];
 
       for (const ally of allies) {
-        for (let i = 0; i < ally.momentum; i++) {
-          pool.push(ally);
-        }
+        for (let i = 0; i < ally.momentum; i++) pool.push(ally);
       }
 
-      console.log(
-        "[ERYON][eidolic_collapse] Initial Momentum pool (ids):",
-        pool.map((a) => a.id),
-      );
-
+      const consumedPerAlly = new Map();
       let consumed = 0;
-      const maxConsume = this.maxConsume;
 
-      while (
-        pool.length > 0 &&
-        consumed < maxConsume
-      ) {
-        const index = Math.floor(
-          Math.random() * pool.length,
+      while (pool.length > 0 && consumed < this.maxConsume) {
+        const [chosen] = pool.splice(
+          Math.floor(Math.random() * pool.length),
+          1,
         );
 
-        const chosen = pool[index];
-
-        chosen.spendMomentum(1);
-        pool.splice(index, 1);
-
+        consumedPerAlly.set(chosen, (consumedPerAlly.get(chosen) ?? 0) + 1);
         consumed++;
       }
 
-      console.log(
-        "[ERYON][eidolic_collapse] Total consumed:",
-        consumed,
-      );
-
       if (consumed === 0) return;
 
-      // 🔹 Select a random primary target
+      for (const [ally, amount] of consumedPerAlly) {
+        resolver.applyResourceChange({
+          target: ally,
+          amount: -amount,
+          context,
+          sourceId: user.id,
+          debugLabel: "eryon_collapse_consume",
+        });
+      }
+
       const enemies = context.aliveChampions.filter(
         (c) => c.team !== user.team,
       );
@@ -243,64 +184,28 @@ const eryonSkills = [
       if (!enemies.length) return;
 
       const primary =
-        enemies[
-          Math.floor(Math.random() * enemies.length)
-        ];
+        enemies[Math.floor(Math.random() * enemies.length)];
 
-      console.log(
-        "[ERYON][eidolic_collapse] Primary target:",
-        primary?.name,
-        "(ID:",
-        primary?.id,
-        ")",
-      );
+      const targets = [
+        primary,
+        ...context.getAdjacentChampions(primary),
+      ];
 
-      const adjacent = context.getAdjacentChampions
-        ? context.getAdjacentChampions(primary) || []
-        : [];
+      const damageMap = new Map(targets.map((t) => [t.id, 0]));
 
-      const targets = [primary, ...adjacent];
+      for (let i = 0; i < consumed; i++) {
+        const hit = targets[Math.floor(Math.random() * targets.length)];
 
-      console.log(
-        "[ERYON][eidolic_collapse] Final targets:",
-        targets.map((t) => t.name),
-      );
-
-      // 🔹 Distribute damage
-      const chunks = consumed;
-      const damageMap = new Map();
-
-      for (const target of targets) {
-        damageMap.set(target.id, 0);
+        damageMap.set(hit.id, damageMap.get(hit.id) + this.damagePerUnit);
       }
 
-      for (let i = 0; i < chunks; i++) {
-        const randomTarget =
-          targets[
-            Math.floor(Math.random() * targets.length)
-          ];
-
-        damageMap.set(
-          randomTarget.id,
-          damageMap.get(randomTarget.id) + 6,
-        );
-      }
-
-      // 🔹 Deal damage
       for (const target of targets) {
-        const dmg = damageMap.get(target.id);
+        const damage = damageMap.get(target.id);
 
-        if (!dmg || dmg <= 0) continue;
-
-        console.log(
-          "[ERYON][eidolic_collapse] Dealing",
-          dmg,
-          "damage to",
-          target.name,
-        );
+        if (damage <= 0) continue;
 
         new DamageEvent({
-          baseDamage: dmg,
+          baseDamage: damage,
           attacker: user,
           defender: target,
           skill: this,
@@ -311,7 +216,7 @@ const eryonSkills = [
       }
 
       return {
-        log: `${user.name} collapsed the Eidolic flow (${consumed} Momentum).`,
+        log: `${formatChampionName(user)} collapsed the Eidolic flow (${consumed} Momentum).`,
       };
     },
   },

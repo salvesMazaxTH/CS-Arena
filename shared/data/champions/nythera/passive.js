@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 
 export default {
   key: "glacial_omen",
@@ -6,7 +7,7 @@ export default {
   chillDuration: 2,
   freezeDuration: 2,
   description() {
-    return `The cold around Nythera answers for her. Whenever she takes damage from a contact source (Absolute Damage excluded), the aggressor is left ❄️ Chilled for ${this.chillDuration} turn(s).
+    return `The cold around Nythera answers for her. Whenever she is struck by a contact source (Absolute Damage excluded), the aggressor is left ❄️ Chilled for ${this.chillDuration} turn(s).
 
     If they are already Chilled, the frost closes in and they become Frozen for ${this.freezeDuration} turn(s) instead.`;
   },
@@ -15,10 +16,10 @@ export default {
     onAfterDmgTaking: "defender",
   },
 
-  onAfterDmgTaking({ attacker, owner, skill, damage, context }) {
+  onAfterDmgTaking({ attacker, owner, skill, damage, mode, context }) {
     if (damage <= 0 || attacker.team === owner.team) return;
 
-    if (!skill.contact) return;
+    if (!skill.contact || mode === DamageEvent.Modes.ABSOLUTE) return;
 
     // Do not stack with Stasis Chamber, which does the same thing, but better.
     if (

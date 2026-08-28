@@ -27,7 +27,7 @@ export default {
   hookScope: {
     onBeforeDmgDealing: "attacker",
     onBuffingStat: "buffTarget",
-    onAfterHealing: undefined,
+    onBeforeHealing: undefined,
   },
 
   hookPolicies: {
@@ -75,7 +75,7 @@ export default {
       context,
       isPermanent: true,
       ignoreMinimum: true,
-      statModifierSrc: defender,
+      statModifierSrc: owner,
     });
 
     if (!result?.appliedAmount) return;
@@ -133,8 +133,8 @@ export default {
     };
   },
 
-  onBeforeHealing({ owner, target, amount, isLifesteal }) {
-    if (target !== owner) return;
+  onBeforeHealing({ owner, healTarget, amount, isLifesteal }) {
+    if (healTarget !== owner) return;
     if (!isLifesteal) return;
     if (!owner?.runtime?.drexBloodAscension) return;
 

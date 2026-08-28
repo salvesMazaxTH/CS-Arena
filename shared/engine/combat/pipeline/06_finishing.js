@@ -1,26 +1,16 @@
 export function processFinishing(event) {
-  console.log("🔥 _processFinishingIfNeeded chamado:", {
-    defender: event.defender.name,
-    hp: event.defender.HP,
-    maxHP: event.defender.maxHP,
-  });
-
   const rule = event.skill?.finishingRule ?? event.skill?.obliterateRule;
   if (!rule) return;
 
   const finishingType = resolveFinishingType(event.skill);
   const finishingFlags = buildFinishingFlags(finishingType);
 
-  // aliados não se executam
   if (event.defender.team === event.attacker.team) return;
 
-  // finishing só faz sentido se o hit realmente conectou e causou dano
   if (!event.actualDmg || event.actualDmg <= 0) return;
 
-  if (event.defender.runtime?.preventFinishing) {
-    console.log("[FINISHING] Cancelado por efeito de sobrevivência");
-    return;
-  }
+  const preventUntil = event.defender.runtime?.preventFinishingUntilTurn ?? 0;
+  if (preventUntil > (event.context?.currentTurn ?? 0)) return;
 
   let threshold =
     typeof rule === "function" ? rule.call(event.skill, event) : rule;

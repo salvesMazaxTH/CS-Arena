@@ -57,15 +57,13 @@ export default {
     finalDamage *= 1 - 0.1 * stacks;
     owner.runtime.stabilityStacks = 0;
 
-    const runtime = (owner.runtime ??= {});
-    runtime.hookEffects ??= [];
-
-    runtime.hookEffects = runtime.hookEffects.filter(
+    owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
       (effect) =>
         effect.key !== "morakhan_adamantine_stability_burst",
     );
 
-    runtime.hookEffects.push({
+    owner.addHookEffect({
+      type: "buff",
       key: "morakhan_adamantine_stability_burst",
       name: "Empowered Adamantine Stability",
       expiresAtTurn: context.currentTurn + 2,
@@ -93,7 +91,7 @@ export default {
           }!`,
         };
       },
-    });
+    }, context);
 
     const msg = `<b>[Passive — ${this.name}]</b> ${formatChampionName(
       owner,

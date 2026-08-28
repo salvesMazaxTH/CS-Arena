@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
 
 const tyrenSkills = [
   // =========================
@@ -129,7 +129,9 @@ const tyrenSkills = [
         (effect) => effect.key !== "living_steel_aegis_expiration",
       );
 
-      user.runtime.hookEffects.push({
+      user.addHookEffect({
+        type: "buff",
+        subtypes: ["statMod"],
         key: "living_steel_aegis_expiration",
         name: "Living Steel Aegis",
 
@@ -176,7 +178,7 @@ const tyrenSkills = [
             )}'s Living Steel transformation expires.`,
           };
         },
-      });
+      }, context);
 
       return {
         log:

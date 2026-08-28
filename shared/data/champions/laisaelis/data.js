@@ -2,10 +2,14 @@ export default {
   name: "Laisaelis",
   portrait: "/assets/portraits/laisaelis.webp",
   unreleased: true,
-  HP: 100,
-  Attack: 100,
-  Defense: 100,
-  Speed: 100,
-  Critical: 100,
-  LifeSteal: 100,
+  hiddenFromDraftGrid: true,
+
+  // Four stats at 250: a thousand split evenly, the whole of one thing.
+  HP: 250,
+  Attack: 250,
+  Defense: 250,
+  Speed: 250,
+
+  classKey: "enchanter",
+  species: ["fairy", "numen", "magickin"],
 };

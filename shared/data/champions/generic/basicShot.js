@@ -1,5 +1,5 @@
 // Centralized Basic Shot (global ranged)
-import { DamageEvent } from "../../engine/combat/DamageEvent.js";
+import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 
 const basicShot = {
   key: "basic_shot",

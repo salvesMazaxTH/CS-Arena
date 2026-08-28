@@ -1,6 +1,8 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../totalBlock.js";
+import totalBlock from "../generic/totalBlock.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
+import { SpawnProtection } from "../../../engine/combat/spawnProtection.js";
 
 const reyskaroneSkills = [
   // =========================
@@ -79,7 +81,9 @@ const reyskaroneSkills = [
         ? enemy.runtime.shields
         : [];
 
-      const hasAbsoluteImmunity = enemy.hasStatusEffect?.("absoluteImmunity");
+      const unreachable =
+        enemy.hasStatusEffect?.("absoluteImmunity") ||
+        SpawnProtection.isActive(enemy);
       const supremeShieldIdx = shields.findIndex(
         (shield) => shield?.type === "supreme" && shield?.amount > 0,
       );
@@ -88,7 +92,7 @@ const reyskaroneSkills = [
       );
 
       const titheBlocked =
-        hasAbsoluteImmunity || supremeShieldIdx !== -1 || spellShieldIdx !== -1;
+        unreachable || supremeShieldIdx !== -1 || spellShieldIdx !== -1;
 
       if (!titheBlocked) {
         // =========================
@@ -99,7 +103,8 @@ const reyskaroneSkills = [
           (effect) => effect.key !== "tithe",
         );
 
-        enemy.runtime.hookEffects.push({
+        enemy.addHookEffect({
+        type: "debuff",
           key: "tithe",
           group: "skill",
 
@@ -124,10 +129,15 @@ const reyskaroneSkills = [
           onAfterDmgTaking: ({ attacker, owner, context }) => {
             if (attacker.team !== user.team) return;
 
-            // The attacker drinks from the brand.
-            attacker.heal(this.titheHeal, context, owner);
+            // The brand is Reyskarone's, so the healing is credited to him.
+            new HealEvent({
+              target: attacker,
+              amount: this.titheHeal,
+              context,
+              source: user,
+            }).execute();
           },
-        });
+        }, context);
 
         context.registerDialog({
           message: `${formatChampionName(enemy)} is branded with the <b>Tithe</b>!`,
@@ -252,7 +262,10 @@ const reyskaroneSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} seals a Crimson Pact with ${formatChampionName(ally)}.`,
+        log:
+          user === ally
+            ? `${formatChampionName(user)} seals a Crimson Pact in his own blood.`
+            : `${formatChampionName(user)} seals a Crimson Pact with ${formatChampionName(ally)}.`,
       };
     },
   },

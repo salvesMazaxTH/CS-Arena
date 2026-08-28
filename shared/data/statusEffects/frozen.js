@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../ui/formatters.js";
 import { StatusEffect } from "../../core/StatusEffect.js";
+import { ElementalInteractions } from "../../engine/combat/ElementalInteractions.js";
 
 // Reduces Speed and Attack to 0 and prevents the target from acting for X turns (usually 1)
 const frozen = {
@@ -7,6 +8,10 @@ const frozen = {
   name: "Frozen",
   type: "debuff",
   subtypes: ["hardCC", "ice"],
+
+  // Evolved form of Chilled: replaces it on apply, decays back into it on expiry.
+  evolvesFrom: "chilled",
+  decaysTo: { key: "chilled", duration: 1 },
 
   onStatusEffectAdded({ owner, duration, context }) {
     owner.modifyStat({
@@ -28,7 +33,7 @@ const frozen = {
     });
 
     return {
-      message: `${owner.name} was ${this.name}!`,
+      message: `${formatChampionName(owner)} was ${this.name}!`,
     };
   },
 
@@ -44,12 +49,10 @@ const frozen = {
     };
   },
 
-  onAfterDmgTaking({ attacker, defender, owner, damage, context }) {
+  onAfterDmgTaking({ attacker, defender, owner, damage, element, context }) {
     if (damage <= 0) return;
 
-    // Only remove the status if it was already present before the damage
-    // was dealt, preventing it from being removed immediately after application.
-    // Check the current effect and verify that it expires after the current turn.
+    // A freeze applied this same turn must survive it.
     const currentTurn = context?.currentTurn ?? 0;
 
     const effect =
@@ -59,12 +62,18 @@ const frozen = {
     if (effect && effect.appliedAtTurn < currentTurn) {
       defender.removeStatusEffect("frozen");
 
+      const reaction = ElementalInteractions.onFrozenBroken({
+        target: defender,
+        element,
+        context,
+      });
+
       return {
-        log: `${formatChampionName(defender)} was unfrozen after taking damage!`,
+        log: `${formatChampionName(defender)} breaks out of the ice!
+${reaction.log}`,
       };
     }
 
-    // If it was just applied this turn, do not remove it.
     return;
   },
 
