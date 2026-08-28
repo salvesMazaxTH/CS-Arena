@@ -1,5 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
-import { dieWithTwin, TWIN_BOND_TEXT } from "../pairs/twinBond.js";
+import { dieWithTwin, findTwin, TWIN_BOND_TEXT } from "../pairs/twinBond.js";
 
 export default {
   key: "the_one_that_leaves",
@@ -9,7 +9,7 @@ export default {
   returnHPPercent: 25,
 
   description(champion) {
-    return `Laiserisa is the sister who answers presence by letting it go: nothing she touches is destroyed, only allowed to stop being. The first lethal effect that would end her instead empties her to a sliver, and at the start of the next turn she slips into the Nothingness, returning ${this.vanishTurns} turns later with ${this.returnHPPercent}% of her base Max HP. Once per match. ${TWIN_BOND_TEXT}
+    return `Laiserisa is the sister who answers presence by letting it go: nothing she touches is destroyed, only allowed to stop being. The first lethal effect that would end her instead empties her to a sliver, and at the start of the next turn she slips into the Nothingness, returning ${this.vanishTurns} turns later with ${this.returnHPPercent}% of her base Max HP — and should her sister have fallen meanwhile, she returns only to cease. Once per match. ${TWIN_BOND_TEXT}
 
     <b>Still unspent:</b> ${champion.runtime?.leaveSpent ? "no" : "yes"}`;
   },
@@ -48,22 +48,38 @@ export default {
   },
 
   onTurnStart({ owner, context }) {
-    if (!owner.runtime.leavePending) return;
-    delete owner.runtime.leavePending;
+    if (owner.runtime.leavePending) {
+      delete owner.runtime.leavePending;
+      // Held across the stay: the Nothingness hides who is merely away from who is gone.
+      owner.runtime.twinAtDeparture = findTwin(owner, context);
 
-    context.schedule({
-      type: "championMutation",
-      turnToHappen: context.currentTurn,
-      payload: {
-        targetId: owner.id,
-        mode: "vanish",
-        turns: this.vanishTurns,
-        returnState: { hpRatio: this.returnHPPercent / 100 },
-      },
-    });
+      context.schedule({
+        type: "championMutation",
+        turnToHappen: context.currentTurn,
+        payload: {
+          targetId: owner.id,
+          mode: "vanish",
+          turns: this.vanishTurns,
+          returnState: { hpRatio: this.returnHPPercent / 100 },
+        },
+      });
+
+      return {
+        log: `[Passive - <b>${this.name}</b>] ${formatChampionName(owner)} slips into the Nothingness.`,
+      };
+    }
+
+    const twin = owner.runtime.twinAtDeparture;
+    if (!twin) return;
+
+    delete owner.runtime.twinAtDeparture;
+    if (twin.alive) return;
+
+    owner.HP = 0;
+    owner.alive = false;
 
     return {
-      log: `[Passive - <b>${this.name}</b>] ${formatChampionName(owner)} slips into the Nothingness.`,
+      log: `[Passive - <b>${this.name}</b>] ${formatChampionName(owner)} steps back out of the Nothingness, finds ${formatChampionName(twin)} gone, and has nothing left to remain for.`,
     };
   },
 
