@@ -102,7 +102,7 @@ const zyrelleSkills = [
     key: "reckless_reload",
     name: "Reckless Reload",
 
-    defensePenaltyPercent: 50,
+    defensePenaltyPercent: 35,
     vulnerabilityPercent: 10,
     duration: 2,
 
