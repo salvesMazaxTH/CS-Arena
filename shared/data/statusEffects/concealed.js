@@ -38,7 +38,7 @@ const concealed = {
 
   onActionResolved({ owner, context }) {
     const instance = owner.statusEffects.get(this.key);
-    if (!instance || instance.appliedContext === context) return;
+    if (!instance || instance.appliedByAction(context)) return;
 
     owner.removeStatusEffect(this.key);
     context?.registerDialog?.({
@@ -71,7 +71,7 @@ const concealed = {
       hooks.onActionResolved = this.onActionResolved;
     }
 
-    const instance = new StatusEffect({
+    return new StatusEffect({
       key: this.key,
       duration,
       owner,
@@ -79,10 +79,6 @@ const concealed = {
       metadata,
       hooks,
     });
-
-    // Lets onActionResolved skip the very action that applied this effect.
-    instance.appliedContext = context;
-    return instance;
   },
 };
 
