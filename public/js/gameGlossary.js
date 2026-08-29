@@ -22,6 +22,11 @@ export const GAME_GLOSSARY = {
     description:
       "The champion is rooted in place, unable to act with abilities that require contact.",
   },
+  snared: {
+    title: "Snared",
+    description:
+      "The champion is snared, unable to act with abilities that require contact.",
+  },
   poisoned: {
     title: "Poisoned",
     description:

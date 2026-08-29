@@ -3,6 +3,7 @@
 import paralyzed from "./paralyzed.js";
 import stunned from "./stunned.js";
 import rooted from "./rooted.js";
+import snared from "./snared.js";
 import inert from "./inert.js";
 import chilled from "./chilled.js";
 import frozen from "./frozen.js";
@@ -20,6 +21,7 @@ export const StatusEffectsRegistry = {
   paralyzed,
   stunned,
   rooted,
+  snared,
   inert,
   chilled,
   frozen,

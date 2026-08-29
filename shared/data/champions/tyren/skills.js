@@ -28,10 +28,10 @@ const tyrenSkills = [
     priority: 0,
     element: "steel",
 
-    rootDuration: 2,
+    snareDuration: 2,
 
     description() {
-      return `Tyren shapes his liquid steel into a piercing lance, dealing Steel magical damage. The metal then hardens around the target's feet, Rooting them for ${this.rootDuration} turn.`;
+      return `Tyren shapes his liquid steel into a piercing lance, dealing Steel magical damage. The metal then ensnares the target for ${this.snareDuration} turn.`;
     },
 
     targetSpec: ["enemy"],
@@ -54,11 +54,11 @@ const tyrenSkills = [
       const results = Array.isArray(result) ? result : [result];
 
       const hitSuccess = results.some(
-        (r) => !r?.evaded && !r?.immune && (r?.totalDamage ?? 0) > 0,
+        (r) => r?.landed && (r?.totalDamage ?? 0) > 0,
       );
 
       if (hitSuccess && enemy.alive) {
-        enemy.applyStatusEffect("rooted", this.rootDuration, context);
+        enemy.applyStatusEffect("snared", this.snareDuration, context);
       }
 
       return results;

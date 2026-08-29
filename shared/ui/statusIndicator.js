@@ -119,6 +119,12 @@ export const StatusIndicator = {
       background: "none",
       label: "Rooted",
     },
+    snared: {
+      type: "image",
+      value: "/assets/indicators/snared_indicator.png",
+      background: "none",
+      label: "Snared",
+    },
     healblock: {
       type: "image",
       value: "/assets/indicators/healBlock_indicator.png",

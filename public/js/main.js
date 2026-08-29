@@ -2494,14 +2494,14 @@ function showActionBarSlot({ playerAdvanced = true } = {}) {
     btn.addEventListener("mouseleave", () => removeSkillOverlay());
     btn.addEventListener("click", () => handleSkillUsage(btn));
 
-    // Disable contact skill if champion is rooted
-    const hasRooted =
+    // Disable contact skill if champion is rooted or snared
+    const hasMovementRestriction =
       champion.statusEffects &&
       champion.statusEffects.has &&
-      champion.statusEffects.has("rooted");
-    if (skill.contact && hasRooted) {
+      (champion.statusEffects.has("rooted") || champion.statusEffects.has("snared"));
+    if (skill.contact && hasMovementRestriction) {
       btn.disabled = true;
-      btn.title = "Cannot use contact skills while Rooted.";
+      btn.title = "Cannot use contact skills while restricted.";
     }
 
     if (isUlt) {
