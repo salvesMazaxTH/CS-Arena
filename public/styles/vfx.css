@@ -114,6 +114,12 @@
     transform 220ms ease;
 }
 
+.vfx-concealed {
+  mix-blend-mode: multiply;
+  filter: brightness(0.92) saturate(0.82);
+  z-index: 7;
+}
+
 .champion.is-concealed .portrait img {
   opacity: 0.72;
   filter: grayscale(0.4) contrast(0.9) brightness(0.9);

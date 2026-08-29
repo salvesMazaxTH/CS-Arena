@@ -123,14 +123,8 @@ export const StatusIndicator = {
     healblock: {
       type: "image",
       value: "/assets/indicators/healBlock_indicator.png",
-      background: "none",
+      background: "rgba(170, 0, 20, 0.88)",
       label: "Heal Block",
-    },
-    concealed: {
-      type: "emoji",
-      value: "🌫️",
-      background: "rgba(70, 80, 95, 0.75)",
-      label: "Concealed",
     },
     provocado: {
       type: "image",
