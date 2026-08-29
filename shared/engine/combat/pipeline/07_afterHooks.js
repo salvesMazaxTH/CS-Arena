@@ -84,6 +84,7 @@ function _applyAfterTakingPassive(event) {
     skill: event.skill,
     element: event.element,
     damage: event.damage,
+    actualDmg: event.actualDmg,
     mode: event.mode,
     crit: event.crit,
     context: event.context,
