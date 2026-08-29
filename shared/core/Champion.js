@@ -28,6 +28,7 @@ import {
   modifyHP,
   takeDamage,
   heal,
+  removeStatModifiers,
   purgeExpiredStatModifiers,
   purgeExpiredHookEffects,
   addHookEffect,
@@ -575,6 +576,10 @@ export class Champion {
 
   getTotalDamageReduction(currentTurn) {
     return getTotalDamageReduction(this, currentTurn);
+  }
+
+  removeStatModifiers(modifiers) {
+    return removeStatModifiers(this, modifiers);
   }
 
   purgeExpiredStatModifiers(currentTurn) {

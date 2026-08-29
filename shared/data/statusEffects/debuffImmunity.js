@@ -3,7 +3,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 
 const debuffImmunity = {
   key: "debuffImmunity",
-  name: "Debuff Immunity",
+  name: "Affliction Ward",
   type: "buff",
   subtypes: ["immunity"],
 

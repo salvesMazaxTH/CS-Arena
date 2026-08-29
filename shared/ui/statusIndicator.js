@@ -92,7 +92,7 @@ export const StatusIndicator = {
       type: "emoji",
       value: "🪬",
       background: "rgba(120, 200, 160, 0.8)",
-      label: "Debuff Immunity",
+      label: "Affliction Ward",
     },
     burning: {
       type: "emoji",

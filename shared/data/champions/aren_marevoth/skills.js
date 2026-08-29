@@ -5,6 +5,23 @@ import { applyTide, consumeTide, getTideStacks } from "./tide.js";
 import { getClaimPoints } from "../../../engine/combat/claim.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
+// Strip up to `max` positive effects — positive status effects first, then
+// standalone stat buffs — and return how many fell.
+function stripPositiveEffects(target, max) {
+  const statuses = target.getStatusEffects({ type: "buff" }).slice(0, max);
+  for (const status of statuses) target.removeStatusEffect(status.key);
+
+  let mods = [];
+  if (statuses.length < max) {
+    mods = target.statModifiers
+      .filter((mod) => mod.amount > 0 && !mod.statusKey)
+      .slice(0, max - statuses.length);
+    target.removeStatModifiers(mods);
+  }
+
+  return statuses.length + mods.length;
+}
+
 const arenMarevothSkills = [
   // ========================
   // Total block (global)
@@ -25,10 +42,10 @@ const arenMarevothSkills = [
 
     tideThreshold: 2,
     tideBonusDamage: 15,
-    buffsRemoved: 2,
+    positiveEffectsStripped: 2,
 
     description() {
-      return `When this ability hits a target, it applies Tide to them. When it hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} absolute damage and remove ${this.buffsRemoved} buffs from them.`;
+      return `When this ability hits a target, it applies Tide to them. When it hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} absolute damage and strip up to ${this.positiveEffectsStripped} positive status effects or stat buffs from them.`;
     },
 
     targetSpec: ["enemy"],
@@ -72,14 +89,10 @@ const arenMarevothSkills = [
             : [bonusResult];
           results.push(...bonusResults);
 
-          const buffs = enemy.getStatusEffects({ type: "buff" });
-          const buffsToRemove = buffs.slice(0, this.buffsRemoved);
-          for (const buff of buffsToRemove) {
-            enemy.removeStatusEffect(buff.key);
-          }
+          const stripped = stripPositiveEffects(enemy, this.positiveEffectsStripped);
 
           context.registerDialog?.({
-            message: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing ${this.tideBonusDamage} absolute damage and removing ${buffsToRemove.length} buff(s)!`,
+            message: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing ${this.tideBonusDamage} absolute damage and stripping ${stripped} positive effect(s)!`,
             sourceId: user.id,
             targetId: enemy.id,
           });
@@ -173,7 +186,7 @@ const arenMarevothSkills = [
     bf: 100,
     tideThreshold: 2,
     tideBonusDamage: 30,
-    buffsRemoved: 4,
+    positiveEffectsStripped: 3,
     claimPointsRequired: 5,
     maxHPBonusPercent: 12,
     maxHPBonusStacks: 3,
@@ -185,7 +198,7 @@ const arenMarevothSkills = [
     element: "water",
 
     description() {
-      return `When this ability hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} absolute damage and remove ${this.buffsRemoved} buffs from them.\n\nThe next time this champion uses Claim while possessing ${this.claimPointsRequired} or more Value Points, increase his Max HP by ${this.maxHPBonusPercent}% permanently. Max: +${this.maxHPBonusPercent * this.maxHPBonusStacks}%.`;
+      return `When this ability hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} absolute damage and strip up to ${this.positiveEffectsStripped} positive status effects or stat buffs from them.\n\nThe next time this champion uses Claim while possessing ${this.claimPointsRequired} or more Value Points, increase his Max HP by ${this.maxHPBonusPercent}% permanently. Max: +${this.maxHPBonusPercent * this.maxHPBonusStacks}%.`;
     },
 
     targetSpec: ["enemy"],
@@ -231,14 +244,10 @@ const arenMarevothSkills = [
           : [bonusResult];
         results.push(...bonusResults);
 
-        const buffs = enemy.getStatusEffects({ type: "buff" });
-        const buffsToRemove = buffs.slice(0, this.buffsRemoved);
-        for (const buff of buffsToRemove) {
-          enemy.removeStatusEffect(buff.key);
-        }
+        const stripped = stripPositiveEffects(enemy, this.positiveEffectsStripped);
 
         context.registerDialog?.({
-          message: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing ${this.tideBonusDamage} absolute damage and removing ${buffsToRemove.length} buff(s)!`,
+          message: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing ${this.tideBonusDamage} absolute damage and stripping ${stripped} positive effect(s)!`,
           sourceId: user.id,
           targetId: enemy.id,
         });
