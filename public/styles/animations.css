@@ -1008,9 +1008,7 @@
   height: 118%;
   object-fit: contain;
   image-rendering: auto;
-  backface-visibility: hidden;
   display: block;
-  transform: translateZ(0);
 }
 
 .status-indicator::before {
