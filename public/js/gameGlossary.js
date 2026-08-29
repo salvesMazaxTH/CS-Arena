@@ -15,27 +15,27 @@ export const GAME_GLOSSARY = {
   frozen: {
     title: "Frozen",
     description:
-      "The champion is temporarily unable to act. Speed and Attack are set to zero.",
+      "The champion is temporarily unable to act. Speed and Attack are set to zero. Applies on any hit that connects, even one that deals no damage.",
   },
   rooted: {
     title: "Rooted",
     description:
-      "The champion is rooted in place, unable to act with abilities that require contact.",
+      "The champion is rooted in place, unable to act with abilities that require contact. Applies on any hit that connects, even one that deals no damage.",
   },
   snared: {
     title: "Snared",
     description:
-      "The champion is snared, unable to act with abilities that require contact.",
+      "The champion is snared, unable to act with abilities that require contact. Applies on any hit that connects, even one that deals no damage.",
   },
   poisoned: {
     title: "Poisoned",
     description:
-      "At the start of the turn, deals magic damage over time equal to 4% of maximum HP per stack and removes 1 stack. When the last stack is consumed, the effect expires. New applications only add stacks to the same active status. Damage over time never triggers reactive effects.",
+      "At the start of the turn, deals magic damage over time equal to 4% of maximum HP per stack and removes 1 stack. When the last stack is consumed, the effect expires. New applications only add stacks to the same active status. Damage over time never triggers reactive effects. Applies on any hit that connects, even one that deals no damage.",
   },
   healBlock: {
     title: "Heal Block",
     description:
-      "The champion cannot recover HP by any means, lifesteal included.",
+      "The champion cannot recover HP by any means, lifesteal included. Requires the attack to deal damage.",
   },
   spell_shield: {
     title: "Spell Shield",
@@ -44,7 +44,8 @@ export const GAME_GLOSSARY = {
   },
   chilled: {
     title: "Chilled",
-    description: "The champion's speed and attack are reduced.",
+    description:
+      "The champion's speed and attack are reduced. Applies on any hit that connects, even one that deals no damage.",
   },
   absolute_immunity: {
     title: "Absolute Immunity",
@@ -80,7 +81,7 @@ export const GAME_GLOSSARY = {
   paralyzed: {
     title: "Paralyzed",
     description:
-      "The champion's SPD is set to zero and has a 40% chance of not acting.",
+      "The champion's SPD is set to zero and has a 40% chance of not acting. Requires the attack to deal damage.",
   },
   piercing: {
     title: "Piercing",
@@ -90,11 +91,11 @@ export const GAME_GLOSSARY = {
   burning: {
     title: "Burning",
     description:
-      "At the start of the turn, deals magic damage over time equal to 15 plus 4% of maximum HP. While Burning, all HP the champion recovers is reduced by 35%. Damage over time never triggers reactive effects.",
+      "At the start of the turn, deals magic damage over time equal to 15 plus 4% of maximum HP. While Burning, all HP the champion recovers is reduced by 35%. Damage over time never triggers reactive effects. Requires the attack to deal damage; some sources (like D'Lorafya) bypass this.",
   },
   bleeding: {
     title: "Bleeding",
     description:
-      "At the start of the turn, deals physical damage over time equal to 4% of maximum HP per stack and removes 1 stack. When the last stack is consumed, the effect expires. New applications only add stacks to the same active status. Damage over time never triggers reactive effects.",
+      "At the start of the turn, deals physical damage over time equal to 4% of maximum HP per stack and removes 1 stack. When the last stack is consumed, the effect expires. New applications only add stacks to the same active status. Damage over time never triggers reactive effects. Requires the attack to deal damage.",
   },
 };
