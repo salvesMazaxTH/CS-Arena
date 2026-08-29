@@ -12,17 +12,17 @@ const theopetraSkills = [
   // Special Abilities
   // ========================
 
-    {
-      key: "petrium_strike",
-      name: "Petrium Strike",
-      bf: 70,
-      damageMode: "standard",
-      contact: true,
-      priority: 0,
+  {
+    key: "petrium_strike",
+    name: "Petrium Strike",
+    bf: 70,
+    damageMode: "standard",
+    contact: true,
+    priority: 0,
 
-      description() {
-        return `Theópetra closes in and strikes with her stone-forged body, dealing physical damage to the chosen target.`;
-      },
+    description() {
+      return `Theópetra closes in and strikes with her stone-forged body, dealing physical damage to the chosen target.`;
+    },
 
     targetSpec: ["enemy"],
 
@@ -88,14 +88,10 @@ const theopetraSkills = [
     targetSpec: ["all:enemy"],
 
     resolve({ user, targets, context = {} }) {
-      const enemies = targets.filter(
-        (champion) => champion.team !== user.team && champion.alive,
-      );
-
       const baseDamage = (user.Attack * this.bf) / 100;
       const results = [];
 
-      for (const enemy of enemies) {
+      for (const enemy of targets) {
         const damageResult = new DamageEvent({
           baseDamage,
           attacker: user,
@@ -106,11 +102,9 @@ const theopetraSkills = [
           allChampions: context?.allChampions,
         }).execute();
 
-        const damageResults = Array.isArray(damageResult)
-          ? damageResult
-          : [damageResult];
-
-        results.push(...damageResults);
+        results.push(
+          ...(Array.isArray(damageResult) ? damageResult : [damageResult]),
+        );
       }
 
       return results;
