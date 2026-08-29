@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import totalBlock from "../generic/totalBlock.js";
 
 const brunoSkills = [
@@ -44,7 +45,7 @@ const brunoSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      if (!result?.evaded && !result?.immune) {
+      if (effectConnected(result, "chilled")) {
         target.applyStatusEffect("chilled", this.chillDuration, context);
       }
 
@@ -121,7 +122,7 @@ const brunoSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      if (!result?.evaded && !result?.immune) {
+      if (effectConnected(result, "chilled")) {
         target.applyStatusEffect("chilled", this.chillDuration, context);
       }
 

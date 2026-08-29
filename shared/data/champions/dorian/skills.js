@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import { isSorcerer } from "./sorcerer.js";
 import totalBlock from "../generic/totalBlock.js";
@@ -90,11 +91,9 @@ const dorianSkills = [
       }).execute();
 
       const results = Array.isArray(result) ? result : [result];
-      const landed = results.some(
-        (r) => r?.targetId === enemy.id && !r?.evaded && !r?.immune,
-      );
+      const mainHit = results.find((r) => r?.targetId === enemy.id);
 
-      if (landed) {
+      if (effectConnected(mainHit, "healBlock")) {
         enemy.applyStatusEffect("healBlock", this.healBlockDuration, context, {
           source: this.key,
         });
@@ -144,11 +143,10 @@ const dorianSkills = [
       }).execute();
 
       const results = Array.isArray(result) ? result : [result];
-      const landed = results.some(
-        (r) => r?.targetId === enemy.id && !r?.evaded && !r?.immune,
-      );
+      const mainHit = results.find((r) => r?.targetId === enemy.id);
+      const landed = !!mainHit?.landed;
 
-      if (landed) {
+      if (effectConnected(mainHit, "healBlock")) {
         enemy.applyStatusEffect("healBlock", this.healBlockDuration, context, {
           source: this.key,
         });

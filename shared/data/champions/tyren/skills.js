@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 
@@ -53,9 +54,9 @@ const tyrenSkills = [
 
       const results = Array.isArray(result) ? result : [result];
 
-      const hitSuccess = results.some(
-        (r) => r?.landed && (r?.totalDamage ?? 0) > 0,
-      );
+      // The metal hardens and pins the target down even on a hit that did not
+      // break skin.
+      const hitSuccess = results.some((r) => effectConnected(r, "snared"));
 
       if (hitSuccess && enemy.alive) {
         enemy.applyStatusEffect("snared", this.snareDuration, context);

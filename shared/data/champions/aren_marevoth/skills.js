@@ -67,7 +67,7 @@ const arenMarevothSkills = [
       }).execute();
 
       const results = Array.isArray(result) ? result : [result];
-      const hitSuccess = results.some((r) => !r?.evaded && !r?.immune);
+      const hitSuccess = results.some((r) => r?.landed);
 
       if (hitSuccess) {
         if (currentTideStacks >= this.tideThreshold) {
@@ -223,7 +223,7 @@ const arenMarevothSkills = [
       }).execute();
 
       const results = Array.isArray(result) ? result : [result];
-      const hitSuccess = results.some((r) => !r?.evaded && !r?.immune);
+      const hitSuccess = results.some((r) => r?.landed);
 
       if (hitSuccess && currentTideStacks >= this.tideThreshold) {
         consumeTide(enemy);

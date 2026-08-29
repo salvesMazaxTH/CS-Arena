@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
@@ -220,11 +221,7 @@ const raliaSkills = [
 
         results.push(...resultsArray);
 
-        const hitLanded =
-          mainDamage &&
-          mainDamage.evaded !== true &&
-          mainDamage.immune !== true &&
-          (mainDamage.totalDamage ?? 0) > 0;
+        const hitLanded = effectConnected(mainDamage, "bleeding");
 
         if (hitLanded) {
           enemy.applyStatusEffect(

@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
@@ -45,8 +46,7 @@ const gryskarchuSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      // Status effect only applies if the damage connects.
-      if (!result?.evaded && !result?.immune) {
+      if (effectConnected(result, "rooted")) {
         enemy.applyStatusEffect("rooted", this.rootDuration, context);
       }
 

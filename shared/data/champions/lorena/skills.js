@@ -47,7 +47,7 @@ const lorenaSkills = [
       const hitResult = Array.isArray(result) ? result[0] : result;
 
       // The mark only sticks if the shot actually connects.
-      if (!hitResult?.evaded && !hitResult?.immune) {
+      if (hitResult?.landed) {
         enemy.runtime.lorenaMarked = true;
       }
 

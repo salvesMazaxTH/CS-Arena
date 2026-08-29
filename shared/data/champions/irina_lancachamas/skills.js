@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 
@@ -78,11 +79,7 @@ const irinaSkills = [
 
       const hitResult = Array.isArray(result) ? result[0] : result;
 
-      if (
-        !hitResult?.evaded &&
-        !hitResult?.immune &&
-        Math.random() < this.burnChance
-      ) {
+      if (effectConnected(hitResult, "burning") && Math.random() < this.burnChance) {
         enemy.applyStatusEffect("burning", this.burnDuration, context);
       }
 
@@ -138,7 +135,7 @@ const irinaSkills = [
         }),
       );
 
-      if (!hitResult?.evaded && !hitResult?.immune) {
+      if (effectConnected(hitResult, "burning")) {
         enemy.applyStatusEffect("burning", this.burnDuration, context);
       }
 
@@ -197,7 +194,7 @@ const irinaSkills = [
         }),
       );
 
-      if (!hitResult?.evaded && !hitResult?.immune) {
+      if (effectConnected(hitResult, "burning")) {
         enemy.applyStatusEffect("burning", this.burnDuration, context);
       }
 

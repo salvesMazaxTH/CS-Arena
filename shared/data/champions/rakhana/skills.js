@@ -59,7 +59,7 @@ const rakhanaSkills = [
       // Reflects and counter-attacks ride along in `results` aimed back at her.
       const mainResult = results.find((entry) => entry.targetId === enemy.id);
 
-      if (mainResult.evaded || mainResult.immune) return results;
+      if (!mainResult.landed) return results;
 
       const value = Math.floor(
         user.maxHP * (this.shieldPercent / 100),

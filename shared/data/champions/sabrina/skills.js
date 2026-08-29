@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import totalBlock from "../generic/totalBlock.js";
 
 const sabrinaSkills = [
@@ -42,7 +43,7 @@ const sabrinaSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      if (!result?.evaded && !result?.immune) {
+      if (effectConnected(result, "chilled")) {
         target.applyStatusEffect("chilled", this.chillDuration, context);
       }
 
@@ -88,7 +89,7 @@ const sabrinaSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      if (!result?.evaded && !result?.immune && isChilled) {
+      if (effectConnected(result, "frozen") && isChilled) {
         target.applyStatusEffect("frozen", this.freezeDuration, context);
       }
 
@@ -136,8 +137,7 @@ const sabrinaSkills = [
       }).execute();
 
       if (
-        !waterResult?.evaded &&
-        !waterResult?.immune &&
+        effectConnected(waterResult, "chilled") &&
         !wasChilledOnImpact &&
         target.alive
       ) {
@@ -159,7 +159,7 @@ const sabrinaSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      if (!iceResult?.evaded && !iceResult?.immune && wasChilledOnImpact) {
+      if (effectConnected(iceResult, "frozen") && wasChilledOnImpact) {
         target.applyStatusEffect("frozen", this.freezeDuration, context);
       }
 

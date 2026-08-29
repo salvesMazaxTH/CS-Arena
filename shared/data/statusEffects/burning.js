@@ -8,6 +8,9 @@ const burning = {
   name: "Burning",
   type: "debuff",
   subtypes: ["dot", "fire"],
+  // An attack that deals no damage does not set the target alight, unless the
+  // applying skill explicitly waives this.
+  requiresDamage: true,
   healingReductionPercent: 35,
 
   hookScope: {

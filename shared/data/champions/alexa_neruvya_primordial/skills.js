@@ -44,7 +44,7 @@ const alexaNeruvyaPrimordialSkills = [
       }).execute();
 
       const results = Array.isArray(result) ? result : [result];
-      const hitSuccess = results.some((r) => !r?.evaded && !r?.immune);
+      const hitSuccess = results.some((r) => r?.landed);
 
       if (!hitSuccess) return results;
 

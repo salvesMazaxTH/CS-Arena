@@ -6,6 +6,7 @@ const paralyzed = {
   name: "Paralyzed",
   type: "debuff",
   subtypes: ["softCC", "statMod", "lightning"],
+  requiresDamage: true,
 
   hookScope: {
     onValidateAction: "actionSource",

@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
 import { BLEEDING_DAMAGE_PER_STACK_RATIO } from "../../statusEffects/bleeding.js";
@@ -42,11 +43,7 @@ const drexSkills = [
       const results = Array.isArray(result) ? result : [result];
       const mainDamage = results[0];
 
-      if (
-        !mainDamage?.evaded &&
-        !mainDamage?.immune &&
-        (mainDamage?.totalDamage ?? 0) > 0
-      ) {
+      if (effectConnected(mainDamage, "bleeding")) {
         const bleedStacks = enemy.hasStatusEffect("bleeding")
           ? this.bleedingStacks + 1
           : this.bleedingStacks;
@@ -222,8 +219,7 @@ const drexSkills = [
 
       const dealtDamage = Number(mainDamage?.totalDamage ?? 0) > 0;
 
-      const connected =
-        !mainDamage?.evaded && !mainDamage?.immune && dealtDamage;
+      const connected = mainDamage?.landed && dealtDamage;
 
       // Shield check happens AFTER the Ultimate applies its own Bleeding.
       if (connected && bleedStacks >= this.minimumBleedStacks) {

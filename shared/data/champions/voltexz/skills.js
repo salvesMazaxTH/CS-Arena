@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 import unstableOvercharge from "./passive.js";
@@ -160,13 +161,8 @@ const voltexzSkills = [
 
       const mainDamage = damageArray[0];
 
-      // Paralysis only lands if the hit connected.
       // Its log is handled by the status effect system.
-      if (
-        !mainDamage?.evaded &&
-        !mainDamage?.immune &&
-        mainDamage?.totalDamage > 0
-      ) {
+      if (effectConnected(mainDamage, "paralyzed")) {
         enemy.applyStatusEffect("paralyzed", this.paralyzeDuration, context);
       }
 

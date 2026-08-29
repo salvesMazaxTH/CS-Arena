@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicShot from "../generic/basicShot.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
@@ -99,7 +100,7 @@ const sereneSkills = [
         stunSuccess = stunRoll < 0.5;
       }
 
-      if (!result?.evaded && !result?.immune && stunSuccess) {
+      if (effectConnected(result, "stunned") && stunSuccess) {
         const stunned = enemy.applyStatusEffect(
           "stunned",
           this.stunDuration,
@@ -112,8 +113,7 @@ const sereneSkills = [
         }
       } else if (
         user.runtime.sereneStreak > 1 &&
-        !result?.evaded &&
-        !result?.immune
+        effectConnected(result, "stunned")
       ) {
         // The Stun roll failed.
         result.log =

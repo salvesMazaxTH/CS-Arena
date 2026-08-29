@@ -11,6 +11,9 @@ const bleeding = {
   name: "Bleeding",
   type: "debuff",
   subtypes: ["dot", "physical"],
+  // A wound has to be opened: an attack that deals no damage does not bleed,
+  // unless the applying skill explicitly waives this.
+  requiresDamage: true,
   isStackable: true,
   durationFromStacks: true,
 

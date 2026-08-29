@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import basicShot from "../generic/basicShot.js";
 
 const vulnaraSkills = [
@@ -96,8 +97,7 @@ const vulnaraSkills = [
 
         // Apply Burning if the hit connects and the roll succeeds.
         if (
-          !mainDamage?.evaded &&
-          !mainDamage?.immune &&
+          effectConnected(mainDamage, "burning") &&
           Math.random() < this.burnChance
         ) {
           enemy.applyStatusEffect("burning", this.burnDuration, context);
@@ -156,7 +156,7 @@ const vulnaraSkills = [
         const hitResults = Array.isArray(result) ? result : [result];
         const mainDamage = hitResults[0];
 
-        if (!mainDamage?.evaded && !mainDamage?.immune) {
+        if (effectConnected(mainDamage, "burning")) {
           enemy.applyStatusEffect("burning", this.burnDuration, context);
         }
 

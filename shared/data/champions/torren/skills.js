@@ -41,11 +41,7 @@ const torrenSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      if (
-        damageEvent?.evaded ||
-        damageEvent?.immune ||
-        !(damageEvent?.totalDamage > 0)
-      ) {
+      if (!damageEvent?.landed || !(damageEvent?.totalDamage > 0)) {
         return damageEvent;
       }
 
@@ -187,11 +183,7 @@ const torrenSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      if (
-        !damageEvent?.evaded &&
-        !damageEvent?.immune &&
-        damageEvent?.totalDamage > 0
-      ) {
+      if (damageEvent?.landed && damageEvent?.totalDamage > 0) {
         enemy.applyStatusEffect("stunned", this.stunDuration, context, {
           source: {
             type: "skill",

@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
 
@@ -57,11 +58,8 @@ const toxViprannaSkills = [
 
       const mainDamage = damageArray[0];
 
-      if (
-        !mainDamage?.evaded &&
-        !mainDamage?.immune &&
-        mainDamage?.totalDamage > 0
-      ) {
+      // Poison seeps in through the pores; it does not need the strike to wound.
+      if (effectConnected(mainDamage, "poisoned")) {
         const alreadyPoisoned = enemy.hasStatusEffect("poisoned");
         const stacks = alreadyPoisoned ? 2 : 4;
 
