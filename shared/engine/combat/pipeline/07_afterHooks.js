@@ -98,6 +98,7 @@ function _applyAfterDealingPassive(event) {
     attacker: event.attacker,
     defender: event.defender,
     damage: event.damage,
+    actualDmg: event.actualDmg,
     mode: event.mode,
     crit: event.crit,
     skill: event.skill,
