@@ -121,7 +121,7 @@ const laisaelisSkills = [
     priority: 3,
 
     description() {
-      return `Laisaelis steps between an ally and the next thing meant to diminish them. For ${this.wardDuration} turn(s) the chosen ally — herself or her sister included — carries <b>Debuff Immunity</b>: the first negative effect that would take hold never does, and the ward is spent turning it away. It stops nothing that merely deals damage.`;
+      return `Laisaelis steps between an ally and the next thing meant to diminish them. For ${this.wardDuration} turn(s) the chosen ally — herself or her sister included — carries <b>Affliction Ward</b>: the first negative effect that would take hold never does, and the ward is spent turning it away. It stops nothing that merely deals damage.`;
     },
 
     targetSpec: ["select:ally"],
