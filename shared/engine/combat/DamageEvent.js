@@ -13,6 +13,23 @@ const DEFAULT_HOOK_POLICY = Object.freeze({
   allowOnNestedDamage: false,
 });
 
+// Stamp `landed` on every result: true when the hit reached and affected the
+// target. Skills gate their follow-up effects on this instead of re-deriving it.
+function stampLanded(result) {
+  const list = Array.isArray(result) ? result : [result];
+  for (const r of list) {
+    if (!r || typeof r !== "object" || r.landed !== undefined) continue;
+    r.landed = !(
+      r.evaded ||
+      r.immune ||
+      r.unreachable ||
+      r.shieldBlocked ||
+      r.inactiveTarget
+    );
+  }
+  return result;
+}
+
 const REACTIVE_HOOKS = new Set([
   "onBeforeDmgDealing",
   "onBeforeDmgTaking",
@@ -132,7 +149,7 @@ export class DamageEvent {
 
   execute() {
     const earlyExit = preChecks(this);
-    if (earlyExit) return earlyExit;
+    if (earlyExit) return stampLanded(earlyExit);
 
     prepareDamage(this);
 
@@ -161,10 +178,10 @@ export class DamageEvent {
       } else if (result && result.log) {
         result.log = undefined;
       }
-      return result;
+      return stampLanded(result);
     }
 
-    return buildFinalResult(this);
+    return stampLanded(buildFinalResult(this));
   }
 
   canRunHook(eventName, champ, source) {

@@ -48,7 +48,9 @@ export function preChecks(event) {
       console.log(
         `[DAMAGE CANCEL] ${event.defender.name} teve o dano cancelado por status-effect`,
       );
-      return _buildImmuneResult(event, r.message ?? null);
+      return r.unreachable
+        ? _buildUnreachableResult(event, r.message ?? null)
+        : _buildImmuneResult(event, r.message ?? null);
     }
 
     if (r?.modifiedDamage !== undefined) {
@@ -171,12 +173,24 @@ function _rollEvasion({ attacker, defender, context, debugMode }) {
   };
 }
 
-function _buildImmuneResult(
+function _buildImmuneResult(event, customMessage = null, opts = {}) {
+  return _buildBlockedResult(event, customMessage, { ...opts, kind: "immune" });
+}
+
+function _buildUnreachableResult(event, customMessage = null, opts = {}) {
+  return _buildBlockedResult(event, customMessage, {
+    ...opts,
+    kind: "unreachable",
+  });
+}
+
+// Damage stopped before it could apply. `kind` is "immune" (a ward nullified it)
+// or "unreachable" (the hit never landed — stealth, spawn protection).
+function _buildBlockedResult(
   event,
   customMessage = null,
-  { quiet = false } = {},
+  { quiet = false, kind = "immune" } = {},
 ) {
-  // Usamos as propriedades que já existem na instância
   const targetName = formatChampionName(event.defender);
   const username = event.attacker ? formatChampionName(event.attacker) : null;
   const skillName = event.skill?.name || "habilidade";
@@ -185,7 +199,7 @@ function _buildImmuneResult(
     target: event.defender,
     amount: 0,
     sourceId: event.attacker?.id ?? null,
-    flags: { immune: true, immuneMessage: customMessage, immuneQuiet: quiet },
+    flags: { [kind]: true, immuneMessage: customMessage, immuneQuiet: quiet },
   });
 
   const log = customMessage
@@ -201,7 +215,7 @@ function _buildImmuneResult(
     targetId: event.defender.id,
     userId: event.attacker?.id ?? null,
     evaded: false,
-    immune: true,
+    [kind]: true,
     type: event.type,
     log,
     crit: { chance: 0, didCrit: false, bonus: 0, roll: null },

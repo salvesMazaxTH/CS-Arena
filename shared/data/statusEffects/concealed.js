@@ -8,21 +8,12 @@ const concealed = {
   subtypes: ["stealth"],
 
   description:
-    "Only the enemy directly opposite can land a hit. Taking any damage, or acting, ends it.",
+    "Only the enemy directly opposite can target it. Taking any damage, or acting, ends it.",
 
-  onDamageIncoming({ attacker, defender, context }) {
-    if (context?.isDot || !attacker || attacker.id === defender.id) return;
-
-    const facing = context?.getChampionAtSlot?.(
-      defender.team === 1 ? 2 : 1,
-      defender.combatSlot,
-    );
-    if (facing?.id === attacker.id) return;
-
-    return {
-      cancel: true,
-      message: `${formatChampionName(attacker)} strikes at ${formatChampionName(defender)} and cuts only air.`,
-    };
+  // A single-target attacker who is not directly opposite cannot see it; area
+  // and splash damage still reach it.
+  hidesFromAttacker(attacker, owner) {
+    return attacker.combatSlot !== owner.combatSlot;
   },
 
   onAfterDmgTaking({ owner, damage, context }) {
@@ -49,11 +40,10 @@ const concealed = {
 
   createInstance({ owner, duration, context, metadata }) {
     // Break on the wearer's next action unless the caller opts out; the
-    // reveal-on-damage and facing-slot rules always apply.
+    // reveal-on-damage rule always applies.
     const breaksOnAction = metadata?.breaksOnAction !== false;
 
     const hookScope = {
-      onDamageIncoming: "defender",
       onAfterDmgTaking: "defender",
     };
     const hooks = {
@@ -62,7 +52,6 @@ const concealed = {
       subtypes: this.subtypes,
       description: this.description,
       hookScope,
-      onDamageIncoming: this.onDamageIncoming,
       onAfterDmgTaking: this.onAfterDmgTaking,
     };
 
