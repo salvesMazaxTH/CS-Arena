@@ -317,3 +317,21 @@
     filter: brightness(1);
   }
 }
+
+/* Arrow hit effect (applied to champion portrait when an arrow lands) */
+
+.arrow-hit {
+  animation: arrowFlash 0.3s ease-out;
+}
+
+@keyframes arrowFlash {
+  0% {
+    filter: brightness(1);
+  }
+  12% {
+    filter: brightness(2.2) contrast(1.35) saturate(0.6);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}

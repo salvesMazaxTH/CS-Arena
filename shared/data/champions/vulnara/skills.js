@@ -7,7 +7,7 @@ const vulnaraSkills = [
   // ========================
   // Basic Shot (global)
   // ========================
-  { ...basicShot, type: "physical" },
+  { ...basicShot, type: "physical", hitVfx: "flaming_arrow" },
 
   // ========================
   // Special Abilities
@@ -61,6 +61,7 @@ const vulnaraSkills = [
     contact: false,
     priority: 0,
     element: "fire",
+    hitVfx: "flaming_arrow",
 
     description() {
       return `Vulnara looses a rain of burning arrows over the whole field, dealing Fire physical damage to every enemy. Each arrow that lands has a ${this.burnChance * 100}% chance of setting its target Burning for ${this.burnDuration} turn(s).`;
@@ -122,6 +123,7 @@ const vulnaraSkills = [
 
     contact: false,
     damageMode: "standard",
+    hitVfx: "flaming_arrow",
 
     isUltimate: true,
     momentumCost: 55,

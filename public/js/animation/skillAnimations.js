@@ -9,7 +9,9 @@
 //  function, then register it at the bottom of this file.
 // ============================================================
 
+import { playArrowShot } from "./arrowAnimation.js";
 import { createFireballAnimation } from "./fireballAnimation.js";
+import { playFlamingArrow } from "./flamingArrowAnimation.js";
 import { playLightningBolt } from "./lightningAnimation.js";
 import { playMeleePunch } from "./meleePunchAnimation.js";
 import { playMultislash } from "./multislashAnimation.js";
@@ -95,3 +97,5 @@ registerSkillAnimation("default_water", createWaterBoltAnimation(1));
 registerSkillAnimation("default_water_big", createWaterBoltAnimation(1.85));
 registerSkillAnimation("default_slash", playSlash);
 registerSkillAnimation("default_multislash", playMultislash);
+registerSkillAnimation("default_arrow", playArrowShot);
+registerSkillAnimation("default_flaming_arrow", playFlamingArrow);
