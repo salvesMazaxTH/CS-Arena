@@ -25,37 +25,35 @@ const labels = expectedIndicatorKeys.map(
   (key) => StatusIndicator.statusEffectIcons[key].label,
 );
 const expectedLabels = [
-  "Paralisado",
-  "Congelado",
-  "Imunidade Absoluta",
-  "Sangramento",
+  "Paralyzed",
+  "Frozen",
+  "Absolute Immunity",
+  "Bleeding",
 ];
 const missingLabels = expectedLabels.filter((label) => !labels.includes(label));
 if (missingLabels.length > 0) {
-  throw new Error(`Missing Portuguese UI labels: ${missingLabels.join(", ")}`);
+  throw new Error(`Missing English UI labels: ${missingLabels.join(", ")}`);
 }
 
 const expectedGlossaryKeys = [
-  "atordoado",
-  "condutor",
-  "congelado",
-  "enraizado",
-  "gelado",
-  "inerte",
-  "invisivel",
-  "paralisado",
-  "queimando",
-  "sangramento",
+  "stunned",
+  "conductor",
+  "frozen",
+  "rooted",
+  "chilled",
+  "inert",
+  "invisible",
+  "paralyzed",
+  "burning",
+  "bleeding",
 ];
 const missingGlossaryKeys = expectedGlossaryKeys.filter(
   (key) => !(key in GAME_GLOSSARY),
 );
 if (missingGlossaryKeys.length > 0) {
-  throw new Error(
-    `Missing glossary PT keys: ${missingGlossaryKeys.join(", ")}`,
-  );
+  throw new Error(`Missing glossary keys: ${missingGlossaryKeys.join(", ")}`);
 }
 
 console.log("indicator-keys-english-ok");
-console.log("ui-labels-portuguese-ok");
-console.log("glossary-portuguese-ok");
+console.log("ui-labels-english-ok");
+console.log("glossary-english-ok");
