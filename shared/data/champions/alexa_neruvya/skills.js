@@ -109,7 +109,7 @@ const alexaNeruvyaSkills = [
 
     healPercentOfDamage: 90,
     minHealPerAlly: 60,
-    momentumGainPercentOfDamage: 6,
+    momentumGainPercentOfDamage: 7,
     transformInto: "alexa_neruvya_primordial",
     transformDuration: 2,
 
