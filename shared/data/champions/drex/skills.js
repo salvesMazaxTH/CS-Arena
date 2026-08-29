@@ -75,7 +75,7 @@ const drexSkills = [
     targetSpec: ["all:enemy"],
 
     description() {
-      return `Deals damage to all enemies and applies ${this.bleedingStacksApplied} Bleeding stacks to each. If an enemy is already Bleeding, applies ${this.bonusBleedStacksIfBleeding} additional stack. Each existing Bleeding stack also triggers an immediate instance of Bleeding damage without consuming the status.`;
+      return `Deals damage to all enemies and applies ${this.bleedingStacksApplied} Bleeding stacks to each, taking hold on any hit that reaches the target even when it deals no damage. If an enemy is already Bleeding, applies ${this.bonusBleedStacksIfBleeding} additional stack. Each existing Bleeding stack also triggers an immediate instance of Bleeding damage without consuming the status.`;
     },
 
     resolve({ user, targets, context = {} }) {
@@ -95,10 +95,23 @@ const drexSkills = [
           allChampions: context?.allChampions,
         }).execute();
 
-        if (Array.isArray(initialDamage)) {
-          results.push(...initialDamage);
-        } else if (initialDamage) {
-          results.push(initialDamage);
+        const initialResults = Array.isArray(initialDamage)
+          ? initialDamage
+          : [initialDamage];
+        results.push(...initialResults.filter(Boolean));
+
+        const mainDamage =
+          initialResults.find((r) => r?.targetId === enemy.id) ??
+          initialResults[0];
+
+        // Reaching the target is enough — no blood need be drawn — but a whiffed
+        // strike bursts no existing wounds and adds no stacks.
+        if (
+          !effectConnected(mainDamage, "bleeding", {
+            ignoreDamageRequirement: true,
+          })
+        ) {
+          continue;
         }
 
         const existingStacks =

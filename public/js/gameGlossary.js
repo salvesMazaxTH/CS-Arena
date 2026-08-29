@@ -96,6 +96,6 @@ export const GAME_GLOSSARY = {
   bleeding: {
     title: "Bleeding",
     description:
-      "At the start of the turn, deals physical damage over time equal to 4% of maximum HP per stack and removes 1 stack. When the last stack is consumed, the effect expires. New applications only add stacks to the same active status. Damage over time never triggers reactive effects. Requires the attack to deal damage.",
+      "At the start of the turn, deals physical damage over time equal to 4% of maximum HP per stack and removes 1 stack. When the last stack is consumed, the effect expires. New applications only add stacks to the same active status. Damage over time never triggers reactive effects. Requires the attack to deal damage; some sources (like Drex's Bloodletting and ultimate) bypass this.",
   },
 };
