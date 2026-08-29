@@ -4,9 +4,10 @@ export default {
   key: "first_sutra_adamantine_heart",
   name: "First Sutra: Adamantine Heart",
 
-  flatReductionVSContact: 25, // Kept for reference, but no longer used as a trigger
+  flatReductionVSContact: 25,
   stabilityStacksCap: 4,
   dmgBuffAuraDuration: 2,
+  significantHitRatio: 0.35,
 
   description(champion) {
     const stacks = champion.runtime?.stabilityStacks || 0;
@@ -15,7 +16,7 @@ export default {
 
     Whenever he takes Physical Damage, he gains 1 <b>Stability</b> stack (Max: ${this.stabilityStacksCap}).
 
-    When he takes a significant hit, he consumes all Stability stacks to reduce the damage taken by an additional 10% per stack and doubles his damage dealt for the next ${this.dmgBuffAuraDuration} turn(s).
+    When a hit would deal more than ${this.significantHitRatio * 100}% of his Max HP, he consumes all Stability stacks to reduce that damage by an additional 10% per stack and doubles his damage dealt for the next ${this.dmgBuffAuraDuration} turn(s).
 
     <b>Current Stacks: ${stacks}</b>`;
   },
@@ -41,14 +42,9 @@ export default {
 
     finalDamage *= 0.9;
 
-    // Evaluate whether this is a significant hit.
-    const hp = owner.HP;
-    const nextHp = hp - damage;
-    const halfHp = owner.maxHP * 0.5;
-
+    // Measured against the post-mitigation figure, not the raw incoming hit.
     const isSignificantHit =
-      (hp > halfHp && nextHp < halfHp) ||
-      (hp <= halfHp && nextHp <= 0);
+      finalDamage > owner.maxHP * this.significantHitRatio;
 
     if (!stacks || !isSignificantHit) {
       return { damage: finalDamage };
@@ -57,9 +53,9 @@ export default {
     finalDamage *= 1 - 0.1 * stacks;
     owner.runtime.stabilityStacks = 0;
 
+    owner.runtime.hookEffects ??= [];
     owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
-      (effect) =>
-        effect.key !== "morakhan_adamantine_stability_burst",
+      (effect) => effect.key !== "morakhan_adamantine_stability_burst",
     );
 
     owner.addHookEffect({
@@ -109,9 +105,8 @@ export default {
     };
   },
 
-  onAfterDmgTaking({ damage, skill, owner, type }) {
-    // type: "physical" | "magical" | ...
-    if (damage <= 0 || type !== "physical") return;
+  onAfterDmgTaking({ actualDmg, owner, type }) {
+    if (!(actualDmg > 0) || type !== "physical") return;
 
     const runtime = (owner.runtime ??= {});
     const stacks = runtime.stabilityStacks || 0;
