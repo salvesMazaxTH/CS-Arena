@@ -9,8 +9,7 @@
 //  function, then register it at the bottom of this file.
 // ============================================================
 
-import { playArrowShot } from "./arrowAnimation.js";
-import { createFireballAnimation } from "./fireballAnimation.js";
+import { createFireBoltGL } from "./fireBoltGLAnimation.js";
 import { playFlamingArrow } from "./flamingArrowAnimation.js";
 import { playLightningBolt } from "./lightningAnimation.js";
 import { playMeleePunch } from "./meleePunchAnimation.js";
@@ -91,11 +90,10 @@ export async function animateSkill(skillKey, opts = {}) {
 registerSkillAnimation("quick_hook", playMeleePunch);
 registerSkillAnimation("blazing_fist_barrage", playMeleePunch);
 registerSkillAnimation("default_lightning", playLightningBolt);
-registerSkillAnimation("default_fire", createFireballAnimation(1));
-registerSkillAnimation("default_fire_big", createFireballAnimation(1.85));
+registerSkillAnimation("default_fire", createFireBoltGL(1));
+registerSkillAnimation("default_fire_big", createFireBoltGL(1.275, true));
 registerSkillAnimation("default_water", createWaterBoltAnimation(1));
 registerSkillAnimation("default_water_big", createWaterBoltAnimation(1.85));
 registerSkillAnimation("default_slash", playSlash);
 registerSkillAnimation("default_multislash", playMultislash);
-registerSkillAnimation("default_arrow", playArrowShot);
 registerSkillAnimation("default_flaming_arrow", playFlamingArrow);
