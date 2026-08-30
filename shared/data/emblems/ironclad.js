@@ -1,6 +1,6 @@
 export const ironclad = {
   key: "ironclad",
-  name: "Emblem of the Ironclad",
+  name: "Emblem of Impervious Steel",
   piercingResistPercent: 50,
 
   requirements: {
@@ -35,7 +35,7 @@ export const ironclad = {
       amount: 15,
       type: "percent",
       duration: 9999,
-      source: "Emblem of the Ironclad",
+      source: "Emblem of Impervious Steel",
       context,
     });
   },
@@ -49,7 +49,7 @@ export const ironclad = {
 
     return {
       piercingPercentage: resistedPiercing,
-      log: `<b>[Emblem — Ironclad]</b> ${defender.name}'s steel resists the piercing strike, halving its effectiveness!`,
+      log: `<b>[Emblem — Impervious Steel]</b> ${defender.name}'s steel resists the piercing strike, halving its effectiveness!`,
     };
   },
 };
