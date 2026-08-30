@@ -362,6 +362,9 @@ function ensureStage() {
   renderer.setPixelRatio(1);
   renderer.setClearAlpha(0);
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.domElement.style.position = "absolute";
+  renderer.domElement.style.top = "0";
+  renderer.domElement.style.left = "0";
   container.appendChild(renderer.domElement);
 
   stage = { renderer, scene, camera, effects: [], raf: 0, last: 0 };
