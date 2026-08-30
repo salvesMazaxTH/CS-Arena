@@ -46,6 +46,7 @@ import alexa_neruvya_primordial from "./alexa_neruvya_primordial/index.js";
 import lorena from "./lorena/index.js";
 import irina_lancachamas from "./irina_lancachamas/index.js";
 import dorian from "./dorian/index.js";
+import thorwells from "./thorwells/index.js";
 
 const championDB = {
   ralia,
@@ -96,6 +97,7 @@ const championDB = {
   lorena,
   irina_lancachamas,
   dorian,
+  thorwells,
 };
 
 export default championDB;
