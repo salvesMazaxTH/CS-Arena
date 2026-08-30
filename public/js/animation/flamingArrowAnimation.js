@@ -42,13 +42,13 @@ const FLIGHT_DURATION = 0.26;
 const IMPACT_DURATION = 0.5;
 const LIFETIME = DRAW_DURATION + FLIGHT_DURATION + IMPACT_DURATION;
 
-const HEAD_LEN = 12;
-const HEAD_W = 5;
+const HEAD_LEN = 13;
+const HEAD_W = 5.5;
 const SHAFT_LEN = 30;
 const STREAK_SAMPLES = 9;
 
-const MAX_TRAIL = 38;
-const MAX_EMBERS = 26;
+const MAX_TRAIL = 44;
+const MAX_EMBERS = 30;
 
 export class FlamingArrowEffect {
   constructor(ctx, from, to) {
@@ -88,21 +88,21 @@ export class FlamingArrowEffect {
   }
 
   flicker() {
-    return 0.78 + 0.22 * Math.sin(this.age * 47) + 0.12 * (Math.random() - 0.5);
+    return 0.76 + 0.26 * Math.sin(this.age * 47) + 0.13 * (Math.random() - 0.5);
   }
 
   spawnTrail(dt) {
     const room = MAX_TRAIL - this.trail.length;
-    const count = Math.min(Math.ceil(dt * 230 * this.particleScale), room);
+    const count = Math.min(Math.ceil(dt * 270 * this.particleScale), room);
     for (let i = 0; i < count; i++) {
       this.trail.push({
         x: this.pos.x + (Math.random() - 0.5) * 14,
         y: this.pos.y + (Math.random() - 0.5) * 14,
         vx: (Math.random() - 0.5) * 80 - Math.cos(this.angle) * 50,
         vy: (Math.random() - 0.5) * 80 - Math.sin(this.angle) * 50 - 55,
-        life: 0.24 + Math.random() * 0.3,
-        maxLife: 0.54,
-        size: 20 + Math.random() * 30,
+        life: 0.24 + Math.random() * 0.32,
+        maxLife: 0.56,
+        size: 24 + Math.random() * 34,
         sprite: SPRITES[1 + (i % 3)],
       });
     }
@@ -110,23 +110,23 @@ export class FlamingArrowEffect {
 
   spawnEmbers(dt) {
     const room = MAX_EMBERS - this.embers.length;
-    const count = Math.min(Math.ceil(dt * 110 * this.particleScale), room);
+    const count = Math.min(Math.ceil(dt * 130 * this.particleScale), room);
     for (let i = 0; i < count; i++) {
       this.embers.push({
         x: this.pos.x,
         y: this.pos.y,
-        vx: (Math.random() - 0.5) * 150,
-        vy: -70 - Math.random() * 170,
-        life: 0.28 + Math.random() * 0.36,
-        maxLife: 0.64,
-        size: 5 + Math.random() * 9,
+        vx: (Math.random() - 0.5) * 160,
+        vy: -75 - Math.random() * 180,
+        life: 0.28 + Math.random() * 0.38,
+        maxLife: 0.66,
+        size: 6 + Math.random() * 10,
         sprite: SPRITES[i % 2],
       });
     }
   }
 
   spawnBurst() {
-    const count = Math.round(24 * this.particleScale);
+    const count = Math.round(28 * this.particleScale);
     for (let i = 0; i < count; i++) {
       const theta = Math.random() * Math.PI * 2;
       const speed = 150 + Math.random() * 500;
@@ -137,7 +137,7 @@ export class FlamingArrowEffect {
         vy: Math.sin(theta) * speed + Math.sin(this.angle) * 90,
         life: 0.26 + Math.random() * 0.36,
         maxLife: 0.62,
-        size: 14 + Math.random() * 30,
+        size: 16 + Math.random() * 34,
         sprite: SPRITES[1 + (i % 3)],
       });
     }
@@ -215,8 +215,8 @@ export class FlamingArrowEffect {
     const n = pts.length;
 
     for (const [maxHalf, a] of [
-      [10, 0.3],
-      [4.5, 0.85],
+      [12, 0.34],
+      [5.5, 0.92],
     ]) {
       ctx.beginPath();
       for (let pass = 0; pass < 2; pass++) {
@@ -241,7 +241,7 @@ export class FlamingArrowEffect {
         pts[n - 1].y,
       );
       grad.addColorStop(0, "rgba(255,58,10,0)");
-      grad.addColorStop(0.55, "rgba(255,140,40,0.55)");
+      grad.addColorStop(0.5, "rgba(255,140,40,0.62)");
       grad.addColorStop(1, "rgba(255,244,214,1)");
       ctx.globalAlpha = alpha * a;
       ctx.fillStyle = grad;
@@ -260,18 +260,18 @@ export class FlamingArrowEffect {
     ctx.save();
     ctx.translate(pos.x, pos.y);
     ctx.rotate(angle);
-    ctx.globalAlpha = alpha * 0.9;
-    ctx.drawImage(SPRITES[2], nockX - 10, -18 * f, SHAFT_LEN + HEAD_LEN + 20, 36 * f);
-    ctx.drawImage(SPRITES[1], nockX - 2, -10 * f, SHAFT_LEN + 6, 20 * f);
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(SPRITES[2], nockX - 12, -22 * f, SHAFT_LEN + HEAD_LEN + 24, 44 * f);
+    ctx.drawImage(SPRITES[1], nockX - 2, -12 * f, SHAFT_LEN + 8, 24 * f);
     ctx.restore();
 
     const bx = pos.x - Math.cos(angle) * 6;
     const by = pos.y - Math.sin(angle) * 6 - 6;
     for (const [sprite, size, a] of [
-      [SPRITES[3], 64, 0.28],
-      [SPRITES[2], 44, 0.52],
-      [SPRITES[1], 25, 0.85],
-      [SPRITES[0], 12, 1],
+      [SPRITES[3], 74, 0.34],
+      [SPRITES[2], 50, 0.6],
+      [SPRITES[1], 28, 0.9],
+      [SPRITES[0], 13, 1],
     ]) {
       const s = size * f;
       ctx.globalAlpha = a * alpha;
@@ -293,20 +293,20 @@ export class FlamingArrowEffect {
     ctx.lineJoin = "round";
 
     ctx.strokeStyle = "rgba(30,12,6,0.5)";
-    ctx.lineWidth = 3.4;
+    ctx.lineWidth = 3.8;
     ctx.beginPath();
     ctx.moveTo(-HEAD_LEN, 0);
     ctx.lineTo(nockX, 0);
     ctx.stroke();
 
-    ctx.strokeStyle = "#ffcf8a";
-    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = "#ffe0ad";
+    ctx.lineWidth = 2.1;
     ctx.beginPath();
     ctx.moveTo(-HEAD_LEN, 0);
     ctx.lineTo(nockX, 0);
     ctx.stroke();
 
-    ctx.fillStyle = "#fff4d6";
+    ctx.fillStyle = "#fff6e2";
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(-HEAD_LEN, -HEAD_W);
