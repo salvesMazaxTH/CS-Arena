@@ -56,7 +56,7 @@ const dorianSkills = [
         });
       }
 
-      return result;
+      return Array.isArray(result) ? result : [result];
     },
   },
 
@@ -152,7 +152,7 @@ const dorianSkills = [
         });
       }
 
-      if (landed && isSorcerer(enemy)) {
+      if (landed && enemy.alive && isSorcerer(enemy)) {
         const bonus = Math.floor(
           (enemy.maxHP * this.sorcererMaxHPPercent) / 100,
         );

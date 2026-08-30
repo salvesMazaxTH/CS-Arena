@@ -27,8 +27,8 @@ export default {
     onBeforeDmgDealing: "attacker",
   },
 
-  onAfterDmgTaking({ owner, damage, type, context }) {
-    if (damage <= 0) return;
+  onAfterDmgTaking({ owner, actualDmg, type, context }) {
+    if (!(actualDmg > 0)) return;
 
     const runtime = (owner.runtime ??= {});
 
@@ -45,7 +45,7 @@ export default {
       context.currentTurn;
 
     const shieldAmount = Math.floor(
-      damage * (this.shieldPercent / 100),
+      actualDmg * (this.shieldPercent / 100),
     );
 
     if (shieldAmount > 0) {
@@ -80,7 +80,7 @@ export default {
         log:
           `<b>[Passive — ${this.name}]</b> ` +
           `${formatChampionName(owner)}'s Living Steel resonates with the magical impact, ` +
-          `forming a ${shieldAmount} HP Spellshield and preparing his next damaging ability ` +
+          `forming a Spellshield and preparing his next damaging ability ` +
           `to pierce ${this.piercingPercentage}% of the target's Defense.`,
       };
     }
@@ -125,6 +125,7 @@ export default {
 
     if (adaptation === "magical") {
       return {
+        mode: "piercing",
         piercingPercentage: this.piercingPercentage,
         log:
           `<b>[Passive — ${this.name}]</b> ` +
