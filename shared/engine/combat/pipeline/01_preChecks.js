@@ -32,6 +32,7 @@ export function preChecks(event) {
       defender: event.defender,
       damage: event.damage,
       skill: event.skill,
+      mode: event.mode,
       element: event.element,
       type: event.type,
       context: event.context,
@@ -39,10 +40,15 @@ export function preChecks(event) {
     event.allChampions,
   );
 
+  let hookForcedEvade = null;
+
   for (const r of results) {
     if (r?.message) {
       event.context?.logs?.push?.(r.message);
     }
+
+    // A defender-side hook may force the evade outright, not just roll for it.
+    if (r?.evade) hookForcedEvade = r;
 
     if (r?.cancel) {
       console.log(
@@ -67,12 +73,14 @@ export function preChecks(event) {
     event.mode !== event.constructor.Modes.ABSOLUTE &&
     !event.skill?.cannotBeEvaded
   ) {
-    const evasion = _rollEvasion({
-      attacker: event.attacker,
-      defender: event.defender,
-      context: event.context,
-      debugMode: event.constructor.debugMode,
-    });
+    const evasion = hookForcedEvade
+      ? { attempted: true, evaded: true }
+      : _rollEvasion({
+          attacker: event.attacker,
+          defender: event.defender,
+          context: event.context,
+          debugMode: event.constructor.debugMode,
+        });
 
     event.evasionAttempted = !!evasion?.attempted;
 
