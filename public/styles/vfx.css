@@ -300,6 +300,24 @@
   }
 }
 
+/* Ice hit effect (applied to champion portrait on ice bolt impact) */
+
+.ice-hit {
+  animation: iceFlash 0.32s ease-out;
+}
+
+@keyframes iceFlash {
+  0% {
+    filter: brightness(1);
+  }
+  25% {
+    filter: brightness(2) saturate(0.75) hue-rotate(160deg);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
 /* Slash hit effect (applied to champion portrait when a cut lands) */
 
 .slash-hit {

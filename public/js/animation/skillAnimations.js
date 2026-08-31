@@ -10,6 +10,7 @@
 // ============================================================
 
 import { createFireBoltGL } from "./fireBoltGLAnimation.js";
+import { createIceBoltGL } from "./iceBoltGLAnimation.js";
 import { playFlamingArrow } from "./flamingArrowAnimation.js";
 import { playLightningBolt } from "./lightningAnimation.js";
 import { playMeleePunch } from "./meleePunchAnimation.js";
@@ -33,11 +34,13 @@ const DEFAULT_ELEMENT_ANIMATIONS = {
   lightning: "default_lightning",
   fire: "default_fire",
   water: "default_water",
+  ice: "default_ice",
 };
 
 // Non-ultimate skills that still deserve the big blast, per element.
 const BIG_FIREBALL_SKILLS = new Set(["magma_bomb"]);
 const BIG_WATERBOLT_SKILLS = new Set();
+const BIG_ICEBOLT_SKILLS = new Set();
 
 function resolveDefaultAnimationKey(skill) {
   if (!skill || typeof skill !== "object") return null;
@@ -64,6 +67,12 @@ function resolveDefaultAnimationKey(skill) {
     (skill.isUltimate === true || BIG_WATERBOLT_SKILLS.has(skill.key))
   ) {
     return "default_water_big";
+  }
+  if (
+    key === "default_ice" &&
+    (skill.isUltimate === true || BIG_ICEBOLT_SKILLS.has(skill.key))
+  ) {
+    return "default_ice_big";
   }
   return key;
 }
@@ -94,6 +103,8 @@ registerSkillAnimation("default_fire", createFireBoltGL(1));
 registerSkillAnimation("default_fire_big", createFireBoltGL(1.368, true));
 registerSkillAnimation("default_water", createWaterBoltGL(1));
 registerSkillAnimation("default_water_big", createWaterBoltGL(1.4, true));
+registerSkillAnimation("default_ice", createIceBoltGL(1));
+registerSkillAnimation("default_ice_big", createIceBoltGL(1.4, true));
 registerSkillAnimation("default_slash", playSlash);
 registerSkillAnimation("default_multislash", playMultislash);
 registerSkillAnimation("default_flaming_arrow", playFlamingArrow);
