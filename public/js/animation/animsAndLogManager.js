@@ -107,6 +107,56 @@ function getChampionElement(championId) {
   return document.querySelector(`.champion[data-champion-id="${championId}"]`);
 }
 
+// Reads an action envelope and mounts a rotating ring on every champion the
+// skill touches: gold on the caster, red on those it harms, green on those it
+// benefits. A skill that only helps its own caster gets no green ring — the
+// gold ring and the stat-buff animation already read as "acted on itself".
+// Returns a teardown that fades the rings out.
+function applySkillAffectGlows(envelope) {
+  const userId = envelope.action?.userId ?? null;
+
+  const harm = new Set();
+  const boon = new Set();
+
+  for (const ev of envelope.damageEvents ?? []) {
+    if (ev?.targetId) harm.add(ev.targetId);
+  }
+  for (const ev of envelope.lifestealEvents ?? []) {
+    if (ev?.fromTargetId) harm.add(ev.fromTargetId);
+    if (ev?.targetId) boon.add(ev.targetId);
+  }
+  for (const key of ["healEvents", "shieldEvents", "buffEvents"]) {
+    for (const ev of envelope[key] ?? []) {
+      if (ev?.targetId) boon.add(ev.targetId);
+    }
+  }
+
+  boon.delete(userId);
+  for (const id of harm) boon.delete(id);
+  harm.delete(userId);
+
+  const mounted = [];
+  const mount = (championId, variant) => {
+    const championEl = getChampionElement(championId);
+    if (!championEl) return;
+    const glow = document.createElement("div");
+    glow.className = `skill-affect-glow skill-affect-glow--${variant}`;
+    championEl.appendChild(glow);
+    mounted.push(glow);
+  };
+
+  if (userId) mount(userId, "user");
+  for (const id of harm) mount(id, "harm");
+  for (const id of boon) mount(id, "boon");
+
+  return () => {
+    for (const glow of mounted) {
+      glow.classList.add("is-leaving");
+      setTimeout(() => glow.remove(), 300);
+    }
+  };
+}
+
 function scrollIfNeeded(
   el,
   {
@@ -467,7 +517,12 @@ export function createCombatAnimationManager(deps) {
 
     // event loop — plays events in the real chronological order (seq)
     // instead of a fixed category order.
-    await dispatcher.runOrdered(envelope);
+    const clearAffectGlows = applySkillAffectGlows(envelope);
+    try {
+      await dispatcher.runOrdered(envelope);
+    } finally {
+      clearAffectGlows();
+    }
 
     if (state) applyStateSnapshots(state);
     if (log) appendToLog(log);
