@@ -41,6 +41,7 @@ export function processFinishing(event) {
       sourceId: event.attacker?.id,
       element: event.element,
       contact: event.contact,
+      hitVfx: event.hitVfx,
       flags: finishingFlags,
     });
   }

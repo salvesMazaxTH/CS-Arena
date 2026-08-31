@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import totalBlock from "../generic/totalBlock.js";
 
@@ -103,8 +104,6 @@ const sabrinaSkills = [
     key: "deluge_of_winter",
     name: "Deluge of Winter",
 
-    bfWater: 65,
-    bfIce: 65,
     chillDuration: 2,
     freezeDuration: 1,
 
@@ -116,6 +115,12 @@ const sabrinaSkills = [
 
     damageMode: "standard",
     element: "water",
+
+    hits: [
+      { id: "wave", element: "water", type: "magical", bf: 65 },
+      { id: "frost", element: "ice", type: "magical", bf: 65 },
+    ],
+
     description() {
       return `Unleashes a massive wave that crashes into the target, dealing Water magical damage and applying Chilled for ${this.chillDuration} turn(s) (if not already Chilled). The wave then immediately freezes around the target, dealing Ice magical damage. If the target was already Chilled when the wave struck, the Ice hit consumes the Chilled effect and Freezes them for ${this.freezeDuration} turn(s) instead.`;
     },
@@ -126,18 +131,7 @@ const sabrinaSkills = [
       const [target] = targets;
       const wasChilledOnImpact = target.hasStatusEffect("chilled");
 
-      // 1º impacto — Water
-      const waterDamage = (user.Attack * this.bfWater) / 100;
-      const waterResult = new DamageEvent({
-        baseDamage: waterDamage,
-        attacker: user,
-        defender: target,
-        skill: this,
-        element: "water",
-        type: "magical",
-        context,
-        allChampions: context?.allChampions,
-      }).execute();
+      const waterResult = SkillHits.run(this, "wave", { user, target, context });
 
       if (
         effectConnected(waterResult, "chilled") &&
@@ -149,18 +143,7 @@ const sabrinaSkills = [
 
       if (!target.alive) return [waterResult];
 
-      // 2º impacto — Ice, logo em seguida
-      const iceDamage = (user.Attack * this.bfIce) / 100;
-      const iceResult = new DamageEvent({
-        baseDamage: iceDamage,
-        attacker: user,
-        defender: target,
-        skill: this,
-        element: "ice",
-        type: "magical",
-        context,
-        allChampions: context?.allChampions,
-      }).execute();
+      const iceResult = SkillHits.run(this, "frost", { user, target, context });
 
       if (effectConnected(iceResult, "frozen") && wasChilledOnImpact) {
         target.applyStatusEffect("frozen", this.freezeDuration, context);

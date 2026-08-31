@@ -47,9 +47,10 @@ const BIG_ICEBOLT_SKILLS = new Set();
 function resolveDefaultAnimationKey(skill, hit) {
   if (!skill || typeof skill !== "object") return null;
 
-  // Authorial motif declared on the skill itself. It wins over the element
+  // Authorial motif, from the hit when it names one. It wins over the element
   // fallback and applies to melee too, since a cut is usually contact-based.
-  if (skill.hitVfx) return `default_${skill.hitVfx}`;
+  const motif = hit?.hitVfx ?? skill.hitVfx;
+  if (motif) return `default_${motif}`;
 
   const contact = hit?.contact ?? skill.contact;
   const element = hit?.element ?? skill.element;

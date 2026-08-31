@@ -105,6 +105,8 @@ export class DamageEvent {
     // Same override for contact: a skill can be melee overall and still throw a
     // ranged sub-hit that must not answer contact-gated retaliations.
     this.contact = params.contact ?? skill?.contact ?? false;
+    this.hitVfx = params.hitVfx ?? skill?.hitVfx ?? null;
+    this.hitLabel = params.hitLabel ?? null;
     console.log("[DamageEvent_constructor] Damage type:", this.type);
 
     this.context = context ?? {};

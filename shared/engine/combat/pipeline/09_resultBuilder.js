@@ -25,7 +25,7 @@ export function buildFinalResult(event) {
     finalLog = _buildLog(
       event.attacker,
       event.defender,
-      event.skill,
+      event.hitLabel ?? event.skill,
       event.damage,
       event.crit,
       event.hpAfter,
@@ -47,6 +47,7 @@ export function buildFinalResult(event) {
     type: event.type,
     element: event.element,
     contact: event.contact,
+    hitVfx: event.hitVfx,
     log: finalLog,
     crit: event.crit,
     damageDepth: event.context.damageDepth,

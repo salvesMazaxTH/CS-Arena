@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
@@ -52,8 +53,17 @@ const thorwellsSkills = [
     damageMode: "standard",
     priority: 0,
     element: "lightning",
-    hitVfx: "slash",
     arcRatio: 0.45,
+
+    hits: [
+      { id: "cleave", type: "physical", hitVfx: "slash" },
+      {
+        id: "arc",
+        type: "magical",
+        contact: false,
+        label: "Skyfall Cleave (Arc)",
+      },
+    ],
 
     description() {
       return `Thorwells hooks the axe overhead and brings the whole weight of the sky down through it onto the chosen target — a heavy Lightning blow that deals Physical damage. If that target is a Conductor, the charge leaps: ${Math.round(this.arcRatio * 100)}% of the blow arcs on to the other enemy holding the most current HP, and the Conductor mark is spent.`;
@@ -68,15 +78,11 @@ const thorwellsSkills = [
 
       const wasConductor = enemy.hasStatusEffect("conductor");
 
-      const result = new DamageEvent({
-        baseDamage,
-        attacker: user,
-        defender: enemy,
-        skill: this,
-        type: "physical",
+      const result = SkillHits.run(this, "cleave", {
+        user,
+        target: enemy,
         context,
-        allChampions: context?.allChampions,
-      }).execute();
+      });
 
       const resultArray = Array.isArray(result) ? result : [result];
       results.push(...resultArray);
@@ -104,20 +110,12 @@ const thorwellsSkills = [
         targetId: arcTarget.id,
       });
 
-      const arcResult = new DamageEvent({
+      const arcResult = SkillHits.run(this, "arc", {
+        user,
+        target: arcTarget,
         baseDamage: baseDamage * this.arcRatio,
-        attacker: user,
-        defender: arcTarget,
-        skill: {
-          key: "skyfall_cleave_arc",
-          name: "Skyfall Cleave (Arc)",
-          contact: false,
-        },
-        element: "lightning",
-        type: "magical",
         context: { ...context, damageDepth: (context.damageDepth || 0) + 1 },
-        allChampions: context?.allChampions,
-      }).execute();
+      });
 
       results.push(...(Array.isArray(arcResult) ? arcResult : [arcResult]));
 

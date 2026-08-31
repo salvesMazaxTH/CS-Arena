@@ -1231,6 +1231,7 @@ export class TurnResolver {
         isDot = false,
         element = null,
         contact = null,
+        hitVfx = null,
         flags,
       } = {}) {
         if (!target?.id) return;
@@ -1277,6 +1278,7 @@ export class TurnResolver {
           damageDepth: damageDepth || 0,
           element,
           contact,
+          hitVfx,
           evaded: flags?.evaded,
           immune: !!flags?.immune,
           immuneMessage: flags?.immuneMessage ?? null,
