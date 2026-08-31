@@ -524,6 +524,8 @@ export function createCombatAnimationManager(deps) {
       finishing,
       finishingType,
       skillKey,
+      element,
+      contact,
     } = effect;
 
     const target = resolveTargetVisual(targetId);
@@ -541,6 +543,7 @@ export function createCombatAnimationManager(deps) {
         targetEl: championEl,
         userEl,
         skill,
+        hit: { element, contact },
         canvasBatch,
       });
     }

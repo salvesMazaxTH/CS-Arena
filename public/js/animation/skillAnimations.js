@@ -42,18 +42,22 @@ const BIG_FIREBALL_SKILLS = new Set(["magma_bomb"]);
 const BIG_WATERBOLT_SKILLS = new Set();
 const BIG_ICEBOLT_SKILLS = new Set();
 
-function resolveDefaultAnimationKey(skill) {
+// `hit` is the individual DamageEvent's own element/contact, which override the
+// skill's: one skill can throw hits of different elements, or a ranged sub-hit.
+function resolveDefaultAnimationKey(skill, hit) {
   if (!skill || typeof skill !== "object") return null;
 
   // Authorial motif declared on the skill itself. It wins over the element
   // fallback and applies to melee too, since a cut is usually contact-based.
   if (skill.hitVfx) return `default_${skill.hitVfx}`;
 
-  if (skill.contact !== false) return null;
+  const contact = hit?.contact ?? skill.contact;
+  const element = hit?.element ?? skill.element;
 
-  // No damage gate here: this only runs from the DamageEvent handler, so a hit
-  // already happened.
-  const key = DEFAULT_ELEMENT_ANIMATIONS[skill.element] || null;
+  if (contact !== false) return null;
+
+  // No damage gate here: this only runs from the DamageEvent handler.
+  const key = DEFAULT_ELEMENT_ANIMATIONS[element] || null;
   if (
     key === "default_fire" &&
     (skill.isUltimate === true || BIG_FIREBALL_SKILLS.has(skill.key))
@@ -86,7 +90,7 @@ export async function animateSkill(skillKey, opts = {}) {
   let factory = skillAnimationRegistry.get(skillKey);
 
   if (!factory) {
-    const defaultKey = resolveDefaultAnimationKey(opts.skill);
+    const defaultKey = resolveDefaultAnimationKey(opts.skill, opts.hit);
     if (defaultKey) factory = skillAnimationRegistry.get(defaultKey);
   }
 
