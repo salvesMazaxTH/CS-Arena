@@ -162,7 +162,7 @@ const morakhanSkills = [
         id: "reflection",
         label: "Mountain Stance Counterattack",
         type: "magical",
-        contact: true,
+        contact: false,
         damageMode: "piercing",
         piercingPercentage: 100,
       },

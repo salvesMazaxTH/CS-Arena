@@ -97,7 +97,7 @@ const naelysSkills = [
         label: "Raging Sea Counterattack",
         type: "physical",
         element: null,
-        contact: true,
+        contact: false,
         damageMode: "standard",
       },
     ],
