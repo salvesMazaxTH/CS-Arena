@@ -22,6 +22,7 @@ const zyrelleSkills = [
 
     contact: false,
     damageMode: "standard",
+    hitVfx: "musket_ball",
     priority: 0,
 
     description() {
@@ -169,6 +170,7 @@ const zyrelleSkills = [
 
     contact: false,
     damageMode: "standard",
+    hitVfx: "musket_ball",
 
     isUltimate: true,
     momentumCost: 55,

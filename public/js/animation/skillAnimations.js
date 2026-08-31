@@ -12,6 +12,7 @@
 import { createEarthBoltGL } from "./earthBoltGLAnimation.js";
 import { createFireBoltGL } from "./fireBoltGLAnimation.js";
 import { createIceBoltGL } from "./iceBoltGLAnimation.js";
+import { createMusketBallGL } from "./musketBallGLAnimation.js";
 import { playFlamingArrow } from "./flamingArrowAnimation.js";
 import { playLightningBolt } from "./lightningAnimation.js";
 import { playMeleePunch } from "./meleePunchAnimation.js";
@@ -119,6 +120,7 @@ registerSkillAnimation("default_ice", createIceBoltGL(1));
 registerSkillAnimation("default_ice_big", createIceBoltGL(1.4, true));
 registerSkillAnimation("default_earth", createEarthBoltGL(1));
 registerSkillAnimation("default_earth_big", createEarthBoltGL(1.4, true));
+registerSkillAnimation("default_musket_ball", createMusketBallGL(1));
 registerSkillAnimation("default_slash", playSlash);
 registerSkillAnimation("default_multislash", playMultislash);
 registerSkillAnimation("default_flaming_arrow", playFlamingArrow);

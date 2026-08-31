@@ -22,6 +22,7 @@ const lorenaSkills = [
 
     contact: false,
     damageMode: "standard",
+    hitVfx: "musket_ball",
     priority: 0,
 
     description() {
@@ -66,6 +67,7 @@ const lorenaSkills = [
 
     contact: false,
     damageMode: "standard",
+    hitVfx: "musket_ball",
     priority: 0,
 
     description() {
@@ -109,6 +111,7 @@ const lorenaSkills = [
 
     contact: false,
     damageMode: "standard",
+    hitVfx: "musket_ball",
 
     isUltimate: true,
     momentumCost: 55,

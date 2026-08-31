@@ -336,6 +336,24 @@
     filter: brightness(1);
   }
 }
+
+/* Musket ball hit effect (applied to champion portrait when a shot lands) */
+
+.shot-hit {
+  animation: shotFlash 0.26s ease-out;
+}
+
+@keyframes shotFlash {
+  0% {
+    filter: brightness(1);
+  }
+  18% {
+    filter: brightness(2.4) saturate(1.4) contrast(1.15);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
 /* Slash hit effect (applied to champion portrait when a cut lands) */
 
 .slash-hit {
