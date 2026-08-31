@@ -18,13 +18,14 @@ const laisaelisSkills = [
     name: "Manifest",
 
     echoScale: 0.375,
+    echoSpeedScale: 0.75,
     echoDuration: 3,
 
     contact: false,
     priority: 2,
 
     description() {
-      return `Laisaelis looks at something on the field and answers that there could be more of it. At the start of the next turn an Echo of the chosen entity takes the field at her side with its skills, its passive and everything currently upon it, at ${this.echoScale * 100}% of its base stats. The Echo fades after ${this.echoDuration} turns, and its ending is not a death: it concedes no points, and nothing that answers to dying answers to it. Neither sister can be echoed, and neither can an Echo.`;
+      return `Laisaelis looks at something on the field and answers that there could be more of it. At the start of the next turn an Echo of the chosen entity takes the field at her side with its skills, its passive and everything currently upon it, at ${this.echoScale * 100}% of its base stats — ${this.echoSpeedScale * 100}% for Speed. Only one Echo can hold the field at a time: casting again unravels the old one. The Echo fades after ${this.echoDuration} turns, and its ending is not a death: it concedes no points, and nothing that answers to dying answers to it. Neither sister can be echoed, and neither can an Echo.`;
     },
 
     targetSpec: [
@@ -38,8 +39,24 @@ const laisaelisSkills = [
     resolve({ user, targets, context }) {
       const [source] = targets;
       const echoScale = this.echoScale;
+      const echoSpeedScale = this.echoSpeedScale;
       const skillName = this.name;
       const fadesAtTurn = context.currentTurn + 1 + this.echoDuration;
+
+      // Only one Echo may hold the field, so a recast replaces the current one.
+      const castToken = (user.runtime.manifestCastToken ?? 0) + 1;
+      user.runtime.manifestCastToken = castToken;
+
+      for (const other of context.aliveChampions) {
+        if (other.team !== user.team || !other.runtime?.manifestEcho) continue;
+        other.HP = 0;
+        other.alive = false;
+        context.registerDialog({
+          message: `<b>${skillName}</b> — ${formatChampionName(other)} comes apart as ${formatChampionName(user)} answers anew.`,
+          sourceId: user.id,
+          targetId: other.id,
+        });
+      }
 
       context.schedule({
         type: "spawnChampion",
@@ -50,11 +67,20 @@ const laisaelisSkills = [
           team: user.team,
           asEntityType: "minion",
           statScale: echoScale,
+          statScaleByStat: { Speed: echoSpeedScale },
 
           onSpawn: (echo, spawnContext) => {
-            echo.name = `Echo of ${source.name}`;
             echo.runtime.leavesNoDeath = true;
             echo.runtime.manifestEcho = true;
+
+            // A newer Manifest was cast before this Echo could form: it never takes the field.
+            if (user.runtime.manifestCastToken !== castToken) {
+              echo.HP = 0;
+              echo.alive = false;
+              return;
+            }
+
+            echo.name = `Echo of ${source.name}`;
             echo.momentum = source.momentum;
 
             for (const modifier of source.statModifiers) {
