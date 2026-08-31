@@ -72,13 +72,20 @@ const ysvaneSkills = [
     resolve({ user, targets, context = {} }) {
       const [ally = user] = targets;
       const key = "hold_fast_stasis";
-      const damageReductionPercent = this.damageReductionPercent;
       const lockedOutStatusKeys = this.lockedOutStatusKeys;
 
       ally.runtime.hookEffects ??= [];
       ally.runtime.hookEffects = ally.runtime.hookEffects.filter(
         (e) => e.key !== key,
       );
+
+      ally.applyDamageReduction({
+        amount: this.damageReductionPercent,
+        duration: this.effectDuration,
+        type: "percent",
+        source: this.key,
+        context,
+      });
 
       ally.addHookEffect(
         {
@@ -89,13 +96,7 @@ const ysvaneSkills = [
           expiresAtTurn: context.currentTurn + this.effectDuration,
 
           hookScope: {
-            onBeforeDmgTaking: "defender",
             onStatusEffectIncoming: "target",
-          },
-
-          onBeforeDmgTaking({ defender, owner, damage }) {
-            if (defender !== owner || !(damage > 0)) return;
-            return { damage: damage * (1 - damageReductionPercent / 100) };
           },
 
           onStatusEffectIncoming({ target, owner, statusEffect }) {
@@ -155,6 +156,7 @@ const ysvaneSkills = [
         ally.applyDamageReduction({
           amount: this.damageReductionPercent,
           duration: this.reductionDuration,
+          type: "percent",
           source: this.key,
           context,
         });

@@ -19,7 +19,7 @@ export default {
     if (!owner.alive || !actionSource || actionSource.team !== owner.team) return;
 
     const keptUntil = Number(actionSource.runtime?.[KEPT_RUNTIME_FLAG] ?? 0);
-    if (keptUntil < context.currentTurn) return;
+    if (keptUntil <= context.currentTurn) return;
 
     context.registerScore({
       amount: this.claimBonusPoints,
