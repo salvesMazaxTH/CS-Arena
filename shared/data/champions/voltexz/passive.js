@@ -6,6 +6,17 @@ export default {
   recoilPercent: 8,
   conductorDuration: 2,
   conductorBonusPercent: 15,
+
+  hits: [
+    {
+      id: "recoil",
+      label: "Recoil (Unstable Overcharge)",
+      type: "magical",
+      contact: false,
+      damageMode: "absolute",
+      suppressLog: true,
+    },
+  ],
   description() {
     return `Voltexz is not something that carries lightning — she is the lightning, a storm wearing the shape of a goddess, her hair drifting like thunderheads about to break. Every skill she throws is torn out of her own substance: she takes ${this.recoilPercent}% of its base damage as Absolute recoil, whether it lands or not.
 

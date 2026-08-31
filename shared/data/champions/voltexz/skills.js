@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
@@ -22,20 +23,12 @@ function applyOverchargeRecoil({ user, baseDamage, context }) {
     targetId: user.id,
   });
 
-  const result = new DamageEvent({
+  const result = SkillHits.run(unstableOvercharge, "recoil", {
+    user,
+    target: user,
     baseDamage: recoilDamage,
-    attacker: user,
-    defender: user,
-    skill: {
-      key: "unstable_overcharge_recoil",
-      name: "Recoil (Unstable Overcharge)",
-      suppressLog: true,
-    },
-    type: "magical",
-    mode: DamageEvent.Modes.ABSOLUTE,
     context: { ...context, damageDepth: 1 },
-    allChampions: context?.allChampions,
-  }).execute();
+  });
 
   return Array.isArray(result) ? result : [result];
 }
