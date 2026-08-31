@@ -73,13 +73,17 @@ export default {
           },
         },
 
-        onBeforeDmgDealing({ damage, attacker, hitId }) {
+        onBeforeDmgDealing({ damage, attacker, skill, hitId }) {
+          const isOwnCounter =
+            skill?.key === "fourth_sutra_mountain_stance" &&
+            hitId === "reflection";
+
           return {
             damage: damage * 2,
             log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
               attacker,
             )} doubles the damage dealt${
-              hitId === "reflection" ? " by the counterattack" : ""
+              isOwnCounter ? " by the counterattack" : ""
             }!`,
           };
         },

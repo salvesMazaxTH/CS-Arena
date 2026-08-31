@@ -195,9 +195,9 @@ const blyskartriSkills = [
       ally.addDamageModifier({
         id: "infinite_horizon",
         expiresAtTurn: context.currentTurn + this.effectDuration,
-        apply: ({ baseDamage, attacker, hitId }) => {
+        apply: ({ baseDamage, attacker, skill, hitId }) => {
           // Its own overtake strike is a flat bonus, so it must not scale twice.
-          if (hitId === "overtake") return baseDamage;
+          if (skill?.key === this.key && hitId === "overtake") return baseDamage;
 
           const steps = Math.floor(attacker.Speed / this.speedPerStack);
 

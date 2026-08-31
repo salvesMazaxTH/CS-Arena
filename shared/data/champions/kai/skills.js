@@ -88,6 +88,7 @@ const kaiSkills = [
         onAfterDmgTaking({
           attacker,
           defender,
+          skill: incoming,
           hitId,
           contact,
           damage,
@@ -97,7 +98,8 @@ const kaiSkills = [
           if (defender !== owner) return;
           if (!contact) return;
           if (damage <= 0) return;
-          if (hitId === "counter") return;
+          // Hit ids are only unique within their own skill.
+          if (incoming?.key === skill.key && hitId === "counter") return;
           if (!attacker?.alive) return;
 
           context.extraDamageQueue ??= [];
