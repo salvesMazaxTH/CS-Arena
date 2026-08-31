@@ -29,7 +29,7 @@ export default {
 
     owner.runtime.slowerThanStormTurn = context.currentTurn;
 
-    context.registerDialog?.({
+    context.registerDialog({
       message: `${formatChampionName(attacker)}'s blow was loosed a week too early — ${formatChampionName(owner)} is not where it falls.`,
       sourceId: owner.id,
       targetId: owner.id,

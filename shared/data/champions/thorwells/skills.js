@@ -66,7 +66,7 @@ const thorwellsSkills = [
       const baseDamage = (user.Attack * this.bf) / 100;
       const results = [];
 
-      const wasConductor = enemy.hasStatusEffect?.("conductor");
+      const wasConductor = enemy.hasStatusEffect("conductor");
 
       const result = new DamageEvent({
         baseDamage,
@@ -78,19 +78,27 @@ const thorwellsSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      results.push(...(Array.isArray(result) ? result : [result]));
+      const resultArray = Array.isArray(result) ? result : [result];
+      results.push(...resultArray);
 
-      if (!wasConductor) return results;
+      // The Conductor mark is only spent when the blow actually connects.
+      if (!wasConductor || !effectConnected(resultArray[0], "conductor")) {
+        return results;
+      }
 
       enemy.removeStatusEffect("conductor");
 
-      const arcTarget = context.aliveChampions
-        .filter((c) => c.team !== user.team && c.id !== enemy.id && c.alive)
-        .sort((a, b) => b.HP - a.HP || Math.random() - 0.5)[0];
+      const candidates = context.aliveChampions.filter(
+        (c) => c.team !== user.team && c.id !== enemy.id,
+      );
 
-      if (!arcTarget) return results;
+      if (!candidates.length) return results;
 
-      context.registerDialog?.({
+      const mostHP = Math.max(...candidates.map((c) => c.HP));
+      const tied = candidates.filter((c) => c.HP === mostHP);
+      const arcTarget = tied[Math.floor(Math.random() * tied.length)];
+
+      context.registerDialog({
         message: `The storm leaps off ${formatChampionName(enemy)} into ${formatChampionName(arcTarget)}!`,
         sourceId: user.id,
         targetId: arcTarget.id,
@@ -193,7 +201,7 @@ const thorwellsSkills = [
       for (const enemy of enemies) {
         if (!enemy.alive) continue;
 
-        const charged = enemy.hasStatusEffect?.("conductor");
+        const charged = enemy.hasStatusEffect("conductor");
 
         const result = new DamageEvent({
           baseDamage,
@@ -209,7 +217,9 @@ const thorwellsSkills = [
         const resultArray = Array.isArray(result) ? result : [result];
         results.push(...resultArray.map((r) => ({ ...r, targetId: enemy.id })));
 
-        if (charged) enemy.removeStatusEffect("conductor");
+        if (charged && effectConnected(resultArray[0], "conductor")) {
+          enemy.removeStatusEffect("conductor");
+        }
       }
 
       user.modifyStat({

@@ -2,7 +2,7 @@ export default {
   name: "Thorwells",
   portrait: "/assets/portraits/thorwells.webp",
 
-  unrevealed: true,
+  unreleased: true,
 
   HP: 355,
   Attack: 205,
