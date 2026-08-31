@@ -22,6 +22,7 @@ const sabrinaSkills = [
     contact: false,
     priority: 0,
 
+    damageMode: "standard",
     element: "water",
     description() {
       return `Fires a concentrated lance of water at an enemy, dealing Water magical damage and applying Chilled for ${this.chillDuration} turn(s).`;
@@ -62,6 +63,7 @@ const sabrinaSkills = [
     contact: false,
     priority: 0,
 
+    damageMode: "standard",
     element: "ice",
     description() {
       return `Conjures a mass of hardened ice around an enemy, dealing Ice magical damage. If the target is already Chilled, this deals ${this.chilledBonusPercent}% increased damage and the Chilled effect is consumed and replaced by Frozen for ${this.freezeDuration} turn(s).`;
@@ -112,6 +114,7 @@ const sabrinaSkills = [
     isUltimate: true,
     momentumCost: 55,
 
+    damageMode: "standard",
     element: "water",
     description() {
       return `Unleashes a massive wave that crashes into the target, dealing Water magical damage and applying Chilled for ${this.chillDuration} turn(s) (if not already Chilled). The wave then immediately freezes around the target, dealing Ice magical damage. If the target was already Chilled when the wave struck, the Ice hit consumes the Chilled effect and Freezes them for ${this.freezeDuration} turn(s) instead.`;

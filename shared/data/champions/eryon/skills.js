@@ -132,6 +132,7 @@ const eryonSkills = [
     momentumCost: 24,
     priority: -1,
     contact: false,
+    damageMode: "standard",
     targetSpec: ["all"],
 
     damagePerUnit: 3,

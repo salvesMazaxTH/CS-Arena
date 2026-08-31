@@ -51,10 +51,8 @@ function resolveDefaultAnimationKey(skill) {
 
   if (skill.contact !== false) return null;
 
-  // Restrict to damaging skills only.
-  // In this codebase, offensive skills consistently define damageMode.
-  if (typeof skill.damageMode !== "string" || !skill.damageMode) return null;
-
+  // No damage gate here: this only runs from the DamageEvent handler, so a hit
+  // already happened.
   const key = DEFAULT_ELEMENT_ANIMATIONS[skill.element] || null;
   if (
     key === "default_fire" &&

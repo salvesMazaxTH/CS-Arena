@@ -17,6 +17,7 @@ const nytheraSkills = [
     contact: false,
     priority: 0,
 
+    damageMode: "standard",
     element: "ice",
     description() {
       return `Nythera draws an edge of northern wind across the chosen target, dealing Ice magical damage and leaving them Chilled for ${this.chillDuration} turn(s).
@@ -137,6 +138,7 @@ const nytheraSkills = [
     isUltimate: true,
     momentumCost: 55,
 
+    damageMode: "standard",
     element: "ice",
     description() {
       return `Nythera takes her throne and the white night falls over the chosen target, dealing Ice magical damage and leaving them Chilled for ${this.chillDuration} turn(s).

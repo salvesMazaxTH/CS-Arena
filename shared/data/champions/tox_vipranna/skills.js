@@ -171,6 +171,7 @@ const toxViprannaSkills = [
     name: "Venomous Queen's Decree",
 
     contact: false,
+    damageMode: "absolute",
     isUltimate: true,
     momentumCost: 55,
 
