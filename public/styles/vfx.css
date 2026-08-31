@@ -318,6 +318,24 @@
   }
 }
 
+
+/* Earth hit effect (applied to champion portrait on rock impact) */
+
+.earth-hit {
+  animation: earthFlash 0.32s ease-out;
+}
+
+@keyframes earthFlash {
+  0% {
+    filter: brightness(1);
+  }
+  25% {
+    filter: brightness(0.72) saturate(1.35) sepia(0.45);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
 /* Slash hit effect (applied to champion portrait when a cut lands) */
 
 .slash-hit {

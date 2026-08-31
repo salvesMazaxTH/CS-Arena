@@ -9,6 +9,7 @@
 //  function, then register it at the bottom of this file.
 // ============================================================
 
+import { createEarthBoltGL } from "./earthBoltGLAnimation.js";
 import { createFireBoltGL } from "./fireBoltGLAnimation.js";
 import { createIceBoltGL } from "./iceBoltGLAnimation.js";
 import { playFlamingArrow } from "./flamingArrowAnimation.js";
@@ -35,12 +36,14 @@ const DEFAULT_ELEMENT_ANIMATIONS = {
   fire: "default_fire",
   water: "default_water",
   ice: "default_ice",
+  earth: "default_earth",
 };
 
 // Non-ultimate skills that still deserve the big blast, per element.
 const BIG_FIREBALL_SKILLS = new Set(["magma_bomb"]);
 const BIG_WATERBOLT_SKILLS = new Set();
 const BIG_ICEBOLT_SKILLS = new Set();
+const BIG_EARTHBOLT_SKILLS = new Set();
 
 // `hit` is the individual DamageEvent's own element/contact, which override the
 // skill's: one skill can throw hits of different elements, or a ranged sub-hit.
@@ -77,6 +80,12 @@ function resolveDefaultAnimationKey(skill, hit) {
   ) {
     return "default_ice_big";
   }
+  if (
+    key === "default_earth" &&
+    (skill.isUltimate === true || BIG_EARTHBOLT_SKILLS.has(skill.key))
+  ) {
+    return "default_earth_big";
+  }
   return key;
 }
 
@@ -108,6 +117,8 @@ registerSkillAnimation("default_water", createWaterBoltGL(1));
 registerSkillAnimation("default_water_big", createWaterBoltGL(1.4, true));
 registerSkillAnimation("default_ice", createIceBoltGL(1));
 registerSkillAnimation("default_ice_big", createIceBoltGL(1.4, true));
+registerSkillAnimation("default_earth", createEarthBoltGL(1));
+registerSkillAnimation("default_earth_big", createEarthBoltGL(1.4, true));
 registerSkillAnimation("default_slash", playSlash);
 registerSkillAnimation("default_multislash", playMultislash);
 registerSkillAnimation("default_flaming_arrow", playFlamingArrow);
