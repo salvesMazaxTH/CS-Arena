@@ -158,7 +158,7 @@ const rakhanaSkills = [
           defender,
           attacker,
           damage,
-          skill,
+          contact,
           context,
         }) {
           if (context.damageDepth > 0 || spent) return;
@@ -207,7 +207,7 @@ const rakhanaSkills = [
           });
 
           // If the incoming attack was a contact skill, stun the attacker
-          if (skill?.contact) {
+          if (contact) {
             attacker.applyStatusEffect("stunned", 1, context);
 
             context.registerDialog?.({

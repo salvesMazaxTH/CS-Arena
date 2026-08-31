@@ -71,9 +71,17 @@ const kaiSkills = [
         expiresAtTurn: context.currentTurn + stanceDuration,
 
         // 🔥 COUNTERATTACK
-        onAfterDmgTaking({ attacker, defender, skill, damage, owner, context }) {
+        onAfterDmgTaking({
+          attacker,
+          defender,
+          skill,
+          contact,
+          damage,
+          owner,
+          context,
+        }) {
           if (defender !== owner) return;
-          if (!skill?.contact) return;
+          if (!contact) return;
           if (damage <= 0) return;
           if (skill?.key === "living_ember_stance_counter") return;
           if (!attacker?.alive) return;

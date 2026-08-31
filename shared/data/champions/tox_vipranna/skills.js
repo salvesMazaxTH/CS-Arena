@@ -126,8 +126,8 @@ const toxViprannaSkills = [
           onBeforeDmgTaking: "defender",
         },
 
-        onBeforeDmgTaking({ owner, attacker, skill, context }) {
-          if (!skill?.contact) return;
+        onBeforeDmgTaking({ owner, attacker, contact, context }) {
+          if (!contact) return;
           if (!attacker) return;
 
           attacker.applyStatusEffect(

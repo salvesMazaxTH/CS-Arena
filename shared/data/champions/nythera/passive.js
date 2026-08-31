@@ -16,10 +16,10 @@ export default {
     onAfterDmgTaking: "defender",
   },
 
-  onAfterDmgTaking({ attacker, owner, skill, damage, mode, context }) {
+  onAfterDmgTaking({ attacker, owner, contact, damage, mode, context }) {
     if (damage <= 0 || attacker.team === owner.team) return;
 
-    if (!skill.contact || mode === DamageEvent.Modes.ABSOLUTE) return;
+    if (!contact || mode === DamageEvent.Modes.ABSOLUTE) return;
 
     // Do not stack with Stasis Chamber, which does the same thing, but better.
     if (
