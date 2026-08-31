@@ -101,12 +101,16 @@ export class DamageEvent {
     // damage of their own `skill.element`, so this defaults to it — but
     // multi-element skills (e.g. a hybrid Water/Ice ultimate) can pass an
     // explicit `element` per DamageEvent instance to override it.
-    this.element = params.element ?? skill?.element;
+    this.element = "element" in params ? params.element : skill?.element;
     // Same override for contact: a skill can be melee overall and still throw a
     // ranged sub-hit that must not answer contact-gated retaliations.
     this.contact = params.contact ?? skill?.contact ?? false;
     this.hitVfx = params.hitVfx ?? skill?.hitVfx ?? null;
     this.hitLabel = params.hitLabel ?? null;
+    // Identity of the declared hit within the skill. Loop guards compare this
+    // rather than the skill key, which every hit of a skill shares.
+    this.hitId = params.hitId ?? null;
+    this.suppressLog = params.suppressLog ?? skill?.suppressLog ?? false;
     console.log("[DamageEvent_constructor] Damage type:", this.type);
 
     this.context = context ?? {};
@@ -172,8 +176,7 @@ export class DamageEvent {
 
     this.context.ignoreMinimumFloor = false;
 
-    // SUPRIMIR log padrão se skill.suppressLog === true
-    if (this.skill && this.skill.suppressLog) {
+    if (this.suppressLog) {
       // Retorna apenas o objeto de resultado, mas sem o campo 'log' padrão
       const result = buildFinalResult(this);
       if (Array.isArray(result)) {

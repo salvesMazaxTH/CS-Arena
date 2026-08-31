@@ -21,7 +21,7 @@ export function processExtraQueue(event) {
         ...event.context,
         // Increment the depth to avoid infinite recursion (stops at 2 or 3)
         damageDepth: (event.context.damageDepth || 0) + 1,
-        origin: extra.skill?.key || "reaction",
+        origin: extra.hitId || extra.skill?.key || "reaction",
         // Important: We pass the reference of the cleaned queue to the new event
         extraDamageQueue: event.context.extraDamageQueue,
       },

@@ -48,6 +48,7 @@ export function buildFinalResult(event) {
     element: event.element,
     contact: event.contact,
     hitVfx: event.hitVfx,
+    hitId: event.hitId,
     log: finalLog,
     crit: event.crit,
     damageDepth: event.context.damageDepth,
