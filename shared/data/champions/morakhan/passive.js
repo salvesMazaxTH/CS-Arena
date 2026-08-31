@@ -4,7 +4,7 @@ export default {
   key: "first_sutra_adamantine_heart",
   name: "First Sutra: Adamantine Heart",
 
-  flatReductionVSContact: 25,
+  flatReductionVSPhysical: 25,
   stabilityStacksCap: 4,
   dmgBuffAuraDuration: 2,
   significantHitRatio: 0.35,
@@ -12,7 +12,7 @@ export default {
   description(champion) {
     const stacks = champion.runtime?.stabilityStacks || 0;
 
-    return `Morakhan takes 10% less damage (except Absolute Damage) and reduces damage taken from physical attacks by an additional ${this.flatReductionVSContact}.
+    return `Morakhan takes 10% less damage (except Absolute Damage) and reduces damage taken from physical attacks by an additional ${this.flatReductionVSPhysical}.
 
     Whenever he takes Physical Damage, he gains 1 <b>Stability</b> stack (Max: ${this.stabilityStacksCap}).
 
@@ -34,10 +34,7 @@ export default {
     let finalDamage = damage;
 
     if (isPhysical) {
-      finalDamage = Math.max(
-        5,
-        finalDamage - this.flatReductionVSContact,
-      );
+      finalDamage = Math.max(5, finalDamage - this.flatReductionVSPhysical);
     }
 
     finalDamage *= 0.9;
@@ -58,36 +55,39 @@ export default {
       (effect) => effect.key !== "morakhan_adamantine_stability_burst",
     );
 
-    owner.addHookEffect({
-      type: "buff",
-      key: "morakhan_adamantine_stability_burst",
-      name: "Empowered Adamantine Stability",
-      expiresAtTurn: context.currentTurn + 2,
+    owner.addHookEffect(
+      {
+        type: "buff",
+        key: "morakhan_adamantine_stability_burst",
+        name: "Empowered Adamantine Stability",
+        expiresAtTurn: context.currentTurn + 2,
 
-      hookScope: {
-        onBeforeDmgDealing: "attacker",
-      },
+        hookScope: {
+          onBeforeDmgDealing: "attacker",
+        },
 
-      hookPolicies: {
-        onBeforeDmgDealing: {
-          allowOnDot: true,
-          allowOnNestedDamage: true,
+        hookPolicies: {
+          onBeforeDmgDealing: {
+            allowOnDot: true,
+            allowOnNestedDamage: true,
+          },
+        },
+
+        onBeforeDmgDealing({ damage, attacker, skill }) {
+          return {
+            damage: damage * 2,
+            log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
+              attacker,
+            )} doubles the damage dealt${
+              skill?.key === "fourth_sutra_mountain_stance_counter"
+                ? " by the counterattack"
+                : ""
+            }!`,
+          };
         },
       },
-
-      onBeforeDmgDealing({ damage, attacker, skill }) {
-        return {
-          damage: damage * 2,
-          log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
-            attacker,
-          )} doubles the damage dealt${
-            skill?.key === "fourth_sutra_mountain_stance_counter"
-              ? " by the counterattack"
-              : ""
-          }!`,
-        };
-      },
-    }, context);
+      context,
+    );
 
     const msg = `<b>[Passive — ${this.name}]</b> ${formatChampionName(
       owner,
