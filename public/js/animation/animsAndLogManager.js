@@ -488,44 +488,48 @@ export function createCombatAnimationManager(deps) {
     const { action, log, state } = envelope;
     const isClaim = envelope?.action?.skillKey === CLAIM_ACTION_KEY;
 
-    if (action && typeof handleActionDialog === "function") {
-      currentPhase = "combat";
-      await handleActionDialog(action);
-    }
+    // Mounted up front so the caster's ring is already lit under the "used a
+    // skill" dialog — a purely deferred skill (a hook registration, a stance)
+    // has no events to animate but still reads as an action taken.
+    const clearAffectGlows = applySkillAffectGlows(envelope);
 
-    if (envelope.scorePayload) {
-      if (isClaim) {
-        await scoreboard.animateClaim(envelope.scorePayload);
-      } else {
-        scoreboard.update(envelope.scorePayload);
+    try {
+      if (action && typeof handleActionDialog === "function") {
+        currentPhase = "combat";
+        await handleActionDialog(action);
       }
-    }
 
-    // GLOBAL dialogs (ALWAYS runs)
-    if (envelope.globalDialogs?.length) {
-      await runDialogs(envelope.globalDialogs);
-    }
-    const hasAnyEvent =
-      dispatcher.keys.some((key) => envelope[key]?.length) ||
-      Boolean(envelope.scorePayload);
+      if (envelope.scorePayload) {
+        if (isClaim) {
+          await scoreboard.animateClaim(envelope.scorePayload);
+        } else {
+          scoreboard.update(envelope.scorePayload);
+        }
+      }
 
-    if (!hasAnyEvent) {
+      // GLOBAL dialogs (ALWAYS runs)
+      if (envelope.globalDialogs?.length) {
+        await runDialogs(envelope.globalDialogs);
+      }
+      const hasAnyEvent =
+        dispatcher.keys.some((key) => envelope[key]?.length) ||
+        Boolean(envelope.scorePayload);
+
+      if (!hasAnyEvent) {
+        if (state) applyStateSnapshots(state);
+        if (log) appendToLog(log);
+        return;
+      }
+
+      // event loop — plays events in the real chronological order (seq)
+      // instead of a fixed category order.
+      await dispatcher.runOrdered(envelope);
+
       if (state) applyStateSnapshots(state);
       if (log) appendToLog(log);
-      return;
-    }
-
-    // event loop — plays events in the real chronological order (seq)
-    // instead of a fixed category order.
-    const clearAffectGlows = applySkillAffectGlows(envelope);
-    try {
-      await dispatcher.runOrdered(envelope);
     } finally {
       clearAffectGlows();
     }
-
-    if (state) applyStateSnapshots(state);
-    if (log) appendToLog(log);
   }
 
   // ============================================================
