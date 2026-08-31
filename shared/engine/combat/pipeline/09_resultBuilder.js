@@ -45,6 +45,8 @@ export function buildFinalResult(event) {
     userId: event.attacker?.id ?? null,
     killed: event.defender.alive === false,
     type: event.type,
+    element: event.element,
+    contact: event.contact,
     log: finalLog,
     crit: event.crit,
     damageDepth: event.context.damageDepth,

@@ -89,6 +89,8 @@ export function preChecks(event) {
         target: event.defender,
         amount: 0,
         sourceId: event.attacker?.id,
+        element: event.element,
+        contact: event.contact,
         flags: { evaded: true },
       });
 
@@ -127,6 +129,8 @@ export function preChecks(event) {
         target: event.defender,
         amount: 0,
         sourceId: event.attacker?.id,
+        element: event.element,
+        contact: event.contact,
         flags: { shieldBlocked: true },
       });
 
@@ -207,6 +211,8 @@ function _buildBlockedResult(
     target: event.defender,
     amount: 0,
     sourceId: event.attacker?.id ?? null,
+    element: event.element,
+    contact: event.contact,
     flags: { [kind]: true, immuneMessage: customMessage, immuneQuiet: quiet },
   });
 

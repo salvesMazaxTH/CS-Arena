@@ -102,6 +102,9 @@ export class DamageEvent {
     // multi-element skills (e.g. a hybrid Water/Ice ultimate) can pass an
     // explicit `element` per DamageEvent instance to override it.
     this.element = params.element ?? skill?.element;
+    // Same override for contact: a skill can be melee overall and still throw a
+    // ranged sub-hit that must not answer contact-gated retaliations.
+    this.contact = params.contact ?? skill?.contact ?? false;
     console.log("[DamageEvent_constructor] Damage type:", this.type);
 
     this.context = context ?? {};

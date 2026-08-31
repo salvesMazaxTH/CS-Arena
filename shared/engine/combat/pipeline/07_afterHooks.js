@@ -83,6 +83,7 @@ function _applyAfterTakingPassive(event) {
     defender: event.defender,
     skill: event.skill,
     element: event.element,
+    contact: event.contact,
     damage: event.damage,
     actualDmg: event.actualDmg,
     mode: event.mode,
@@ -103,6 +104,7 @@ function _applyAfterDealingPassive(event) {
     crit: event.crit,
     skill: event.skill,
     element: event.element,
+    contact: event.contact,
     context: event.context,
   });
 }
