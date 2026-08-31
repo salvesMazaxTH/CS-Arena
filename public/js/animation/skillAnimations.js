@@ -15,7 +15,7 @@ import { playLightningBolt } from "./lightningAnimation.js";
 import { playMeleePunch } from "./meleePunchAnimation.js";
 import { playMultislash } from "./multislashAnimation.js";
 import { playSlash } from "./slashAnimation.js";
-import { createWaterBoltAnimation } from "./waterAnimation.js";
+import { createWaterBoltGL } from "./waterBoltGLAnimation.js";
 
 const skillAnimationRegistry = new Map();
 
@@ -92,8 +92,8 @@ registerSkillAnimation("blazing_fist_barrage", playMeleePunch);
 registerSkillAnimation("default_lightning", playLightningBolt);
 registerSkillAnimation("default_fire", createFireBoltGL(1));
 registerSkillAnimation("default_fire_big", createFireBoltGL(1.275, true));
-registerSkillAnimation("default_water", createWaterBoltAnimation(1));
-registerSkillAnimation("default_water_big", createWaterBoltAnimation(1.85));
+registerSkillAnimation("default_water", createWaterBoltGL(1));
+registerSkillAnimation("default_water_big", createWaterBoltGL(1.4, true));
 registerSkillAnimation("default_slash", playSlash);
 registerSkillAnimation("default_multislash", playMultislash);
 registerSkillAnimation("default_flaming_arrow", playFlamingArrow);
