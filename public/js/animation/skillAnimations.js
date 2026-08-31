@@ -91,7 +91,7 @@ registerSkillAnimation("quick_hook", playMeleePunch);
 registerSkillAnimation("blazing_fist_barrage", playMeleePunch);
 registerSkillAnimation("default_lightning", playLightningBolt);
 registerSkillAnimation("default_fire", createFireBoltGL(1));
-registerSkillAnimation("default_fire_big", createFireBoltGL(1.275, true));
+registerSkillAnimation("default_fire_big", createFireBoltGL(1.368, true));
 registerSkillAnimation("default_water", createWaterBoltGL(1));
 registerSkillAnimation("default_water_big", createWaterBoltGL(1.4, true));
 registerSkillAnimation("default_slash", playSlash);
