@@ -6,6 +6,17 @@ export default {
 
   attackPerRecoil: 20,
 
+  hits: [
+    {
+      id: "overheat",
+      label: "Weapon Overheat",
+      type: "magical",
+      contact: false,
+      damageMode: "absolute",
+      suppressLog: true,
+    },
+  ],
+
   description() {
     return `Irina's own fire was always a weak, useless little thing that burned her more than it ever helped anyone else — until the flamethrower gave it teeth, at the cost of running hot enough to bite back at her too. She doesn't mind. Every time the gun kicks back, she laughs harder and hits harder: +${this.attackPerRecoil} permanent Attack.`;
   },
@@ -22,8 +33,8 @@ export default {
     },
   },
 
-  onAfterDmgTaking({ owner, skill, context }) {
-    if (skill?.key !== "weapon_overheat") return;
+  onAfterDmgTaking({ owner, hitId, context }) {
+    if (hitId !== "overheat") return;
 
     owner.modifyStat({
       statName: "Attack",
