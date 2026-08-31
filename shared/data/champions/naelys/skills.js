@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
@@ -90,6 +91,17 @@ const naelysSkills = [
     damageReduction: 20,
     stanceDuration: 2,
 
+    hits: [
+      {
+        id: "counter",
+        label: "Raging Sea Counterattack",
+        type: "physical",
+        element: null,
+        contact: true,
+        damageMode: "standard",
+      },
+    ],
+
     description() {
       return `Naelys assumes a maritime stance until the end of the next turn, gaining ${this.damageReduction}% damage reduction. The first time she is hit each turn, she counterattacks the attacker with Basic Strike.`;
     },
@@ -98,6 +110,8 @@ const naelysSkills = [
 
     resolve({ user, context }) {
       user.runtime.hookEffects ??= [];
+
+      const skill = this;
 
       const effect = {
         type: "buff",
@@ -122,19 +136,13 @@ const naelysSkills = [
 
           if (!basic) return;
 
-          const baseDamage = (owner.Attack * basic.bf) / 100;
-
           context.extraDamageQueue.push({
-            mode: "standard",
-            baseDamage,
-            attacker: owner,
-            defender: attacker,
-            type: "physical",
-            skill: {
-              ...basic,
-              key: "mass_of_the_raging_sea_counter",
-              name: "Raging Sea Counterattack",
-            },
+            ...SkillHits.params(skill, "counter", {
+              user: owner,
+              target: attacker,
+              baseDamage: (owner.Attack * basic.bf) / 100,
+              context,
+            }),
 
             dialog: {
               message: `${formatChampionName(
