@@ -47,6 +47,7 @@ import lorena from "./lorena/index.js";
 import irina_lancachamas from "./irina_lancachamas/index.js";
 import dorian from "./dorian/index.js";
 import thorwells from "./thorwells/index.js";
+import ysvane from "./ysvane/index.js";
 
 const championDB = {
   ralia,
@@ -98,6 +99,7 @@ const championDB = {
   irina_lancachamas,
   dorian,
   thorwells,
+  ysvane,
 };
 
 export default championDB;
