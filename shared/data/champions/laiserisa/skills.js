@@ -1,14 +1,14 @@
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../generic/totalBlock.js";
+import basicShot from "../generic/basicShot.js";
 import { findTwin, survivalDamage, wouldBeLethal } from "../pairs/twinBond.js";
 
 const SISTER_KEYS = ["laisaelis", "laiserisa"];
 
 const laiserisaSkills = [
   // ========================
-  // Total Block (global)
+  // Basic Shot (global)
   // ========================
-  totalBlock,
+  { ...basicShot, type: "magical" },
 
   // ========================
   // Erase
