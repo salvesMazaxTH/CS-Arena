@@ -1,5 +1,11 @@
 import { formatChampionName } from "../../../ui/formatters.js";
-import { dieWithTwin, findTwin, TWIN_BOND_TEXT } from "../pairs/twinBond.js";
+import {
+  dieWithTwin,
+  findTwin,
+  survivalDamage,
+  TWIN_BOND_TEXT,
+  wouldBeLethal,
+} from "../pairs/twinBond.js";
 
 export default {
   key: "the_one_that_leaves",
@@ -16,19 +22,35 @@ export default {
 
   hookScope: {
     onBeforeDmgTaking: "defender",
+    onValidateAction: "actionSource",
   },
 
   hookPolicies: {
     onBeforeDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
   },
 
+  onValidateAction({ actionSource, skill, context }) {
+    if (skill?.key !== "then_let_me_take_you_with_me") return;
+    if (findTwin(actionSource, context)) return;
+
+    return {
+      deny: true,
+      message: `${formatChampionName(actionSource)} reaches for her sister and finds no one to take with her.`,
+    };
+  },
+
   onBeforeDmgTaking({ defender, owner, damage, context }) {
     if (defender !== owner) return;
     if (owner.runtime.leaveSpent) return;
-    if (owner.HP - damage > 0) return;
+    if (!wouldBeLethal(owner, damage)) return;
 
-    // The ultimate's binding answers the same lethal hit, and takes precedence.
-    if (owner.runtime.hookEffects?.some((e) => e.key === "twin_departure"))
+    // Either binding answers the same lethal hit, and outranks the passive:
+    // twin_departure takes both sisters, keep_you_here shields this one for free.
+    if (
+      owner.runtime.hookEffects?.some(
+        (e) => e.key === "twin_departure" || e.key === "keep_you_here",
+      )
+    )
       return;
 
     owner.runtime.leaveSpent = true;
@@ -42,7 +64,7 @@ export default {
     });
 
     return {
-      damage: Math.max(owner.HP - 1, 0),
+      damage: survivalDamage(owner, 1),
       log: `${formatChampionName(owner)} holds on by a thread.`,
     };
   },

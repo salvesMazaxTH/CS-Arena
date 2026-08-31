@@ -1,6 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
-import { findTwin } from "../pairs/twinBond.js";
+import { findTwin, survivalDamage, wouldBeLethal } from "../pairs/twinBond.js";
 
 const SISTER_KEYS = ["laisaelis", "laiserisa"];
 
@@ -67,6 +67,11 @@ const laisaelisSkills = [
                 isPermanent: modifier.isPermanent,
                 statModifierSrc: echo,
               });
+            }
+
+            // Its expiresAtTurn rides the same turn clock, so it carries over as-is.
+            for (const modifier of source.damageModifiers) {
+              echo.addDamageModifier({ ...modifier });
             }
 
             for (const effect of source.statusEffects.values()) {
@@ -155,7 +160,7 @@ const laisaelisSkills = [
     priority: 4,
 
     description() {
-      return `Laisaelis refuses the one departure she cannot bear and lays an anchor of presence over her sister. For ${this.auraDuration} turn(s), any lethal effect that would take Laiserisa instead leaves her on the field with ${this.survivalHP} HP. The anchor never spends what Laiserisa carries of her own, and cannot be laid at all while she is absent from the field or lost to the Nothingness.`;
+      return `Laisaelis refuses the one departure she cannot bear and lays an anchor of presence over her sister. For ${this.auraDuration} turn(s), the first lethal effect that would take Laiserisa instead leaves her on the field with ${this.survivalHP} HP. The anchor never spends what Laiserisa carries of her own, and cannot be laid at all while she is absent from the field or lost to the Nothingness.`;
     },
 
     targetSpec: ["self"],
@@ -195,9 +200,17 @@ const laisaelisSkills = [
 
           onBeforeDmgTaking({ defender, owner, damage, context }) {
             if (defender !== owner) return;
-            if (owner.HP - damage > 0) return;
+            // Laiserisa's own binding answers the same hit and outranks this.
+            if (owner.runtime.hookEffects?.some((e) => e.key === "twin_departure"))
+              return;
+            if (!wouldBeLethal(owner, damage)) return;
 
             owner.runtime.preventFinishingUntilTurn = context.currentTurn + 1;
+
+            // One anchor, one save: spend it by removing it.
+            owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
+              (e) => e.key !== "keep_you_here",
+            );
 
             context.registerDialog({
               message: `<b>${skillName}</b> — ${formatChampionName(owner)} is held here, and the ending does not take.`,
@@ -206,7 +219,7 @@ const laisaelisSkills = [
             });
 
             return {
-              damage: Math.max(owner.HP - survivalHP, 0),
+              damage: survivalDamage(owner, survivalHP),
               log: `${formatChampionName(owner)} is kept on the field with ${survivalHP} HP.`,
             };
           },

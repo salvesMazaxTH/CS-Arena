@@ -19,6 +19,31 @@ export function findTwin(champion, context) {
   );
 }
 
+function regularShieldTotal(champion) {
+  const shields = Array.isArray(champion.runtime?.shields)
+    ? champion.runtime.shields
+    : [];
+
+  return shields.reduce(
+    (total, s) =>
+      !s.type || s.type === "regular" ? total + (Number(s.amount) || 0) : total,
+    0,
+  );
+}
+
+/** A hit is lethal only once the champion's regular shields cannot cover it. */
+export function wouldBeLethal(champion, damage) {
+  return champion.HP + regularShieldTotal(champion) - damage <= 0;
+}
+
+/**
+ * Damage a cheat-death hook should return so the champion lands at exactly
+ * `survivalHP`: regular shields drain first, as they would against the real blow.
+ */
+export function survivalDamage(champion, survivalHP) {
+  return Math.max(champion.HP + regularShieldTotal(champion) - survivalHP, 0);
+}
+
 /** The innate half both sisters share; returns whether the owner was taken along. */
 export function dieWithTwin({ owner, deadChampion, context }, passiveName) {
   if (!owner.alive || owner === deadChampion) return false;
