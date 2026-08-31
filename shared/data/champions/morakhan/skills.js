@@ -1,4 +1,4 @@
-import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
 
@@ -157,6 +157,17 @@ const morakhanSkills = [
     isUltimate: true,
     momentumCost: 48,
 
+    hits: [
+      {
+        id: "reflection",
+        label: "Mountain Stance Counterattack",
+        type: "magical",
+        contact: true,
+        damageMode: "piercing",
+        piercingPercentage: 100,
+      },
+    ],
+
     description() {
       return `Unleashes Mountain Stance. During this turn:
       Becomes immune to crowd control.
@@ -167,6 +178,8 @@ const morakhanSkills = [
     targetSpec: ["self"],
 
     resolve({ user, context }) {
+      const skill = this;
+
       const effect = {
         type: "buff",
         key: "mountain_stance",
@@ -192,18 +205,12 @@ const morakhanSkills = [
           });
 
           context.extraDamageQueue.push({
-            mode: DamageEvent.Modes.PIERCING,
-            piercingPercentage: 100,
-            baseDamage: reflectedDamage,
-            attacker: defender,
-            defender: attacker,
-            type: "magical",
-
-            skill: {
-              key: "fourth_sutra_mountain_stance_counter",
-              name: "Mountain Stance Counterattack",
-              contact: true,
-            },
+            ...SkillHits.params(skill, "reflection", {
+              user: defender,
+              target: attacker,
+              baseDamage: reflectedDamage,
+              context,
+            }),
 
             dialog: {
               message: `${formatChampionName(
