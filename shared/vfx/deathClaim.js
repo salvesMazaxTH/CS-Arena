@@ -431,7 +431,6 @@ function createGlowTexture() {
 // ─── LÓGICA PRINCIPAL WEBGL ───
 export async function playDeathClaimEffect(championEl) {
   const container = document.getElementById("webgl-container");
-  if (container) container.innerHTML = "";
 
   // 1. Setup da Cena e Luzes
   const scene = new THREE.Scene();
@@ -454,7 +453,8 @@ export async function playDeathClaimEffect(championEl) {
     antialias: true,
   });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(window.devicePixelRatio);
+  // A phone reports 2-3x, which is 4-9x the fragments for no visible gain.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   if (container) container.appendChild(renderer.domElement);
 
   // 2. Mapeamento DOM -> WebGL
@@ -611,8 +611,8 @@ export async function playDeathClaimEffect(championEl) {
 
   // 5. Tela de Flash
   const flashGeo = new THREE.PlaneGeometry(
-    window.innerWidth * 2,
-    window.innerHeight * 2,
+    window.innerWidth,
+    window.innerHeight,
   );
   const flashMat = new THREE.MeshBasicMaterial({
     color: 0xffffff,
@@ -622,6 +622,7 @@ export async function playDeathClaimEffect(championEl) {
   });
   const flashMesh = new THREE.Mesh(flashGeo, flashMat);
   flashMesh.position.set(window.innerWidth / 2, window.innerHeight / 2, 50);
+  flashMesh.visible = false;
   scene.add(flashMesh);
 
   // 6. O "Braço de Sombra"
@@ -629,8 +630,8 @@ export async function playDeathClaimEffect(championEl) {
 
   // 7. Dimmer/Vignette (Tela Escura)
   const dimmerGeo = new THREE.PlaneGeometry(
-    window.innerWidth * 2,
-    window.innerHeight * 2,
+    window.innerWidth,
+    window.innerHeight,
   );
   const dimmerMat = new THREE.MeshBasicMaterial({
     color: 0x000000,
@@ -640,6 +641,7 @@ export async function playDeathClaimEffect(championEl) {
   });
   const dimmerMesh = new THREE.Mesh(dimmerGeo, dimmerMat);
   dimmerMesh.position.set(window.innerWidth / 2, window.innerHeight / 2, 10);
+  dimmerMesh.visible = false;
   scene.add(dimmerMesh);
 
   // 8. Loop de Animação
@@ -654,6 +656,7 @@ export async function playDeathClaimEffect(championEl) {
       const vigAlpha =
         norm(elapsed, 0, 800) * 0.7 * (1 - norm(elapsed, 4500, 5500));
       dimmerMat.opacity = vigAlpha;
+      dimmerMesh.visible = vigAlpha > 0;
 
       // --- A Mão Sombria ---
       if (elapsed > 200 && elapsed < 2500) {
@@ -782,6 +785,7 @@ export async function playDeathClaimEffect(championEl) {
       }
 
       if (flashMat.opacity > 0) flashMat.opacity -= 0.03;
+      flashMesh.visible = flashMat.opacity > 0;
 
       // Drenando Almas Continuamente
       if (hasStruck && elapsed < 4500 && Math.random() < 0.4) {
@@ -831,6 +835,12 @@ export async function playDeathClaimEffect(championEl) {
             posAttr.array[i * 3] = -9999;
           }
         }
+        sys.geometry.setDrawRange(0, sys.count);
+        if (sys.count === 0) return;
+
+        posAttr.updateRange.count = sys.count * 3;
+        colAttr.updateRange.count = sys.count * 3;
+        sizeAttr.updateRange.count = sys.count;
         posAttr.needsUpdate = true;
         sizeAttr.needsUpdate = true;
         colAttr.needsUpdate = true;
@@ -855,7 +865,7 @@ export async function playDeathClaimEffect(championEl) {
         soulSys.geometry.dispose();
         soulSys.material.dispose();
 
-        if (container) container.innerHTML = "";
+        renderer.domElement.remove();
         resolve();
       }
     }
