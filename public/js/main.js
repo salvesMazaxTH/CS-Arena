@@ -2422,12 +2422,10 @@ function initActionBar() {
 function showActionBarSlot({ playerAdvanced = true } = {}) {
   removeActionBar();
   if (currentActionBarSlot >= actionBarSlotOrder.length) {
-    if (actionBarSlotOrder.length > 0) {
-      if (playerAdvanced) requestEndTurn();
-      // Kept available while the turn is still open, so a dismissed summon
-      // reminder always has a way back to ending the turn.
-      setEndTurnButtonVisible(!hasConfirmedEndTurn);
-    }
+    if (playerAdvanced && actionBarSlotOrder.length > 0) requestEndTurn();
+    // Kept available while the turn is still open, so a dismissed summon
+    // reminder always has a way back to ending the turn.
+    setEndTurnButtonVisible(!hasConfirmedEndTurn);
     return;
   }
 
