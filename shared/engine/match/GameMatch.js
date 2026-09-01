@@ -773,8 +773,10 @@ class CombatState {
     const normalizedSlot = Number(slot);
     const normalizedAmount = Number(amount) || 0;
     if (!Number.isInteger(normalizedSlot) || normalizedSlot < 0) return;
-    this.playerScores[normalizedSlot] =
-      (this.playerScores[normalizedSlot] || 0) + normalizedAmount;
+    this.playerScores[normalizedSlot] = Math.max(
+      0,
+      (this.playerScores[normalizedSlot] || 0) + normalizedAmount,
+    );
   }
 
   addPointsForSlot(slot, amount = 1) {

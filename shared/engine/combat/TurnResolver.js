@@ -1164,7 +1164,7 @@ export class TurnResolver {
         sourceId = null,
       } = {}) {
         const value = Number(amount) || 0;
-        if (value <= 0) return null;
+        if (value === 0) return null;
 
         if (scoringSlot !== 0 && scoringSlot !== 1) {
           throw new Error(`[SCORE ERROR] scoringSlot inválido: ${scoringSlot}`);
@@ -1177,6 +1177,10 @@ export class TurnResolver {
           reason,
           sourceId,
         });
+      },
+
+      getScore(slot) {
+        return combat.playerScores?.[slot] ?? 0;
       },
 
       // A hook emitted from inside a registry (onBuffingStat) can't return its
