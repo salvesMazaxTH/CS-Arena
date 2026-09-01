@@ -3,7 +3,7 @@ export default {
   portrait: "/assets/portraits/sabrina.webp",
 
   HP: 300,
-  Attack: 315,
+  Attack: 305,
   Defense: 85,
   Speed: 75,
   
