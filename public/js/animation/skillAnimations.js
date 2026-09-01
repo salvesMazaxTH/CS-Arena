@@ -14,7 +14,7 @@ import { createFireBoltGL } from "./fireBoltGLAnimation.js";
 import { createIceBoltGL } from "./iceBoltGLAnimation.js";
 import { createMusketBallGL } from "./musketBallGLAnimation.js";
 import { playFlamingArrow } from "./flamingArrowAnimation.js";
-import { playLightningBolt } from "./lightningAnimation.js";
+import { createLightningBolt } from "./lightningAnimation.js";
 import { playMeleePunch } from "./meleePunchAnimation.js";
 import { playMultislash } from "./multislashAnimation.js";
 import { playSlash } from "./slashAnimation.js";
@@ -44,6 +44,7 @@ const DEFAULT_ELEMENT_ANIMATIONS = {
 const BIG_FIREBALL_SKILLS = new Set(["magma_bomb"]);
 const BIG_WATERBOLT_SKILLS = new Set();
 const BIG_ICEBOLT_SKILLS = new Set();
+const BIG_LIGHTNING_SKILLS = new Set();
 const BIG_EARTHBOLT_SKILLS = new Set();
 
 // `hit` is the individual DamageEvent's own element/contact, which override the
@@ -87,6 +88,12 @@ function resolveDefaultAnimationKey(skill, hit) {
   ) {
     return "default_earth_big";
   }
+  if (
+    key === "default_lightning" &&
+    (skill.isUltimate === true || BIG_LIGHTNING_SKILLS.has(skill.key))
+  ) {
+    return "default_lightning_big";
+  }
   return key;
 }
 
@@ -111,7 +118,8 @@ export async function animateSkill(skillKey, opts = {}) {
 
 registerSkillAnimation("quick_hook", playMeleePunch);
 registerSkillAnimation("blazing_fist_barrage", playMeleePunch);
-registerSkillAnimation("default_lightning", playLightningBolt);
+registerSkillAnimation("default_lightning", createLightningBolt());
+registerSkillAnimation("default_lightning_big", createLightningBolt(true));
 registerSkillAnimation("default_fire", createFireBoltGL(1));
 registerSkillAnimation("default_fire_big", createFireBoltGL(1.368, true));
 registerSkillAnimation("default_water", createWaterBoltGL(1));
