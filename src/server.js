@@ -739,6 +739,11 @@ function handleScheduledEffect(effect, context) {
 /** Runs start-of-turn processing: scheduled effects, hooks, purges and global regen. */
 function handleStartTurn() {
   const currentTurn = match.combat.currentTurn;
+
+  // Flip the client's turn header before any start-of-turn log or animation is
+  // emitted, so DoT ticks and scheduled detonations group under the new turn.
+  io.emit("turnUpdate", currentTurn);
+
   const currentTurnEffects = [];
   const futureEffects = [];
   const preTurnMutationResults = [];
@@ -875,7 +880,6 @@ function handleStartTurn() {
   // last real champion outside the regular end-turn action flow.
   emitGameOverIfNeeded();
 
-  io.emit("turnUpdate", match.combat.currentTurn);
   broadcastGameState();
 }
 
