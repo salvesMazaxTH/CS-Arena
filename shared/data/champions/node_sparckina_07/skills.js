@@ -80,8 +80,9 @@ const nodeSparckina07Skills = [
     name: "Radiant Burst",
     bf: 135,
     paralyzeDuration: 2,
-    contact: true,
+    contact: false,
     damageMode: "standard",
+    hitVfxPalette: "lightning",
     priority: 0,
     element: "lightning",
 
