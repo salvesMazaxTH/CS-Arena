@@ -2,8 +2,6 @@ export default {
   name: "Thorwells",
   portrait: "/assets/portraits/thorwells.webp",
 
-  unreleased: true,
-
   HP: 355,
   Attack: 205,
   Defense: 110,
@@ -11,5 +9,5 @@ export default {
 
   classKey: "brawler",
   elementalAffinities: ["lightning"],
-  species: ["divinity"],
+  species: ["divinity", "magickin"],
 };
