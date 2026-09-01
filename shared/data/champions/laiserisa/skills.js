@@ -109,7 +109,7 @@ const laiserisaSkills = [
     name: "Then Let Me Take You With Me",
 
     auraDuration: 2,
-    vanishTurns: 2,
+    vanishTurns: 1,
     returnHPPercent: 25,
 
     contact: false,
