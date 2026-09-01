@@ -71,6 +71,7 @@ const laisaelisSkills = [
 
           onSpawn: (echo, spawnContext) => {
             echo.runtime.leavesNoDeath = true;
+            echo.runtime.unmakingPalette = "answer";
             echo.runtime.manifestEcho = true;
 
             // A newer Manifest was cast before this Echo could form: it never takes the field.
