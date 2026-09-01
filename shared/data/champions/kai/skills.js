@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
 import kindledFists from "./passive.js";
@@ -44,6 +45,18 @@ const kaiSkills = [
     priority: 2,
     element: "fire",
 
+    hits: [
+      {
+        id: "counter",
+        label: "Living Ember Counter",
+        type: "physical",
+        element: null,
+        contact: true,
+        damageMode: "piercing",
+        piercingPercentage: 100,
+      },
+    ],
+
     description() {
       return `Kai settles into a stance that glows from the inside out, taking ${this.damageReduction}% less damage during this turn and the next.
 
@@ -57,6 +70,7 @@ const kaiSkills = [
     resolve({ user, context }) {
       user.runtime.hookEffects ??= [];
 
+      const skill = this;
       const counterAtkDmg = this.counterAtkDmg;
       const stanceDuration = this.stanceDuration;
       const burnDuration = this.burnDuration;
@@ -71,27 +85,32 @@ const kaiSkills = [
         expiresAtTurn: context.currentTurn + stanceDuration,
 
         // 🔥 COUNTERATTACK
-        onAfterDmgTaking({ attacker, defender, skill, damage, owner, context }) {
+        onAfterDmgTaking({
+          attacker,
+          defender,
+          skill: incoming,
+          hitId,
+          contact,
+          damage,
+          owner,
+          context,
+        }) {
           if (defender !== owner) return;
-          if (!skill?.contact) return;
+          if (!contact) return;
           if (damage <= 0) return;
-          if (skill?.key === "living_ember_stance_counter") return;
+          // Hit ids are only unique within their own skill.
+          if (incoming?.key === skill.key && hitId === "counter") return;
           if (!attacker?.alive) return;
 
           context.extraDamageQueue ??= [];
 
           context.extraDamageQueue.push({
-            mode: "piercing",
-            baseDamage: counterAtkDmg,
-            piercingPercentage: 100,
-            attacker: owner,
-            defender: attacker,
-            type: "physical",
-            skill: {
-              key: "living_ember_stance_counter",
-              name: "Living Ember Counter",
-              contact: true,
-            },
+            ...SkillHits.params(skill, "counter", {
+              user: owner,
+              target: attacker,
+              baseDamage: counterAtkDmg,
+              context,
+            }),
 
             dialog: {
               message: `${formatChampionName(owner)} answers with the Living Ember Stance!`,

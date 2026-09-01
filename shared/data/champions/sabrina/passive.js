@@ -1,11 +1,22 @@
 import { formatChampionName } from "../../../ui/formatters.js";
-import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 
 export default {
   key: "thermal_convergence",
   name: "Thermal Convergence",
 
   iceBonusRatio: 0.4,
+
+  hits: [
+    {
+      id: "crystallization",
+      label: "Thermal Convergence (Passive)",
+      type: "magical",
+      element: "ice",
+      contact: false,
+      damageMode: "standard",
+    },
+  ],
 
   description() {
     return `Whenever Sabrina deals Water damage to a Chilled enemy, the water crystallizes into Ice, dealing an additional Ice hit equal to ${this.iceBonusRatio * 100}% of the Water damage dealt.`;
@@ -30,19 +41,11 @@ export default {
       targetId: defender.id,
     });
 
-    new DamageEvent({
+    SkillHits.run(this, "crystallization", {
+      user: owner,
+      target: defender,
       baseDamage: iceDamage,
-      attacker: owner,
-      defender,
-      skill: {
-        key: "thermal_convergence_passive",
-        name: "Thermal Convergence (Passive)",
-        contact: false,
-      },
-      element: "ice",
-      type: "magical",
       context: { ...context, damageDepth: (context.damageDepth || 0) + 1 },
-      allChampions: context.allChampions,
-    }).execute();
+    });
   },
 };

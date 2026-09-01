@@ -17,8 +17,8 @@ export default {
     onAfterDmgTaking: "defender",
   },
 
-  onAfterDmgTaking({ attacker, defender, owner, damage, context }) {
-    if (damage <= 0 || attacker.id === owner.id) return;
+  onAfterDmgTaking({ attacker, owner, actualDmg, context }) {
+    if (!(actualDmg > 0) || attacker.id === owner.id) return;
 
     owner.runtime.tharoxInerciaStacks =
       (owner.runtime.tharoxInerciaStacks || 0) + 1;

@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
@@ -53,39 +54,27 @@ const naelysSkills = [
         results.push(...damageResults);
       }
 
-      const selfHealApplied = new HealEvent({
+      const selfHealed = new HealEvent({
         target: user,
         amount: this.selfHealAmount,
         context,
         source: user,
       }).execute();
 
+      results.push({
+        log: `${formatChampionName(user)} restores ${selfHealed} HP.`,
+      });
+
       if (ally) {
-        const allyHealApplied = new HealEvent({
+        const allyHealed = new HealEvent({
           target: ally,
           amount: this.allyHealAmount,
           context,
           source: user,
         }).execute();
-      }
 
-      results.push({
-        type: "heal",
-        userId: user.id,
-        targetId: user.id,
-        amount: this.selfHealAmount,
-        log: `${formatChampionName(user)} restores ${this.selfHealAmount} HP.`,
-      });
-
-      if (ally) {
         results.push({
-          type: "heal",
-          userId: user.id,
-          targetId: ally.id,
-          amount: this.allyHealAmount,
-          log: `${formatChampionName(
-            ally,
-          )} restores ${this.allyHealAmount} HP.`,
+          log: `${formatChampionName(ally)} restores ${allyHealed} HP.`,
         });
       }
 
@@ -100,6 +89,18 @@ const naelysSkills = [
     priority: 2,
     element: "water",
     damageReduction: 20,
+    stanceDuration: 2,
+
+    hits: [
+      {
+        id: "counter",
+        label: "Raging Sea Counterattack",
+        type: "physical",
+        element: null,
+        contact: false,
+        damageMode: "standard",
+      },
+    ],
 
     description() {
       return `Naelys assumes a maritime stance until the end of the next turn, gaining ${this.damageReduction}% damage reduction. The first time she is hit each turn, she counterattacks the attacker with Basic Strike.`;
@@ -110,21 +111,19 @@ const naelysSkills = [
     resolve({ user, context }) {
       user.runtime.hookEffects ??= [];
 
+      const skill = this;
+
       const effect = {
         type: "buff",
         key: "mass_of_the_raging_sea",
-        expiresAtTurn: context.currentTurn + 2,
+        expiresAtTurn: context.currentTurn + this.stanceDuration,
         lastTriggerTurn: null,
 
-        onAfterDmgTaking({
-          attacker,
-          defender,
-          damage,
-          skill,
-          owner,
-          context,
-        }) {
-          if (defender !== owner) return;
+        hookScope: {
+          onAfterDmgTaking: "defender",
+        },
+
+        onAfterDmgTaking({ attacker, damage, owner, context }) {
           if (damage <= 0) return;
 
           if (this.lastTriggerTurn === context.currentTurn) return;
@@ -137,19 +136,13 @@ const naelysSkills = [
 
           if (!basic) return;
 
-          const baseDamage = (owner.Attack * basic.bf) / 100;
-
           context.extraDamageQueue.push({
-            mode: "standard",
-            baseDamage,
-            attacker: owner,
-            defender: attacker,
-            type: "physical",
-            skill: {
-              ...basic,
-              key: "mass_of_the_raging_sea_counter",
-              name: "Raging Sea Counterattack",
-            },
+            ...SkillHits.params(skill, "counter", {
+              user: owner,
+              target: attacker,
+              baseDamage: (owner.Attack * basic.bf) / 100,
+              context,
+            }),
 
             dialog: {
               message: `${formatChampionName(
@@ -172,7 +165,7 @@ const naelysSkills = [
       user.applyDamageReduction({
         amount: this.damageReduction,
         type: "percent",
-        duration: 1,
+        duration: this.stanceDuration,
         context,
       });
 

@@ -39,6 +39,9 @@ export function processFinishing(event) {
       target: event.defender,
       amount: remainingHp,
       sourceId: event.attacker?.id,
+      element: event.element,
+      contact: event.contact,
+      hitVfx: event.hitVfx,
       flags: finishingFlags,
     });
   }

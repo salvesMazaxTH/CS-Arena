@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 
@@ -32,7 +33,7 @@ const dlorafyaSkills = [
     element: "fire",
 
     description() {
-      return `Brands an enemy with divine fire, dealing Fire magical damage and applying Burning for ${this.burnDuration} turn(s). If the target is <b>already Burning</b>, this attack instead strikes with ${this.bf + this.burningBonusBf} power and refreshes their Burning.`;
+      return `Brands an enemy with divine fire, dealing Fire magical damage and applying Burning for ${this.burnDuration} turn(s). If the target is <b>already Burning</b>, this attack instead strikes with ${this.bf + this.burningBonusBf} power and refreshes their Burning. As the god of fire, his Burning takes even when the strike deals no damage.`;
     },
 
     targetSpec: ["enemy"],
@@ -54,7 +55,10 @@ const dlorafyaSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      if (!result?.evaded && !result?.immune && enemy.alive) {
+      if (
+        effectConnected(result, "burning", { ignoreDamageRequirement: true }) &&
+        enemy.alive
+      ) {
         // Burning does not stack, so a refresh needs the old instance gone.
         if (wasBurning) enemy.removeStatusEffect("burning");
         enemy.applyStatusEffect(
@@ -87,7 +91,7 @@ const dlorafyaSkills = [
     element: "fire",
 
     description() {
-      return `D'Lorafya kindles his own pyre: he deals Fire magical damage to an enemy, applies Burning for ${this.burnDuration} turn(s), then gains <b>+${this.attackBuff} Attack</b> and <b>+${this.defenseBuff} Defense</b> for ${this.buffDuration} turn(s). He gains an additional <b>+${this.attackBuffPerBurning} Attack</b> for each enemy currently Burning.`;
+      return `D'Lorafya kindles his own pyre: he deals Fire magical damage to an enemy, applies Burning for ${this.burnDuration} turn(s), then gains <b>+${this.attackBuff} Attack</b> and <b>+${this.defenseBuff} Defense</b> for ${this.buffDuration} turn(s). He gains an additional <b>+${this.attackBuffPerBurning} Attack</b> for each enemy currently Burning. As the god of fire, his Burning takes even when the strike deals no damage.`;
     },
 
     targetSpec: ["enemy", "self"],
@@ -107,7 +111,10 @@ const dlorafyaSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      if (!result?.evaded && !result?.immune && enemy.alive) {
+      if (
+        effectConnected(result, "burning", { ignoreDamageRequirement: true }) &&
+        enemy.alive
+      ) {
         if (enemy.hasStatusEffect("burning")) {
           enemy.removeStatusEffect("burning");
         }
@@ -176,7 +183,7 @@ const dlorafyaSkills = [
     element: "fire",
 
     description() {
-      return `A hurricane of divine fire engulfs the arena, dealing Fire magical damage to <b>ALL</b> characters except D'Lorafya himself, who is untouched by it. His <b>allies with Fire Affinity</b> are recognized by the flame and take only ${this.reductedDamagePercent}% damage. Every enemy struck is left Burning for ${this.burnDuration} turn(s). This attack cannot be evaded.`;
+      return `A hurricane of divine fire engulfs the arena, dealing Fire magical damage to <b>ALL</b> characters except D'Lorafya himself, who is untouched by it. His <b>allies with Fire Affinity</b> are recognized by the flame and take only ${this.reductedDamagePercent}% damage. Every enemy struck is left Burning for ${this.burnDuration} turn(s), which takes even when the strike deals no damage. This attack cannot be evaded.`;
     },
 
     targetSpec: ["all"],
@@ -224,7 +231,11 @@ const dlorafyaSkills = [
 
         const isEnemy = target.team !== user.team;
 
-        if (isEnemy && target.alive && !mainResult?.immune) {
+        if (
+          isEnemy &&
+          target.alive &&
+          effectConnected(mainResult, "burning", { ignoreDamageRequirement: true })
+        ) {
           if (target.hasStatusEffect("burning")) {
             target.removeStatusEffect("burning");
           }

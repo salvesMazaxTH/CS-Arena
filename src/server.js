@@ -3,6 +3,7 @@
 // ============================================================
 
 import express from "express";
+import compression from "compression";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import path from "path";
@@ -90,8 +91,22 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer);
 
-app.use(express.static(path.join(__dirname, "..", "public")));
-app.use("/shared", express.static(path.join(__dirname, "..", "shared")));
+// On Render the files only change on redeploy (which restarts the server), so a
+// day of caching is safe there; locally we keep serving fresh files.
+const staticOpts = process.env.RENDER
+  ? {
+      maxAge: "1d",
+      setHeaders(res, filePath) {
+        if (filePath.endsWith(".html")) {
+          res.setHeader("Cache-Control", "no-cache");
+        }
+      },
+    }
+  : {};
+
+app.use(compression());
+app.use(express.static(path.join(__dirname, "..", "public"), staticOpts));
+app.use("/shared", express.static(path.join(__dirname, "..", "shared"), staticOpts));
 
 app.get("/", (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "index.html"));

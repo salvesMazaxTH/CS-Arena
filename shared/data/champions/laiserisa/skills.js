@@ -1,14 +1,14 @@
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../generic/totalBlock.js";
-import { findTwin } from "../pairs/twinBond.js";
+import basicShot from "../generic/basicShot.js";
+import { findTwin, survivalDamage, wouldBeLethal } from "../pairs/twinBond.js";
 
 const SISTER_KEYS = ["laisaelis", "laiserisa"];
 
 const laiserisaSkills = [
   // ========================
-  // Total Block (global)
+  // Basic Shot (global)
   // ========================
-  totalBlock,
+  { ...basicShot, type: "magical" },
 
   // ========================
   // Erase
@@ -154,7 +154,7 @@ const laiserisaSkills = [
 
         onBeforeDmgTaking({ defender, owner, damage, context }) {
           if (defender !== owner) return;
-          if (owner.HP - damage > 0) return;
+          if (!wouldBeLethal(owner, damage)) return;
 
           owner.runtime.preventFinishingUntilTurn = context.currentTurn + 1;
 
@@ -182,7 +182,7 @@ const laiserisaSkills = [
           });
 
           return {
-            damage: Math.max(owner.HP - 1, 0),
+            damage: survivalDamage(owner, 1),
             log: `${formatChampionName(user)} and ${formatChampionName(twin)} are bound for the Nothingness together.`,
           };
         },

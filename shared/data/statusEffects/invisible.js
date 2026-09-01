@@ -9,17 +9,8 @@ const invisible = {
 
   description: "Cannot be targeted by enemies until its next action.",
 
-  onValidateAction({ actionSource, owner, context }) {
-    if (!actionSource || actionSource.id === owner.id) return;
-
-    const message = `${formatChampionName(actionSource)} cannot find ${formatChampionName(owner)}.`;
-    context?.registerDialog?.({
-      message,
-      sourceId: actionSource.id,
-      targetId: owner.id,
-    });
-
-    return { deny: true, message };
+  hidesFromAttacker() {
+    return true;
   },
 
   onActionResolved({ owner, context }) {
@@ -38,14 +29,13 @@ const invisible = {
     // case it just runs out its duration and can be acted through.
     const breaksOnAction = metadata?.breaksOnAction !== false;
 
-    const hookScope = { onValidateAction: "target" };
+    const hookScope = {};
     const hooks = {
       name: this.name,
       type: this.type,
       subtypes: this.subtypes,
       description: this.description,
       hookScope,
-      onValidateAction: this.onValidateAction,
     };
 
     if (breaksOnAction) {

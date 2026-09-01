@@ -7,8 +7,18 @@
 
 import { getElementCenter } from "./animationUtils.js";
 
-export async function playLightningBolt({ userEl, targetEl }) {
+// Hues follow shared/ui/identityPalette.js, as the cut motifs do. The choice is
+// authorial only: every skill drawing this bolt is already lightning, so the
+// element cannot tell the two looks apart.
+const PALETTES = Object.freeze({
+  azure: { body: "#7df9ff", tip: "#00ffff", branch: "#b2f7ff" },
+  lightning: { body: "#ffe14d", tip: "#ffa713", branch: "#fff3a6" },
+});
+
+export async function playLightningBolt({ userEl, targetEl, skill }) {
   if (!targetEl) return;
+
+  const palette = PALETTES[skill?.hitVfxPalette] ?? PALETTES.azure;
 
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -61,7 +71,7 @@ export async function playLightningBolt({ userEl, targetEl }) {
     );
     grad.addColorStop(0, "#ffffff");
     grad.addColorStop(0.15, color);
-    grad.addColorStop(1, "#00ffff");
+    grad.addColorStop(1, palette.tip);
     ctx.strokeStyle = grad;
 
     ctx.beginPath();
@@ -76,9 +86,9 @@ export async function playLightningBolt({ userEl, targetEl }) {
     const mainPts = buildBoltPoints(start, end, 18, 45);
 
     // Outer diffuse halo
-    strokeBolt(mainPts, 28, "#7df9ff", 0.15);
+    strokeBolt(mainPts, 28, palette.body, 0.15);
     // Main body
-    strokeBolt(mainPts, 10, "#7df9ff", 0.9);
+    strokeBolt(mainPts, 10, palette.body, 0.9);
     // White core
     strokeBolt(mainPts, 3, "#ffffff", 1.0);
 
@@ -93,7 +103,7 @@ export async function playLightningBolt({ userEl, targetEl }) {
           origin.y + (Math.random() * 60 + 20) * (Math.random() < 0.5 ? 1 : -1),
       };
       const branchPts = buildBoltPoints(origin, branchEnd, 6, 15);
-      strokeBolt(branchPts, 4, "#b2f7ff", 0.55);
+      strokeBolt(branchPts, 4, palette.branch, 0.55);
       strokeBolt(branchPts, 1.5, "#ffffff", 0.7);
     }
   }

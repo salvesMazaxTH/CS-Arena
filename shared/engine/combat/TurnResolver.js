@@ -345,9 +345,25 @@ export class TurnResolver {
 
     // console.log("STEP 1 - TARGETS:", roleTargets);
     if (!roleTargets) {
-      context.registerDialog({
-        message: `${formatChampionName(user)} usou <b>${skill.name}</b>, mas não encontrou alvo.`,
+      let hidden = null;
+      for (const id of Object.values(action?.targetIds ?? {})) {
+        const chosen = this.combat.activeChampions.get(id);
+        if (
+          chosen?.alive &&
+          user.team !== chosen.team &&
+          TargetFilter.hiddenFromAttacker(user, chosen)
+        ) {
+          hidden = chosen;
+          break;
+        }
+      }
 
+      const message = hidden
+        ? `${formatChampionName(user)} reaches for ${formatChampionName(hidden)}, but cannot find them.`
+        : `${formatChampionName(user)} used <b>${skill.name}</b>, but found no target.`;
+
+      context.registerDialog({
+        message,
         sourceId: user.id,
         damageDepth: context.damageDepth ?? 0,
       });
@@ -364,12 +380,7 @@ export class TurnResolver {
         skill,
         context,
         action,
-        results: [
-          {
-            log: `${formatChampionName(user)} usou <b>${skill.name}</b>, mas não encontrou alvo.`,
-            noTargets: true,
-          },
-        ],
+        results: [{ log: message, noTargets: true }],
       };
     }
 
@@ -1218,6 +1229,9 @@ export class TurnResolver {
         isCritical = false,
         damageDepth = 0,
         isDot = false,
+        element = null,
+        contact = null,
+        hitVfx = null,
         flags,
       } = {}) {
         if (!target?.id) return;
@@ -1262,6 +1276,9 @@ export class TurnResolver {
           isCritical: !!isCritical,
           isDot: !!isDot,
           damageDepth: damageDepth || 0,
+          element,
+          contact,
+          hitVfx,
           evaded: flags?.evaded,
           immune: !!flags?.immune,
           immuneMessage: flags?.immuneMessage ?? null,

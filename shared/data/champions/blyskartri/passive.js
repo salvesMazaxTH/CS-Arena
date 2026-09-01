@@ -1,11 +1,22 @@
 import { formatChampionName } from "../../../ui/formatters.js";
-import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 
 export default {
   key: "unstoppable_progression",
   name: "Unstoppable Progression",
   stackCap: 8,
   speedPercentAsDamage: 0.85,
+
+  hits: [
+    {
+      id: "explosion",
+      type: "magical",
+      contact: false,
+      damageMode: "piercing",
+      // Ignores 50% of the target's Defense.
+      piercingPercentage: 50,
+    },
+  ],
 
   description(champion) {
     return `Whenever Blyskartri or an ally gains Speed or Evasion, Blyskartri gains 1 stack of Impulse. Whenever Blyskartri evades an attack, he gains 1 additional stack. Max: ${this.stackCap}.
@@ -117,20 +128,12 @@ export default {
       targetId: owner.id,
     });
 
-    const damageEvent = new DamageEvent({
+    const damageEvent = SkillHits.run(this, "explosion", {
+      user: owner,
+      target: lowestHealthEnemy,
       baseDamage: damageAmount,
-      attacker: owner,
-      defender: lowestHealthEnemy,
-      mode: DamageEvent.Modes.PIERCING,
-      piercingPercentage: 50, // Ignores 50% of the target's Defense
-      skill: {
-        key: "unstoppable_progression_explosion",
-        contact: false,
-      },
-      type: "magical",
       context,
-      allChampions: context?.allChampions,
-    }).execute();
+    });
 
     owner.runtime.impulseStacks = 0;
 

@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
 
@@ -79,8 +80,9 @@ const nodeSparckina07Skills = [
     name: "Radiant Burst",
     bf: 135,
     paralyzeDuration: 2,
-    contact: true,
+    contact: false,
     damageMode: "standard",
+    hitVfxPalette: "lightning",
     priority: 0,
     element: "lightning",
 
@@ -105,7 +107,7 @@ const nodeSparckina07Skills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      if (!result?.evaded && !result?.immune && result?.totalDamage > 0) {
+      if (effectConnected(result, "paralyzed")) {
         enemy.applyStatusEffect("paralyzed", this.paralyzeDuration, context);
       }
 

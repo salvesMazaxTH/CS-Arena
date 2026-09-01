@@ -1,16 +1,7 @@
-// ============================================================
-//  Melee Punch Animation
-//
-//  Kai's close-range punch, rendered with Three.js + bloom in the
-//  #webgl-container overlay. Used by quick_hook and
-//  blazing_fist_barrage.
-// ============================================================
+// Kai's close-range punch (quick_hook, blazing_fist_barrage): Three.js + bloom
+// in the shared #webgl-container. The ultimate throws a bigger, much faster hit.
 
 import { getElementCenter } from "./animationUtils.js";
-
-// ============================================================
-//  GLSL Simplex Noise
-// ============================================================
 
 const snoiseGLSL = `
   vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
@@ -40,10 +31,6 @@ const snoiseGLSL = `
   }
 `;
 
-// ============================================================
-//  Shared vertex shader (simple UV pass-through)
-// ============================================================
-
 const basicVertexShader = `
   varying vec2 vUv;
   void main() {
@@ -51,10 +38,6 @@ const basicVertexShader = `
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
-
-// ============================================================
-//  Punch Shaders
-// ============================================================
 
 const swipeFragmentShader = `
   ${snoiseGLSL}
@@ -132,16 +115,8 @@ const smokeFragmentShader = `
   }
 `;
 
-// ============================================================
-//  Punch Silhouette Texture (loaded from assets)
-// ============================================================
-
 const textureLoader = new THREE.TextureLoader();
 const punchTexture = textureLoader.load("/assets/punch_silouete.png");
-
-// ============================================================
-//  Screen → World coordinate conversion
-// ============================================================
 
 function screenToWorld(screenX, screenY, camera) {
   const ndcX = (screenX / window.innerWidth) * 2 - 1;
@@ -158,26 +133,27 @@ function screenToWorld(screenX, screenY, camera) {
   return worldPos;
 }
 
-// ============================================================
-//  MeleePunchEffect
-// ============================================================
-
 class MeleePunchEffect {
-  constructor(scene, userPos, targetPos) {
+  constructor(scene, userPos, targetPos, big) {
     this.scene = scene;
     this.age = 0;
+    this.big = big;
 
-    // Positions
     this.userPos = userPos.clone();
     this.targetPos = targetPos.clone();
     const dx = targetPos.x - userPos.x;
     const dy = targetPos.y - userPos.y;
-    this.distance = Math.sqrt(dx * dx + dy * dy);
     this.direction = new THREE.Vector3(dx, dy, 0).normalize();
     const angle = Math.atan2(dy, dx);
 
+    const sizeScale = big ? 1.5 : 1;
+    this.travelDur = big ? 0.07 : 0.16;
+    this.postDur = big ? 0.3 : 0.6;
+    this.lifetime = this.travelDur + this.postDur;
+    this.fadeScale = 0.95 / this.postDur;
+
     // --- Phase 1: Swipe trail (travels from user → target) ---
-    const swipeGeo = new THREE.PlaneGeometry(5, 1.55);
+    const swipeGeo = new THREE.PlaneGeometry(5 * sizeScale, 1.55 * sizeScale);
     this.swipeMat = new THREE.ShaderMaterial({
       vertexShader: basicVertexShader,
       fragmentShader: swipeFragmentShader,
@@ -193,7 +169,7 @@ class MeleePunchEffect {
     scene.add(this.swipe);
 
     // --- Phase 2: Fist print (impact mark at target) ---
-    const printGeo = new THREE.PlaneGeometry(3.1, 3.1);
+    const printGeo = new THREE.PlaneGeometry(3.1 * sizeScale, 3.1 * sizeScale);
     this.printMat = new THREE.ShaderMaterial({
       vertexShader: basicVertexShader,
       fragmentShader: fistPrintFragmentShader,
@@ -213,7 +189,7 @@ class MeleePunchEffect {
     scene.add(this.fistPrint);
 
     // --- Phase 3: Smoke particles (at target) ---
-    const particleCount = 30;
+    const particleCount = big ? 38 : 20;
     const pGeo = new THREE.BufferGeometry();
     const pPos = new Float32Array(particleCount * 3);
     const pVel = new Float32Array(particleCount * 3);
@@ -227,12 +203,12 @@ class MeleePunchEffect {
 
       // Smoke pushed in direction of punch + radial expansion
       const theta = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 2 + 1;
+      const speed = (Math.random() * 2 + 1) * (big ? 1.8 : 1);
       pVel[i * 3] = (Math.cos(theta) * 0.5 + this.direction.x) * speed;
       pVel[i * 3 + 1] = (Math.sin(theta) * 0.5 + this.direction.y) * speed;
       pVel[i * 3 + 2] = (Math.random() - 0.5) * speed;
 
-      pSize[i] = Math.random() * 12 + 9;
+      pSize[i] = (Math.random() * 12 + 9) * sizeScale;
     }
     pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
     pGeo.setAttribute("aVelocity", new THREE.BufferAttribute(pVel, 3));
@@ -249,44 +225,31 @@ class MeleePunchEffect {
     this.particles = new THREE.Points(pGeo, this.smokeMat);
     this.particles.visible = false;
     scene.add(this.particles);
-
-    // Timings
-    this.TRAVEL_DUR = 0.15; // swipe travels from user to target
-    this.LIFETIME = 1.1;
   }
 
   update(dt) {
     this.age += dt;
 
-    // Phase 1: Swipe travels from user → target
-    if (this.age <= this.TRAVEL_DUR) {
-      const t = this.age / this.TRAVEL_DUR;
+    if (this.age <= this.travelDur) {
+      const t = this.age / this.travelDur;
       this.swipeMat.uniforms.uProgress.value = t;
-
-      // Lerp position from user to target
       this.swipe.position.x =
         this.userPos.x + (this.targetPos.x - this.userPos.x) * t;
       this.swipe.position.y =
         this.userPos.y + (this.targetPos.y - this.userPos.y) * t;
-
-      // Stretch as it travels
       this.swipe.scale.x = 1.0 + t * 2.0;
     } else {
       this.swipe.visible = false;
-    }
 
-    // Phase 2 & 3: Impact mark + smoke (at target)
-    if (this.age > this.TRAVEL_DUR) {
-      const postImpactAge = this.age - this.TRAVEL_DUR;
-
+      // Shader fades run on a ~0.95s clock; rescale so they finish in postDur.
+      const shaderAge = (this.age - this.travelDur) * this.fadeScale;
       this.fistPrint.visible = true;
-      this.printMat.uniforms.uAge.value = postImpactAge;
-
+      this.printMat.uniforms.uAge.value = shaderAge;
       this.particles.visible = true;
-      this.smokeMat.uniforms.uTime.value = postImpactAge;
+      this.smokeMat.uniforms.uTime.value = shaderAge;
     }
 
-    return this.age < this.LIFETIME;
+    return this.age < this.lifetime;
   }
 
   dispose(scene) {
@@ -302,9 +265,11 @@ class MeleePunchEffect {
   }
 }
 
-export async function playMeleePunch({ targetEl, userEl }) {
+export async function playMeleePunch({ targetEl, userEl, skill }) {
   const container = document.getElementById("webgl-container");
   if (!container || !targetEl) return;
+
+  const big = skill?.isUltimate === true;
 
   const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }] =
     await Promise.all([
@@ -339,12 +304,15 @@ export async function playMeleePunch({ targetEl, userEl }) {
   renderer.setClearColor(0x000000, 1);
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.domElement.style.position = "absolute";
+  renderer.domElement.style.top = "0";
+  renderer.domElement.style.left = "0";
   container.appendChild(renderer.domElement);
 
   const renderScene = new RenderPass(scene, camera);
   const bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    2.5,
+    big ? 3.2 : 2.5,
     0.5,
     0.1,
   );
@@ -353,7 +321,7 @@ export async function playMeleePunch({ targetEl, userEl }) {
   composer.addPass(renderScene);
   composer.addPass(bloomPass);
 
-  const effect = new MeleePunchEffect(scene, worldUser, worldTarget);
+  const effect = new MeleePunchEffect(scene, worldUser, worldTarget, big);
 
   const clock = new THREE.Clock();
 

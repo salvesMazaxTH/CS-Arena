@@ -32,6 +32,7 @@ export function preChecks(event) {
       defender: event.defender,
       damage: event.damage,
       skill: event.skill,
+      mode: event.mode,
       element: event.element,
       type: event.type,
       context: event.context,
@@ -39,16 +40,23 @@ export function preChecks(event) {
     event.allChampions,
   );
 
+  let hookForcedEvade = null;
+
   for (const r of results) {
     if (r?.message) {
       event.context?.logs?.push?.(r.message);
     }
 
+    // A defender-side hook may force the evade outright, not just roll for it.
+    if (r?.evade) hookForcedEvade = r;
+
     if (r?.cancel) {
       console.log(
         `[DAMAGE CANCEL] ${event.defender.name} teve o dano cancelado por status-effect`,
       );
-      return _buildImmuneResult(event, r.message ?? null);
+      return r.unreachable
+        ? _buildUnreachableResult(event, r.message ?? null)
+        : _buildImmuneResult(event, r.message ?? null);
     }
 
     if (r?.modifiedDamage !== undefined) {
@@ -65,12 +73,14 @@ export function preChecks(event) {
     event.mode !== event.constructor.Modes.ABSOLUTE &&
     !event.skill?.cannotBeEvaded
   ) {
-    const evasion = _rollEvasion({
-      attacker: event.attacker,
-      defender: event.defender,
-      context: event.context,
-      debugMode: event.constructor.debugMode,
-    });
+    const evasion = hookForcedEvade
+      ? { attempted: true, evaded: true }
+      : _rollEvasion({
+          attacker: event.attacker,
+          defender: event.defender,
+          context: event.context,
+          debugMode: event.constructor.debugMode,
+        });
 
     event.evasionAttempted = !!evasion?.attempted;
 
@@ -79,6 +89,9 @@ export function preChecks(event) {
         target: event.defender,
         amount: 0,
         sourceId: event.attacker?.id,
+        element: event.element,
+        contact: event.contact,
+        hitVfx: event.hitVfx,
         flags: { evaded: true },
       });
 
@@ -117,6 +130,9 @@ export function preChecks(event) {
         target: event.defender,
         amount: 0,
         sourceId: event.attacker?.id,
+        element: event.element,
+        contact: event.contact,
+        hitVfx: event.hitVfx,
         flags: { shieldBlocked: true },
       });
 
@@ -171,12 +187,24 @@ function _rollEvasion({ attacker, defender, context, debugMode }) {
   };
 }
 
-function _buildImmuneResult(
+function _buildImmuneResult(event, customMessage = null, opts = {}) {
+  return _buildBlockedResult(event, customMessage, { ...opts, kind: "immune" });
+}
+
+function _buildUnreachableResult(event, customMessage = null, opts = {}) {
+  return _buildBlockedResult(event, customMessage, {
+    ...opts,
+    kind: "unreachable",
+  });
+}
+
+// Damage stopped before it could apply. `kind` is "immune" (a ward nullified it)
+// or "unreachable" (the hit never landed — stealth, spawn protection).
+function _buildBlockedResult(
   event,
   customMessage = null,
-  { quiet = false } = {},
+  { quiet = false, kind = "immune" } = {},
 ) {
-  // Usamos as propriedades que já existem na instância
   const targetName = formatChampionName(event.defender);
   const username = event.attacker ? formatChampionName(event.attacker) : null;
   const skillName = event.skill?.name || "habilidade";
@@ -185,7 +213,10 @@ function _buildImmuneResult(
     target: event.defender,
     amount: 0,
     sourceId: event.attacker?.id ?? null,
-    flags: { immune: true, immuneMessage: customMessage, immuneQuiet: quiet },
+    element: event.element,
+    contact: event.contact,
+    hitVfx: event.hitVfx,
+    flags: { [kind]: true, immuneMessage: customMessage, immuneQuiet: quiet },
   });
 
   const log = customMessage
@@ -201,7 +232,7 @@ function _buildImmuneResult(
     targetId: event.defender.id,
     userId: event.attacker?.id ?? null,
     evaded: false,
-    immune: true,
+    [kind]: true,
     type: event.type,
     log,
     crit: { chance: 0, didCrit: false, bonus: 0, roll: null },

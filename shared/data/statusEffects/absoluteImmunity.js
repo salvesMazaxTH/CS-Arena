@@ -10,6 +10,7 @@ const absoluteImmunity = {
   hookScope: {
     onDamageIncoming: "defender",
     onStatusEffectIncoming: "target",
+    onHookEffectIncoming: "target",
   },
 
   onDamageIncoming({ defender }) {
@@ -22,6 +23,15 @@ const absoluteImmunity = {
 
   onStatusEffectIncoming({ target, statusEffect }) {
     if (statusEffect.type !== "debuff") return;
+
+    return {
+      cancel: true,
+      message: `${formatChampionName(target)} has <b>${this.name}</b> and is immune to negative effects!`,
+    };
+  },
+
+  onHookEffectIncoming({ target, hookEffect }) {
+    if (hookEffect.type !== "debuff") return;
 
     return {
       cancel: true,
@@ -43,6 +53,7 @@ const absoluteImmunity = {
         hookScope: this.hookScope,
         onDamageIncoming: this.onDamageIncoming,
         onStatusEffectIncoming: this.onStatusEffectIncoming,
+        onHookEffectIncoming: this.onHookEffectIncoming,
       },
     });
   },

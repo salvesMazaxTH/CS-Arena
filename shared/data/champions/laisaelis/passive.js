@@ -1,5 +1,11 @@
 import { formatChampionName } from "../../../ui/formatters.js";
-import { dieWithTwin, TWIN_BOND_TEXT } from "../pairs/twinBond.js";
+import {
+  dieWithTwin,
+  findTwin,
+  survivalDamage,
+  TWIN_BOND_TEXT,
+  wouldBeLethal,
+} from "../pairs/twinBond.js";
 
 export default {
   key: "the_one_that_remains",
@@ -15,6 +21,7 @@ export default {
 
   hookScope: {
     onBeforeDmgTaking: "defender",
+    onValidateAction: "actionSource",
   },
 
   // Death is death whatever the source, so poison and recoil must reach it too.
@@ -22,10 +29,20 @@ export default {
     onBeforeDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
   },
 
+  onValidateAction({ actionSource, skill, context }) {
+    if (skill?.key !== "i_will_keep_you_here") return;
+    if (findTwin(actionSource, context)) return;
+
+    return {
+      deny: true,
+      message: `${formatChampionName(actionSource)} reaches for her sister and finds nothing to hold.`,
+    };
+  },
+
   onBeforeDmgTaking({ defender, owner, damage, context }) {
     if (defender !== owner) return;
     if (owner.runtime.remainSpent) return;
-    if (owner.HP - damage > 0) return;
+    if (!wouldBeLethal(owner, damage)) return;
 
     // Her sister's binding answers the same lethal hit, and takes precedence.
     if (owner.runtime.hookEffects?.some((e) => e.key === "twin_departure"))
@@ -42,7 +59,7 @@ export default {
     });
 
     return {
-      damage: Math.max(owner.HP - this.survivalHP, 0),
+      damage: survivalDamage(owner, this.survivalHP),
       log: `${formatChampionName(owner)} holds on with ${this.survivalHP} HP.`,
     };
   },

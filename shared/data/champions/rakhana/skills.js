@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
@@ -59,7 +60,7 @@ const rakhanaSkills = [
       // Reflects and counter-attacks ride along in `results` aimed back at her.
       const mainResult = results.find((entry) => entry.targetId === enemy.id);
 
-      if (mainResult.evaded || mainResult.immune) return results;
+      if (!mainResult.landed) return results;
 
       const value = Math.floor(
         user.maxHP * (this.shieldPercent / 100),
@@ -116,6 +117,17 @@ const rakhanaSkills = [
     contact: false,
     priority: 3,
 
+    hits: [
+      {
+        id: "reflection",
+        label: "Silver Mirror Counterattack",
+        type: "physical",
+        contact: false,
+        damageMode: "piercing",
+        piercingPercentage: 100,
+      },
+    ],
+
     description() {
       return `Rakhana enters a defensive stance and gains a Shield equal to ${this.shieldPercent}% of her Max HP for this turn.
 
@@ -140,6 +152,7 @@ const rakhanaSkills = [
         (e) => e.key !== "silver_mirror_reflect",
       );
 
+      const skill = this;
       const reflectPercent = this.reflectPercent;
       let spent = false;
 
@@ -158,7 +171,7 @@ const rakhanaSkills = [
           defender,
           attacker,
           damage,
-          skill,
+          contact,
           context,
         }) {
           if (context.damageDepth > 0 || spent) return;
@@ -185,18 +198,12 @@ const rakhanaSkills = [
           });
 
           context.extraDamageQueue.push({
-            mode: DamageEvent.Modes.PIERCING,
-            piercingPercentage: 100,
-            baseDamage: reflectedDamage,
-            attacker: defender,
-            defender: attacker,
-            type: "physical",
-
-            skill: {
-              key: "silver_mirror_counterattack",
-              name: "Silver Mirror Counterattack",
-              contact: false,
-            },
+            ...SkillHits.params(skill, "reflection", {
+              user: defender,
+              target: attacker,
+              baseDamage: reflectedDamage,
+              context,
+            }),
 
             dialog: {
               message: `${formatChampionName(
@@ -207,7 +214,7 @@ const rakhanaSkills = [
           });
 
           // If the incoming attack was a contact skill, stun the attacker
-          if (skill?.contact) {
+          if (contact) {
             attacker.applyStatusEffect("stunned", 1, context);
 
             context.registerDialog?.({

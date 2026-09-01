@@ -1,4 +1,4 @@
-import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
 
@@ -27,35 +27,40 @@ const morakhanSkills = [
 
     resolve({ user, targets, context = {} }) {
       const shieldPercent = this.shieldPercent;
+      let spent = false;
 
       user.runtime.hookEffects ??= [];
       user.runtime.hookEffects = user.runtime.hookEffects.filter(
         (e) => e.key !== "mantra_of_living_iron_shield",
       );
 
-      user.addHookEffect({
-        type: "buff",
-        hookScope: {
-          onAfterDmgTaking: "defender",
+      user.addHookEffect(
+        {
+          type: "buff",
+          hookScope: {
+            onAfterDmgTaking: "defender",
+          },
+          key: "mantra_of_living_iron_shield",
+          expiresAtTurn: context.currentTurn + 1,
+          name: "Mantra of Living Iron (Protection)",
+
+          onAfterDmgTaking({ defender, actualDmg, context }) {
+            if (spent || !(actualDmg > 0)) return;
+            spent = true;
+
+            const shieldAmount = Math.floor(actualDmg * (shieldPercent / 100));
+
+            defender.addShield(shieldAmount, 0, context);
+
+            return {
+              log: `<b>[${this.name}]</b> ${formatChampionName(
+                defender,
+              )} gained a ${shieldAmount} HP shield (${shieldPercent}% of the damage taken)!`,
+            };
+          },
         },
-        key: "mantra_of_living_iron_shield",
-        expiresAtTurn: context.currentTurn + 1,
-        name: "Mantra of Living Iron (Protection)",
-
-        onAfterDmgTaking({ defender, damage, context }) {
-          const shieldAmount = Math.floor(
-            damage * (shieldPercent / 100),
-          );
-
-          defender.addShield(shieldAmount, 0, context);
-
-          return {
-            log: `<b>[${this.name}]</b> ${formatChampionName(
-              defender,
-            )} gained a ${shieldAmount} HP shield (${shieldPercent}% of the damage taken)!`,
-          };
-        },
-      }, context);
+        context,
+      );
     },
   },
 
@@ -76,9 +81,7 @@ const morakhanSkills = [
     targetSpec: ["self"],
 
     resolve({ user, context }) {
-      const allies = context.aliveChampions.filter(
-        (c) => c.team === user.team,
-      );
+      const allies = context.aliveChampions.filter((c) => c.team === user.team);
 
       for (const ally of allies) {
         // 🛡️ Damage reduction via native system
@@ -99,31 +102,34 @@ const morakhanSkills = [
           (e) => e.key !== "blessing_of_the_mountain_god_cc",
         );
 
-        ally.addHookEffect({
-          type: "buff",
-          key: "blessing_of_the_mountain_god_cc",
-          expiresAtTurn: context.currentTurn + this.duration,
+        ally.addHookEffect(
+          {
+            type: "buff",
+            key: "blessing_of_the_mountain_god_cc",
+            expiresAtTurn: context.currentTurn + this.duration,
 
-          hookScope: {
-            onStatusEffectIncoming: "target",
+            hookScope: {
+              onStatusEffectIncoming: "target",
+            },
+
+            onStatusEffectIncoming({ target, statusEffect }) {
+              if (!statusEffect?.subtypes) return;
+
+              if (
+                statusEffect.subtypes.includes("hardCC") ||
+                statusEffect.subtypes.includes("softCC")
+              ) {
+                return {
+                  cancel: true,
+                  message: `${formatChampionName(
+                    target,
+                  )} is under the Blessing of the Mountain God and is immune to crowd control!`,
+                };
+              }
+            },
           },
-
-          onStatusEffectIncoming({ target, statusEffect }) {
-            if (!statusEffect?.subtypes) return;
-
-            if (
-              statusEffect.subtypes.includes("hardCC") ||
-              statusEffect.subtypes.includes("softCC")
-            ) {
-              return {
-                cancel: true,
-                message: `${formatChampionName(
-                  target,
-                )} is under the Blessing of the Mountain God and is immune to crowd control!`,
-              };
-            }
-          },
-        }, context);
+          context,
+        );
       }
 
       context.registerDialog({
@@ -149,7 +155,18 @@ const morakhanSkills = [
     contact: false,
 
     isUltimate: true,
-    momentumCost: 33,
+    momentumCost: 48,
+
+    hits: [
+      {
+        id: "reflection",
+        label: "Mountain Stance Counterattack",
+        type: "magical",
+        contact: false,
+        damageMode: "piercing",
+        piercingPercentage: 100,
+      },
+    ],
 
     description() {
       return `Unleashes Mountain Stance. During this turn:
@@ -161,22 +178,18 @@ const morakhanSkills = [
     targetSpec: ["self"],
 
     resolve({ user, context }) {
+      const skill = this;
+
       const effect = {
         type: "buff",
         key: "mountain_stance",
 
         hookScope: {
-          onAfterDmgTaking: "defender",
+          onBeforeDmgTaking: "defender",
           onStatusEffectIncoming: "target",
         },
 
-        onAfterDmgTaking({
-          defender,
-          attacker,
-          damage,
-          skill,
-          context,
-        }) {
+        onBeforeDmgTaking({ defender, attacker, damage, context }) {
           if (context.damageDepth > 0) return;
 
           const reflectedDamage = damage * 0.5;
@@ -192,18 +205,12 @@ const morakhanSkills = [
           });
 
           context.extraDamageQueue.push({
-            mode: DamageEvent.Modes.PIERCING,
-            piercingPercentage: 100,
-            baseDamage: reflectedDamage,
-            attacker: defender,
-            defender: attacker,
-            type: "magical",
-
-            skill: {
-              key: "fourth_sutra_mountain_stance_counter",
-              name: "Mountain Stance Counterattack",
-              contact: true,
-            },
+            ...SkillHits.params(skill, "reflection", {
+              user: defender,
+              target: attacker,
+              baseDamage: reflectedDamage,
+              context,
+            }),
 
             dialog: {
               message: `${formatChampionName(
@@ -219,7 +226,7 @@ const morakhanSkills = [
               defender,
             )} reflects ${Math.floor(
               reflectedDamage,
-            )} damage back to the attacker and takes only 40% of the damage!`,
+            )} damage back to the attacker and takes only 40% of the blow!`,
           };
         },
 

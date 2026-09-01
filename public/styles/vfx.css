@@ -114,6 +114,12 @@
     transform 220ms ease;
 }
 
+.vfx-concealed {
+  mix-blend-mode: multiply;
+  filter: brightness(0.92) saturate(0.82);
+  z-index: 7;
+}
+
 .champion.is-concealed .portrait img {
   opacity: 0.72;
   filter: grayscale(0.4) contrast(0.9) brightness(0.9);
@@ -294,6 +300,60 @@
   }
 }
 
+/* Ice hit effect (applied to champion portrait on ice bolt impact) */
+
+.ice-hit {
+  animation: iceFlash 0.32s ease-out;
+}
+
+@keyframes iceFlash {
+  0% {
+    filter: brightness(1);
+  }
+  25% {
+    filter: brightness(2) saturate(0.75) hue-rotate(160deg);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+
+/* Earth hit effect (applied to champion portrait on rock impact) */
+
+.earth-hit {
+  animation: earthFlash 0.32s ease-out;
+}
+
+@keyframes earthFlash {
+  0% {
+    filter: brightness(1);
+  }
+  25% {
+    filter: brightness(0.72) saturate(1.35) sepia(0.45);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+/* Musket ball hit effect (applied to champion portrait when a shot lands) */
+
+.shot-hit {
+  animation: shotFlash 0.26s ease-out;
+}
+
+@keyframes shotFlash {
+  0% {
+    filter: brightness(1);
+  }
+  18% {
+    filter: brightness(2.4) saturate(1.4) contrast(1.15);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
 /* Slash hit effect (applied to champion portrait when a cut lands) */
 
 .slash-hit {
@@ -306,6 +366,24 @@
   }
   15% {
     filter: brightness(2.4) contrast(1.3) saturate(0.4);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+/* Arrow hit effect (applied to champion portrait when an arrow lands) */
+
+.arrow-hit {
+  animation: arrowFlash 0.3s ease-out;
+}
+
+@keyframes arrowFlash {
+  0% {
+    filter: brightness(1);
+  }
+  12% {
+    filter: brightness(2.2) contrast(1.35) saturate(0.6);
   }
   100% {
     filter: brightness(1);

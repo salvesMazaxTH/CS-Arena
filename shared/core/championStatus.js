@@ -530,6 +530,8 @@ export function removeStatusEffect(champion, statusEffectName) {
  */
 export function purgeExpiredStatusEffects(champion, currentTurn, context) {
   const removedStatusEffects = [];
+  const decays = [];
+
   for (const [
     statusEffectName,
     statusEffectData,
@@ -537,16 +539,23 @@ export function purgeExpiredStatusEffects(champion, currentTurn, context) {
     if (statusEffectData.expiresAtTurn <= currentTurn) {
       champion.statusEffects.delete(statusEffectName);
       removedStatusEffects.push(statusEffectName);
-      // No longer remove from runtime.hookEffects; status effect hooks are only in statusEffects Map now
+
+      const decay = StatusEffectsRegistry[statusEffectName]?.decaysTo;
+      if (decay) {
+        decays.push({ decay, sourceId: statusEffectData.sourceId ?? null });
+      }
     }
   }
 
-  for (const statusEffectName of removedStatusEffects) {
-    const decay = StatusEffectsRegistry[statusEffectName]?.decaysTo;
+  for (const { decay, sourceId } of decays) {
+    // The purge context has no stat-modifier source; a decayed debuff inherits
+    // the expiring effect's source, falling back to the champion itself.
+    const decayContext =
+      context?.statModifierSrcId != null
+        ? context
+        : { ...context, statModifierSrcId: sourceId ?? champion.id };
 
-    if (decay) {
-      applyStatusEffect(champion, decay.key, decay.duration, context);
-    }
+    applyStatusEffect(champion, decay.key, decay.duration, decayContext);
   }
 
   return removedStatusEffects;

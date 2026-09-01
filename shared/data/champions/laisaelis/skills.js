@@ -1,14 +1,14 @@
 import { formatChampionName } from "../../../ui/formatters.js";
-import totalBlock from "../generic/totalBlock.js";
-import { findTwin } from "../pairs/twinBond.js";
+import basicShot from "../generic/basicShot.js";
+import { findTwin, survivalDamage, wouldBeLethal } from "../pairs/twinBond.js";
 
 const SISTER_KEYS = ["laisaelis", "laiserisa"];
 
 const laisaelisSkills = [
   // ========================
-  // Total Block (global)
+  // Basic Shot (global)
   // ========================
-  totalBlock,
+  { ...basicShot, type: "magical" },
 
   // ========================
   // Manifest
@@ -18,13 +18,14 @@ const laisaelisSkills = [
     name: "Manifest",
 
     echoScale: 0.375,
+    echoSpeedScale: 0.75,
     echoDuration: 3,
 
     contact: false,
     priority: 2,
 
     description() {
-      return `Laisaelis looks at something on the field and answers that there could be more of it. At the start of the next turn an Echo of the chosen entity takes the field at her side with its skills, its passive and everything currently upon it, at ${this.echoScale * 100}% of its base stats. The Echo fades after ${this.echoDuration} turns, and its ending is not a death: it concedes no points, and nothing that answers to dying answers to it. Neither sister can be echoed, and neither can an Echo.`;
+      return `Laisaelis looks at something on the field and answers that there could be more of it. At the start of the next turn an Echo of the chosen entity takes the field at her side with its skills, its passive and everything currently upon it, at ${this.echoScale * 100}% of its base stats — ${this.echoSpeedScale * 100}% for Speed. Only one Echo can hold the field at a time: casting again unravels the old one. The Echo fades after ${this.echoDuration} turns, and its ending is not a death: it concedes no points, and nothing that answers to dying answers to it. Neither sister can be echoed, and neither can an Echo.`;
     },
 
     targetSpec: [
@@ -38,8 +39,24 @@ const laisaelisSkills = [
     resolve({ user, targets, context }) {
       const [source] = targets;
       const echoScale = this.echoScale;
+      const echoSpeedScale = this.echoSpeedScale;
       const skillName = this.name;
       const fadesAtTurn = context.currentTurn + 1 + this.echoDuration;
+
+      // Only one Echo may hold the field, so a recast replaces the current one.
+      const castToken = (user.runtime.manifestCastToken ?? 0) + 1;
+      user.runtime.manifestCastToken = castToken;
+
+      for (const other of context.aliveChampions) {
+        if (other.team !== user.team || !other.runtime?.manifestEcho) continue;
+        other.HP = 0;
+        other.alive = false;
+        context.registerDialog({
+          message: `<b>${skillName}</b> — ${formatChampionName(other)} comes apart as ${formatChampionName(user)} answers anew.`,
+          sourceId: user.id,
+          targetId: other.id,
+        });
+      }
 
       context.schedule({
         type: "spawnChampion",
@@ -50,11 +67,20 @@ const laisaelisSkills = [
           team: user.team,
           asEntityType: "minion",
           statScale: echoScale,
+          statScaleByStat: { Speed: echoSpeedScale },
 
           onSpawn: (echo, spawnContext) => {
-            echo.name = `Echo of ${source.name}`;
             echo.runtime.leavesNoDeath = true;
             echo.runtime.manifestEcho = true;
+
+            // A newer Manifest was cast before this Echo could form: it never takes the field.
+            if (user.runtime.manifestCastToken !== castToken) {
+              echo.HP = 0;
+              echo.alive = false;
+              return;
+            }
+
+            echo.name = `Echo of ${source.name}`;
             echo.momentum = source.momentum;
 
             for (const modifier of source.statModifiers) {
@@ -67,6 +93,11 @@ const laisaelisSkills = [
                 isPermanent: modifier.isPermanent,
                 statModifierSrc: echo,
               });
+            }
+
+            // Its expiresAtTurn rides the same turn clock, so it carries over as-is.
+            for (const modifier of source.damageModifiers) {
+              echo.addDamageModifier({ ...modifier });
             }
 
             for (const effect of source.statusEffects.values()) {
@@ -121,7 +152,7 @@ const laisaelisSkills = [
     priority: 3,
 
     description() {
-      return `Laisaelis steps between an ally and the next thing meant to diminish them. For ${this.wardDuration} turn(s) the chosen ally — herself or her sister included — carries <b>Debuff Immunity</b>: the first negative effect that would take hold never does, and the ward is spent turning it away. It stops nothing that merely deals damage.`;
+      return `Laisaelis steps between an ally and the next thing meant to diminish them. For ${this.wardDuration} turn(s) the chosen ally — herself or her sister included — carries <b>Affliction Ward</b>: the first negative effect that would take hold never does, and the ward is spent turning it away. It stops nothing that merely deals damage.`;
     },
 
     targetSpec: ["select:ally"],
@@ -155,7 +186,7 @@ const laisaelisSkills = [
     priority: 4,
 
     description() {
-      return `Laisaelis refuses the one departure she cannot bear and lays an anchor of presence over her sister. For ${this.auraDuration} turn(s), any lethal effect that would take Laiserisa instead leaves her on the field with ${this.survivalHP} HP. The anchor never spends what Laiserisa carries of her own, and cannot be laid at all while she is absent from the field or lost to the Nothingness.`;
+      return `Laisaelis refuses the one departure she cannot bear and lays an anchor of presence over her sister. For ${this.auraDuration} turn(s), the first lethal effect that would take Laiserisa instead leaves her on the field with ${this.survivalHP} HP. The anchor never spends what Laiserisa carries of her own, and cannot be laid at all while she is absent from the field or lost to the Nothingness.`;
     },
 
     targetSpec: ["self"],
@@ -195,9 +226,17 @@ const laisaelisSkills = [
 
           onBeforeDmgTaking({ defender, owner, damage, context }) {
             if (defender !== owner) return;
-            if (owner.HP - damage > 0) return;
+            // Laiserisa's own binding answers the same hit and outranks this.
+            if (owner.runtime.hookEffects?.some((e) => e.key === "twin_departure"))
+              return;
+            if (!wouldBeLethal(owner, damage)) return;
 
             owner.runtime.preventFinishingUntilTurn = context.currentTurn + 1;
+
+            // One anchor, one save: spend it by removing it.
+            owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
+              (e) => e.key !== "keep_you_here",
+            );
 
             context.registerDialog({
               message: `<b>${skillName}</b> — ${formatChampionName(owner)} is held here, and the ending does not take.`,
@@ -206,7 +245,7 @@ const laisaelisSkills = [
             });
 
             return {
-              damage: Math.max(owner.HP - survivalHP, 0),
+              damage: survivalDamage(owner, survivalHP),
               log: `${formatChampionName(owner)} is kept on the field with ${survivalHP} HP.`,
             };
           },

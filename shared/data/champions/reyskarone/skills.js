@@ -2,7 +2,6 @@ import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
-import { SpawnProtection } from "../../../engine/combat/spawnProtection.js";
 
 const reyskaroneSkills = [
   // =========================
@@ -28,9 +27,9 @@ const reyskaroneSkills = [
 
     priority: 1,
     description() {
-      return `Reyskarone spills ${this.hpSacrificePercent}% of his own Max HP — never falling below 1 HP — to brand the chosen target with the Tithe for ${this.titheDuration} turn(s), then strikes them for magical damage.
+      return `Reyskarone spills ${this.hpSacrificePercent}% of his own Max HP — never falling below 1 HP — then strikes the chosen target for magical damage. If the strike connects, it brands them with the Tithe for ${this.titheDuration} turn(s).
 
-      While the brand holds, every ally who strikes the marked target restores ${this.titheHeal} HP and deals +${this.titheBonusDamage} bonus damage. The brand cannot take hold through Absolute Immunity, Supreme Shield or Spell Shield — it burns one of those shields away instead.`;
+      While the brand holds, every ally who strikes the marked target restores ${this.titheHeal} HP and deals +${this.titheBonusDamage} bonus damage.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -76,95 +75,6 @@ const reyskaroneSkills = [
         duration: 1000,
       });
 
-      enemy.runtime.hookEffects ??= [];
-      const shields = Array.isArray(enemy.runtime?.shields)
-        ? enemy.runtime.shields
-        : [];
-
-      const unreachable =
-        enemy.hasStatusEffect?.("absoluteImmunity") ||
-        SpawnProtection.isActive(enemy);
-      const supremeShieldIdx = shields.findIndex(
-        (shield) => shield?.type === "supreme" && shield?.amount > 0,
-      );
-      const spellShieldIdx = shields.findIndex(
-        (shield) => shield?.type === "spell" && shield?.amount > 0,
-      );
-
-      const titheBlocked =
-        unreachable || supremeShieldIdx !== -1 || spellShieldIdx !== -1;
-
-      if (!titheBlocked) {
-        // =========================
-        // TEMPORARY HOOK: TITHE
-        // =========================
-        // Recasting refreshes the brand rather than stacking a second one.
-        enemy.runtime.hookEffects = enemy.runtime.hookEffects.filter(
-          (effect) => effect.key !== "tithe",
-        );
-
-        enemy.addHookEffect({
-        type: "debuff",
-          key: "tithe",
-          group: "skill",
-
-          expiresAtTurn: context.currentTurn + this.titheDuration,
-
-          // The brand rides on the branded champion, so both hooks are the
-          // taking side of the exchange and the scope alone already keeps them
-          // from firing on anyone else's damage.
-          hookScope: {
-            onBeforeDmgTaking: "defender",
-            onAfterDmgTaking: "defender",
-          },
-
-          onBeforeDmgTaking: ({ attacker, damage }) => {
-            if (attacker.team !== user.team) return;
-
-            return {
-              damage: damage + this.titheBonusDamage,
-            };
-          },
-
-          onAfterDmgTaking: ({ attacker, owner, context }) => {
-            if (attacker.team !== user.team) return;
-
-            // The brand is Reyskarone's, so the healing is credited to him.
-            new HealEvent({
-              target: attacker,
-              amount: this.titheHeal,
-              context,
-              source: user,
-            }).execute();
-          },
-        }, context);
-
-        context.registerDialog({
-          message: `${formatChampionName(enemy)} is branded with the <b>Tithe</b>!`,
-          sourceId: user.id,
-          targetId: enemy.id,
-          duration: 1000,
-        });
-      } else {
-        const burnedShieldIdx =
-          supremeShieldIdx !== -1 ? supremeShieldIdx : spellShieldIdx;
-        const burnedShieldName =
-          supremeShieldIdx !== -1 ? "Supreme Shield" : "Spell Shield";
-
-        if (burnedShieldIdx !== -1) shields.splice(burnedShieldIdx, 1);
-
-        context.registerDialog({
-          message:
-            burnedShieldIdx !== -1
-              ? `The <b>Tithe</b> burns away ${formatChampionName(enemy)}'s ${burnedShieldName} instead!`
-              : `${formatChampionName(enemy)} is immune to the <b>Tithe</b>!`,
-          sourceId: user.id,
-          targetId: enemy.id,
-          duration: 1000,
-        });
-      }
-
-      // Immediate follow-up attack.
       const result = new DamageEvent({
         baseDamage: (user.Attack * this.bf) / 100,
         attacker: user,
@@ -175,7 +85,67 @@ const reyskaroneSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      return result;
+      const results = Array.isArray(result) ? result : [result];
+      const landed = results.some((r) => r?.targetId === enemy.id && r?.landed);
+
+      // Like any post-damage status: the brand only takes hold on a strike that
+      // connects, and wards turn it away through the normal hook-incoming path.
+      if (landed) {
+        enemy.runtime.hookEffects ??= [];
+        // Recasting refreshes the brand rather than stacking a second one.
+        enemy.runtime.hookEffects = enemy.runtime.hookEffects.filter(
+          (effect) => effect.key !== "tithe",
+        );
+
+        const branded = enemy.addHookEffect(
+          {
+            type: "debuff",
+            key: "tithe",
+            group: "skill",
+            expiresAtTurn: context.currentTurn + this.titheDuration,
+
+            // The brand rides on the branded champion, so both hooks are the
+            // taking side of the exchange and the scope alone already keeps
+            // them from firing on anyone else's damage.
+            hookScope: {
+              onBeforeDmgTaking: "defender",
+              onAfterDmgTaking: "defender",
+            },
+
+            onBeforeDmgTaking: ({ attacker, damage }) => {
+              if (attacker.team !== user.team) return;
+
+              return {
+                damage: damage + this.titheBonusDamage,
+              };
+            },
+
+            onAfterDmgTaking: ({ attacker, context }) => {
+              if (attacker.team !== user.team) return;
+
+              // The brand is Reyskarone's, so the healing is credited to him.
+              new HealEvent({
+                target: attacker,
+                amount: this.titheHeal,
+                context,
+                source: user,
+              }).execute();
+            },
+          },
+          context,
+        );
+
+        if (branded) {
+          context.registerDialog({
+            message: `${formatChampionName(enemy)} is branded with the <b>Tithe</b>!`,
+            sourceId: user.id,
+            targetId: enemy.id,
+            duration: 1000,
+          });
+        }
+      }
+
+      return results;
     },
   },
 

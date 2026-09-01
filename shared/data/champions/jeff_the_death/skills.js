@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 
@@ -100,6 +101,15 @@ const jeffTheDeathSkills = [
     contact: false,
     priority: 1,
 
+    hits: [
+      {
+        id: "punish",
+        type: "magical",
+        contact: false,
+        damageMode: "absolute",
+      },
+    ],
+
     description() {
       return `Deals damage to the chosen target and marks them for ${this.markDuration} turn(s).
       
@@ -128,6 +138,7 @@ const jeffTheDeathSkills = [
       // Mark the enemy.
       enemy.runtime.markedByDeathsEmbrace = true;
 
+      const skill = this;
       const punishPercent = this.punishPercent;
       const rewardAttack = this.rewardAttack;
 
@@ -151,20 +162,12 @@ const jeffTheDeathSkills = [
           const punishDamage = owner.HP * punishPercent;
           const dotContext = { ...context, isDot: true };
 
-          const result = new DamageEvent({
+          const result = SkillHits.run(skill, "punish", {
+            user: null,
+            target: owner,
             baseDamage: punishDamage,
-            mode: DamageEvent.Modes.ABSOLUTE,
-            attacker: null,
-            defender: owner,
-            skill: {
-              key: "deaths_embrace_punish",
-              contact: false,
-              damageMode: "absolute",
-            },
-            type: "magical",
             context: dotContext,
-            allChampions: context?.allChampions,
-          }).execute();
+          });
 
           if (result?.immune) {
             return {

@@ -701,6 +701,126 @@
 }
 
 /* ============================================
+   SKILL AFFECT GLOWS
+   Rotating ring around a portrait while a skill resolves:
+   gold on the caster, red on whoever it harms, green on
+   whoever it benefits. Mounted as a direct child of
+   .champion so it can bleed past the portrait's clip.
+   ============================================ */
+
+.skill-affect-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 6;
+  opacity: 0;
+  transform: scale(1.05);
+  animation: skillAffectGlowIn 200ms ease-out forwards;
+}
+
+.skill-affect-glow::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    var(--affect-glow-strong) 55deg,
+    var(--affect-glow-soft) 130deg,
+    transparent 190deg,
+    transparent 260deg,
+    var(--affect-glow-strong) 320deg,
+    transparent 360deg
+  );
+  filter: blur(4px);
+  -webkit-mask: radial-gradient(
+    ellipse,
+    transparent 58%,
+    #000 66%,
+    #000 90%,
+    transparent 99%
+  );
+  mask: radial-gradient(
+    ellipse,
+    transparent 58%,
+    #000 66%,
+    #000 90%,
+    transparent 99%
+  );
+  animation: skillAffectGlowSpin 2.6s linear infinite;
+}
+
+.skill-affect-glow::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  box-shadow: 0 0 16px 1px var(--affect-glow-soft);
+  animation: skillAffectGlowPulse 1.9s ease-in-out infinite;
+}
+
+.skill-affect-glow--user {
+  --affect-glow-strong: rgba(255, 206, 84, 0.95);
+  --affect-glow-soft: rgba(255, 176, 0, 0.55);
+}
+
+.skill-affect-glow--harm {
+  --affect-glow-strong: rgba(255, 92, 92, 0.95);
+  --affect-glow-soft: rgba(224, 32, 32, 0.55);
+}
+
+.skill-affect-glow--boon {
+  --affect-glow-strong: rgba(104, 240, 146, 0.95);
+  --affect-glow-soft: rgba(28, 200, 104, 0.55);
+}
+
+.skill-affect-glow.is-leaving {
+  animation: skillAffectGlowOut 280ms ease-in forwards;
+}
+
+@keyframes skillAffectGlowIn {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes skillAffectGlowOut {
+  to {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes skillAffectGlowSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes skillAffectGlowPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-affect-glow::before,
+  .skill-affect-glow::after {
+    animation: none;
+  }
+}
+
+/* ============================================
    EVASION ANIMATIONS
    ============================================ */
 
@@ -1008,9 +1128,7 @@
   height: 118%;
   object-fit: contain;
   image-rendering: auto;
-  backface-visibility: hidden;
   display: block;
-  transform: translateZ(0);
 }
 
 .status-indicator::before {
@@ -1028,6 +1146,7 @@
 
 .status-indicator-stack-badge {
   position: absolute;
+  z-index: 10;
   top: 1px;
   right: 1px;
   min-width: 18px;
@@ -1048,7 +1167,7 @@
     0 2px 6px rgba(0, 0, 0, 0.45),
     0 0 10px rgba(214, 26, 47, 0.35);
   color: #fff8f8;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -1189,15 +1308,14 @@
 
   text-align: center;
 
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
 
-  background:
-    linear-gradient(
-      180deg,
-      rgba(25, 27, 34, 0.88),
-      rgba(12, 13, 18, 0.92)
-    );
+  background: linear-gradient(
+    180deg,
+    rgba(25, 27, 34, 0.88),
+    rgba(12, 13, 18, 0.92)
+  );
 
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -1275,4 +1393,3 @@
   transform: scaleX(1);
   opacity: 0.75;
 }
-

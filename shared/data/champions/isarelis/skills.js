@@ -28,10 +28,6 @@ const isarelisSkills = [
 
     targetSpec: ["enemy"],
 
-    // Configurable
-    damageBonusRatio: 0.2,
-    piercingRatio: 0.6,
-
     resolve({ user, targets, context }) {
       const [enemy] = targets;
 

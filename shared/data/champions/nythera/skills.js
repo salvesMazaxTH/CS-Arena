@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
 
@@ -16,6 +17,7 @@ const nytheraSkills = [
     contact: false,
     priority: 0,
 
+    damageMode: "standard",
     element: "ice",
     description() {
       return `Nythera draws an edge of northern wind across the chosen target, dealing Ice magical damage and leaving them Chilled for ${this.chillDuration} turn(s).
@@ -43,8 +45,7 @@ const nytheraSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      // Status effects only land if the damage connected (not evaded, not immune).
-      if (!result?.evaded && !result?.immune && !wasFrozen) {
+      if (effectConnected(result, "frozen") && !wasFrozen) {
         if (wasChilled) {
           target.applyStatusEffect("frozen", this.freezeDuration, context);
         } else {
@@ -137,6 +138,7 @@ const nytheraSkills = [
     isUltimate: true,
     momentumCost: 55,
 
+    damageMode: "standard",
     element: "ice",
     description() {
       return `Nythera takes her throne and the white night falls over the chosen target, dealing Ice magical damage and leaving them Chilled for ${this.chillDuration} turn(s).
@@ -174,8 +176,7 @@ const nytheraSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      // Status effects only land if the damage connected (not evaded, not immune).
-      if (!result?.evaded && !result?.immune) {
+      if (effectConnected(result, "frozen")) {
         if (isChilled) {
           target.applyStatusEffect("frozen", this.freezeDuration, context);
         } else if (!isFrozen) {

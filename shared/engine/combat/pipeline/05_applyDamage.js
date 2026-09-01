@@ -60,6 +60,9 @@ export function applyDamage(event) {
     sourceId: event.attacker?.id,
     isCritical: event.crit?.didCrit,
     isDot: !!event.context.isDot,
+    element: event.element,
+    contact: event.contact,
+    hitVfx: event.hitVfx,
     flags: {
       ...event.flags,
       evaded: event.evasionAttempted ? false : undefined,

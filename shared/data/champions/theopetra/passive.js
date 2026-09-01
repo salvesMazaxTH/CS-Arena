@@ -16,31 +16,33 @@ export default {
   hookScope: {
     onAfterDmgTaking: "defender",
     onBeforeDmgDealing: "attacker",
+    onActionResolved: "actionSource",
     onStatusEffectIncoming: "target",
   },
 
-  onAfterDmgTaking({ owner, context }) {
+  onAfterDmgTaking({ owner, actualDmg, context }) {
+    if (!(actualDmg > 0)) return;
+
     owner.runtime = owner.runtime || {};
-    owner.runtime.theopetraStacks = Math.min(
-      (owner.runtime.theopetraStacks || 0) + 1,
-      this.maxStacks,
-    );
+
+    const previous = owner.runtime.theopetraStacks || 0;
+    if (previous >= this.maxStacks) return;
+
+    owner.runtime.theopetraStacks = previous + 1;
 
     if (owner.runtime.theopetraStacks === this.maxStacks) {
+      const message = `<b>[PASSIVE — ${this.name}]</b> ${formatChampionName(owner)} reached the maximum number of stacks (${this.maxStacks})! Her next ability will deal bonus damage.`;
       context.registerDialog({
-        message: `<b>[PASSIVE — ${this.name}]</b> ${formatChampionName(owner)} reached the maximum number of stacks (${this.maxStacks})! Her next ability will deal bonus damage.`,
+        message,
         sourceId: owner.id,
         targetId: owner.id,
       });
-
-      return {
-        log: `<b>[PASSIVE — ${this.name}]</b> ${formatChampionName(owner)} reached the maximum number of stacks (${this.maxStacks})! Her next ability will deal bonus damage.`,
-      };
-    } else {
-      return {
-        log: `<b>[PASSIVE — ${this.name}]</b> ${formatChampionName(owner)} gained 1 stack (${owner.runtime.theopetraStacks}/${this.maxStacks}).`,
-      };
+      return { log: message };
     }
+
+    return {
+      log: `<b>[PASSIVE — ${this.name}]</b> ${formatChampionName(owner)} gained 1 stack (${owner.runtime.theopetraStacks}/${this.maxStacks}).`,
+    };
   },
 
   onBeforeDmgDealing({ attacker, owner, skill, damage, context }) {
@@ -52,7 +54,9 @@ export default {
     )
       return;
 
-    owner.runtime.theopetraStacks = 0;
+    // Stay charged until the whole action resolves so every hit of a
+    // multi-target ability is empowered; onActionResolved clears it.
+    owner.runtime.theopetraEmpowerSpent = true;
 
     const bonus = Math.floor(damage * (this.bonusPercent / 100));
     const finalBaseDamage = damage + bonus;
@@ -65,6 +69,13 @@ export default {
       preMitigationDamage: finalBaseDamage,
       log: `[PASSIVE — Eternalized Rock] ${formatChampionName(owner)} consumes all stacks and gains +${this.bonusPercent}% bonus damage on this ability!`,
     };
+  },
+
+  onActionResolved({ owner }) {
+    if (!owner.runtime?.theopetraEmpowerSpent) return;
+
+    owner.runtime.theopetraStacks = 0;
+    owner.runtime.theopetraEmpowerSpent = false;
   },
 
   onStatusEffectIncoming({ target, statusEffect }) {

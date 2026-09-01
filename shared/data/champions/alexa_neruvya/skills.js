@@ -97,23 +97,24 @@ const alexaNeruvyaSkills = [
     key: "advent_of_the_colossal_tide",
     name: "Advent of the Colossal Tide",
 
-    bf: 60,
+    bf: 65,
     damageMode: "piercing",
     piercingPercentage: 80,
     contact: false,
     element: "water",
 
     isUltimate: true,
-    momentumCost: 63,
+    momentumCost: 55,
     priority: 1,
 
-    healPercentOfDamage: 50,
-    momentumGainPercentOfDamage: 6,
+    healPercentOfDamage: 90,
+    minHealPerAlly: 60,
+    momentumGainPercentOfDamage: 7,
     transformInto: "alexa_neruvya_primordial",
     transformDuration: 2,
 
     description() {
-      return `Alexa Neruvya answers one foe first, calling home through them every drop she has ever spent mending an ally, dealing Water magical damage that ignores ${this.piercingPercentage}% of their Defense. The tide that returns from that strike does not disperse: it carries ${this.healPercentOfDamage}% of the damage dealt back to her and every active ally, restoring HP, and leaves ${this.momentumGainPercentOfDamage}% of it behind in her as Momentum.
+      return `Alexa Neruvya answers one foe first, calling home through them every drop she has ever spent mending an ally, dealing Water magical damage that ignores ${this.piercingPercentage}% of their Defense. The tide that returns from that strike does not disperse: it carries ${this.healPercentOfDamage}% of the damage dealt — never less than ${this.minHealPerAlly} — back to her and every active ally, restoring HP, and leaves ${this.momentumGainPercentOfDamage}% of it behind in her as Momentum.
 
       Only then does she stop holding the shape she has been wearing. What surfaces is a blue dragon with the whole ocean hanging off it, her <b>Primordial Form</b>, for ${this.transformDuration} turn(s), replacing her skills, her passive and her stats.`;
     },
@@ -142,12 +143,16 @@ const alexaNeruvyaSkills = [
         : [damageResult];
       const [mainDamageResult] = results;
 
-      const healAmount = Math.floor(
-        ((mainDamageResult?.totalDamage || 0) * this.healPercentOfDamage) /
-          100,
+      const healAmount = Math.max(
+        Math.floor(
+          ((mainDamageResult?.totalDamage || 0) * this.healPercentOfDamage) /
+            100,
+        ),
+        this.minHealPerAlly,
       );
 
-      if (healAmount > 0) {
+      // The tide only carries healing back if the strike connected.
+      if (mainDamageResult?.landed) {
         const allies = context.aliveChampions.filter(
           (champ) => champ.team === user.team,
         );

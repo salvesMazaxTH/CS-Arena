@@ -1,6 +1,9 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
+import redlineRapture from "./passive.js";
 
 // The flamethrower overheats every time the trigger is pulled, so the recoil is
 // its own unconditional hit rather than a reaction queued off the shot (which
@@ -16,16 +19,12 @@ function applyWeaponOverheat({ user, baseDamage, recoilPercent, context }) {
     targetId: user.id,
   });
 
-  const result = new DamageEvent({
+  const result = SkillHits.run(redlineRapture, "overheat", {
+    user,
+    target: user,
     baseDamage: recoilDamage,
-    attacker: user,
-    defender: user,
-    skill: { key: "weapon_overheat", name: "Weapon Overheat", suppressLog: true },
-    type: "magical",
-    mode: DamageEvent.Modes.ABSOLUTE,
     context: { ...context, damageDepth: 1 },
-    allChampions: context?.allChampions,
-  }).execute();
+  });
 
   return Array.isArray(result) ? result : [result];
 }
@@ -78,11 +77,7 @@ const irinaSkills = [
 
       const hitResult = Array.isArray(result) ? result[0] : result;
 
-      if (
-        !hitResult?.evaded &&
-        !hitResult?.immune &&
-        Math.random() < this.burnChance
-      ) {
+      if (effectConnected(hitResult, "burning") && Math.random() < this.burnChance) {
         enemy.applyStatusEffect("burning", this.burnDuration, context);
       }
 
@@ -138,7 +133,7 @@ const irinaSkills = [
         }),
       );
 
-      if (!hitResult?.evaded && !hitResult?.immune) {
+      if (effectConnected(hitResult, "burning")) {
         enemy.applyStatusEffect("burning", this.burnDuration, context);
       }
 
@@ -197,7 +192,7 @@ const irinaSkills = [
         }),
       );
 
-      if (!hitResult?.evaded && !hitResult?.immune) {
+      if (effectConnected(hitResult, "burning")) {
         enemy.applyStatusEffect("burning", this.burnDuration, context);
       }
 

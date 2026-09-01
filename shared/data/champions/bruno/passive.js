@@ -1,5 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
-import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 
 export default {
   key: "absolute_cold",
@@ -7,6 +7,16 @@ export default {
   passiveDamage: 45,
   lowLifeThresholdRatio: 0.3,
   forcedCritBonus: 55,
+
+  hits: [
+    {
+      id: "closing_ice",
+      label: "Absolute Cold (Passive)",
+      type: "magical",
+      contact: false,
+      damageMode: "absolute",
+    },
+  ],
 
   hookScope: {
     onBeforeDmgDealing: "attacker",
@@ -53,19 +63,11 @@ export default {
       targetId: target.id,
     });
 
-    new DamageEvent({
-      mode: DamageEvent.Modes.ABSOLUTE,
+    SkillHits.run(this, "closing_ice", {
+      user: owner,
+      target,
       baseDamage: this.passiveDamage,
-      attacker: owner,
-      defender: target,
-      skill: {
-        key: "absolute_cold_passive",
-        name: "Absolute Cold (Passive)",
-        contact: false,
-      },
-      type: "magical",
       context: { ...context, damageDepth: (context.damageDepth || 0) + 1 },
-      allChampions: context.allChampions,
-    }).execute();
+    });
   },
 };

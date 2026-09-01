@@ -3,7 +3,7 @@ import {
   getRuntimeCounterIndicatorEntries,
 } from "../indicators/exclusiveIndicators.js";
 
-// Ícones Boxicons para seta para cima/baixo
+// Boxicons arrow icons for stat buffs/debuffs
 const BUFF_ICON = {
   type: "icon",
   value:
@@ -40,108 +40,108 @@ function syncStatusStackBadge(indicator, icon, effectData) {
   }
 }
 /**
- * Sistema de indicadores visuais para status de campeões
- * Gerencia exibição de ícones e efeitos visuais baseados em statusEffects
+ * Champion status indicator system — visual icons and effects based on statusEffects
  */
 export const StatusIndicator = {
-  // Mapeamento de statusEffects -> ícones e cores
+  // statusEffects → icons and backgrounds
   statusEffectIcons: {
     paralyzed: {
       type: "image",
-      value: "/assets/indicators/paralisado_indicator.png",
+      value: "/assets/indicators/paralyzed_indicator.png",
       background: "none",
-      label: "Paralisado",
+      label: "Paralyzed",
     },
     stunned: {
       type: "emoji",
       value: "💫",
       background: "rgba(241, 241, 241, 0.8)",
-      label: "Atordoado",
+      label: "Stunned",
     },
     chilled: {
       type: "emoji",
       value: "❄️",
       background: "rgba(173, 216, 230, 0.8)",
-      label: "Gelado",
+      label: "Chilled",
     },
     frozen: {
       type: "emoji",
       value: "❄️",
       background: "rgba(16, 216, 230, 0.8)",
-      label: "Congelado",
+      label: "Frozen",
     },
     inert: {
       type: "emoji",
       value: "🔒",
       background: "rgba(128, 128, 128, 0.8)",
-      label: "Inerte",
+      label: "Inert",
     },
     conductor: {
       type: "emoji",
       value: "⚡",
       background: "rgba(255, 255, 0, 0.8)",
-      label: "Condutor",
+      label: "Conductor",
     },
     absoluteimmunity: {
       type: "image",
-      value: "/assets/indicators/imunidade_absoluta_indicator.png",
+      value: "/assets/indicators/absolute_immunity_indicator.png",
       background: "none",
-      label: "Imunidade Absoluta",
+      label: "Absolute Immunity",
     },
     debuffimmunity: {
-      type: "emoji",
-      value: "🪬",
+      type: "image",
+      value: "/assets/indicators/debuffImmunity_indicator.png",
       background: "rgba(120, 200, 160, 0.8)",
-      label: "Debuff Immunity",
+      label: "Affliction Ward",
     },
     burning: {
       type: "emoji",
       value: "🔥",
       background: "rgba(255, 69, 0, 0.8)",
-      label: "Queimando",
+      label: "Burning",
     },
     bleeding: {
       type: "emoji",
       value: "🩸",
       background: "rgba(170, 0, 20, 0.88)",
-      label: "Sangramento",
+      label: "Bleeding",
       showStackCount: true,
     },
     poisoned: {
       type: "image",
       value: "/assets/indicators/poisoned_indicator.png",
       background: "rgba(80, 255, 80, 0.88)",
-      label: "Envenenado",
+      label: "Poisoned",
       showStackCount: true,
     },
     rooted: {
       type: "image",
       value: "/assets/indicators/rooted_indicator.png",
       background: "none",
-      label: "Enraizado",
+      label: "Rooted",
+    },
+    snared: {
+      type: "image",
+      value: "/assets/indicators/snared_indicator.png",
+      background: "none",
+      label: "Snared",
     },
     healblock: {
       type: "image",
       value: "/assets/indicators/healBlock_indicator.png",
-      background: "none",
+      background: //"rgba(170, 0, 20, 0.88)", 
+      "black",
       label: "Heal Block",
     },
-    concealed: {
-      type: "emoji",
-      value: "🌫️",
-      background: "rgba(70, 80, 95, 0.75)",
-      label: "Concealed",
-    },
-    provocado: {
+    taunted: {
       type: "image",
       value: "/assets/indicators/taunted_indicator.png",
       background: "",
-      label: "Provocado",
+      label: "Taunted",
     },
   },
 
-  // Duração mínima visual para indicadores (em ms)
-  VISUAL_DELAY: 1500, // 1.5 segundos para garantir que o jogador veja a animação
+  // Minimum visual duration for indicators (ms)
+  VISUAL_DELAY: 1500,
 
   // Controle de rotação por champion
   //_rotationTimers: new Map(),
@@ -150,8 +150,8 @@ export const StatusIndicator = {
   _rotationIndex: 0,
 
   /**
-   * Atualiza os indicadores visuais de um campeão com base em seus statusEffects
-   * @param {Champion} champion - Instância do campeão
+   * Update champion's status indicators based on active statusEffects
+   * @param {Champion} champion
    */
   updateChampionIndicators(champion) {
     if (!champion.el) return;
@@ -172,7 +172,7 @@ export const StatusIndicator = {
       Array.isArray(champion.tauntEffects) && champion.tauntEffects.length > 0;
 
     if (hasActiveTaunt) {
-      activeStatuses.add("provocado");
+      activeStatuses.add("taunted");
     }
 
     // Runtime-counter indicators (e.g. Zyrelle's ammo): active whenever the
@@ -185,15 +185,15 @@ export const StatusIndicator = {
     }
 
     // --- BUFF/DEBUFF INDICATORS ---
-    // Remove buff/debuff indicators antigos
+    // Remove existing buff/debuff indicators
     portrait
       .querySelectorAll(".status-indicator-buff, .status-indicator-debuff")
       .forEach((el) => el.remove());
 
-    // Detecta buffs/debuffs ativos
+    // Detect active buffs/debuffs
     let hasBuff = false;
     let hasDebuff = false;
-    // Buff: statModifiers positivos, damageModifiers (presença = buff), damageReduction positivo
+    // Buff: positive statModifiers, damageModifiers (presence = buff), positive damageReduction
     if (
       Array.isArray(champion.statModifiers) &&
       champion.statModifiers.some((m) => m.amount > 0)
@@ -211,14 +211,14 @@ export const StatusIndicator = {
       champion.damageReductionModifiersCount > 0
     )
       hasBuff = true;
-    // Debuff: statModifiers negativos
+    // Debuff: negative statModifiers
     if (
       Array.isArray(champion.statModifiers) &&
       champion.statModifiers.some((m) => m.amount < 0)
     )
       hasDebuff = true;
 
-    // Adiciona indicator de buff
+    // Add buff indicator
     if (hasBuff) {
       const buffDiv = document.createElement("div");
       buffDiv.className = "status-indicator status-indicator-buff";
@@ -228,7 +228,7 @@ export const StatusIndicator = {
       buffDiv.style.backgroundColor = BUFF_ICON.background;
       portrait.appendChild(buffDiv);
     }
-    // Adiciona indicator de debuff
+    // Add debuff indicator
     if (hasDebuff) {
       const debuffDiv = document.createElement("div");
       debuffDiv.className = "status-indicator status-indicator-debuff";
@@ -239,7 +239,7 @@ export const StatusIndicator = {
       portrait.appendChild(debuffDiv);
     }
 
-    // remove indicadores que não existem mais
+    // remove stale indicators
     portrait.querySelectorAll(".status-indicator").forEach((el) => {
       if (
         el.classList.contains("status-indicator-buff") ||

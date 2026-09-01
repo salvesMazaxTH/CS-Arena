@@ -1,12 +1,13 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import basicShot from "../generic/basicShot.js";
 
 const vulnaraSkills = [
   // ========================
   // Basic Shot (global)
   // ========================
-  { ...basicShot, type: "physical" },
+  { ...basicShot, type: "physical", hitVfx: "flaming_arrow" },
 
   // ========================
   // Special Abilities
@@ -60,6 +61,7 @@ const vulnaraSkills = [
     contact: false,
     priority: 0,
     element: "fire",
+    hitVfx: "flaming_arrow",
 
     description() {
       return `Vulnara looses a rain of burning arrows over the whole field, dealing Fire physical damage to every enemy. Each arrow that lands has a ${this.burnChance * 100}% chance of setting its target Burning for ${this.burnDuration} turn(s).`;
@@ -96,8 +98,7 @@ const vulnaraSkills = [
 
         // Apply Burning if the hit connects and the roll succeeds.
         if (
-          !mainDamage?.evaded &&
-          !mainDamage?.immune &&
+          effectConnected(mainDamage, "burning") &&
           Math.random() < this.burnChance
         ) {
           enemy.applyStatusEffect("burning", this.burnDuration, context);
@@ -122,6 +123,7 @@ const vulnaraSkills = [
 
     contact: false,
     damageMode: "standard",
+    hitVfx: "flaming_arrow",
 
     isUltimate: true,
     momentumCost: 55,
@@ -156,7 +158,7 @@ const vulnaraSkills = [
         const hitResults = Array.isArray(result) ? result : [result];
         const mainDamage = hitResults[0];
 
-        if (!mainDamage?.evaded && !mainDamage?.immune) {
+        if (effectConnected(mainDamage, "burning")) {
           enemy.applyStatusEffect("burning", this.burnDuration, context);
         }
 

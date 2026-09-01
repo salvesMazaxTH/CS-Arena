@@ -13,6 +13,23 @@ const DEFAULT_HOOK_POLICY = Object.freeze({
   allowOnNestedDamage: false,
 });
 
+// Stamp `landed` on every result: true when the hit reached and affected the
+// target. Skills gate their follow-up effects on this instead of re-deriving it.
+function stampLanded(result) {
+  const list = Array.isArray(result) ? result : [result];
+  for (const r of list) {
+    if (!r || typeof r !== "object" || r.landed !== undefined) continue;
+    r.landed = !(
+      r.evaded ||
+      r.immune ||
+      r.unreachable ||
+      r.shieldBlocked ||
+      r.inactiveTarget
+    );
+  }
+  return result;
+}
+
 const REACTIVE_HOOKS = new Set([
   "onBeforeDmgDealing",
   "onBeforeDmgTaking",
@@ -84,7 +101,16 @@ export class DamageEvent {
     // damage of their own `skill.element`, so this defaults to it — but
     // multi-element skills (e.g. a hybrid Water/Ice ultimate) can pass an
     // explicit `element` per DamageEvent instance to override it.
-    this.element = params.element ?? skill?.element;
+    this.element = "element" in params ? params.element : skill?.element;
+    // Same override for contact: a skill can be melee overall and still throw a
+    // ranged sub-hit that must not answer contact-gated retaliations.
+    this.contact = params.contact ?? skill?.contact ?? false;
+    this.hitVfx = params.hitVfx ?? skill?.hitVfx ?? null;
+    this.hitLabel = params.hitLabel ?? null;
+    // Identity of the declared hit within the skill. Loop guards compare this
+    // rather than the skill key, which every hit of a skill shares.
+    this.hitId = params.hitId ?? null;
+    this.suppressLog = params.suppressLog ?? skill?.suppressLog ?? false;
     console.log("[DamageEvent_constructor] Damage type:", this.type);
 
     this.context = context ?? {};
@@ -132,7 +158,7 @@ export class DamageEvent {
 
   execute() {
     const earlyExit = preChecks(this);
-    if (earlyExit) return earlyExit;
+    if (earlyExit) return stampLanded(earlyExit);
 
     prepareDamage(this);
 
@@ -150,8 +176,7 @@ export class DamageEvent {
 
     this.context.ignoreMinimumFloor = false;
 
-    // SUPRIMIR log padrão se skill.suppressLog === true
-    if (this.skill && this.skill.suppressLog) {
+    if (this.suppressLog) {
       // Retorna apenas o objeto de resultado, mas sem o campo 'log' padrão
       const result = buildFinalResult(this);
       if (Array.isArray(result)) {
@@ -161,10 +186,10 @@ export class DamageEvent {
       } else if (result && result.log) {
         result.log = undefined;
       }
-      return result;
+      return stampLanded(result);
     }
 
-    return buildFinalResult(this);
+    return stampLanded(buildFinalResult(this));
   }
 
   canRunHook(eventName, champ, source) {

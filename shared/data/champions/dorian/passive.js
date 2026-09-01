@@ -22,8 +22,8 @@ export default {
     onActionResolved: "actionSource",
   },
 
-  onAfterDmgDealing({ owner, defender, damage, context }) {
-    if (!(damage > 0) || !defender || defender.team === owner.team) return;
+  onAfterDmgDealing({ owner, defender, actualDmg, context }) {
+    if (!(actualDmg > 0) || !defender || defender.team === owner.team) return;
     if (!isSorcerer(defender)) return;
     if (context.currentTurn === owner.runtime.dorianGrudgeTurn) return;
 

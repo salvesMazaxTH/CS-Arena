@@ -27,6 +27,7 @@ import { startWaterBubble } from "./waterBubbleCanvas.js";
 import { startDeathsEmbraceMark } from "./deathsEmbraceMarkCanvas.js";
 import { startDeathsInevitability } from "./deathsInevitabilityCanvas.js";
 import { startInvisibilityCanvas } from "./invisibilityCanvas.js";
+import { startConcealedCanvas } from "./concealedCanvas.js";
 import { startCrimsonFrenzy } from "./crimsonFrenzyCanvas.js";
 
 // no futuro:
@@ -37,8 +38,12 @@ import { startCrimsonFrenzy } from "./crimsonFrenzyCanvas.js";
 const StatusEffectVFX = [
   "frozen",
   "invisible",
+  "concealed",
   // Adicione outros status effects que tenham VFX próprios aqui
 ];
+
+// Status effects that also phase the portrait via a body class.
+const PORTRAIT_PHASE_VFX = new Set(["invisible", "concealed"]);
 
 // Triggers exclusivos/habilidades:
 // Use esta estrutura para efeitos visuais que NÃO são status effects genéricos,
@@ -114,8 +119,8 @@ export function syncChampionVFX(champion) {
     const shouldExist = champion.statusEffects?.has(type);
     const exists = champion._vfxState[type];
 
-    if (type === "invisible") {
-      champion.el.classList.toggle("is-invisible", !!shouldExist);
+    if (PORTRAIT_PHASE_VFX.has(type)) {
+      champion.el.classList.toggle(`is-${type}`, !!shouldExist);
     }
 
     if (shouldExist && !exists) {
@@ -130,12 +135,6 @@ export function syncChampionVFX(champion) {
 
     champion._vfxState[type] = shouldExist;
   }
-
-  // Concealed has no canvas of its own, only a portrait phase.
-  champion.el.classList.toggle(
-    "is-concealed",
-    !!champion.statusEffects?.has("concealed"),
-  );
 
   // 2. Triggers exclusivos/habilidades
   for (const [type, trigger] of Object.entries(ExclusiveVFXTriggers)) {
@@ -208,6 +207,10 @@ export function playVFX(type, canvas, data = {}) {
       controller = startInvisibilityCanvas(canvas, data);
       break;
 
+    case "concealed":
+      controller = startConcealedCanvas(canvas, data);
+      break;
+
     // case "burn":
     //   controller = startBurn(canvas, data);
     //   break;
@@ -250,8 +253,8 @@ function removeVFXCanvas(champion, key) {
     if (imgEl) imgEl.style.visibility = "";
   }
 
-  if (key === "invisible") {
-    champion.el?.classList.remove("is-invisible");
+  if (PORTRAIT_PHASE_VFX.has(key)) {
+    champion.el?.classList.remove(`is-${key}`);
   }
 
   stopVFX(canvas);

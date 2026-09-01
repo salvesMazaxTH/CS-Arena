@@ -402,6 +402,7 @@ class CombatState {
     spawnProtection = true,
     asEntityType = null,
     statScale = 1,
+    statScaleByStat = null,
   } = {}) {
     const dbData = championDB[championKey];
     if (!dbData) {
@@ -412,10 +413,9 @@ class CombatState {
     const entityType = asEntityType ?? dbData.entityType ?? "champion";
 
     const scaledStats = {};
-    if (statScale !== 1) {
-      for (const stat of SCALABLE_STATS) {
-        scaledStats[stat] = roundToFive(dbData[stat] * statScale);
-      }
+    for (const stat of SCALABLE_STATS) {
+      const scale = statScaleByStat?.[stat] ?? statScale;
+      if (scale !== 1) scaledStats[stat] = roundToFive(dbData[stat] * scale);
     }
     const baseData = { ...dbData, entityType, ...scaledStats };
 

@@ -6,6 +6,7 @@ const healBlock = {
   name: "Heal Block",
   type: "debuff",
   subtypes: ["healBlock"],
+  requiresDamage: true,
 
   description:
     "The champion cannot recover HP by any means, lifesteal included.",

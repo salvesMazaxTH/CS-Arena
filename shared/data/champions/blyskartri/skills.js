@@ -1,4 +1,4 @@
-import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
 
@@ -58,6 +58,16 @@ const blyskartriSkills = [
 
     contact: false,
 
+    hits: [
+      {
+        id: "counter",
+        type: "physical",
+        contact: false,
+        damageMode: "piercing",
+        piercingPercentage: 100,
+      },
+    ],
+
     description() {
       return `Blyskartri turns the chosen ally into a living conductor for ${this.buffsDuration} turn(s), granting +${this.speedBuff} Speed and tripling their Evasion.
 
@@ -95,6 +105,7 @@ const blyskartriSkills = [
         (h) => h.key !== "vital_conductance_counter",
       );
 
+      const skill = this;
       const piercingDamageBonus = this.piercingDamageBonus;
 
       ally.addHookEffect({
@@ -110,19 +121,12 @@ const blyskartriSkills = [
         onEvade({ attacker, owner, context }) {
           if (!attacker?.alive || !user.alive) return;
 
-          new DamageEvent({
+          SkillHits.run(skill, "counter", {
+            user,
+            target: attacker,
             baseDamage: piercingDamageBonus,
-            mode: "piercing",
-            piercingPercentage: 100,
-            attacker: user,
-            defender: attacker,
-            skill: {
-              key: "vital_conductance_counter",
-            },
-            type: "physical",
             context,
-            allChampions: context?.allChampions,
-          }).execute();
+          });
 
           const counterLog = `${formatChampionName(user)} strikes back at ${formatChampionName(attacker)} for attacking his ally!`;
 
@@ -162,6 +166,17 @@ const blyskartriSkills = [
     isUltimate: true,
     momentumCost: 55,
 
+    hits: [
+      {
+        id: "overtake",
+        label: "Infinite Horizon",
+        type: "physical",
+        contact: false,
+        damageMode: "piercing",
+        piercingPercentage: 100,
+      },
+    ],
+
     description() {
       return `Blyskartri pushes the horizon out of reach for the chosen ally. For ${this.effectDuration} turn(s), everything they throw carries +${this.dmgBonus}% raw damage for every ${this.speedPerStack} points of their total Speed.
 
@@ -180,9 +195,9 @@ const blyskartriSkills = [
       ally.addDamageModifier({
         id: "infinite_horizon",
         expiresAtTurn: context.currentTurn + this.effectDuration,
-        apply: ({ baseDamage, attacker, skill }) => {
+        apply: ({ baseDamage, attacker, skill, hitId }) => {
           // Its own overtake strike is a flat bonus, so it must not scale twice.
-          if (skill?.key === "infinite_horizon_overtake") return baseDamage;
+          if (skill?.key === this.key && hitId === "overtake") return baseDamage;
 
           const steps = Math.floor(attacker.Speed / this.speedPerStack);
 
@@ -190,6 +205,7 @@ const blyskartriSkills = [
         },
       });
 
+      const skill = this;
       const piercingDamageBonus = this.piercingDamageBonus;
 
       ally.runtime.hookEffects ??= [];
@@ -221,17 +237,12 @@ const blyskartriSkills = [
           const overtake = `${formatChampionName(attacker)} strikes ahead of ${formatChampionName(defender)}'s defence!`;
 
           context.extraDamageQueue.push({
-            baseDamage: piercingDamageBonus,
-            mode: DamageEvent.Modes.PIERCING,
-            piercingPercentage: 100,
-            attacker,
-            defender,
-            type: "physical",
-            skill: {
-              key: "infinite_horizon_overtake",
-              name: "Infinite Horizon",
-              contact: false,
-            },
+            ...SkillHits.params(skill, "overtake", {
+              user: attacker,
+              target: defender,
+              baseDamage: piercingDamageBonus,
+              context,
+            }),
             dialog: { message: overtake, duration: 1000 },
           });
 

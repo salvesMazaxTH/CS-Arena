@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import totalBlock from "../generic/totalBlock.js";
 
 const kaeldrathVulcanoSkills = [
@@ -92,11 +93,8 @@ const kaeldrathVulcanoSkills = [
 
       results.push(...primaryResults);
 
-      if (
-        !mainPrimaryDamage?.evaded &&
-        !mainPrimaryDamage?.immune &&
-        mainPrimaryDamage.totalDamage > 0
-      )
+      // The thrown rock is already ablaze, so it burns even on a grazing hit.
+      if (effectConnected(mainPrimaryDamage, "burning", { ignoreDamageRequirement: true }))
         enemy.applyStatusEffect("burning", this.burnDuration, context);
 
       const [secondaryTarget] = context.getAdjacentChampions(enemy, {

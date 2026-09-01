@@ -251,6 +251,7 @@ function applyDamageModifiers(event, debugMode) {
           attacker: event.attacker,
           defender: event.defender,
           skill: event.skill,
+          hitId: event.hitId,
         },
         event.context,
       );

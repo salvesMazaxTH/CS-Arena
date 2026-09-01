@@ -107,6 +107,56 @@ function getChampionElement(championId) {
   return document.querySelector(`.champion[data-champion-id="${championId}"]`);
 }
 
+// Reads an action envelope and mounts a rotating ring on every champion the
+// skill touches: gold on the caster, red on those it harms, green on those it
+// benefits. A skill that only helps its own caster gets no green ring — the
+// gold ring and the stat-buff animation already read as "acted on itself".
+// Returns a teardown that fades the rings out.
+function applySkillAffectGlows(envelope) {
+  const userId = envelope.action?.userId ?? null;
+
+  const harm = new Set();
+  const boon = new Set();
+
+  for (const ev of envelope.damageEvents ?? []) {
+    if (ev?.targetId) harm.add(ev.targetId);
+  }
+  for (const ev of envelope.lifestealEvents ?? []) {
+    if (ev?.fromTargetId) harm.add(ev.fromTargetId);
+    if (ev?.targetId) boon.add(ev.targetId);
+  }
+  for (const key of ["healEvents", "shieldEvents", "buffEvents"]) {
+    for (const ev of envelope[key] ?? []) {
+      if (ev?.targetId) boon.add(ev.targetId);
+    }
+  }
+
+  boon.delete(userId);
+  for (const id of harm) boon.delete(id);
+  harm.delete(userId);
+
+  const mounted = [];
+  const mount = (championId, variant) => {
+    const championEl = getChampionElement(championId);
+    if (!championEl) return;
+    const glow = document.createElement("div");
+    glow.className = `skill-affect-glow skill-affect-glow--${variant}`;
+    championEl.appendChild(glow);
+    mounted.push(glow);
+  };
+
+  if (userId) mount(userId, "user");
+  for (const id of harm) mount(id, "harm");
+  for (const id of boon) mount(id, "boon");
+
+  return () => {
+    for (const glow of mounted) {
+      glow.classList.add("is-leaving");
+      setTimeout(() => glow.remove(), 300);
+    }
+  };
+}
+
 function scrollIfNeeded(
   el,
   {
@@ -438,39 +488,48 @@ export function createCombatAnimationManager(deps) {
     const { action, log, state } = envelope;
     const isClaim = envelope?.action?.skillKey === CLAIM_ACTION_KEY;
 
-    if (action && typeof handleActionDialog === "function") {
-      currentPhase = "combat";
-      await handleActionDialog(action);
-    }
+    // Mounted up front so the caster's ring is already lit under the "used a
+    // skill" dialog — a purely deferred skill (a hook registration, a stance)
+    // has no events to animate but still reads as an action taken.
+    const clearAffectGlows = applySkillAffectGlows(envelope);
 
-    if (envelope.scorePayload) {
-      if (isClaim) {
-        await scoreboard.animateClaim(envelope.scorePayload);
-      } else {
-        scoreboard.update(envelope.scorePayload);
+    try {
+      if (action && typeof handleActionDialog === "function") {
+        currentPhase = "combat";
+        await handleActionDialog(action);
       }
-    }
 
-    // GLOBAL dialogs (ALWAYS runs)
-    if (envelope.globalDialogs?.length) {
-      await runDialogs(envelope.globalDialogs);
-    }
-    const hasAnyEvent =
-      dispatcher.keys.some((key) => envelope[key]?.length) ||
-      Boolean(envelope.scorePayload);
+      if (envelope.scorePayload) {
+        if (isClaim) {
+          await scoreboard.animateClaim(envelope.scorePayload);
+        } else {
+          scoreboard.update(envelope.scorePayload);
+        }
+      }
 
-    if (!hasAnyEvent) {
+      // GLOBAL dialogs (ALWAYS runs)
+      if (envelope.globalDialogs?.length) {
+        await runDialogs(envelope.globalDialogs);
+      }
+      const hasAnyEvent =
+        dispatcher.keys.some((key) => envelope[key]?.length) ||
+        Boolean(envelope.scorePayload);
+
+      if (!hasAnyEvent) {
+        if (state) applyStateSnapshots(state);
+        if (log) appendToLog(log);
+        return;
+      }
+
+      // event loop — plays events in the real chronological order (seq)
+      // instead of a fixed category order.
+      await dispatcher.runOrdered(envelope);
+
       if (state) applyStateSnapshots(state);
       if (log) appendToLog(log);
-      return;
+    } finally {
+      clearAffectGlows();
     }
-
-    // event loop — plays events in the real chronological order (seq)
-    // instead of a fixed category order.
-    await dispatcher.runOrdered(envelope);
-
-    if (state) applyStateSnapshots(state);
-    if (log) appendToLog(log);
   }
 
   // ============================================================
@@ -524,6 +583,9 @@ export function createCombatAnimationManager(deps) {
       finishing,
       finishingType,
       skillKey,
+      element,
+      contact,
+      hitVfx,
     } = effect;
 
     const target = resolveTargetVisual(targetId);
@@ -541,6 +603,7 @@ export function createCombatAnimationManager(deps) {
         targetEl: championEl,
         userEl,
         skill,
+        hit: { element, contact, hitVfx },
         canvasBatch,
       });
     }

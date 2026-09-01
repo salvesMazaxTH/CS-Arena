@@ -1,7 +1,8 @@
-import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 
-function _processEntropy(owner, context, resolver, stacksCap, drainPunishPercent) {
+function _processEntropy(owner, context, resolver, passive) {
+  const { stacksCap, drainPunishPercent } = passive;
   let procs = 0;
   const results = [];
 
@@ -43,21 +44,12 @@ function _processEntropy(owner, context, resolver, stacksCap, drainPunishPercent
       if (canUseMomentumSkill) {
         const dmg = Math.floor(enemy.maxHP * (drainPunishPercent / 100));
 
-        const damageResult = new DamageEvent({
+        const damageResult = SkillHits.run(passive, "punishment", {
+          user: owner,
+          target: enemy,
           baseDamage: dmg,
-          attacker: owner,
-          defender: enemy,
-          skill: {
-            key: "entropy_punishment",
-            name: "Entropy (Passive)",
-            contact: false,
-          },
           context: { ...context, damageDepth: (context.damageDepth || 0) + 1 },
-          allChampions: context.allChampions,
-          mode: "piercing",
-          piercingPercentage: 75,
-          type: "magical",
-        }).execute();
+        });
 
         if (Array.isArray(damageResult)) {
           results.push(...damageResult);
@@ -82,13 +74,7 @@ function onResourceChanged({ owner, target, amount, context, resolver }) {
 
   _accumulateEntropy(owner);
 
-  const { procs, results } = _processEntropy(
-    owner,
-    context,
-    resolver,
-    this.stacksCap,
-    this.drainPunishPercent,
-  );
+  const { procs, results } = _processEntropy(owner, context, resolver, this);
 
   if (procs > 0) {
     return [
@@ -105,6 +91,17 @@ export default {
   name: "Entropy",
   stacksCap: 7,
   drainPunishPercent: 15,
+
+  hits: [
+    {
+      id: "punishment",
+      label: "Entropy (Passive)",
+      type: "magical",
+      contact: false,
+      damageMode: "piercing",
+      piercingPercentage: 75,
+    },
+  ],
 
   description(champion) {
     const stacks = champion.runtime.entropyStacks || 0;

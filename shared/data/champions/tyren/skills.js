@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 
@@ -28,10 +29,10 @@ const tyrenSkills = [
     priority: 0,
     element: "steel",
 
-    rootDuration: 2,
+    snareDuration: 2,
 
     description() {
-      return `Tyren shapes his liquid steel into a piercing lance, dealing Steel magical damage. The metal then hardens around the target's feet, Rooting them for ${this.rootDuration} turn.`;
+      return `Tyren shapes his liquid steel into a piercing lance, dealing Steel magical damage. The metal then ensnares the target for ${this.snareDuration} turn.`;
     },
 
     targetSpec: ["enemy"],
@@ -53,12 +54,12 @@ const tyrenSkills = [
 
       const results = Array.isArray(result) ? result : [result];
 
-      const hitSuccess = results.some(
-        (r) => !r?.evaded && !r?.immune && (r?.totalDamage ?? 0) > 0,
-      );
+      // The metal hardens and pins the target down even on a hit that did not
+      // break skin.
+      const hitSuccess = results.some((r) => effectConnected(r, "snared"));
 
       if (hitSuccess && enemy.alive) {
-        enemy.applyStatusEffect("rooted", this.rootDuration, context);
+        enemy.applyStatusEffect("snared", this.snareDuration, context);
       }
 
       return results;
@@ -78,7 +79,7 @@ const tyrenSkills = [
     speedMultiplier: 0.5,
 
     description() {
-      return `Tyren transmutes his body into Living Steel for ${this.duration} turn.
+      return `Tyren transmutes his body into Living Steel for ${this.duration} turns.
 
         His Attack and Defense are inverted, then he gains +${this.attackBonus} Attack and +${this.defenseBonus} Defense. His Speed is reduced by ${Math.round((1 - this.speedMultiplier) * 100)}%.
 
@@ -90,8 +91,10 @@ const tyrenSkills = [
     resolve({ user, context = {} }) {
       user.runtime ??= {};
 
-      // Prevent recasting while the current transformation is active.
-      if (user.runtime.livingSteelAegisActive) {
+      if (
+        user.runtime.livingSteelAegisExpiresAtTurn != null &&
+        context.currentTurn < user.runtime.livingSteelAegisExpiresAtTurn
+      ) {
         return {
           log: `${formatChampionName(
             user,
@@ -104,89 +107,43 @@ const tyrenSkills = [
       const originalSpeed = user.Speed;
 
       const transformedAttack = originalDefense + this.attackBonus;
-
       const transformedDefense = originalAttack + this.defenseBonus;
-
       const transformedSpeed = Math.floor(originalSpeed * this.speedMultiplier);
 
-      // Store the exact pre-transformation values so the effect
-      // can be completely reverted when it expires.
-      user.runtime.livingSteelAegisActive = true;
-      user.runtime.livingSteelAegisOriginalStats = {
-        Attack: originalAttack,
-        Defense: originalDefense,
-        Speed: originalSpeed,
+      user.runtime.livingSteelAegisExpiresAtTurn =
+        context.currentTurn + this.duration;
+
+      const statOpts = {
+        duration: this.duration,
+        context,
+        statModifierSrc: user,
       };
 
-      user.Attack = transformedAttack;
-      user.Defense = transformedDefense;
-      user.Speed = transformedSpeed;
-
-      user.runtime.hookEffects ??= [];
-
-      // Prevent duplicate hooks.
-      user.runtime.hookEffects = user.runtime.hookEffects.filter(
-        (effect) => effect.key !== "living_steel_aegis_expiration",
-      );
-
-      user.addHookEffect({
-        type: "buff",
-        subtypes: ["statMod"],
-        key: "living_steel_aegis_expiration",
-        name: "Living Steel Aegis",
-
-        expiresAtTurn: context.currentTurn + this.duration,
-
-        // No hookScope needed here: this event is already dispatched once per
-        // champion by emitCombatEvent, and this hookEffect only ever lives on
-        // its own owner's runtime.hookEffects — so it's inherently self-scoped.
-        // A hookScope of "owner" would never match: the payload for
-        // onTurnStart/onTurnEnd is just { context }, with no "owner" key to
-        // compare against.
-        //
-        // Must be onTurnStart, not onTurnEnd: each turn, the server runs
-        // onTurnStart hooks and *then* champion.purgeExpiredHookEffects(),
-        // which silently drops any hookEffect once expiresAtTurn <= currentTurn
-        // — without ever calling its handler. onTurnEnd only fires later, at
-        // the end of that same turn, by which point the purge has already
-        // deleted this effect, so the revert would never run. Checking on
-        // onTurnStart (same pattern as Kai's living_ember_stance) lets the
-        // revert execute before the purge can remove it.
-        onTurnStart({ owner, context }) {
-          if (context.currentTurn < this.expiresAtTurn) return;
-
-          const originalStats = owner.runtime?.livingSteelAegisOriginalStats;
-
-          if (originalStats) {
-            owner.Attack = originalStats.Attack;
-            owner.Defense = originalStats.Defense;
-            owner.Speed = originalStats.Speed;
-          }
-
-          if (owner.runtime) {
-            owner.runtime.livingSteelAegisActive = false;
-            delete owner.runtime.livingSteelAegisOriginalStats;
-
-            owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
-              (effect) => effect.key !== "living_steel_aegis_expiration",
-            );
-          }
-
-          return {
-            log: `<b>[${this.name}]</b> ${formatChampionName(
-              owner,
-            )}'s Living Steel transformation expires.`,
-          };
-        },
-      }, context);
+      // Timed stat modifiers so the transformation rides the stat system and
+      // reverts itself on expiry instead of being restored by hand.
+      user.applyStatModifier({
+        statName: "Attack",
+        amount: transformedAttack - originalAttack,
+        ...statOpts,
+      });
+      user.applyStatModifier({
+        statName: "Defense",
+        amount: transformedDefense - originalDefense,
+        ...statOpts,
+      });
+      user.applyStatModifier({
+        statName: "Speed",
+        amount: transformedSpeed - originalSpeed,
+        ...statOpts,
+      });
 
       return {
         log:
           `<b>[${this.name}]</b> ${formatChampionName(user)} ` +
           `transmutes his body into Living Steel: ` +
-          `Attack ${originalAttack} → ${transformedAttack}, ` +
-          `Defense ${originalDefense} → ${transformedDefense}, ` +
-          `Speed ${originalSpeed} → ${transformedSpeed}.`,
+          `Attack ${originalAttack} → ${user.Attack}, ` +
+          `Defense ${originalDefense} → ${user.Defense}, ` +
+          `Speed ${originalSpeed} → ${user.Speed}.`,
       };
     },
   },
@@ -233,7 +190,9 @@ const tyrenSkills = [
 
       const results = Array.isArray(result) ? result : [result];
 
-      if (!enemy.alive) return results;
+      const mainHit = results.find((r) => r?.targetId === enemy.id);
+
+      if (!effectConnected(mainHit, "stunned") || !enemy.alive) return results;
 
       // Any active Crowd Control counts:
       // softCC or hardCC.

@@ -599,6 +599,21 @@ export function purgeExpiredStatModifiers(champion, currentTurn) {
   return revertedStats;
 }
 
+/** Remove the given stat modifiers (matched by reference) and recompute their stats. */
+export function removeStatModifiers(champion, modifiers) {
+  const doomed = new Set(modifiers);
+  if (doomed.size === 0) return [];
+
+  const affectedStats = new Set();
+  champion.statModifiers = champion.statModifiers.filter((modifier) => {
+    if (!doomed.has(modifier)) return true;
+    affectedStats.add(modifier.statName);
+    return false;
+  });
+
+  return _recomputeStats(champion, champion.statModifiers, affectedStats);
+}
+
 export function revertStatModifiersFromStatus(champion, statusKey) {
   const affectedStats = new Set();
   const remaining = [];
