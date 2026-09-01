@@ -483,7 +483,14 @@ function emitChampionDeath(deathResult) {
   }
 
   broadcastGameState(champ ? [champ] : []);
-  io.emit("championRemoved", deathResult.championId);
+
+  // Sent on the event rather than read off runtime: the flag is stripped from
+  // the payload of anything wearing a disguise.
+  io.emit("championRemoved", {
+    championId: deathResult.championId,
+    leavesNoDeath: champ?.runtime?.leavesNoDeath === true,
+    unmakingPalette: champ?.runtime?.unmakingPalette ?? null,
+  });
 }
 
 // ============================================================

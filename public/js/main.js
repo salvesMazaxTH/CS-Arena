@@ -1904,8 +1904,8 @@ function updateChampionSelectionTimerUI() {
 //  CHAMPION MANAGEMENT
 // ============================================================
 
-socket.on("championRemoved", (championId) => {
-  combatAnimations.handleChampionRemoved(championId);
+socket.on("championRemoved", (payload) => {
+  combatAnimations.handleChampionRemoved(payload);
   // After removal, re-sort DOM to match logical slot order
   sortTeamContainersByCombatSlot();
 });

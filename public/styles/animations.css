@@ -946,6 +946,52 @@
    DEATH ANIMATIONS
    ============================================ */
 
+/* The unmaking of something that was never alive. Deliberately the inverse of
+   .dying on every axis — it rises instead of falling, floods with colour
+   instead of draining, and is erased from the hem up instead of collapsing. */
+.champion.unmaking {
+  animation: unmake 620ms linear forwards;
+  pointer-events: none;
+}
+
+/* Erased bottom-up on the same 620ms as the canvas wavefront, so the mask edge
+   and the line releasing the motes are read as one edge. No filter here: an
+   animated filter is a full-element GPU pass every frame, and the canvas layer
+   already carries the colour. */
+@keyframes unmake {
+  from {
+    -webkit-mask-image: linear-gradient(
+      to top,
+      transparent 0%,
+      #000 6%,
+      #000 100%
+    );
+    mask-image: linear-gradient(to top, transparent 0%, #000 6%, #000 100%);
+  }
+
+  to {
+    -webkit-mask-image: linear-gradient(
+      to top,
+      transparent 100%,
+      #000 106%,
+      #000 100%
+    );
+    mask-image: linear-gradient(to top, transparent 100%, #000 106%, #000 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .champion.unmaking {
+    animation: unmakeFade 640ms linear forwards;
+  }
+
+  @keyframes unmakeFade {
+    to {
+      opacity: 0;
+    }
+  }
+}
+
 .champion.dying {
   opacity: 0.8;
   animation: collapse 950ms ease-out forwards;

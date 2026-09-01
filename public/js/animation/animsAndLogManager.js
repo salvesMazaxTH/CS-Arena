@@ -8,6 +8,7 @@ import { playDeathClaimEffect } from "../../../shared/vfx/deathClaim.js";
 import { CLAIM_ACTION_KEY } from "../../../shared/engine/combat/claim.js";
 import { audioManager } from "../utils/AudioManager.js";
 import { animateSkill } from "./skillAnimations.js";
+import { playUnmakingEffect } from "./unmakingAnimation.js";
 import { EffectCanvasBatch } from "./effectCanvasBatch.js";
 import { createMatchStatsPanel } from "../ui/matchStats.js";
 import { createScoreboard } from "../ui/scoreboard.js";
@@ -37,6 +38,10 @@ const TIMING = {
 
   // Death collapse animation
   DEATH_ANIM: 2000,
+
+  // Unravelling of something whose ending is not a death: the card is erased
+  // over 620ms, then the last motes clear.
+  UNMAKING_ANIM: 1050,
 
   // Combat dialog bubble
   DIALOG_DISPLAY: 2350, // Reduced from 1200
@@ -1553,7 +1558,7 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   async function processChampionRemoved(payload) {
-    const { championId } = payload;
+    const { championId, leavesNoDeath, unmakingPalette } = payload;
 
     const champion = deps.activeChampions.get(championId);
     if (!champion) return;
@@ -1561,7 +1566,12 @@ export function createCombatAnimationManager(deps) {
     const el = champion.el;
     if (!el) return;
 
-    if (champion.runtime?.deathClaimTriggered) {
+    if (leavesNoDeath) {
+      // Its ending is not a death, so it must not wear the skull.
+      el.classList.add("unmaking");
+      playUnmakingEffect(el, unmakingPalette);
+      await wait(TIMING.UNMAKING_ANIM);
+    } else if (champion.runtime?.deathClaimTriggered) {
       // special vfx + dialog for Jeff_The_Death claim/special execution
       const name = formatChampionName(champion);
 
