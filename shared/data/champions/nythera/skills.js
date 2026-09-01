@@ -12,7 +12,7 @@ const nytheraSkills = [
 
     chillDuration: 2,
     freezeDuration: 1,
-    bonusIfCold: 50,
+    bonusIfCold: 30,
 
     contact: false,
     priority: 0,
@@ -129,8 +129,8 @@ const nytheraSkills = [
 
     chillDuration: 2,
     freezeDuration: 1,
-    bfIfCold: 110,
-    bonusIfFrozen: 50,
+    bfIfCold: 105,
+    bonusIfFrozen: 35,
 
     contact: false,
     priority: 1,
