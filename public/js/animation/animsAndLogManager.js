@@ -1380,6 +1380,8 @@ export function createCombatAnimationManager(deps) {
   }
 
   function syncChampionFromSnapshot(champion, snap) {
+    let slotChanged = false;
+
     if (snap.portrait != undefined) {
       champion.portrait = snap.portrait;
     }
@@ -1437,6 +1439,13 @@ export function createCombatAnimationManager(deps) {
       if (champion.el) champion.el.dataset.entityType = snap.entityType;
     }
 
+    // Reported back so the caller can re-sort the row: a slot can move after
+    // creation, and DOM order otherwise stays frozen at arrival order.
+    if (snap.combatSlot !== undefined && snap.combatSlot !== champion.combatSlot) {
+      champion.combatSlot = snap.combatSlot;
+      slotChanged = true;
+    }
+
     if (snap.name !== undefined && snap.name !== champion.name) {
       champion.name = snap.name;
       if (champion.el) {
@@ -1445,6 +1454,7 @@ export function createCombatAnimationManager(deps) {
       }
     }
 
+    return slotChanged;
   }
 
   // ============================================================
@@ -1470,6 +1480,8 @@ export function createCombatAnimationManager(deps) {
     const newChampionIds = new Set(
       champions.map((c) => c?.id).filter((id) => id),
     );
+
+    let slotsChanged = false;
 
     // 1. SYNC EXISTING CHAMPIONS AND CREATE NEW ONES
     // With the new swap system (inactiveChampions), Lana and Tutu have different IDs,
@@ -1497,7 +1509,7 @@ export function createCombatAnimationManager(deps) {
         deps.onChampionReplaced?.();
       }
 
-      syncChampionFromSnapshot(champion, champData);
+      if (syncChampionFromSnapshot(champion, champData)) slotsChanged = true;
 
       champion.updateUI({
         freeCostSkills: editMode?.freeCostSkills === true,
@@ -1516,6 +1528,8 @@ export function createCombatAnimationManager(deps) {
         deps.activeChampions.delete(champId);
       }
     }
+
+    if (slotsChanged) deps.onChampionReplaced?.();
 
     // Keep status indicator loop on only when needed
     deps.syncStatusIndicatorRotation();
@@ -1538,7 +1552,9 @@ export function createCombatAnimationManager(deps) {
   //  Waits for animation, then removes the DOM element.
   // ============================================================
 
-  async function processChampionRemoved(championId) {
+  async function processChampionRemoved(payload) {
+    const { championId } = payload;
+
     const champion = deps.activeChampions.get(championId);
     if (!champion) return;
 
@@ -1720,8 +1736,8 @@ export function createCombatAnimationManager(deps) {
     handleTurnUpdate(turn) {
       enqueue("turnUpdate", turn);
     },
-    handleChampionRemoved(championId) {
-      enqueue("championRemoved", championId);
+    handleChampionRemoved(payload) {
+      enqueue("championRemoved", payload);
     },
     handleGameOver(data) {
       enqueue("gameOver", data);
