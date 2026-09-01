@@ -159,8 +159,11 @@ export const StatusIndicator = {
     const portrait = champion.el.querySelector(".portrait");
     if (!portrait) return;
 
+    // An effect applied with hiddenIndicator carries no icon at all.
     const activeStatuses = new Set(
-      [...champion.statusEffects.keys()].map((s) => String(s).toLowerCase()),
+      [...champion.statusEffects.entries()]
+        .filter(([, effect]) => !effect?.hiddenIndicator)
+        .map(([key]) => String(key).toLowerCase()),
     );
     const hookEffectData = Array.isArray(champion.runtime?.hookEffectData)
       ? champion.runtime.hookEffectData
