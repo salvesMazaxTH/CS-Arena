@@ -49,6 +49,7 @@ import dorian from "./dorian/index.js";
 import thorwells from "./thorwells/index.js";
 import ysvane from "./ysvane/index.js";
 import oryn from "./oryn/index.js";
+import neraqa from "./neraqa/index.js";
 
 const championDB = {
   ralia,
@@ -102,6 +103,7 @@ const championDB = {
   thorwells,
   ysvane,
   oryn,
+  neraqa,
 };
 
 export default championDB;
