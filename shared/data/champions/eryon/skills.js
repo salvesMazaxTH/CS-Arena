@@ -71,7 +71,7 @@ const eryonSkills = [
     key: "absolute_channeling",
     name: "Absolute Channeling",
 
-    priority: 0,
+    priority: 1,
     contact: false,
 
     bonusMomentum: 7,
@@ -130,7 +130,7 @@ const eryonSkills = [
 
     isUltimate: true,
     momentumCost: 24,
-    priority: -1,
+    priority: 0,
     contact: false,
     damageMode: "standard",
     targetSpec: ["all"],
