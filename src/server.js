@@ -179,6 +179,39 @@ function isConcealedFromViewer(serializedChampion, viewerTeam) {
 }
 
 /**
+ * Rewrites serialized entities for viewers outside their own team, following the
+ * `runtime.disguise` bag each one declares: `fields` overrides serialized values,
+ * `mirrorFields` copies them from the entity named by `mirrorFrom`, and
+ * `hideRuntimeKeys` strips runtime entries that would give the disguise away.
+ * The bag itself never reaches any client.
+ */
+function applyDisguises(champions, viewerTeam) {
+  if (!champions.some((entry) => entry?.runtime?.disguise)) return champions;
+
+  const byId = new Map(champions.map((entry) => [entry.id, entry]));
+
+  return champions.map((serialized) => {
+    const disguise = serialized.runtime?.disguise;
+    if (!disguise) return serialized;
+
+    const runtime = { ...serialized.runtime };
+    delete runtime.disguise;
+
+    if (viewerTeam === serialized.team) return { ...serialized, runtime };
+
+    for (const key of disguise.hideRuntimeKeys ?? []) delete runtime[key];
+
+    const mirrored = {};
+    const source = byId.get(disguise.mirrorFrom);
+    if (source) {
+      for (const key of disguise.mirrorFields ?? []) mirrored[key] = source[key];
+    }
+
+    return { ...serialized, ...mirrored, ...(disguise.fields ?? {}), runtime };
+  });
+}
+
+/**
  * Serializes the match state from one viewer's perspective.
  *
  * @param {object[]} [extraChampions] Champions to force into the payload (e.g. just-killed ones).
@@ -197,9 +230,11 @@ function getGameState(extraChampions = [], { viewerTeam = null } = {}) {
     }
   }
 
+  const disguised = applyDisguises(champions, viewerTeam);
+
   const visibleChampions = concealedSummonIds.size
-    ? champions.filter((c) => !isConcealedFromViewer(c, viewerTeam))
-    : champions;
+    ? disguised.filter((c) => !isConcealedFromViewer(c, viewerTeam))
+    : disguised;
 
   // Full 8-champion roster of each team, for the client's line-up banners.
   const lineups = {};
@@ -267,13 +302,49 @@ function getViewerTeam(socketId) {
   return match.getPlayer(slot)?.team ?? null;
 }
 
+/** Rewrites the champion payload embedded in an envelope, in either shape it
+ *  takes: a bare snapshot array, or a full getGameState object. */
+function disguiseState(state, viewerTeam) {
+  if (Array.isArray(state)) return applyDisguises(state, viewerTeam);
+
+  if (Array.isArray(state?.champions)) {
+    return { ...state, champions: applyDisguises(state.champions, viewerTeam) };
+  }
+
+  return state;
+}
+
+/**
+ * Emits a combatAction, tailoring the champion state it carries to each viewer.
+ * Use this instead of io.emit("combatAction", ...): the envelope embeds a full
+ * serialization, so a broadcast would hand every disguise straight to the
+ * opposing player.
+ */
+function emitCombatAction(envelope) {
+  if (!envelope?.state) {
+    io.emit("combatAction", envelope);
+    return;
+  }
+
+  for (const [socketId, socket] of io.sockets.sockets) {
+    socket.emit("combatAction", {
+      ...envelope,
+      state: disguiseState(envelope.state, getViewerTeam(socketId)),
+    });
+  }
+}
+
 /**
  * Sends the game state to every connected socket, tailored to what that viewer
  * is allowed to know. Use this instead of io.emit("gameStateUpdate", ...) so a
  * concealed summon can never leak through an unrelated broadcast.
  */
 function broadcastGameState(extraChampions = []) {
-  if (concealedSummonIds.size === 0) {
+  const hasDisguise = [...match.combat.activeChampions.values()].some(
+    (champion) => champion.runtime?.disguise,
+  );
+
+  if (concealedSummonIds.size === 0 && !hasDisguise) {
     io.emit("gameStateUpdate", getGameState(extraChampions));
     return;
   }
@@ -401,7 +472,7 @@ function emitChampionDeath(deathResult) {
   if (champ?.runtime) delete champ.runtime.currentContext;
 
   if (deathResult.scoreAwarded && deathResult.scorePayload) {
-    io.emit("combatAction", {
+    emitCombatAction({
       action: null,
       scorePayload: deathResult.scorePayload,
       claimPoints: null,
@@ -475,7 +546,7 @@ function applyGlobalMomentumRegen(champion, context, resolver) {
 /** Builds the action envelope via CombatEnvelopeBuilder and emits it if it has content. */
 function emitCombatEnvelopesFromContext(params) {
   const envelope = envelopeBuilder.buildActionEnvelope(params);
-  if (envelope) io.emit("combatAction", envelope);
+  if (envelope) emitCombatAction(envelope);
 }
 
 function emitCombatLogsFromResults(results = []) {
@@ -549,7 +620,7 @@ function handleEndTurn() {
         globalDialogs.push({ message: result.denial.message });
       }
 
-      io.emit("combatAction", {
+      emitCombatAction({
         globalDialogs,
         state: result.context?._intermediateSnapshot ?? null,
       });
