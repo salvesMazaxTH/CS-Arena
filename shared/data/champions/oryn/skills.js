@@ -3,6 +3,8 @@ import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import totalBlock from "../generic/totalBlock.js";
 
+const INDICT_MARK_KEY = "sky_courts_indicted";
+
 const orynSkills = [
   // ========================
   // Total Block (global)
@@ -104,57 +106,139 @@ const orynSkills = [
     key: "sentence_of_the_sky_courts",
     name: "Sentence of the Sky-Courts",
 
-    defenseScaling: 60,
-    paralyzeDuration: 1,
+    indictDuration: 2,
+    dischargePercent: 65,
+    dischargePiercing: 40,
+    paralyzeDuration: 2,
+    maxDischarges: 2,
     shieldAmount: 90,
 
     contact: false,
-    damageMode: "standard",
     isUltimate: true,
     momentumCost: 58,
     priority: 2,
     element: "lightning",
 
     description() {
-      return `The pins in Oryn's body finish their work and the sky-courts hand down their sentence at once. Every enemy takes Lightning magical damage equal to ${this.defenseScaling}% of his Defense and, where it lands, is left Paralyzed for ${this.paralyzeDuration} turn(s), while Oryn stands under a ${this.shieldAmount} Shield.`;
+      return `The pins in Oryn's body finish their work and the sky-courts hand down their sentence on the whole enemy line — a sentence, not a blow. For ${this.indictDuration} turns, the first time each Indicted enemy deals damage the charge grounds through them for Lightning magical damage equal to ${this.dischargePercent}% of that blow, following the path of least resistance past ${this.dischargePiercing}% of their Defense, leaving them Paralyzed for ${this.paralyzeDuration} turn(s) and banking Oryn's team 1 point; at most once per turn and ${this.maxDischarges} times each, and nothing if Oryn has fallen. He stands under a ${this.shieldAmount} Shield while the courts sit.`;
     },
 
     targetSpec: ["all:enemy"],
 
     resolve({ user, targets, context = {} }) {
-      const baseDamage = (user.Defense * this.defenseScaling) / 100;
       const list = Array.isArray(targets) ? targets : targets ? [targets] : [];
-      const results = [];
+      const castTurn = context.currentTurn;
+      const marked = [];
 
       for (const enemy of list) {
         if (!enemy?.alive) continue;
 
-        const result = new DamageEvent({
-          baseDamage,
-          attacker: user,
-          defender: enemy,
-          skill: this,
-          type: "magical",
+        enemy.runtime.hookEffects ??= [];
+        enemy.runtime.hookEffects = enemy.runtime.hookEffects.filter(
+          (e) => e.key !== INDICT_MARK_KEY,
+        );
+
+        enemy.addHookEffect(
+          {
+            type: "debuff",
+            key: INDICT_MARK_KEY,
+            name: "Indicted",
+            group: "skill",
+            ownerId: user.id,
+            expiresAtTurn: castTurn + this.indictDuration + 1,
+            castTurn,
+            dischargePercent: this.dischargePercent,
+            dischargePiercing: this.dischargePiercing,
+            paralyzeDuration: this.paralyzeDuration,
+            maxDischarges: this.maxDischarges,
+            dischargesUsed: 0,
+            lastDischargeTurn: 0,
+
+            hookScope: { onAfterDmgDealing: "attacker" },
+
+            onAfterDmgDealing({ owner, damage, context }) {
+              if (context.currentTurn <= this.castTurn) return;
+              if (!(damage > 0)) return;
+              if (this.lastDischargeTurn === context.currentTurn) return;
+              if (this.dischargesUsed >= this.maxDischarges) return;
+
+              const oryn = context.allChampions?.get?.(this.ownerId);
+              if (!oryn?.alive || !owner.alive) return;
+
+              this.lastDischargeTurn = context.currentTurn;
+              this.dischargesUsed += 1;
+              if (this.dischargesUsed >= this.maxDischarges) {
+                owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
+                  (e) => e !== this,
+                );
+              }
+
+              const result = new DamageEvent({
+                baseDamage: (damage * this.dischargePercent) / 100,
+                attacker: oryn,
+                defender: owner,
+                skill: {
+                  key: "sentence_of_the_sky_courts",
+                  name: "Sentence of the Sky-Courts",
+                  element: "lightning",
+                  contact: false,
+                },
+                type: "magical",
+                mode: "piercing",
+                piercingPercentage: this.dischargePiercing,
+                context,
+                allChampions: context.allChampions,
+              }).execute();
+
+              const arr = Array.isArray(result) ? result : [result];
+
+              if (effectConnected(arr[0], "paralyzed")) {
+                owner.applyStatusEffect(
+                  "paralyzed",
+                  this.paralyzeDuration,
+                  context,
+                  { sourceId: oryn.id },
+                );
+              }
+
+              context.registerScore?.({
+                amount: 1,
+                scoringSlot: oryn.team - 1,
+                reason: this.key,
+                sourceId: oryn.id,
+              });
+
+              const targetName = formatChampionName(owner);
+              context.registerDialog?.({
+                message: `⚡ The sky-courts ground their sentence through ${targetName}!`,
+                sourceId: oryn.id,
+                targetId: owner.id,
+              });
+
+              return {
+                log: arr[0]?.log
+                  ? `<b>Sentence of the Sky-Courts</b> grounds through ${targetName} — Oryn's team banks 1 point.\n${arr[0].log}`
+                  : `<b>Sentence of the Sky-Courts</b> grounds through ${targetName} — Oryn's team banks 1 point.`,
+              };
+            },
+          },
           context,
-          allChampions: context?.allChampions,
-        }).execute();
+        );
 
-        const arr = Array.isArray(result) ? result : [result];
-        results.push(...arr);
-
-        if (effectConnected(arr[0], "paralyzed")) {
-          enemy.applyStatusEffect("paralyzed", this.paralyzeDuration, context, {
-            sourceId: user.id,
-          });
-        }
+        marked.push(formatChampionName(enemy));
       }
 
       user.addShield(this.shieldAmount, 0, context);
 
-      results.push({
-        log: `${formatChampionName(user)} calls down <b>Sentence of the Sky-Courts</b> and stands under a ${this.shieldAmount} Shield.`,
+      context.registerDialog?.({
+        message: `⚖️ The sky-courts sit — ${marked.length} enem${marked.length === 1 ? "y is" : "ies are"} Indicted.`,
+        sourceId: user.id,
+        targetId: user.id,
       });
-      return results;
+
+      return {
+        log: `${formatChampionName(user)} hands down <b>Sentence of the Sky-Courts</b> on ${marked.join(", ")} and stands under a ${this.shieldAmount} Shield.`,
+      };
     },
   },
 ];

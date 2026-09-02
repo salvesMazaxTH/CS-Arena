@@ -45,6 +45,14 @@ registerExclusiveIndicator("marevoth_tide", {
   showStackCount: true,
 });
 
+// Oryn's Sentence of the Sky-Courts: the hookEffect key on each Indicted enemy.
+registerExclusiveIndicator("sky_courts_indicted", {
+  type: "emoji",
+  value: "⚖️",
+  background: "rgba(120, 130, 210, 0.85)",
+  label: "Indicted",
+});
+
 // Zyrelle's revolver: current rounds loaded (runtime.zyrelleAmmo), 0-6.
 registerRuntimeCounterIndicator("zyrelle_ammo", "zyrelleAmmo", {
   type: "image",
