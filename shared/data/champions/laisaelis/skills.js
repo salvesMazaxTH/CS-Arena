@@ -161,7 +161,7 @@ const laisaelisSkills = [
     resolve({ user, targets, context }) {
       const [ally = user] = targets;
 
-      ally.applyStatusEffect("debuffImmunity", this.wardDuration, context, {
+      ally.applyStatusEffect("afflictionWard", this.wardDuration, context, {
         sourceId: user.id,
       });
 

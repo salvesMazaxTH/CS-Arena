@@ -11,7 +11,7 @@ import burning from "./burning.js";
 import bleeding from "./bleeding.js";
 import poisoned from "./poisoned.js";
 import absoluteImmunity from "./absoluteImmunity.js";
-import debuffImmunity from "./debuffImmunity.js";
+import afflictionWard from "./afflictionWard.js";
 import conductor from "./conductor.js";
 import invisible from "./invisible.js";
 import concealed from "./concealed.js";
@@ -28,7 +28,7 @@ export const StatusEffectsRegistry = {
   burning,
   bleeding,
   absoluteImmunity,
-  debuffImmunity,
+  afflictionWard,
   conductor,
   invisible,
   concealed,

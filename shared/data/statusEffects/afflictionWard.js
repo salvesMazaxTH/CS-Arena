@@ -1,8 +1,8 @@
 import { formatChampionName } from "../../ui/formatters.js";
 import { StatusEffect } from "../../core/StatusEffect.js";
 
-const debuffImmunity = {
-  key: "debuffImmunity",
+const afflictionWard = {
+  key: "afflictionWard",
   name: "Affliction Ward",
   type: "buff",
   subtypes: ["immunity"],
@@ -54,4 +54,4 @@ const debuffImmunity = {
   },
 };
 
-export default debuffImmunity;
+export default afflictionWard;

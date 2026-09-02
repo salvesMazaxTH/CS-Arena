@@ -87,9 +87,9 @@ export const StatusIndicator = {
       background: "none",
       label: "Absolute Immunity",
     },
-    debuffimmunity: {
+    afflictionward: {
       type: "image",
-      value: "/assets/indicators/debuffImmunity_indicator.png",
+      value: "/assets/indicators/afflictionWard_indicator.png",
       background: "rgba(120, 200, 160, 0.8)",
       label: "Affliction Ward",
     },

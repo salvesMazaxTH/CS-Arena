@@ -33,7 +33,7 @@ const ysvaneSkills = [
     resolve({ user, targets, context = {} }) {
       const [ally = user] = targets;
 
-      ally.applyStatusEffect("debuffImmunity", this.wardDuration, context, {
+      ally.applyStatusEffect("afflictionWard", this.wardDuration, context, {
         sourceId: user.id,
       });
       ally.addShield(this.shieldAmount, this.shieldDecay, context);
@@ -150,7 +150,7 @@ const ysvaneSkills = [
           .getStatusEffects({ type: "debuff" })
           .forEach((se) => ally.removeStatusEffect(se.key));
 
-        ally.applyStatusEffect("debuffImmunity", this.wardDuration, context, {
+        ally.applyStatusEffect("afflictionWard", this.wardDuration, context, {
           sourceId: user.id,
         });
         ally.applyDamageReduction({
