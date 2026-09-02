@@ -73,21 +73,10 @@ export class CombatEnvelopeBuilder {
     const userId = user?.id ?? null;
     const userName = user?.name ?? null;
 
-    const mainDamage = damageEvents.filter((d) => (d.damageDepth ?? 0) === 0);
-    const mainHeal = healEvents.filter((h) => (h.damageDepth ?? 0) === 0);
-    const mainLifesteal = lifestealEvents.filter(
-      (ls) => (ls.damageDepth ?? 0) === 0,
-    );
-    const mainShield = shieldEvents.filter((s) => (s.damageDepth ?? 0) === 0);
-    const mainBuff = buffEvents.filter((b) => (b.damageDepth ?? 0) === 0);
-    const mainResource = resourceEvents.filter(
-      (r) => (r.damageDepth ?? 0) === 0,
-    );
-
     // All affected targets (damage, heal, buff, shield), deduped, excluding the user.
     const uniqueTargetIds = [
       ...new Set(
-        [...mainDamage, ...mainHeal, ...mainShield, ...mainBuff]
+        [...damageEvents, ...healEvents, ...shieldEvents, ...buffEvents]
           .map((e) => e.targetId)
           .filter((id) => id && id !== userId),
       ),
@@ -108,9 +97,7 @@ export class CombatEnvelopeBuilder {
     const realTargetIds = enemies.length > 0 ? enemies : allies;
     const { targetId, targetName } = this.buildTargetInfo(realTargetIds);
 
-    // Every damageEvent carries skillKey so the client can animate per hit.
     const skillKey = skill?.key;
-    const patchedDamage = mainDamage.map((ev) => ({ ...ev, skillKey }));
 
     return {
       action: user
@@ -123,12 +110,13 @@ export class CombatEnvelopeBuilder {
             targetName,
           }
         : null,
-      damageEvents: patchedDamage,
-      healEvents: mainHeal,
-      lifestealEvents: mainLifesteal,
-      shieldEvents: mainShield,
-      buffEvents: mainBuff,
-      resourceEvents: mainResource,
+      // Every damageEvent carries skillKey so the client can animate per hit.
+      damageEvents: damageEvents.map((event) => ({ ...event, skillKey })),
+      healEvents,
+      lifestealEvents,
+      shieldEvents,
+      buffEvents,
+      resourceEvents,
       redirectionEvents,
       globalDialogs,
       state: context._intermediateSnapshot,
