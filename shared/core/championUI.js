@@ -144,6 +144,26 @@ export function renderChampion(champion, container, handlers = {}) {
   });
 }
 
+// The shield half of the HP readout. A supreme or spell shield shows its marker
+// instead of a number, hiding any regular shield stacked under it.
+export function formatShieldBadge(shields) {
+  if (!Array.isArray(shields) || !shields.length) return "";
+
+  if (shields.some((shield) => shield?.type === "supreme")) {
+    return " 🛡️ <b>SUP</b>";
+  }
+
+  if (shields.some((shield) => shield?.type === "spell")) {
+    return " 🛡️ <b>S</b>";
+  }
+
+  const total = Math.floor(
+    shields.reduce((sum, shield) => sum + (Number(shield?.amount) || 0), 0),
+  );
+
+  return total > 0 ? ` 🛡️ (${total})` : "";
+}
+
 /**
  * Update champion UI
  * @param {object} champion - The champion instance
@@ -174,39 +194,18 @@ export function updateChampionUI(champion, context) {
     );
   }
 
-  const hasShield =
-    Array.isArray(champion.runtime?.shields) &&
-    champion.runtime.shields.length > 0;
-
-  // Texto base
+  const shields = champion.runtime?.shields;
   const currentHP = Number(champion.HP) || 0;
   const maxHP = Number(champion.maxHP) || 0;
-  let hpText = `${Math.floor(currentHP)}/${Math.floor(maxHP)}`;
 
-  // Se tiver escudo, adiciona ao texto conforme tipo
-  if (hasShield) {
-    // 🛡️ Verificar tipo de escudo prioritário
-    const supremeShield = champion.runtime.shields.find((s) => s.type === "supreme");
-    const spellShield = champion.runtime.shields.find((s) => s.type === "spell");
-    const regularShields = champion.runtime.shields.filter((s) => !s.type || s.type === "regular");
+  champion.el.classList.toggle(
+    "has-shield",
+    Array.isArray(shields) && shields.length > 0,
+  );
 
-    if (supremeShield) {
-      // Escudo Supremo: mostrar "SUP" em negrito
-      hpText += ` 🛡️ <b>SUP</b>`;
-    } else if (spellShield) {
-      // Escudo de Feitiço: mostrar "S"
-      hpText += ` 🛡️ <b>S</b>`;
-    } else if (regularShields.length > 0) {
-      // Escudo Regular: mostrar valor numérico
-      const totalShield = Math.floor(regularShields.reduce((sum, s) => sum + (Number(s.amount) || 0), 0));
-      hpText += ` 🛡️ (${totalShield})`;
-    }
-    champion.el.classList.add("has-shield");
-  } else {
-    champion.el.classList.remove("has-shield");
-  }
-
-  HpDiv.innerHTML = hpText;
+  HpDiv.innerHTML =
+    `${Math.floor(currentHP)}/${Math.floor(maxHP)}` +
+    formatShieldBadge(shields);
 
   // Barra de HP
   const percent = (champion.HP / champion.maxHP) * 100;

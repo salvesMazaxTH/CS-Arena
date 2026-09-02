@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../shared/ui/formatters.js";
+import { formatShieldBadge } from "../../../shared/core/championUI.js";
 
 import {
   syncChampionVFX,
@@ -102,12 +103,9 @@ function parseVisualHpState(hpText) {
   const hpMatch = hpText.match(/^(\d+)\/(\d+)/);
   if (!hpMatch) return null;
 
-  const shieldMatch = hpText.match(/🛡️\s*\((\d+)\)/);
-
   return {
     currentHP: parseInt(hpMatch[1], 10),
     maxHP: parseInt(hpMatch[2], 10),
-    shield: shieldMatch ? parseInt(shieldMatch[1], 10) : 0,
   };
 }
 
@@ -582,7 +580,6 @@ export function createCombatAnimationManager(deps) {
       sourceId,
       rawAmount,
       absorbedByShield,
-      remainingShield,
       isCritical,
       isDot,
       finishing,
@@ -698,21 +695,8 @@ export function createCombatAnimationManager(deps) {
       return; // already awaited everything
     }
 
-    const hpText = championEl.querySelector(".hp")?.textContent || "";
-    const visualState = parseVisualHpState(hpText);
-    const fallbackAbsorbed =
-      visualState && Number.isFinite(remainingShield)
-        ? Math.max(0, visualState.shield - Math.max(0, Number(remainingShield)))
-        : 0;
-    const absorbed = absorbedFromEvent || fallbackAbsorbed;
-    const shouldSyncShieldFromDamage = absorbed > 0;
-
     updateVisualHP(targetId, -hpDamage, null, {
-      shieldDelta: shouldSyncShieldFromDamage ? -absorbed : 0,
-      shieldOverride:
-        shouldSyncShieldFromDamage && Number.isFinite(remainingShield)
-          ? Math.max(0, Number(remainingShield))
-          : null,
+      shields: effect.targetState?.runtime?.shields,
     });
 
     // ========================
@@ -875,7 +859,7 @@ export function createCombatAnimationManager(deps) {
     createFloatElement(target.portraitWrapper, `🛡️ ${amount}`, "shield-float");
 
     updateVisualHP(targetId, 0, null, {
-      shieldDelta: Number(amount) || 0,
+      shields: effect.targetState?.runtime?.shields,
     });
 
     await wait(300);
@@ -1100,10 +1084,6 @@ export function createCombatAnimationManager(deps) {
     options = {},
   ) {
     delta = Number(delta) || 0;
-    const shieldDelta = Number(options?.shieldDelta) || 0;
-    const shieldOverride = Number.isFinite(options?.shieldOverride)
-      ? Math.max(0, Number(options.shieldOverride))
-      : null;
 
     const el = getChampionElement(championId);
     if (!el) return;
@@ -1112,27 +1092,24 @@ export function createCombatAnimationManager(deps) {
     const fill = el.querySelector(".hp-fill");
     if (!hpSpan || !fill) return;
 
-    // Parse current displayed HP (format: "current/max" or "current/max 🛡️ (N)")
-    const hpText = hpSpan.textContent;
-    const visualState = parseVisualHpState(hpText);
+    const visualState = parseVisualHpState(hpSpan.textContent);
     if (!visualState) return;
 
     currentVisualHP =
       currentVisualHP !== null ? currentVisualHP : visualState.currentHP;
 
     const maxHP = visualState.maxHP;
-    const currentShield = visualState.shield;
 
     // Apply delta and clamp
     currentVisualHP = Math.max(0, Math.min(maxHP, currentVisualHP + delta));
-    const nextShield =
-      shieldOverride !== null
-        ? shieldOverride
-        : Math.max(0, currentShield + shieldDelta);
 
-    const shieldSuffix = nextShield > 0 ? ` 🛡️ (${nextShield})` : "";
+    // Callers that know the target's shields render the badge; the rest leave
+    // the one already on screen untouched.
+    const shieldBadge = options.shields
+      ? formatShieldBadge(options.shields)
+      : hpSpan.innerHTML.replace(/^\s*\d+\/\d+/, "");
 
-    hpSpan.textContent = `${currentVisualHP}/${maxHP}${shieldSuffix}`;
+    hpSpan.innerHTML = `${currentVisualHP}/${maxHP}${shieldBadge}`;
 
     // Update fill bar width and color
     const percent = (currentVisualHP / maxHP) * 100;
