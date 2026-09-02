@@ -66,17 +66,14 @@ function buildChampionHTML(champion, { editMode } = {}) {
   </div>
 
           <div class="stat-block hp-stat">
-            <p>HP: <span class="hp">${Math.floor(Number(champion.HP) || 0)}/${Math.floor(Number(champion.maxHP) || 0)}</span></p>
-
             <div class="hp-bar">
                 <div class="hp-fill"></div>
                 <div class="hp-segments"></div>
+                <span class="hp">${Math.floor(Number(champion.HP) || 0)}/${Math.floor(Number(champion.maxHP) || 0)}</span>
             </div>
         </div>
 
         <div class="stat-block momentum-stat">
-            <p>Momentum: <span class="momentum">${Math.floor(Number(champion.momentum) || 0)}/100</span></p>
-
             <div class="momentum-bar" aria-label="Momentum bar">
                 <div class="momentum-fill"></div>
                 <div class="momentum-markers" aria-hidden="true">
@@ -84,6 +81,7 @@ function buildChampionHTML(champion, { editMode } = {}) {
                     <span class="momentum-threshold" style="left: 50%;">2</span>
                     <span class="momentum-threshold" style="left: 75%;">3</span>
                 </div>
+                <span class="momentum">${Math.floor(Number(champion.momentum) || 0)}</span>
             </div>
         </div>
 
@@ -144,17 +142,21 @@ export function renderChampion(champion, container, handlers = {}) {
   });
 }
 
-// The shield half of the HP readout. A supreme or spell shield shows its marker
-// instead of a number, hiding any regular shield stacked under it.
+// Shields that block by count carry a token amount, so they show a marker
+// wherever a regular shield would show its value.
+export const SHIELD_MARKERS = { supreme: "SUP", spell: "S" };
+
+// The shield half of the HP readout. A marker hides any regular shield stacked
+// under it.
 export function formatShieldBadge(shields) {
   if (!Array.isArray(shields) || !shields.length) return "";
 
   if (shields.some((shield) => shield?.type === "supreme")) {
-    return " 🛡️ <b>SUP</b>";
+    return ` 🛡️ <b>${SHIELD_MARKERS.supreme}</b>`;
   }
 
   if (shields.some((shield) => shield?.type === "spell")) {
-    return " 🛡️ <b>S</b>";
+    return ` 🛡️ <b>${SHIELD_MARKERS.spell}</b>`;
   }
 
   const total = Math.floor(
@@ -229,7 +231,7 @@ export function updateChampionUI(champion, context) {
   const totalUnits = 100;
 
   if (momentumValueEl) {
-    momentumValueEl.textContent = `${currentUnits}/${totalUnits}`;
+    momentumValueEl.textContent = String(currentUnits);
   }
 
   if (momentumFillEl) {

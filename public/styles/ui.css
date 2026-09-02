@@ -421,7 +421,7 @@
 .hp-bar {
   display: flex;
   width: 100%;
-  height: clamp(6px, 1.2vw, 10px);
+  height: clamp(14px, 2vw, 19px);
   background: #2c1e1e;
   border-radius: 5px;
   overflow: hidden;
@@ -432,7 +432,7 @@
 .momentum-bar {
   display: flex;
   width: 100%;
-  height: clamp(5px, 1vw, 8px);
+  height: clamp(12px, 1.7vw, 16px);
   background: rgba(42, 31, 10, 0.96);
   border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 5px;
@@ -441,10 +441,50 @@
   position: relative;
 }
 
+/* The value rides inside its own bar, right-aligned over a darkened endcap so
+   it stays readable whatever the fill level. No label: the bars say which. */
+.hp-bar .hp,
+.momentum-bar .momentum {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+  z-index: 4;
+  pointer-events: none;
+  font-family: "Chakra Petch", "Montserrat", sans-serif;
+  font-weight: 600;
+  font-size: clamp(9px, 1.4vw, 12.5px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.95),
+    0 0 2px rgba(0, 0, 0, 0.9);
+}
+
+.momentum-bar .momentum {
+  color: #fff7e2;
+}
+
+.hp-bar::after,
+.momentum-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 45%;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 0 5px 5px 0;
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.5));
+}
+
 .momentum-markers {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 3;
   pointer-events: none;
 }
 
@@ -457,10 +497,11 @@
   align-items: center;
   justify-content: center;
   min-width: 12px;
-  font-size: 0.55rem;
+  font-family: "Chakra Petch", "Montserrat", sans-serif;
+  font-size: 0.6rem;
   line-height: 1;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   color: rgba(240, 225, 182, 0.8);
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.75);
   opacity: 0.9;
@@ -2562,13 +2603,18 @@
   }
 
   .hp-bar {
-    height: clamp(4px, 1vw, 7px);
+    height: clamp(12px, 3.4vw, 16px);
     margin-bottom: 4px;
   }
 
   .momentum-bar {
-    height: clamp(4px, 0.9vw, 6px);
+    height: clamp(11px, 3vw, 14px);
     margin-bottom: 6px;
+  }
+
+  .hp-bar .hp,
+  .momentum-bar .momentum {
+    font-size: clamp(8px, 2.3vw, 11px);
   }
 
   .skill-btn {
