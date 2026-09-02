@@ -1,6 +1,9 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
 import totalBlock from "../generic/totalBlock.js";
+
+const SCORNFUL_DOMINION_HOOK_KEY = "scornful_dominion_hook";
 
 const torrenSkills = [
   // ========================
@@ -81,9 +84,13 @@ const torrenSkills = [
     thresholdMultiplier: 1.35,
     priority: 2,
     tauntDuration: 2,
+    dominionDuration: 3,
+    claimBonusPoints: 2,
 
     description() {
-      return `Torren singles out the most fragile enemy, striking through their defenses with a piercing blow. If their fragility is significantly greater than his, they are Taunted for ${this.tauntDuration} turn(s) and deal 30% less damage to other targets.`;
+      return `Torren singles out the most fragile enemy, striking through their defenses with a piercing blow. If their fragility is significantly greater than his, they are Taunted for ${this.tauntDuration} turn(s) and deal 30% less damage to other targets.
+
+      For the next 2 turns, any Claim Torren makes while a foe he has Taunted still stands banks ${this.claimBonusPoints} extra points.`;
     },
 
     targetSpec: ["all:enemy"],
@@ -119,6 +126,52 @@ const torrenSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
+
+      // The scornful aura opens on every cast; the bonus only pays out on a
+      // Claim made while a Torren-taunt is still holding a foe.
+      user.runtime ??= {};
+      user.runtime.hookEffects ??= [];
+      user.runtime.hookEffects = user.runtime.hookEffects.filter(
+        (he) => he.key !== SCORNFUL_DOMINION_HOOK_KEY,
+      );
+
+      const claimBonusPoints = this.claimBonusPoints;
+
+      user.addHookEffect(
+        {
+          type: "buff",
+          key: SCORNFUL_DOMINION_HOOK_KEY,
+          group: "skill",
+          expiresAtTurn: context.currentTurn + this.dominionDuration,
+          hookScope: {
+            onActionResolved: "actionSource",
+          },
+
+          onActionResolved({ owner, skill, context }) {
+            if (skill?.key !== CLAIM_ACTION_KEY) return;
+
+            const holdsTaunt = context.aliveChampions.some(
+              (champ) =>
+                champ.team !== owner.team &&
+                champ.tauntEffects?.some(
+                  (taunt) =>
+                    taunt.taunterId === owner.id &&
+                    taunt.expiresAtTurn > context.currentTurn,
+                ),
+            );
+
+            if (!holdsTaunt) return;
+
+            return {
+              type: "score",
+              amount: claimBonusPoints,
+              scoringSlot: owner.team - 1,
+              log: `${formatChampionName(owner)} claims the ground with a scorned foe pinned to him — <b>Scorn the Weak</b> banks ${claimBonusPoints} extra point(s).`,
+            };
+          },
+        },
+        context,
+      );
 
       // Actual weakness condition.
       const isWeakEnough =
