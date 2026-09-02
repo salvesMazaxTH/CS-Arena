@@ -1,5 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
@@ -23,9 +24,10 @@ const naelysSkills = [
     element: "water",
     selfHealAmount: 50,
     allyHealAmount: 20,
+    snareDuration: 1,
 
     description() {
-      return `Naelys restores ${this.selfHealAmount} HP to herself and ${this.allyHealAmount} HP to an ally, dealing damage to the enemy.`;
+      return `Naelys restores ${this.selfHealAmount} HP to herself and ${this.allyHealAmount} HP to an ally, dealing damage to the enemy and dragging them under, Snared for ${this.snareDuration} turn(s).`;
     },
 
     targetSpec: ["enemy", { type: "select:ally", excludesSelf: true }],
@@ -52,6 +54,13 @@ const naelysSkills = [
           ? damageResult
           : [damageResult];
         results.push(...damageResults);
+
+        if (
+          damageResults.some((r) => effectConnected(r, "snared")) &&
+          enemy.alive
+        ) {
+          enemy.applyStatusEffect("snared", this.snareDuration, context);
+        }
       }
 
       const selfHealed = new HealEvent({
