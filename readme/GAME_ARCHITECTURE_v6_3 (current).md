@@ -372,6 +372,13 @@ O envelope enviado do servidor para o cliente contém:
 }
 ```
 
+Todo evento com `targetId` carrega `targetState` — o `serializeVisualState()` do alvo
+(`runtime`, `statusEffects`, `runtimeHookEffectData`) no instante em que o evento foi
+registrado. O cliente o aplica assim que aquele evento termina de animar, de modo que
+escudo, forma aquática, postura e marcas aparecem junto do balão que os anuncia, e não
+só no fim da resolução. HP não entra ali: continua pelo caminho otimista de
+`updateVisualHP`, reconciliado pelo `state` da ação.
+
 - **Diálogos**: Todos os diálogos de combate agora usam `showDialog(message, duration?)` (bloqueante se sem duração, não-bloqueante se com duração).
 - **Sequenciamento**: O cliente processa cada grupo (damageEvents, healEvents, etc.) em ordem, animando cada um sequencialmente.
 - **Contexto**: O contexto (`context`) é criado por `TurnResolver.createBaseContext`, contendo informações do turno, campeões vivos, buffers de eventos visuais, etc.
@@ -1658,10 +1665,14 @@ combatAnimations.reset();
    ├── "redirectionEvents" → animateTauntRedirection(event)
    └── "dialogEvents"      → showBlockingDialog / showNonBlockingDialog
 
+   └── após cada handler: applyEventVisualState(event)
+       └── syncChampionFromSnapshot(champion, event.targetState)
+       └── StatusIndicator.updateChampionIndicators + syncChampionVFX
+
 3. applyStateSnapshots(state)
    └── syncChampionFromSnapshot(champion, snap)
    └── champion.updateUI(options)
-   └── syncChampionVFX(champion)
+   └── StatusIndicator.updateChampionIndicators + syncChampionVFX
 ```
 
 ### Lógica de `animateDamage`
@@ -2013,7 +2024,7 @@ Num jogo PvP, o cliente não pode ser confiado para computar estado final.
 
 ### Por que a fila de animações no cliente?
 
-Socket.IO pode entregar múltiplos eventos em rajada. A fila garante sequencialidade total; `applyStateSnapshots` ao final de cada ação garante consistência visual.
+Socket.IO pode entregar múltiplos eventos em rajada. A fila garante sequencialidade total; `applyEventVisualState` sincroniza VFX e indicadores a cada evento e `applyStateSnapshots` ao final de cada ação garante consistência visual.
 
 ### Por que sincronização de animações (handshake)?
 

@@ -314,22 +314,53 @@ function disguiseState(state, viewerTeam) {
   return state;
 }
 
+// Every event group whose entries carry a targetState.
+const VISUAL_EVENT_KEYS = [
+  "damageEvents",
+  "healEvents",
+  "lifestealEvents",
+  "shieldEvents",
+  "buffEvents",
+  "resourceEvents",
+];
+
+/** Rewrites the per-event visual states an envelope carries, so a disguise is
+ *  hidden there exactly as it is in the envelope's own snapshot. */
+function disguiseEventStates(envelope, viewerTeam) {
+  const patch = {};
+
+  for (const key of VISUAL_EVENT_KEYS) {
+    const events = envelope[key];
+    if (!Array.isArray(events) || !events.length) continue;
+
+    const states = applyDisguises(
+      events.map((event) => event.targetState),
+      viewerTeam,
+    );
+
+    patch[key] = events.map((event, index) => ({
+      ...event,
+      targetState: states[index],
+    }));
+  }
+
+  return patch;
+}
+
 /**
  * Emits a combatAction, tailoring the champion state it carries to each viewer.
- * Use this instead of io.emit("combatAction", ...): the envelope embeds a full
- * serialization, so a broadcast would hand every disguise straight to the
+ * Use this instead of io.emit("combatAction", ...): the envelope embeds full
+ * serializations, so a broadcast would hand every disguise straight to the
  * opposing player.
  */
 function emitCombatAction(envelope) {
-  if (!envelope?.state) {
-    io.emit("combatAction", envelope);
-    return;
-  }
-
   for (const [socketId, socket] of io.sockets.sockets) {
+    const viewerTeam = getViewerTeam(socketId);
+
     socket.emit("combatAction", {
       ...envelope,
-      state: disguiseState(envelope.state, getViewerTeam(socketId)),
+      ...disguiseEventStates(envelope, viewerTeam),
+      state: disguiseState(envelope.state, viewerTeam),
     });
   }
 }

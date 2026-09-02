@@ -162,6 +162,16 @@ export function syncChampionVFX(champion) {
   }
 }
 
+// The counterpart to syncChampionVFX, for a champion leaving the field: its
+// canvases go with the DOM, but their render loops only stop when told to.
+export function stopChampionVFX(champion) {
+  for (const type of Object.keys(champion?._vfxCanvases ?? {})) {
+    removeVFXCanvas(champion, type);
+  }
+
+  champion._vfxState = {};
+}
+
 export function createVFXCanvas(type, champion) {
   const container = champion.el.querySelector(".portrait-wrapper");
   if (!container) return null;

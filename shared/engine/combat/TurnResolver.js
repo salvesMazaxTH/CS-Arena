@@ -1290,6 +1290,7 @@ export class TurnResolver {
           shieldBlocked: !!flags?.shieldBlocked,
           finishing: hasFinishing,
           finishingType,
+          targetState: target.serializeVisualState(),
           preDialogs: [],
           postDialogs: [],
         };
@@ -1319,6 +1320,7 @@ export class TurnResolver {
           targetId: target.id,
           sourceId: sourceChamp?.id || target.id,
           amount: value,
+          targetState: target.serializeVisualState(),
           preDialogs: [],
           postDialogs: [],
         };
@@ -1352,6 +1354,7 @@ export class TurnResolver {
           sourceId: sourceChamp?.id || target.id,
           fromTargetId,
           amount: value,
+          targetState: target.serializeVisualState(),
           preDialogs: [],
           postDialogs: [],
         };
@@ -1381,6 +1384,7 @@ export class TurnResolver {
             sourceId: sourceChamp?.id || target.id,
             amount: value,
             statName,
+            targetState: target.serializeVisualState(),
             preDialogs: [],
             postDialogs: [],
           };
@@ -1419,6 +1423,7 @@ export class TurnResolver {
           targetId: target.id,
           sourceId: sourceId || this.healSourceId || target.id,
           amount: value,
+          targetState: target.serializeVisualState(),
           preDialogs: [],
           postDialogs: [],
         };
@@ -1441,6 +1446,7 @@ export class TurnResolver {
           amount: Math.abs(value),
           resourceType: "momentum",
           phase,
+          targetState: target.serializeVisualState(),
           preDialogs: [],
           postDialogs: [],
         };

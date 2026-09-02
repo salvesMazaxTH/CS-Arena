@@ -228,72 +228,9 @@ export class Champion {
       momentumMax: this.momentumMax,
       matchStats: this.getMatchStatsSnapshot(),
 
-      runtime: (() => {
-        const clone = { ...this.runtime };
-
-        delete clone.hookEffects;
-        delete clone.currentContext;
-
-        // Strip functions and object references that could cause circular refs
-        for (const k of Object.keys(clone)) {
-          const v = clone[k];
-          if (typeof v === "function") {
-            delete clone[k];
-          } else if (v !== null && typeof v === "object" && !Array.isArray(v)) {
-            // Allow only plain-data objects (shields array is fine via Array.isArray above)
-            // Deep-clone to sever any live references
-            try {
-              clone[k] = JSON.parse(JSON.stringify(v));
-            } catch {
-              delete clone[k];
-            }
-          }
-        }
-
-        return clone;
-      })(),
-
-      // Data-only view of the hooks for client-side indicators.
-      // Never serialize hook functions or full hook objects.
-      runtimeHookEffectData: (() => {
-        const hooks = Array.isArray(this.runtime?.hookEffects)
-          ? this.runtime.hookEffects
-          : [];
-
-        return hooks
-          .filter((effect) => typeof effect?.key === "string")
-          .map((effect) => ({
-            key: effect.key.toLowerCase(),
-            stacks: effect.stacks ?? 0,
-          }));
-      })(),
+      ...this.serializeVisualState(),
 
       actionBlockedByHardCC: this.isActionBlockedByHardCC(),
-
-      statusEffects: Array.from(this.statusEffects.entries()).map(
-        ([key, value]) => {
-          const safeValue = { ...value };
-
-          // Strip raw metadata (may contain live champion/context references)
-          delete safeValue.metadata;
-
-          if (safeValue.source && typeof safeValue.source === "object") {
-            safeValue.source = {
-              id: safeValue.source.id,
-              name: safeValue.source.name,
-            };
-          }
-
-          // Strip functions (hooks not needed by client)
-          for (const k of Object.keys(safeValue)) {
-            if (typeof safeValue[k] === "function") {
-              delete safeValue[k];
-            }
-          }
-
-          return [key, safeValue];
-        },
-      ),
 
       // Modifier counts for UI indicators (buff/debuff arrows)
       statModifiers: (this.statModifiers || []).map((m) => ({
@@ -310,6 +247,67 @@ export class Champion {
         taunterId: t.taunterId,
         expiresAtTurn: t.expiresAtTurn,
       })),
+    };
+  }
+
+  // The slice every state VFX and status indicator reads. Visual events carry
+  // it so the client can render a champion the instant an event changes it.
+  serializeVisualState() {
+    const runtime = { ...this.runtime };
+    const hooks = Array.isArray(this.runtime?.hookEffects)
+      ? this.runtime.hookEffects
+      : [];
+
+    delete runtime.hookEffects;
+    delete runtime.currentContext;
+
+    for (const key of Object.keys(runtime)) {
+      const value = runtime[key];
+      if (typeof value === "function") {
+        delete runtime[key];
+      } else if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+        try {
+          runtime[key] = JSON.parse(JSON.stringify(value));
+        } catch {
+          delete runtime[key];
+        }
+      }
+    }
+
+    const statusEffects = Array.from(this.statusEffects.entries()).map(
+      ([key, value]) => {
+        const safeValue = { ...value };
+
+        // Raw metadata may hold live champion/context references.
+        delete safeValue.metadata;
+
+        if (safeValue.source && typeof safeValue.source === "object") {
+          safeValue.source = {
+            id: safeValue.source.id,
+            name: safeValue.source.name,
+          };
+        }
+
+        for (const k of Object.keys(safeValue)) {
+          if (typeof safeValue[k] === "function") delete safeValue[k];
+        }
+
+        return [key, safeValue];
+      },
+    );
+
+    return {
+      id: this.id,
+      team: this.team,
+      runtime,
+      statusEffects,
+      // Never serialize hook functions or full hook objects.
+      runtimeHookEffectData: hooks
+        .filter((effect) => typeof effect?.key === "string")
+        .map((effect) => ({
+          key: effect.key.toLowerCase(),
+          stacks: effect.stacks ?? 0,
+        })),
     };
   }
 

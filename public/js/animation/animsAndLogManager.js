@@ -1,6 +1,9 @@
 import { formatChampionName } from "../../../shared/ui/formatters.js";
 
-import { syncChampionVFX } from "../../../shared/vfx/vfxManager.js";
+import {
+  syncChampionVFX,
+  stopChampionVFX,
+} from "../../../shared/vfx/vfxManager.js";
 import { playFinishingEffect } from "../../../shared/vfx/finishing.js";
 import { playLifestealTransferVFX } from "../../../shared/vfx/lifestealTransferCanvas.js";
 import { StatusIndicator } from "../../../shared/ui/statusIndicator.js";
@@ -24,8 +27,8 @@ import { createScoreboard } from "../ui/scoreboard.js";
 //    Server emits "combatAction" envelopes with:
 //      { action, effects[], log, state[] }
 //    This manager queues them and processes one at a time.
-//    Each effect is animated before the next begins.
-//    Final state is applied only after all effects are animated.
+//    Each effect is animated before the next begins, and renders the state
+//    it left its target in; the action snapshot reconciles afterwards.
 // ============================================================
 
 // ============================================================
@@ -220,7 +223,6 @@ export function createCombatAnimationManager(deps) {
   let lastLoggedTurn = null;
   let currentPhase = null;
   let activeDialogController = null;
-  let lastDamageAnimationTime = 0; // 🛡️ Track when damage was last animated
   const editMode = deps.editMode || { freeCostSkills: false };
   const matchStats = createMatchStatsPanel({
     activeChampions: deps.activeChampions,
@@ -241,10 +243,6 @@ export function createCombatAnimationManager(deps) {
   function enqueue(type, data) {
     queue.push({ type, data });
     if (!processing) drainQueue();
-  }
-
-  function hasPendingCombatAction() {
-    return queue.some((queuedItem) => queuedItem?.type === "combatAction");
   }
 
   async function drainQueue() {
@@ -330,6 +328,7 @@ export function createCombatAnimationManager(deps) {
         await runDialogs(event.preDialogs);
       }
       await Promise.resolve(handler(event));
+      applyEventVisualState(event);
       if (event.postDialogs?.length) {
         await runDialogs(event.postDialogs);
       }
@@ -349,6 +348,7 @@ export function createCombatAnimationManager(deps) {
       );
 
       for (const event of batch) {
+        applyEventVisualState(event);
         if (event.postDialogs?.length) await runDialogs(event.postDialogs);
       }
     }
@@ -736,13 +736,11 @@ export function createCombatAnimationManager(deps) {
       await wait(450);
 
       championEl.classList.remove("damage");
-      lastDamageAnimationTime = Date.now(); // 🛡️ Track damage animation completion
       return;
     }
 
     // If there's only shield absorption without HP damage, maintain visual pacing
     await wait(300);
-    lastDamageAnimationTime = Date.now(); // 🛡️ Track even shield-only animations
   }
 
   /** * Unique helper to clean up the animation event boilerplate
@@ -880,8 +878,7 @@ export function createCombatAnimationManager(deps) {
       shieldDelta: Number(amount) || 0,
     });
 
-    // Shield bubble visual (.has-shield) is applied when state syncs via updateUI
-    await wait(600);
+    await wait(300);
   }
 
   // ============================================================
@@ -899,16 +896,17 @@ export function createCombatAnimationManager(deps) {
     const eventDirection =
       direction ?? (effect?.type === "resourceSpend" ? -1 : 1);
     const sign = eventDirection >= 0 ? "+" : "-";
-    const floatClass =
+    const directionClass =
       eventDirection >= 0
         ? "resource-float-momentum-gain"
         : "resource-float-momentum-spend";
 
     createFloatElement(
-      target.portraitWrapper,
-      `${sign}${normalizedAmount.toFixed(0)} Momentum`,
+      target.championEl.querySelector(".momentum-bar"),
+      `${sign}${normalizedAmount.toFixed(0)}`,
       "resource-float",
-      floatClass,
+      "resource-float-momentum",
+      directionClass,
     );
 
     updateVisualResource(
@@ -1348,40 +1346,24 @@ export function createCombatAnimationManager(deps) {
       const champion = deps.activeChampions.get(snap.id);
       if (!champion) continue;
 
-      // 🛡️ Check if shields changed to add buffer for animation
-      const hadShieldsBefore = Array.isArray(champion.runtime?.shields) && champion.runtime.shields.length > 0;
-      const hasShieldsAfter = Array.isArray(snap.runtime?.shields) && snap.runtime.shields.length > 0;
-      const shieldsChanged = hadShieldsBefore !== hasShieldsAfter;
-
       syncChampionFromSnapshot(champion, snap);
 
-      // 🛡️ Calculate delay for shield changes
-      let delayMs = 0;
-      if (shieldsChanged) {
-        const timeSinceLastDamage = Date.now() - lastDamageAnimationTime;
-        // If shield changed within 1 second of damage animation, add extra buffer
-        if (timeSinceLastDamage < 1000) {
-          delayMs = 500; // Longer buffer when shield consumed after damage
-        } else {
-          delayMs = 250; // Normal buffer for other shield changes
-        }
-      }
-
-      // Shield changes need a buffer so the bubble doesn't pop before the
-      // damage animation reads; other updates run immediately.
-      const runAfterDelay = (fn) =>
-        delayMs > 0 ? setTimeout(fn, delayMs) : fn();
-
-      runAfterDelay(() => {
-        champion.updateUI({ freeCostSkills: editMode?.freeCostSkills === true });
-        StatusIndicator.updateChampionIndicators(champion);
-      });
-
-      const shouldSyncVfxNow =
-        currentPhase !== "combat" && !hasPendingCombatAction();
-
-      if (shouldSyncVfxNow) runAfterDelay(() => syncChampionVFX(champion));
+      champion.updateUI({ freeCostSkills: editMode?.freeCostSkills === true });
+      StatusIndicator.updateChampionIndicators(champion);
+      syncChampionVFX(champion);
     }
+  }
+
+  // The state a single event left its target in, rendered the moment that
+  // event finishes animating. HP stays on updateVisualHP's optimistic path:
+  // an event state never carries it.
+  function applyEventVisualState(event) {
+    const champion = deps.activeChampions.get(event?.targetId);
+    if (!champion || !event.targetState) return;
+
+    syncChampionFromSnapshot(champion, event.targetState);
+    StatusIndicator.updateChampionIndicators(champion);
+    syncChampionVFX(champion);
   }
 
   function syncChampionFromSnapshot(champion, snap) {
@@ -1529,6 +1511,7 @@ export function createCombatAnimationManager(deps) {
     // Ex: Lana swaps to inactiveChampions → her ID is no longer in the gameState → remove from the frontend.
     for (const [champId, champion] of deps.activeChampions) {
       if (!newChampionIds.has(champId)) {
+        stopChampionVFX(champion);
         champion.destroy();
         deps.activeChampions.delete(champId);
       }
@@ -1590,7 +1573,8 @@ export function createCombatAnimationManager(deps) {
       await wait(TIMING.DEATH_ANIM);
     }
 
-    // Remove from DOM
+    stopChampionVFX(champion);
+
     el.remove();
     champion.el = null;
 
