@@ -66,14 +66,17 @@ function buildChampionHTML(champion, { editMode } = {}) {
   </div>
 
           <div class="stat-block hp-stat">
+            <p><span class="hp">${Math.floor(Number(champion.HP) || 0)}/${Math.floor(Number(champion.maxHP) || 0)}</span></p>
+
             <div class="hp-bar">
                 <div class="hp-fill"></div>
                 <div class="hp-segments"></div>
-                <span class="hp">${Math.floor(Number(champion.HP) || 0)}/${Math.floor(Number(champion.maxHP) || 0)}</span>
             </div>
         </div>
 
         <div class="stat-block momentum-stat">
+            <p><span class="momentum">${Math.floor(Number(champion.momentum) || 0)}</span></p>
+
             <div class="momentum-bar" aria-label="Momentum bar">
                 <div class="momentum-fill"></div>
                 <div class="momentum-markers" aria-hidden="true">
@@ -81,7 +84,6 @@ function buildChampionHTML(champion, { editMode } = {}) {
                     <span class="momentum-threshold" style="left: 50%;">2</span>
                     <span class="momentum-threshold" style="left: 75%;">3</span>
                 </div>
-                <span class="momentum">${Math.floor(Number(champion.momentum) || 0)}</span>
             </div>
         </div>
 
