@@ -117,9 +117,9 @@ const neraqaSkills = [
     key: "the_undertow",
     name: "The Undertow",
 
-    bf: 160,
+    bf: 180,
     delayTurns: 2,
-    piercingPercentage: 45,
+    piercingPercentage: 40,
 
     contact: false,
     damageMode: "piercing",
