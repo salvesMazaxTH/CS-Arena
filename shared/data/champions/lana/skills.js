@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 
@@ -82,8 +83,10 @@ const lanaSkills = [
     damageMode: "standard",
     contact: false,
 
+    snareDuration: 1,
+
     description() {
-      return `Lana closes her fist and the chosen target is torn off the ground and thrown, taking magical damage.`;
+      return `Lana closes her fist and the chosen target is torn off the ground and thrown, taking magical damage and left Snared for ${this.snareDuration} turn(s) as her grip keeps them off their feet.`;
     },
     targetSpec: ["enemy"],
 
@@ -91,7 +94,7 @@ const lanaSkills = [
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
 
-      return new DamageEvent({
+      const result = new DamageEvent({
         baseDamage,
         attacker: user,
         defender: enemy,
@@ -100,6 +103,14 @@ const lanaSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
+
+      const results = Array.isArray(result) ? result : [result];
+
+      if (results.some((r) => effectConnected(r, "snared")) && enemy.alive) {
+        enemy.applyStatusEffect("snared", this.snareDuration, context);
+      }
+
+      return results;
     },
   },
 
