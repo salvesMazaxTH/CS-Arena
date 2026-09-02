@@ -1595,6 +1595,8 @@ export function createCombatAnimationManager(deps) {
     champion.el = null;
 
     deps.activeChampions.delete(championId);
+
+    deps.onChampionRemovalAnimated?.();
   }
 
   // ============================================================

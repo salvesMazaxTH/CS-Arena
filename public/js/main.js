@@ -110,6 +110,8 @@ const playerNames = new Map(); // slot → username
 // --- Turn & Combat ---
 let currentTurn = 1;
 let hasConfirmedEndTurn = false;
+// True from the moment the turn locks until its resolution has finished animating.
+let isResolvingTurn = false;
 let gameEnded = false;
 
 // --- Active champions in the field ---
@@ -236,7 +238,14 @@ const combatAnimations = createCombatAnimationManager({
   },
 
   onGameStateProcessed: () => {
-    if (playerTeam !== null) initActionBar();
+    // While the turn is resolving nothing is clickable yet, and rebuilding the
+    // bar there would also reveal the outcome before its animation plays.
+    if (playerTeam !== null && !isResolvingTurn) initActionBar();
+  },
+
+  onChampionRemovalAnimated: () => {
+    renderLineupBanners(lastLineupsByTeam);
+    if (playerTeam !== null) renderLineupBanner();
   },
 
   onChampionReplaced: () => {
@@ -1426,6 +1435,7 @@ const materializedLineupChampions = new Set();
 // Where each line-up champion of either team stands, decided by the server.
 let lineupStatuses = {};
 let enemyLineupStatuses = {};
+let lastLineupsByTeam = {};
 
 // --- Manual mid-match summon from lineup ---
 // Eligibility (slot free, once per turn) is server-authoritative; this only
@@ -2230,7 +2240,10 @@ socket.on("gameStateUpdate", (gameState) => {
   }
 
   syncMaterializedLineupChampions(gameState?.champions || []);
-  renderLineupBanners(gameState?.lineups);
+  lastLineupsByTeam = gameState?.lineups ?? {};
+  // Repainting here during a resolution would show a death on the banner while
+  // the champion is still standing on the board.
+  if (!isResolvingTurn) renderLineupBanners(lastLineupsByTeam);
   renderPlayerEmblemStrip();
   renderEmblemSelectionUI();
   combatAnimations.handleGameStateUpdate(gameState);
@@ -2256,6 +2269,7 @@ socket.on("actionFailed", (message) => {
 socket.on("turnLocked", () => {
   document.getElementById("undo-actions-btn").disabled = true;
   hasConfirmedEndTurn = false;
+  isResolvingTurn = true;
   closeSummonReminder();
   removeActionBar();
 });
@@ -2296,8 +2310,10 @@ function applyTurnUpdate(turn) {
   currentTurn = turn;
   combatAnimations.updateTurnDisplay(currentTurn);
   hasConfirmedEndTurn = false;
+  isResolvingTurn = false;
   pendingSummonChampionKey = null;
   closeSummonReminder();
+  renderLineupBanners(lastLineupsByTeam);
   renderLineupBanner();
 
   activeChampions.forEach((champion) => champion.resetActionStatus());
