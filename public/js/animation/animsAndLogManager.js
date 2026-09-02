@@ -1,5 +1,8 @@
 import { formatChampionName } from "../../../shared/ui/formatters.js";
-import { formatShieldBadge } from "../../../shared/core/championUI.js";
+import {
+  formatShieldBadge,
+  SHIELD_MARKERS,
+} from "../../../shared/core/championUI.js";
 
 import {
   syncChampionVFX,
@@ -850,13 +853,17 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   async function animateShield(effect) {
-    const { targetId, amount } = effect;
+    const { targetId, amount, shieldType } = effect;
     const target = resolveTargetVisual(targetId);
     if (!target) return;
 
     await showDialog(`${target.name} gained a shield.`);
 
-    createFloatElement(target.portraitWrapper, `🛡️ ${amount}`, "shield-float");
+    createFloatElement(
+      target.portraitWrapper,
+      `🛡️ ${SHIELD_MARKERS[shieldType] ?? amount}`,
+      "shield-float",
+    );
 
     updateVisualHP(targetId, 0, null, {
       shields: effect.targetState?.runtime?.shields,

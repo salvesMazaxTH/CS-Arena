@@ -46,7 +46,7 @@ export function addShield(
   });
 
   if (context?.registerShield) {
-    context.registerShield({ target: champion, amount });
+    context.registerShield({ target: champion, amount, type });
   }
 }
 

@@ -1409,7 +1409,7 @@ export class TurnResolver {
       },
 
       // -- SHIELD REGISTRY -- //
-      registerShield({ target, amount, sourceId } = {}) {
+      registerShield({ target, amount, sourceId, type } = {}) {
         const value = Number(amount) || 0;
         if (!target?.id || value <= 0) return;
 
@@ -1418,6 +1418,7 @@ export class TurnResolver {
         const event = {
           seq: this.visual.seq++,
           type: "shield",
+          shieldType: type,
           targetId: target.id,
           sourceId: sourceId || this.healSourceId || target.id,
           amount: value,
