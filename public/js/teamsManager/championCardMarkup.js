@@ -107,40 +107,6 @@ export function renderChampionIdentityBadgesMarkup(champion) {
     .join("");
 }
 
-export function renderChampionCardContent(champion) {
-  const badges = renderChampionIdentityBadgesMarkup(champion);
-
-  const speciesList = getChampionSpecies(champion);
-  const speciesMarkup = speciesList.length
-    ? speciesList
-        .map(
-          (species) =>
-            `<span class="champion-species-chip">${escapeHtml(toReadableLabel(species))}</span>`,
-        )
-        .join("")
-    : '<span class="champion-species-empty">No species set</span>';
-
-  return `
-    <div class="champion-card-inner">
-      <div class="champion-card-face champion-card-front">
-        <button type="button" class="champion-card-flip-btn" aria-label="Show species" title="Show species">i</button>
-        <img class="champion-card-portrait" src="${champion.portrait}" alt="${champion.name}">
-        <h3>${champion.name}</h3>
-        <div class="champion-identity-row">
-          ${badges}
-        </div>
-      </div>
-      <div class="champion-card-face champion-card-back">
-        <button type="button" class="champion-card-flip-btn champion-card-flip-btn-back" aria-label="Show front" title="Show front">↺</button>
-        <div class="champion-card-back-title">Species</div>
-        <div class="champion-species-list">
-          ${speciesMarkup}
-        </div>
-      </div>
-    </div>
-  `;
-}
-
 export function sortChampionKeysAlphabetically(keys, championDB) {
   return keys.sort((a, b) => {
     const nameA = championDB[a]?.name?.toLowerCase() || "";
