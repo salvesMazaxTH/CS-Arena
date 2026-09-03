@@ -39,9 +39,9 @@ function renderTeamCard(team) {
   const isPrebuilt = team.origin === "prebuilt";
 
   const actions = isPrebuilt
-    ? `<button type="button" data-act="duplicate" data-id="${escapeHtml(team.id)}">Duplicate &amp; edit</button>`
+    ? `<button type="button" class="tm-primary-btn" data-act="duplicate" data-id="${escapeHtml(team.id)}">Duplicate &amp; edit</button>`
     : `
-      <button type="button" data-act="edit" data-id="${escapeHtml(team.id)}">Edit</button>
+      <button type="button" class="tm-primary-btn" data-act="edit" data-id="${escapeHtml(team.id)}">Edit</button>
       <button type="button" class="secondary-action-btn" data-act="duplicate" data-id="${escapeHtml(team.id)}">Duplicate</button>
       <button type="button" class="tm-danger-btn" data-act="delete" data-id="${escapeHtml(team.id)}">Delete</button>
     `;
