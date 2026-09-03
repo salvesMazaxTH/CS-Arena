@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
 
 export default {
   key: "first_sutra_adamantine_heart",
@@ -14,7 +15,7 @@ export default {
 
     return `Morakhan takes 10% less damage (except Absolute Damage) and reduces damage taken from physical attacks by an additional ${this.flatReductionVSPhysical}.
 
-    Whenever he takes Physical Damage, he gains 1 <b>Stability</b> stack (Max: ${this.stabilityStacksCap}).
+    Whenever he takes Physical Damage, he gains 1 <b>Stability</b> stack (Max: ${this.stabilityStacksCap}). A CLAIM, taken in stillness, grants 1 stack as well.
 
     When a hit would deal more than ${this.significantHitRatio * 100}% of his Max HP, he consumes all Stability stacks to reduce that damage by an additional 10% per stack and doubles his damage dealt for the next ${this.dmgBuffAuraDuration} turn(s).
 
@@ -24,6 +25,21 @@ export default {
   hookScope: {
     onBeforeDmgTaking: "defender",
     onAfterDmgTaking: "defender",
+    onActionResolved: "actionSource",
+  },
+
+  onActionResolved({ owner, skill }) {
+    if (skill?.key !== CLAIM_ACTION_KEY) return;
+
+    const runtime = (owner.runtime ??= {});
+    const stacks = runtime.stabilityStacks || 0;
+    if (stacks >= this.stabilityStacksCap) return;
+
+    runtime.stabilityStacks = stacks + 1;
+
+    return {
+      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} recites a sutra through the CLAIM and gains 1 Stability stack (${runtime.stabilityStacks}/${this.stabilityStacksCap}).`,
+    };
   },
 
   onBeforeDmgTaking({ damage, skill, context, owner, defender, type }) {
