@@ -337,6 +337,24 @@
   }
 }
 
+/* Radiant hit effect (Seymour): the portrait washes out, colour wrung from it */
+
+.radiant-hit {
+  animation: radiantFlash 0.34s ease-out;
+}
+
+@keyframes radiantFlash {
+  0% {
+    filter: brightness(1);
+  }
+  22% {
+    filter: brightness(2.6) saturate(0.15) contrast(0.92);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
 /* Musket ball hit effect (applied to champion portrait when a shot lands) */
 
 .shot-hit {
