@@ -117,11 +117,12 @@ const raliaSkills = [
     hitVfx: "slash",
     healPercent: 60,
     minHeal: 25,
+    killScorePoints: 1,
     contact: true,
 
     priority: 0,
     description() {
-      return `Rália passes judgement with her blade, dealing physical damage to the chosen target and taking the sentence back as her own strength: she restores HP equal to ${this.healPercent}% of the effective damage dealt, never less than ${this.minHeal}.`;
+      return `Rália passes judgement with her blade, dealing physical damage to the chosen target and taking the sentence back as her own strength: she restores HP equal to ${this.healPercent}% of the effective damage dealt, never less than ${this.minHeal}. If the judgement is fatal, her player scores ${this.killScorePoints} point.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -158,6 +159,19 @@ const raliaSkills = [
       if (healed > 0) {
         // Extend the engine's log instead of replacing it.
         mainResult.log += `\n${formatChampionName(user)} restores ${healed} HP.`;
+      }
+
+      const didKill = results.some(
+        (entry) => entry?.targetId === enemy.id && entry?.killed,
+      );
+
+      if (didKill) {
+        context.registerScore({
+          amount: this.killScorePoints,
+          scoringSlot: user.team - 1,
+          reason: this.key,
+          sourceId: user.id,
+        });
       }
 
       return results;
