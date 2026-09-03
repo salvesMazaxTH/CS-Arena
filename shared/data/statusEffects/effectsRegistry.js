@@ -16,6 +16,7 @@ import conductor from "./conductor.js";
 import invisible from "./invisible.js";
 import concealed from "./concealed.js";
 import healBlock from "./healBlock.js";
+import blind from "./blind.js";
 
 export const StatusEffectsRegistry = {
   paralyzed,
@@ -34,6 +35,7 @@ export const StatusEffectsRegistry = {
   concealed,
   poisoned,
   healBlock,
+  blind,
 };
 
 export const EvolvedStatusByBase = Object.fromEntries(

@@ -138,6 +138,12 @@ export const StatusIndicator = {
       background: "",
       label: "Taunted",
     },
+    blind: {
+      type: "emoji",
+      value: "🕶️",
+      background: "rgba(20, 20, 20, 0.85)",
+      label: "Blind",
+    },
   },
 
   // Minimum visual duration for indicators (ms)

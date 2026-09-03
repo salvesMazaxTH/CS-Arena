@@ -52,6 +52,7 @@ import oryn from "./oryn/index.js";
 import neraqa from "./neraqa/index.js";
 import julian from "./julian/index.js";
 import silas from "./silas/index.js";
+import seymour from "./seymour/index.js";
 
 const championDB = {
   ralia,
@@ -108,6 +109,7 @@ const championDB = {
   neraqa,
   julian,
   silas,
+  seymour,
 };
 
 export default championDB;
