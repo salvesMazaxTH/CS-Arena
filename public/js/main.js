@@ -27,8 +27,10 @@ function hideOverlay(el) {
 // ============================================================
 
 import { championDB } from "/shared/data/championDB.js";
-import { DuoLayout, duoDB, getDuoForCore } from "/shared/data/duos.js";
-import { isChampionDraftable } from "/shared/data/draftEligibility.js";
+import { getDuoForCore } from "/shared/data/duos.js";
+import { validateTeamComposition } from "/shared/data/teams/index.js";
+import { TeamStore } from "./teamsManager/TeamStore.js";
+import { renderTeamSummary } from "./ui/teamCard.js";
 import { Champion } from "/shared/core/Champion.js";
 import { SpawnProtection } from "/shared/engine/combat/spawnProtection.js";
 import { StatusIndicator } from "../../shared/ui/statusIndicator.js";
@@ -42,7 +44,6 @@ import {
   ELEMENT_IDENTITIES,
   CLASS_IDENTITIES,
   getRequirementIdentity,
-  buildIdentityGradient,
   applyIdentityPaletteCssVariables,
 } from "../../shared/ui/identityPalette.js";
 
@@ -117,14 +118,11 @@ let gameEnded = false;
 // --- Active champions in the field ---
 const activeChampions = new Map();
 
-// --- Champion Selection ---
+// --- Pre-match hub ---
 const TEAM_SIZE = 8;
-let selectedChampions = Array(TEAM_SIZE).fill(null);
-let championSelectionTimer = null;
-let championSelectionTimeLeft = 0;
-let playerTeamConfirmed = false;
-let draggedChampionKey = null;
-let draggedFromSlotIndex = -1; // -1 = available grid, >= 0 = selected slot
+const teamStore = new TeamStore();
+let selectedHubTeamId = null;
+let matchmaking = false;
 
 // --- Timers ---
 let disconnectionCountdownInterval = null;
@@ -147,9 +145,7 @@ const { collectClientTargets } = createTargeting({
   removeSkillOverlay,
 });
 
-const EMBLEM_MAX_SELECTION = 2;
 let playerEmblems = [];
-let selectedEmblemKeys = [];
 let emblemTooltip = null;
 
 // ============================================================
@@ -170,21 +166,13 @@ const endTurnBtn = document.querySelector("#end-turn-btn");
 const combatDialog = document.getElementById("combat-dialog");
 const combatDialogText = document.getElementById("combat-dialog-text");
 
-// --- Champion Selection ---
-const championSelectionScreen = document.getElementById(
-  "champion-selection-screen",
-);
-const availableChampionsGrid = document.getElementById(
-  "availableChampionsGrid",
-);
-const selectedChampionsSlots = document.getElementById(
-  "selectedChampionsSlots",
-);
-const autofillTeamBtn = document.getElementById("autofillTeamBtn");
-const confirmTeamBtn = document.getElementById("confirmTeamBtn");
-const teamSelectionMessage = document.getElementById("team-selection-message");
-const emblemSelectionList = document.getElementById("emblemSelectionList");
-const selectedEmblemsCount = document.getElementById("selectedEmblemsCount");
+// --- Pre-match hub ---
+const hubScreen = document.getElementById("hub-screen");
+const hubTeamGrid = document.getElementById("hubTeamGrid");
+const hubEmpty = document.getElementById("hubEmpty");
+const hubStatus = document.getElementById("hubStatus");
+const hubFindMatchBtn = document.getElementById("hubFindMatchBtn");
+const hubCancelBtn = document.getElementById("hubCancelBtn");
 
 // --- Game Over ---
 const gameOverOverlay = document.getElementById("gameOverOverlay");
@@ -340,11 +328,11 @@ socket.on("playerAssigned", (data) => {
   username = data.username;
   window.playerTeam = playerTeam;
 
-  const initialEmblems = Array.isArray(data.emblems) ? data.emblems : [];
-  playerEmblems = initialEmblems.slice();
-  selectedEmblemKeys = [...playerEmblems];
-  renderEmblemSelectionUI();
+  playerEmblems = Array.isArray(data.emblems) ? data.emblems.slice() : [];
   renderPlayerEmblemStrip();
+
+  hideOverlay(loginScreen);
+  openHub();
 
   // Mirror the arena so the local player always appears on top in blue
   const arena = document.querySelector(".arena");
@@ -355,14 +343,6 @@ socket.on("playerAssigned", (data) => {
     arena?.classList.remove("arena--mirrored");
     document.body.classList.remove("perspective-team2");
   }
-});
-
-socket.on("playerEmblemsUpdated", ({ emblems } = {}) => {
-  const next = Array.isArray(emblems) ? emblems : [];
-  playerEmblems = next.slice();
-  selectedEmblemKeys = [...next];
-  renderEmblemSelectionUI();
-  renderPlayerEmblemStrip();
 });
 
 socket.on("waitingForOpponent", (message) => {
@@ -377,23 +357,9 @@ socket.on("serverFull", (message) => {
 });
 
 socket.on("allPlayersConnected", () => {
-  // Transition: login → main content
-  hideOverlay(loginScreen);
-  mainContent.classList.remove("hidden");
-  mainContent.classList.add("visible");
-
   // Attach listener for skipping slot (uses existing ref)
   if (skipSlotBtn) {
     skipSlotBtn.addEventListener("click", skipCurrentSlot);
-  }
-
-  // Reset selection state for new game
-  selectedChampions = Array(TEAM_SIZE).fill(null);
-  playerTeamConfirmed = false;
-  confirmTeamBtn.disabled = true;
-  if (championSelectionTimer) {
-    clearInterval(championSelectionTimer);
-    championSelectionTimer = null;
   }
 
   // Reset game flags
@@ -429,6 +395,8 @@ socket.on("forceLogout", (message) => {
   alert(message);
 
   // Back to the login screen
+  matchmaking = false;
+  hideOverlay(hubScreen);
   mainContent.classList.remove("visible");
   mainContent.classList.add("hidden");
   showOverlay(loginScreen);
@@ -527,91 +495,131 @@ window.addEventListener("beforeunload", function (e) {
 // ============================================================
 
 // ============================================================
-//  CHAMPION SELECTION
+//  PRE-MATCH HUB (team pick + matchmaking)
 // ============================================================
 
-socket.on("startChampionSelection", ({ timeLeft }) => {
-  showOverlay(championSelectionScreen);
+function isTeamPlayable(team) {
+  return (
+    !!team &&
+    validateTeamComposition(team, { championDB, emblems: EMBLEMS }).ok
+  );
+}
+
+function openHub() {
+  showOverlay(hubScreen);
   mainContent.classList.remove("visible");
   mainContent.classList.add("hidden");
+  selectedHubTeamId = teamStore.getSelectedId();
+  renderHub();
+}
 
-  renderAvailableChampions();
+function renderHub() {
+  const teams = teamStore.getAll();
+  hubEmpty.hidden = teams.length > 0;
 
-  championSelectionTimeLeft = timeLeft;
-  updateChampionSelectionTimerUI();
+  if (!teams.some((team) => team.id === selectedHubTeamId)) {
+    selectedHubTeamId = teams[0]?.id ?? null;
+  }
 
-  if (championSelectionTimer) clearInterval(championSelectionTimer);
+  hubTeamGrid.innerHTML = teams
+    .map((team) => {
+      const playable = isTeamPlayable(team);
+      return `
+        <button type="button"
+          class="hub-team-card ${team.id === selectedHubTeamId ? "selected" : ""} ${playable ? "" : "is-invalid"}"
+          data-team-id="${escapeHtml(team.id)}">
+          ${renderTeamSummary(team)}
+          ${playable ? "" : '<span class="hub-team-invalid">Unavailable — fix it in Manage teams</span>'}
+        </button>
+      `;
+    })
+    .join("");
 
-  championSelectionTimer = setInterval(() => {
-    championSelectionTimeLeft--;
-    updateChampionSelectionTimerUI();
-    if (championSelectionTimeLeft <= 0) {
-      clearInterval(championSelectionTimer);
-      if (!playerTeamConfirmed) {
-        // Time's up — send the current selection; server fills in the missing ones
-        // keep a local copy of the roster for lineup UI
-        playerRoster = selectedChampions.slice();
-        renderLineupBanner();
-        socket.emit("selectTeam", {
-          team: playerTeam,
-          champions: selectedChampions,
-        });
-        teamSelectionMessage.textContent =
-          "Time's up! Team sent. Waiting for the other player...";
-        playerTeamConfirmed = true;
-        confirmTeamBtn.disabled = true;
-      }
-    }
-  }, 1000);
+  updateHubActionState();
+}
+
+function updateHubActionState() {
+  hubFindMatchBtn.disabled =
+    matchmaking || !isTeamPlayable(teamStore.getById(selectedHubTeamId));
+  hubFindMatchBtn.hidden = matchmaking;
+  hubCancelBtn.hidden = !matchmaking;
+  hubTeamGrid.querySelectorAll(".hub-team-card").forEach((card) => {
+    card.disabled = matchmaking || card.classList.contains("is-invalid");
+  });
+}
+
+hubTeamGrid.addEventListener("click", (event) => {
+  const card = event.target.closest(".hub-team-card");
+  if (!card || card.disabled) return;
+  selectedHubTeamId = card.dataset.teamId;
+  hubTeamGrid
+    .querySelectorAll(".hub-team-card")
+    .forEach((el) => el.classList.toggle("selected", el === card));
+  updateHubActionState();
+});
+
+hubFindMatchBtn.addEventListener("click", () => {
+  const team = teamStore.getById(selectedHubTeamId);
+  const check = team
+    ? validateTeamComposition(team, { championDB, emblems: EMBLEMS })
+    : { ok: false, errors: ["Pick a team first."] };
+  if (!check.ok) {
+    hubStatus.textContent = check.errors[0];
+    return;
+  }
+
+  teamStore.setSelectedId(team.id);
+  playerRoster = team.champions.slice(0, TEAM_SIZE);
+  playerEmblems = team.emblems.slice();
+  renderPlayerEmblemStrip();
+  renderLineupBanner();
+
+  matchmaking = true;
+  hubStatus.textContent = "Searching for a match…";
+  updateHubActionState();
+  socket.emit("readyWithTeam", {
+    champions: team.champions,
+    emblems: team.emblems,
+  });
+});
+
+hubCancelBtn.addEventListener("click", () => {
+  matchmaking = false;
+  hubStatus.textContent = "";
+  updateHubActionState();
+  socket.emit("cancelReadyWithTeam");
+});
+
+// A team edited in the Team Manager tab reaches the hub through localStorage.
+window.addEventListener("storage", (event) => {
+  if (
+    event.key?.startsWith("csa.teams") &&
+    !hubScreen.classList.contains("hidden")
+  ) {
+    renderHub();
+  }
+});
+window.addEventListener("focus", () => {
+  if (!hubScreen.classList.contains("hidden") && !matchmaking) renderHub();
+});
+
+socket.on("readyWithTeamRejected", (message) => {
+  matchmaking = false;
+  hubStatus.textContent = message || "The server rejected that team.";
+  updateHubActionState();
 });
 
 socket.on("allTeamsSelected", () => {
-  hideOverlay(championSelectionScreen);
+  matchmaking = false;
+  hubStatus.textContent = "";
+  hideOverlay(hubScreen);
   mainContent.classList.remove("hidden");
   mainContent.classList.add("visible");
 
-  // Play main soundtrack playlist (alternates between tracks)
-  // Repeat main2 twice because it's shorter than main
+  // Play main soundtrack playlist (main2 twice because it's shorter than main).
   audioManager.playMusic(["main", "main2", "main2"]);
-
-  // Reset selection state
-  selectedChampions = Array(TEAM_SIZE).fill(null);
-  playerTeamConfirmed = false;
-  confirmTeamBtn.disabled = true;
   resetLineupMaterializationState();
-  if (championSelectionTimer) {
-    clearInterval(championSelectionTimer);
-    championSelectionTimer = null;
-  }
 });
-
-confirmTeamBtn.addEventListener("click", () => {
-  if (playerTeamConfirmed) return;
-  if (selectedChampions.includes(null)) {
-    alert("Please select your champions for the team.");
-    return;
-  }
-  playerTeamConfirmed = true;
-  confirmTeamBtn.disabled = true;
-  // keep a local copy of the roster for lineup UI
-  playerRoster = selectedChampions.slice();
-  renderLineupBanner();
-  socket.emit("selectTeam", { team: playerTeam, champions: selectedChampions });
-  teamSelectionMessage.textContent =
-    "Team confirmed! Waiting for the other player...";
-  clearInterval(championSelectionTimer);
-});
-
-// --- CHAMPION GRID RENDERING ---
-
-// Function to sort champions alphabetically
-function sortChampionKeysAlphabetically(keys) {
-  return keys.sort((a, b) => {
-    const nameA = championDB[a]?.name?.toLowerCase() || "";
-    const nameB = championDB[b]?.name?.toLowerCase() || "";
-    return nameA.localeCompare(nameB);
-  });
-}
 
 // Icons and colors for affinities/classes live in the shared identity palette
 // so badges, emblem tiles and the stylesheet all read from the same source.
@@ -718,45 +726,7 @@ function renderChampionIdentityBadgesMarkup(champion) {
     .join("");
 }
 
-function renderChampionCardContent(champion) {
-  const badges = renderChampionIdentityBadgesMarkup(champion);
-
-  const speciesList = getChampionSpecies(champion);
-  const speciesMarkup = speciesList.length
-    ? speciesList
-        .map(
-          (species) =>
-            `<span class="champion-species-chip">${escapeHtml(toReadableLabel(species))}</span>`,
-        )
-        .join("")
-    : '<span class="champion-species-empty">No species set</span>';
-
-  return `
-    <div class="champion-card-inner">
-      <div class="champion-card-face champion-card-front">
-        <button type="button" class="champion-card-flip-btn" aria-label="Show species" title="Show species">i</button>
-        <img class="champion-card-portrait" src="${champion.portrait}" alt="${champion.name}">
-        <h3>${champion.name}</h3>
-        <div class="champion-identity-row">
-          ${badges}
-        </div>
-      </div>
-      <div class="champion-card-face champion-card-back">
-        <button type="button" class="champion-card-flip-btn champion-card-flip-btn-back" aria-label="Show front" title="Show front">↺</button>
-        <div class="champion-card-back-title">Species</div>
-        <div class="champion-species-list">
-          ${speciesMarkup}
-        </div>
-      </div>
-    </div>
-  `;
-}
-
 function getPlayerRosterForEmblemEligibility() {
-  if (selectedChampions.some(Boolean)) {
-    return selectedChampions.filter(Boolean);
-  }
-
   return (playerRoster || []).filter(Boolean);
 }
 
@@ -914,88 +884,6 @@ function renderRequirementCountsMarkup(checks) {
     .join(" · ");
 }
 
-/** Paints the emblem tile with the color(s) of the requirement(s) it asks for. */
-function getEmblemRequirementGradient(checks) {
-  return buildIdentityGradient(checks.map((check) => check.identity));
-}
-
-function renderEmblemSelectionUI() {
-  if (!emblemSelectionList) return;
-
-  const rosterKeys = getPlayerRosterForEmblemEligibility();
-  const eligibleKeys = new Set();
-
-  emblemSelectionList.innerHTML = "";
-
-  EMBLEMS.forEach((emblem) => {
-    const isSelected = selectedEmblemKeys.includes(emblem.key);
-    const requirementStatus = evaluateEmblemRequirements(emblem, rosterKeys);
-    const isLocked =
-      !isSelected && selectedEmblemKeys.length >= EMBLEM_MAX_SELECTION;
-    const isBlocked = !requirementStatus.allMet && !isSelected;
-    if (requirementStatus.allMet) eligibleKeys.add(emblem.key);
-
-    const item = document.createElement("button");
-    item.type = "button";
-    item.className = `emblem-option ${isSelected ? "selected" : ""} ${requirementStatus.allMet ? "eligible" : "blocked"}`;
-    item.disabled = isLocked || isBlocked;
-    item.dataset.emblemKey = emblem.key;
-
-    const requirementGradient = getEmblemRequirementGradient(
-      requirementStatus.checks,
-    );
-    if (requirementGradient) {
-      item.style.setProperty("--emblem-requirement-tint", requirementGradient);
-    }
-
-    item.innerHTML = `
-      <span class="emblem-option-badge">${escapeHtml(getEmblemShortCode(emblem))}</span>
-      <span class="emblem-option-copy">
-        <strong>${escapeHtml(emblem.name || emblem.key)}</strong>
-        <small>Requirements ${renderRequirementCountsMarkup(requirementStatus.checks)}</small>
-      </span>
-      <span class="emblem-option-state">${isSelected ? "ON" : requirementStatus.allMet ? "OK" : "REQ"}</span>
-    `;
-
-    item.addEventListener("click", () => {
-      const current = [...selectedEmblemKeys];
-      const existingIndex = current.indexOf(emblem.key);
-
-      if (existingIndex >= 0) {
-        current.splice(existingIndex, 1);
-      } else if (current.length < EMBLEM_MAX_SELECTION) {
-        current.push(emblem.key);
-      } else {
-        return;
-      }
-
-      selectedEmblemKeys = current;
-      playerEmblems = [...selectedEmblemKeys];
-      socket.emit("updatePlayerEmblems", {
-        emblems: selectedEmblemKeys,
-        draftRoster: getPlayerRosterForEmblemEligibility(),
-      });
-      renderEmblemSelectionUI();
-      renderPlayerEmblemStrip();
-    });
-
-    item.addEventListener("mouseenter", () => {
-      showEmblemTooltip(item, emblem, requirementStatus);
-    });
-    item.addEventListener("mouseleave", hideEmblemTooltip);
-    item.addEventListener("focus", () => {
-      showEmblemTooltip(item, emblem, requirementStatus);
-    });
-    item.addEventListener("blur", hideEmblemTooltip);
-
-    emblemSelectionList.appendChild(item);
-  });
-
-  if (selectedEmblemsCount) {
-    selectedEmblemsCount.textContent = String(selectedEmblemKeys.length);
-  }
-}
-
 function showEmblemTooltip(target, emblem, requirementStatus = { checks: [] }) {
   hideEmblemTooltip();
 
@@ -1092,338 +980,6 @@ function renderLineupChipContent(champion, slotIndex) {
     </span>
   `;
 }
-
-function attachChampionCardInteractions(
-  card,
-  championKey,
-  fromSlotIndex = -1,
-  duo = null,
-) {
-  card.title = duo
-    ? `${duo.name} take ${duo.cores.length} line-up slots and always enter the battlefield together`
-    : "Tap the button for species | long press or right-click to flip";
-
-  const flipCard = () => {
-    card.classList.toggle("is-flipped");
-  };
-
-  const flipButtons = card.querySelectorAll(".champion-card-flip-btn");
-  flipButtons.forEach((button) => {
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      flipCard();
-    });
-  });
-
-  let longPressTimer = null;
-  let longPressTriggered = false;
-  let touchStartX = 0;
-  let touchStartY = 0;
-  const LONG_PRESS_MS = 450;
-  const MAX_TOUCH_MOVE_PX = 14;
-
-  const clearLongPressTimer = () => {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      longPressTimer = null;
-    }
-  };
-
-  card.addEventListener("touchstart", (event) => {
-    if (event.touches.length !== 1) return;
-    if (event.target.closest(".champion-card-flip-btn")) return;
-
-    const touch = event.touches[0];
-    touchStartX = touch.clientX;
-    touchStartY = touch.clientY;
-    longPressTriggered = false;
-
-    clearLongPressTimer();
-    longPressTimer = setTimeout(() => {
-      longPressTriggered = true;
-      flipCard();
-    }, LONG_PRESS_MS);
-  });
-
-  card.addEventListener("touchmove", (event) => {
-    if (!longPressTimer || event.touches.length !== 1) return;
-
-    const touch = event.touches[0];
-    const deltaX = Math.abs(touch.clientX - touchStartX);
-    const deltaY = Math.abs(touch.clientY - touchStartY);
-    if (deltaX > MAX_TOUCH_MOVE_PX || deltaY > MAX_TOUCH_MOVE_PX) {
-      clearLongPressTimer();
-    }
-  });
-
-  card.addEventListener("touchend", clearLongPressTimer);
-  card.addEventListener("touchcancel", clearLongPressTimer);
-
-  card.addEventListener("click", (event) => {
-    if (event.target.closest(".champion-card-flip-btn")) return;
-    if (longPressTriggered) {
-      longPressTriggered = false;
-      return;
-    }
-    if (card.classList.contains("is-flipped")) {
-      card.classList.remove("is-flipped");
-      return;
-    }
-    if (duo) handleDuoCardClick(duo);
-    else handleChampionCardClick(championKey);
-  });
-
-  card.addEventListener("dragstart", (event) =>
-    handleDragStart(event, duo ? duo.key : championKey, fromSlotIndex),
-  );
-  card.addEventListener("contextmenu", (event) => {
-    event.preventDefault();
-    card.classList.toggle("is-flipped");
-  });
-}
-
-/** A draftable champion that also gets a card of its own in the grid. */
-function isDraftSelectable(champion) {
-  if (!isChampionDraftable(champion, editMode)) return false;
-
-  return champion.hiddenFromDraftGrid !== true;
-}
-
-function duoLayout() {
-  return new DuoLayout(selectedChampions, TEAM_SIZE);
-}
-
-// A duo card is offered whenever every core behind it is draftable and has no
-// card of its own to be picked from.
-function isDuoOffered(duo) {
-  return duo.cores.every((coreKey) => {
-    const core = championDB[coreKey];
-    if (!core || core.hiddenFromDraftGrid !== true) return false;
-    return isChampionDraftable(core, editMode);
-  });
-}
-
-function renderAvailableChampions() {
-  availableChampionsGrid.innerHTML = "";
-
-  const allAvailableChampionKeys = sortChampionKeysAlphabetically(
-    Object.keys(championDB).filter((key) => isDraftSelectable(championDB[key])),
-  );
-
-  allAvailableChampionKeys.forEach((key) => {
-    const champion = championDB[key];
-    const card = document.createElement("div");
-    card.classList.add("champion-card");
-    card.dataset.championKey = key;
-    card.draggable = true;
-
-    card.innerHTML = renderChampionCardContent(champion);
-    attachChampionCardInteractions(card, key, -1);
-
-    availableChampionsGrid.appendChild(card);
-  });
-
-  Object.values(duoDB)
-    .filter(isDuoOffered)
-    .forEach((duo) => {
-      const card = document.createElement("div");
-      card.classList.add("champion-card", "duo-card");
-      card.dataset.duoKey = duo.key;
-      card.draggable = true;
-
-      card.innerHTML = renderDuoCardContent(duo);
-      attachChampionCardInteractions(card, duo.cores[0], -1, duo);
-
-      availableChampionsGrid.appendChild(card);
-    });
-
-  updateSelectedChampionsUI();
-}
-
-function renderDuoCardContent(duo) {
-  const cores = duo.cores
-    .map(
-      (coreKey) =>
-        `<span class="champion-species-chip">${escapeHtml(championDB[coreKey].name)}</span>`,
-    )
-    .join("");
-
-  return `
-    <div class="champion-card-inner">
-      <div class="champion-card-face champion-card-front">
-        <img class="champion-card-portrait" src="${duo.portrait}" alt="${escapeHtml(duo.name)}">
-        <h3>${escapeHtml(duo.name)}</h3>
-        <div class="champion-identity-row">
-          <span class="duo-slot-cost">${duo.cores.length} slots</span>
-        </div>
-        <div class="duo-core-list">${cores}</div>
-      </div>
-    </div>
-  `;
-}
-
-function handleDuoCardClick(duo) {
-  if (playerTeamConfirmed) return;
-
-  const layout = duoLayout();
-
-  if (layout.at(selectedChampions.indexOf(duo.cores[0]))) {
-    layout.remove(duo);
-  } else {
-    const start = layout.findPlacement(duo);
-    if (start === -1) {
-      alert(
-        `${duo.name} need one free block of slots: ${layout.blockLabels(duo)}.`,
-      );
-      return;
-    }
-    layout.place(duo, start);
-  }
-
-  updateSelectedChampionsUI();
-  renderEmblemSelectionUI();
-}
-
-// --- Click on champion card ---
-
-function getDraftSelectableChampionKeys(excludeKeys = []) {
-  return Object.keys(championDB).filter(
-    (key) => !excludeKeys.includes(key) && isDraftSelectable(championDB[key]),
-  );
-}
-
-function getRandomChampionKeyForDraft(excludeKeys = []) {
-  const availableKeys = getDraftSelectableChampionKeys(excludeKeys);
-  if (availableKeys.length === 0) return null;
-  return availableKeys[Math.floor(Math.random() * availableKeys.length)];
-}
-
-function autofillSelectedChampions() {
-  if (playerTeamConfirmed) return;
-
-  const nextSelection = selectedChampions.slice();
-  const hasAnySelection = nextSelection.some(Boolean);
-
-  if (!hasAnySelection) {
-    for (let index = 0; index < TEAM_SIZE; index += 1) {
-      const championKey = getRandomChampionKeyForDraft(nextSelection);
-      if (!championKey) break;
-      nextSelection[index] = championKey;
-    }
-  } else {
-    for (let index = 0; index < nextSelection.length; index += 1) {
-      if (nextSelection[index] !== null) continue;
-
-      const championKey = getRandomChampionKeyForDraft(nextSelection);
-      if (!championKey) break;
-      nextSelection[index] = championKey;
-    }
-  }
-
-  selectedChampions = nextSelection;
-  updateSelectedChampionsUI();
-  teamSelectionMessage.textContent =
-    "Empty slots automatically filled with random champions.";
-}
-
-function handleChampionCardClick(championKey) {
-  if (playerTeamConfirmed) return;
-
-  const index = selectedChampions.indexOf(championKey);
-  if (index > -1) {
-    selectedChampions[index] = null;
-  } else {
-    const emptySlotIndex = selectedChampions.indexOf(null);
-    if (emptySlotIndex > -1) {
-      selectedChampions[emptySlotIndex] = championKey;
-    } else {
-      alert("All slots are filled. Remove one to add another.");
-    }
-  }
-  updateSelectedChampionsUI();
-  renderEmblemSelectionUI();
-}
-
-// --- Update selected champions slots UI ---
-
-function updateSelectedChampionsUI() {
-  selectedChampionsSlots.innerHTML = "";
-  let allSlotsFilled = true;
-
-  const layout = duoLayout();
-
-  for (let index = 0; index < selectedChampions.length; index += 1) {
-    const championKey = selectedChampions[index];
-    const placement = layout.at(index);
-
-    const slot = document.createElement("div");
-    slot.classList.add("champion-slot");
-    slot.dataset.slotIndex = index;
-    slot.addEventListener("dragover", handleDragOver);
-    slot.addEventListener("drop", handleDrop);
-    slot.addEventListener("dragleave", handleDragLeave);
-    selectedChampionsSlots.appendChild(slot);
-
-    if (placement && placement.start === index) {
-      const { duo } = placement;
-      slot.classList.add("has-champion", "duo-occupied");
-      slot.style.gridColumn = `span ${duo.cores.length}`;
-
-      const card = document.createElement("div");
-      card.classList.add("champion-card", "duo-card");
-      card.dataset.duoKey = duo.key;
-      card.draggable = true;
-      card.innerHTML = renderDuoCardContent(duo);
-      attachChampionCardInteractions(card, duo.cores[0], index, duo);
-      slot.appendChild(card);
-
-      index += duo.cores.length - 1;
-      continue;
-    }
-
-    if (championKey) {
-      const champion = championDB[championKey];
-      slot.classList.add("has-champion");
-      const card = document.createElement("div");
-      card.classList.add("champion-card");
-      card.dataset.championKey = championKey;
-      card.draggable = true;
-      card.innerHTML = renderChampionCardContent(champion);
-      attachChampionCardInteractions(card, championKey, index);
-      slot.appendChild(card);
-    } else {
-      allSlotsFilled = false;
-      slot.textContent = `Slot ${index + 1}`;
-    }
-  }
-
-  // Mark the cards in the available grid as selected
-  document
-    .querySelectorAll(".available-champions-grid .champion-card")
-    .forEach((card) => {
-      const { championKey, duoKey } = card.dataset;
-      const isSelected = duoKey
-        ? duoDB[duoKey].cores.every((coreKey) =>
-            selectedChampions.includes(coreKey),
-          )
-        : selectedChampions.includes(championKey);
-      card.classList.toggle("selected", isSelected);
-    });
-
-  autofillTeamBtn.disabled =
-    playerTeamConfirmed ||
-    !selectedChampions.includes(null) ||
-    getDraftSelectableChampionKeys(selectedChampions).length === 0;
-  confirmTeamBtn.disabled = !allSlotsFilled || playerTeamConfirmed;
-
-  renderEmblemSelectionUI();
-  renderPlayerEmblemStrip();
-}
-
-autofillTeamBtn.addEventListener("click", autofillSelectedChampions);
-
-// --- Drag & Drop ---
 
 // --- Lineup banner & initial 1v1 selection UI ---
 let playerRoster = Array(TEAM_SIZE).fill(null); // copy of the player's confirmed roster
@@ -1812,104 +1368,6 @@ socket.on("firstChampionChoicesFinalized", () => {
   renderLineupBanner();
 });
 
-function handleDragStart(e, championKey, fromSlotIndex = -1) {
-  if (playerTeamConfirmed) {
-    e.preventDefault();
-    return;
-  }
-  draggedChampionKey = championKey;
-  draggedFromSlotIndex = fromSlotIndex;
-  e.dataTransfer.setData("text/plain", championKey);
-  e.currentTarget.classList.add("dragging");
-}
-
-function handleDragOver(e) {
-  e.preventDefault();
-  if (playerTeamConfirmed) return;
-  e.currentTarget.classList.add("drag-over");
-}
-
-function handleDragLeave(e) {
-  e.currentTarget.classList.remove("drag-over");
-}
-
-function handleDrop(e) {
-  e.preventDefault();
-  if (playerTeamConfirmed) return;
-  e.currentTarget.classList.remove("drag-over");
-
-  const droppedChampionKey = e.dataTransfer.getData("text/plain");
-  const targetSlotIndex = parseInt(e.currentTarget.dataset.slotIndex);
-  if (isNaN(targetSlotIndex)) return;
-
-  const layout = duoLayout();
-  const droppedDuo = duoDB[droppedChampionKey];
-
-  if (droppedDuo) {
-    const span = droppedDuo.cores.length;
-    const previous = layout.at(selectedChampions.indexOf(droppedDuo.cores[0]));
-
-    if (previous) layout.remove(droppedDuo);
-
-    const start = targetSlotIndex - (targetSlotIndex % span);
-    if (layout.canPlaceAt(droppedDuo, start)) layout.place(droppedDuo, start);
-    else if (previous) layout.place(droppedDuo, previous.start);
-
-    finishDrag();
-    return;
-  }
-
-  // A single champion may not land on half a duo: that would split the pair.
-  if (layout.at(targetSlotIndex)) {
-    finishDrag();
-    return;
-  }
-
-  if (selectedChampions[targetSlotIndex] === null) {
-    // Dropping in empty slot
-    if (draggedFromSlotIndex === -1) {
-      selectedChampions[targetSlotIndex] = droppedChampionKey;
-    } else {
-      selectedChampions[targetSlotIndex] = droppedChampionKey;
-      selectedChampions[draggedFromSlotIndex] = null;
-    }
-  } else {
-    // Dropping in occupied slot — swap
-    const temp = selectedChampions[targetSlotIndex];
-    selectedChampions[targetSlotIndex] = droppedChampionKey;
-    if (draggedFromSlotIndex !== -1) {
-      selectedChampions[draggedFromSlotIndex] = temp;
-    } else {
-      const oldChampionIndex = selectedChampions.indexOf(droppedChampionKey);
-      if (oldChampionIndex > -1) {
-        selectedChampions[oldChampionIndex] = null;
-      }
-    }
-  }
-
-  finishDrag();
-}
-
-function finishDrag() {
-  document
-    .querySelector(".champion-card.dragging")
-    ?.classList.remove("dragging");
-  draggedChampionKey = null;
-  draggedFromSlotIndex = -1;
-  updateSelectedChampionsUI();
-}
-
-// --- Selection timer ---
-
-function updateChampionSelectionTimerUI() {
-  const minutes = Math.floor(championSelectionTimeLeft / 60);
-  const seconds = championSelectionTimeLeft % 60;
-  teamSelectionMessage.textContent = `Time remaining to select champions: ${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  if (playerTeamConfirmed) {
-    teamSelectionMessage.textContent += " (Team confirmed!)";
-  }
-}
-
 // ============================================================
 //  CHAMPION MANAGEMENT
 // ============================================================
@@ -2217,7 +1675,6 @@ socket.on("gameStateUpdate", (gameState) => {
     serverEmblems.length
   ) {
     playerEmblems = serverEmblems.slice();
-    selectedEmblemKeys = [...playerEmblems];
   }
 
   if (playerTeam !== null) {
@@ -2245,7 +1702,6 @@ socket.on("gameStateUpdate", (gameState) => {
   // the champion is still standing on the board.
   if (!isResolvingTurn) renderLineupBanners(lastLineupsByTeam);
   renderPlayerEmblemStrip();
-  renderEmblemSelectionUI();
   combatAnimations.handleGameStateUpdate(gameState);
 
   if (

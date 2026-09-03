@@ -14,6 +14,9 @@
     <link rel="stylesheet" href="./styles/animations.css" />
     <!-- VFX: visual effects and canvas rendering -->
     <link rel="stylesheet" href="./styles/vfx.css" />
+    <!-- Pre-match hub (team pick + matchmaking) -->
+    <link rel="stylesheet" href="./styles/teamCard.css" />
+    <link rel="stylesheet" href="./styles/hub.css" />
     <link
       href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
       rel="stylesheet"
@@ -215,50 +218,36 @@
       </div>
     </div>
 
-    <!-- Champion Selection Screen -->
-    <div
-      id="champion-selection-screen"
-      class="champion-selection-screen hidden"
-    >
-      <div class="selection-container">
-        <h2>Select your 8 Champions and set the order!</h2>
-        <p class="selection-message">Drag and drop to order your champions.</p>
-
-        <div class="emblem-selection-panel" aria-live="polite">
-          <div class="emblem-selection-header">
-            <div>
-              <span class="eyebrow">Player Passives</span>
-              <h3>Emblems</h3>
-            </div>
-            <span class="emblem-selection-counter">
-              <span id="selectedEmblemsCount">0</span>/2
-            </span>
+    <!-- Pre-match hub: pick a saved team, then queue for a match -->
+    <div id="hub-screen" class="hub-screen hidden">
+      <div class="hub-container">
+        <div class="hub-head">
+          <div>
+            <span class="hub-eyebrow">Ready up</span>
+            <h2>Choose your team</h2>
           </div>
-          <div id="emblemSelectionList" class="emblem-selection-list"></div>
+          <a
+            class="hub-manage-link"
+            href="/teamsManager.html"
+            target="_blank"
+            rel="noopener"
+          >
+            <i class="bx bx-cog"></i> Manage teams
+          </a>
         </div>
 
-        <div class="available-champions-grid" id="availableChampionsGrid">
-          <!-- Champions will be loaded here by JavaScript -->
-        </div>
+        <div id="hubTeamGrid" class="hub-team-grid"></div>
+        <p id="hubEmpty" class="hub-empty" hidden>
+          You have no teams. Open “Manage teams” to build one.
+        </p>
 
-        <div class="selected-champions-area">
-          <h3>Your Team:</h3>
-          <div class="selected-champions-slots" id="selectedChampionsSlots">
-            <!-- Slots will be generated dynamically by JavaScript -->
-          </div>
-          <div class="selection-actions">
-            <button
-              id="autofillTeamBtn"
-              class="secondary-action-btn"
-              type="button"
-              title="Fills empty slots with random champions"
-            >
-              Autofill
-            </button>
-            <button id="confirmTeamBtn" disabled>Confirm Team</button>
-          </div>
+        <div class="hub-actions">
+          <p id="hubStatus" class="hub-status"></p>
+          <button id="hubCancelBtn" class="secondary-action-btn" type="button" hidden>
+            Cancel
+          </button>
+          <button id="hubFindMatchBtn" type="button" disabled>Find match</button>
         </div>
-        <p id="team-selection-message" class="selection-message"></p>
       </div>
     </div>
 

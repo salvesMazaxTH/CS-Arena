@@ -25,7 +25,6 @@ class LobbyState {
   constructor(match) {
     this.match = match;
     this.socketToSlot = new Map();
-    this.selectionTimers = [null, null];
     this.disconnectionTimers = new Map();
     this.firstChoiceTimeouts = new Map();
   }
@@ -45,24 +44,6 @@ class LobbyState {
 
   removeSocket(socketId) {
     this.socketToSlot.delete(socketId);
-  }
-
-  setSelectionTimer(slot, timerId) {
-    this.clearSelectionTimer(slot);
-    this.selectionTimers[slot] = timerId;
-  }
-
-  clearSelectionTimer(slot) {
-    const timer = this.selectionTimers[slot];
-    if (!timer) return;
-    clearTimeout(timer);
-    this.selectionTimers[slot] = null;
-  }
-
-  clearAllSelectionTimers() {
-    for (let slot = 0; slot < this.selectionTimers.length; slot++) {
-      this.clearSelectionTimer(slot);
-    }
   }
 
   setDisconnectionTimer(slot, timerId) {
@@ -106,7 +87,6 @@ class LobbyState {
 
   reset() {
     this.socketToSlot.clear();
-    this.clearAllSelectionTimers();
     this.clearAllDisconnectionTimers();
     this.clearAllFirstChoiceTimers();
   }
@@ -879,14 +859,6 @@ export class GameMatch {
 
   removeSocket(socketId) {
     this.lobby.removeSocket(socketId);
-  }
-
-  setSelectionTimer(slot, timerId) {
-    this.lobby.setSelectionTimer(slot, timerId);
-  }
-
-  clearSelectionTimer(slot) {
-    this.lobby.clearSelectionTimer(slot);
   }
 
   setDisconnectionTimer(slot, timerId) {

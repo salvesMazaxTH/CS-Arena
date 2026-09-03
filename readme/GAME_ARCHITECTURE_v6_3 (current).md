@@ -230,19 +230,18 @@ O servidor gerencia toda a sessão por meio de uma instância de `GameMatch` (ve
 
 > No `editMode.autoLogin = true`, o servidor loga o jogador automaticamente com nome "Player1"/"Player2".
 
-### 4.2 Seleção de Campeões
+### 4.2 Hub e escolha de time
 
-1. Quando ambos os jogadores conectam, servidor emite `allPlayersConnected` seguido de `startChampionSelection`.
-2. Cliente exibe grade. Jogador monta uma lineup de **8 campeões** e, opcionalmente, escolhe até **2 Emblems**.
-3. Ao confirmar, cliente emite `selectTeam` com `{ team, champions: string[8] }`.
-4. Servidor valida (incluindo a elegibilidade dos Emblems para a lineup). Quando **ambos** confirmam, emite `allTeamsSelected` + `gameStateUpdate`.
+1. Após `playerAssigned`, o cliente mostra o **hub** (`#hub-screen` em `index.html`), que lista os times salvos: os prebuilt de `shared/data/teams/` e os custom do `localStorage` do jogador (`csa.teams.custom`, geridos pelo `TeamStore`).
+2. O jogador seleciona um time e clica **Find match**, emitindo `readyWithTeam` com `{ champions: string[8], emblems: string[0..2] }`.
+3. O servidor valida com `validateTeamComposition(team, { championDB, emblems, editMode })` de `shared/data/teams/validateTeam.js` (tamanho, campeões draftáveis, duplicados, duos inteiros, teto de 2 Emblems e elegibilidade de cada Emblem para a lineup). Em falha emite `readyWithTeamRejected`.
+4. Aceito: `player.setSelectedChampionKeys(...)` + `player.emblems = resolveEmblems(...)`. Quando **ambos** os jogadores estão prontos, `checkAllTeamsSelected()` emite `allTeamsSelected` + `gameStateUpdate`.
 
-> Timer de seleção: **120 segundos**. Ao expirar, campeões aleatórios preenchem os slots vazios.
+> A criação e edição de times fica numa página separada, **`/teamsManager.html`** — sem socket, sem login. Editar um prebuilt duplica-o para a coleção `custom` (`derivedFrom` aponta para o original); os prebuilt do código-fonte ficam intactos.
 >
-> A validação de elegibilidade de Emblems vive em `shared/data/emblems/eligibility.js`
-> (`evaluateEmblemEligibilityForRoster(emblem, rosterKeys, championDB)`), reexportada por
-> `shared/data/emblems/index.js`. O `server.js` apenas a chama, tanto no draft (`updatePlayerEmblems`)
-> quanto na confirmação (`selectTeam`).
+> `editMode.autoSelection = true` faz o servidor dar `autoReadyEditMode()` — pronto automaticamente com `PREBUILT_TEAMS[0]`.
+>
+> Não há mais timer de seleção nem tela de draft campeão-a-campeão.
 
 ### 4.3 Início de Partida
 
@@ -304,7 +303,8 @@ O servidor gerencia toda a sessão por meio de uma instância de `GameMatch` (ve
 | Evento                     | Payload                           | Descrição                                      |
 | -------------------------- | --------------------------------- | ---------------------------------------------- |
 | `requestPlayerSlot`        | `username: string`                | Solicita entrada no jogo                       |
-| `selectTeam`               | `{ team, champions: string[] }`   | Confirma seleção de equipe (3 campeões)        |
+| `readyWithTeam`            | `{ champions: string[8], emblems: string[] }` | Entra no matchmaking com o time escolhido no hub |
+| `cancelReadyWithTeam`      | —                                 | Sai do matchmaking (volta ao hub)             |
 | `requestSkillUse`          | `{ userId, skillKey }`            | Pré-validação antes de mostrar overlay de alvo |
 | `useSkill`                 | `{ userId, skillKey, targetIds }` | Enfileira ação com alvos confirmados           |
 | `requestSwitch`            | —                                 | **Desativado por tempo indeterminado**         |
@@ -323,8 +323,8 @@ O servidor gerencia toda a sessão por meio de uma instância de `GameMatch` (ve
 | `serverFull`                | `string`                        | Sala lotada                                  |
 | `waitingForOpponent`        | `string`                        | Aguardando segundo jogador                   |
 | `allPlayersConnected`       | —                               | Ambos jogadores conectados                   |
-| `startChampionSelection`    | `{ timeLeft }`                  | Inicia seleção (timer)                       |
-| `allTeamsSelected`          | —                               | Ambos confirmaram equipes                    |
+| `readyWithTeamRejected`     | `string`                       | Time recusado na validação do servidor       |
+| `allTeamsSelected`          | —                               | Ambos prontos; a partida começa             |
 | `gameStateUpdate`           | `{ champions[], currentTurn }`  | Estado completo do jogo                      |
 | `combatAction`              | envelope tipado (ver seção 5.1) | Envelope de ação de combate                  |
 | `combatLog`                 | `string`                        | Mensagem de log avulsa                       |
@@ -2054,7 +2054,6 @@ Flags que afetam combate (`damageOutput`, `alwaysCrit`, `alwaysEvade`, `executio
 | `TEAM_SIZE`               | 3       | Campeões por equipe na seleção |
 | `MAX_SCORE`               | 3       | Pontos para vencer             |
 | Slots simultâneos         | 3       | Campeões em campo por time     |
-| `CHAMPION_SELECTION_TIME` | 120s    | Timer de seleção               |
 | `DISCONNECT_TIMEOUT`      | 30s     | Timeout de reconexão           |
 | `ultCap` (padrão)         | 24      | 6 barras × 4 unidades          |
 | Ult regen global          | +3/turn | Regen para todos os vivos      |
