@@ -1980,6 +1980,19 @@ function showActionBarSlot({ playerAdvanced = true } = {}) {
       if (!hasResource) btn.disabled = true;
     }
 
+    // A skill may declare itself unavailable given the current board; the string
+    // it returns doubles as the tooltip.
+    const teammates = Array.from(activeChampions.values());
+    const disabledReason = skill.disabledReason?.({
+      user: champion,
+      allies: teammates.filter((c) => c.team === champion.team),
+      enemies: teammates.filter((c) => c.team !== champion.team),
+    });
+    if (disabledReason) {
+      btn.disabled = true;
+      btn.title = disabledReason;
+    }
+
     skillsBar.appendChild(btn);
   });
 

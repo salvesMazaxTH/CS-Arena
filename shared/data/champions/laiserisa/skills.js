@@ -23,19 +23,32 @@ const laiserisaSkills = [
     priority: 2,
 
     description() {
-      return `Laiserisa turns to something her sister only answered into being and withdraws the answer. An Echo of Manifest is erased where it stands, and what it was becomes hers: a shield equal to the Echo's current HP, and ${this.momentumGain} Momentum. Only an Echo can be erased.`;
+      return `Laiserisa turns to the one thing her sister only answered into being and withdraws the answer. The Echo of Manifest is erased where it stands, and what it was becomes hers: a shield equal to the Echo's current HP, and ${this.momentumGain} Momentum.`;
     },
 
-    targetSpec: [
-      {
-        type: "select:any",
-        entityType: "minion",
-        requiresRuntimeFlag: "manifestEcho",
-      },
-    ],
+    // There is at most one Echo on the field, so this resolves it automatically
+    // rather than asking the player to pick the only legal target.
+    targetSpec: ["self"],
+
+    disabledReason({ allies }) {
+      const hasEcho = allies.some(
+        (c) => c.alive && c.runtime?.manifestEcho === true,
+      );
+      return hasEcho ? null : "There is no Echo to withdraw.";
+    },
 
     resolve({ user, targets, context, resolver }) {
-      const [echo] = targets;
+      const echo = (context.aliveChampions ?? []).find(
+        (c) =>
+          c?.alive && c.team === user.team && c.runtime?.manifestEcho === true,
+      );
+
+      if (!echo) {
+        const message = `<b>${this.name}</b> — there is no Echo to withdraw.`;
+        context.registerDialog({ message, sourceId: user.id });
+        return { log: message };
+      }
+
       const shieldAmount = echo.HP;
 
       echo.HP = 0;
