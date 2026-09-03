@@ -18,12 +18,13 @@ const drexSkills = [
     hitVfxPalette: "crimson",
 
     bleedingStacks: 2,
+    healBlockDuration: 2,
 
     priority: 0,
     targetSpec: ["enemy"],
 
     description() {
-      return `Deals light to moderate damage to the chosen target and applies ${this.bleedingStacks} Bleeding stacks. If the target is already Bleeding, applies 1 additional stack.`;
+      return `Deals light to moderate damage to the chosen target and applies ${this.bleedingStacks} Bleeding stacks. If the target is already Bleeding, applies 1 additional stack. The cut will not close: the target is afflicted with Heal Block for ${this.healBlockDuration} turn(s).`;
     },
 
     resolve({ user, targets, context = {} }) {
@@ -55,6 +56,12 @@ const drexSkills = [
           { sourceId: user.id },
           bleedStacks,
         );
+      }
+
+      if (effectConnected(mainDamage, "healBlock")) {
+        enemy.applyStatusEffect("healBlock", this.healBlockDuration, context, {
+          source: this.key,
+        });
       }
 
       return results;
