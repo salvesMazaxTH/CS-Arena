@@ -21,7 +21,7 @@ export default {
   ],
 
   description() {
-    return `Irina's own fire was always a weak, useless little thing that burned her more than it ever helped anyone else — until the flamethrower gave it teeth, at the cost of running hot enough to bite back at her too. She doesn't mind. Every time the gun kicks back, she laughs harder and hits harder: +${this.attackPerRecoil} permanent Attack. Even a Claim keeps the redline lit: +${this.attackPerClaim} permanent Attack, up to +${this.claimAttackCap} from Claims.`;
+    return `Irina's own fire was always a weak, useless little thing that burned her more than it ever helped anyone else — until the flamethrower gave it teeth, at the cost of running hot enough to bite back at her too. She doesn't mind. Every time the gun kicks back, she laughs harder and hits harder: +${this.attackPerRecoil} permanent Attack. Even a CLAIM keeps the redline lit: +${this.attackPerClaim} permanent Attack, up to +${this.claimAttackCap} from CLAIMs.`;
   },
 
   hookScope: {
@@ -48,7 +48,7 @@ export default {
     });
 
     return {
-      log: `<b>[Passive — Redline Rapture]</b> ${formatChampionName(owner)} keeps the redline lit through the Claim (+${amount} permanent Attack).`,
+      log: `<b>[Passive — Redline Rapture]</b> ${formatChampionName(owner)} keeps the redline lit through the CLAIM (+${amount} permanent Attack).`,
     };
   },
 

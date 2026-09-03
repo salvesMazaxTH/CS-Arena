@@ -90,7 +90,7 @@ const torrenSkills = [
     description() {
       return `Torren singles out the most fragile enemy, striking through their defenses with a piercing blow. If their fragility is significantly greater than his, they are Taunted for ${this.tauntDuration} turn(s) and deal 30% less damage to other targets.
 
-      For the next 2 turns, any Claim Torren makes while a foe he has Taunted still stands banks ${this.claimBonusPoints} extra points.`;
+      For the next 2 turns, any CLAIM Torren makes while a foe he has Taunted still stands banks ${this.claimBonusPoints} extra points.`;
     },
 
     targetSpec: ["all:enemy"],
