@@ -396,7 +396,7 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
 
       champion.skills.forEach((skill) => {
         const isUlt = skill.isUltimate === true;
-        const label = isUlt ? `ULT — ${skill.name}` : skill.name;
+        const label = skill.name;
 
         const btn = document.createElement("button");
         btn.className =

@@ -2494,7 +2494,7 @@ function showActionBarSlot({ playerAdvanced = true } = {}) {
 
   champion.skills.forEach((skill) => {
     const isUlt = skill.isUltimate === true;
-    const label = isUlt ? `ULT — ${skill.name}` : skill.name;
+    const label = skill.name;
 
     const btn = document.createElement("button");
     btn.className = "action-bar-skill-btn" + (isUlt ? " ultimate" : "");
