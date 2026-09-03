@@ -10,6 +10,7 @@ import {
 } from "./claim.js";
 import { snapshotChampions } from "./snapshotChampions.js";
 import { TargetFilter } from "./targetFilter.js";
+import { getBlindMiss } from "../../data/statusEffects/blind.js";
 
 const RESOURCE_DEBUG_TRUE_VALUES = new Set(["1", "true", "yes", "on"]);
 
@@ -386,6 +387,32 @@ export class TurnResolver {
 
     const targetsArray = Object.values(roleTargets);
     // console.log("STEP 2 - TARGETS ARRAY:", targetsArray);
+
+    // Blind resolves here, after targets are known: a Blinded champion aiming
+    // one shot at one player-picked target can miss outright. The turn (and any
+    // Momentum already spent above) is gone.
+    const blindMiss = getBlindMiss(user, skill, targetsArray, context);
+    if (blindMiss) {
+      context.registerDialog({
+        message: blindMiss.message,
+        sourceId: user.id,
+        damageDepth: context.damageDepth ?? 0,
+      });
+
+      this.registerSkillUsageInTurn(user, skill, roleTargets);
+      context._intermediateSnapshot = snapshotChampions(
+        this.combat.activeChampions,
+      );
+
+      return {
+        executed: true,
+        user,
+        skill,
+        context,
+        action,
+        results: [{ log: blindMiss.message, blindMissed: true }],
+      };
+    }
 
     console.log(
       `[executeSkillAction] executionIndex set to ${context.executionIndex} for skill ${skill.name}`,
@@ -955,10 +982,24 @@ export class TurnResolver {
 
     const isUnavailable = (c) => !c || !c.alive;
 
+    const taunted = this._resolveTauntTargets(
+      user,
+      skill,
+      action,
+      context,
+      isUnavailable,
+    );
+    const forced =
+      taunted ?? this._resolveAoETargets(user, skill, isUnavailable);
     const targets =
-      this._resolveTauntTargets(user, skill, action, context, isUnavailable) ??
-      this._resolveAoETargets(user, skill, isUnavailable) ??
-      this._resolveDirectTargets(user, skill, action, isUnavailable);
+      forced ?? this._resolveDirectTargets(user, skill, action, isUnavailable);
+
+    // The target was aimed only when the player picked it this turn: a direct
+    // resolution (not taunt-forced, not area) with a non-self role. Blind and
+    // any future redirect/reflect mechanic read this instead of re-deriving it.
+    const direct = !taunted && !forced && targets;
+    context.targetsFromPlayerInput =
+      !!direct && Object.keys(targets).some((role) => role !== "self");
 
     return targets && Object.keys(targets).length > 0 ? targets : null;
   }
