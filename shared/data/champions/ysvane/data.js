@@ -2,8 +2,6 @@ export default {
   name: "Ysvane",
   portrait: "/assets/portraits/ysvane.webp",
 
-  unreleased: true,
-
   HP: 350,
   Attack: 115,
   Defense: 125,
