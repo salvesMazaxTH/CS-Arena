@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
@@ -27,7 +28,7 @@ const reyskaroneSkills = [
 
     priority: 1,
     description() {
-      return `Reyskarone spills ${this.hpSacrificePercent}% of his own Max HP — never falling below 1 HP — then strikes the chosen target for magical damage. If the strike connects, it brands them with the Tithe for ${this.titheDuration} turn(s).
+      return `Reyskarone spills ${this.hpSacrificePercent}% of his own Max HP — never falling below 1 HP — then strikes the chosen target for magical damage. A strike that connects brands them with the Tithe and locks their wounds shut with Heal Block for ${this.titheDuration} turn(s).
 
       While the brand holds, every ally who strikes the marked target restores ${this.titheHeal} HP and deals +${this.titheBonusDamage} bonus damage.`;
     },
@@ -143,6 +144,13 @@ const reyskaroneSkills = [
             duration: 1000,
           });
         }
+      }
+
+      const mainHit = results.find((r) => r?.targetId === enemy.id);
+      if (effectConnected(mainHit, "healBlock")) {
+        enemy.applyStatusEffect("healBlock", this.titheDuration, context, {
+          source: this.key,
+        });
       }
 
       return results;
