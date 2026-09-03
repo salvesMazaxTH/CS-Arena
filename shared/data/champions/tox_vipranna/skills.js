@@ -1,7 +1,11 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
+import { HealEvent } from "../../../engine/combat/HealEvent.js";
+import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
 import basicStrike from "../generic/basicStrike.js";
+
+const TOXIC_COATING_CLAIM_HEAL_KEY = "toxic_coating_claim_heal";
 
 const toxViprannaSkills = [
   // ========================
@@ -89,13 +93,16 @@ const toxViprannaSkills = [
     auraDuration: 2,
     poisonedStacks: 2,
     defenseBuff: 35,
+    claimHeal: 25,
 
     targetSpec: ["self"],
 
     description() {
       return `Tox Vipranna cloaks herself in a toxic coating for ${this.auraDuration} turn(s), gaining +${this.defenseBuff} Defense.
 
-      Enemies that make contact attacks against her are afflicted with ${this.poisonedStacks} stacks of Poisoned.`;
+      Enemies that make contact attacks against her are afflicted with ${this.poisonedStacks} stacks of Poisoned.
+
+      The next time she uses CLAIM, she draws the coating back in and restores ${this.claimHeal} HP.`;
     },
 
     resolve({ user, context = {} }) {
@@ -144,6 +151,43 @@ const toxViprannaSkills = [
             )} is afflicted with ${this.poisonedStacks} stacks of <b>Poisoned</b> after attacking ${formatChampionName(
               owner,
             )}.`,
+          };
+        },
+      }, context);
+
+      // Armed until the next CLAIM, then spent.
+      user.runtime.hookEffects = user.runtime.hookEffects.filter(
+        (e) => e.key !== TOXIC_COATING_CLAIM_HEAL_KEY,
+      );
+
+      const claimHeal = this.claimHeal;
+
+      user.addHookEffect({
+        type: "buff",
+        key: TOXIC_COATING_CLAIM_HEAL_KEY,
+        group: "skill",
+
+        hookScope: {
+          onActionResolved: "actionSource",
+        },
+
+        onActionResolved({ owner, skill, context }) {
+          if (skill?.key !== CLAIM_ACTION_KEY) return;
+
+          owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
+            (e) => e.key !== TOXIC_COATING_CLAIM_HEAL_KEY,
+          );
+
+          const healed = new HealEvent({
+            target: owner,
+            amount: claimHeal,
+            context,
+          }).execute();
+
+          if (healed <= 0) return;
+
+          return {
+            log: `<b>[Toxic Coating]</b> ${formatChampionName(owner)} draws the coating back in through the CLAIM, restoring ${healed} HP.`,
           };
         },
       }, context);
