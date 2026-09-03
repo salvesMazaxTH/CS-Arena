@@ -6,9 +6,14 @@ import { TeamStore } from "./teamsManager/TeamStore.js";
 import { TeamBuilder } from "./teamsManager/TeamBuilder.js";
 import { escapeHtml } from "./teamsManager/championCardMarkup.js";
 import { renderTeamSummary } from "./ui/teamCard.js";
+import { readMirroredEditMode } from "./editModeMirror.js";
 
 applyIdentityPaletteCssVariables(document.documentElement);
 
+// The Team Manager has no socket, so it reads the UI-safe editMode the game
+// client mirrored to localStorage — this is what lets unreleased champions be
+// drafted while `unavailableChampions` is on for testing.
+const clientEditMode = readMirroredEditMode();
 const store = new TeamStore();
 
 const listView = document.getElementById("tm-list-view");
@@ -21,6 +26,7 @@ const toast = document.getElementById("tm-toast");
 
 const builder = new TeamBuilder({
   root: builderView,
+  editMode: clientEditMode,
   onSave: (team) => {
     const saved = store.saveCustom(team);
     store.setSelectedId(saved.id);
@@ -31,7 +37,11 @@ const builder = new TeamBuilder({
 });
 
 function teamValidity(team) {
-  return validateTeamComposition(team, { championDB, emblems: EMBLEMS });
+  return validateTeamComposition(team, {
+    championDB,
+    emblems: EMBLEMS,
+    editMode: clientEditMode,
+  });
 }
 
 function renderTeamCard(team) {

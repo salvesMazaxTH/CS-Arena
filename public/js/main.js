@@ -31,6 +31,7 @@ import { getDuoForCore } from "/shared/data/duos.js";
 import { validateTeamComposition } from "/shared/data/teams/index.js";
 import { TeamStore } from "./teamsManager/TeamStore.js";
 import { renderTeamSummary } from "./ui/teamCard.js";
+import { mirrorEditMode } from "./editModeMirror.js";
 import { Champion } from "/shared/core/Champion.js";
 import { SpawnProtection } from "/shared/engine/combat/spawnProtection.js";
 import { StatusIndicator } from "../../shared/ui/statusIndicator.js";
@@ -296,6 +297,7 @@ sfxVolumeSlider.addEventListener("input", (e) => {
 
 socket.on("editModeUpdate", (serverEditMode = {}) => {
   Object.assign(editMode, serverEditMode);
+  mirrorEditMode(editMode);
   // Auto-login in edit mode: if server enabled autoLogin, fill username and join
   if (editMode.enabled && editMode.autoLogin) {
     // 🔥 request slot automatically
@@ -501,7 +503,7 @@ window.addEventListener("beforeunload", function (e) {
 function isTeamPlayable(team) {
   return (
     !!team &&
-    validateTeamComposition(team, { championDB, emblems: EMBLEMS }).ok
+    validateTeamComposition(team, { championDB, emblems: EMBLEMS, editMode }).ok
   );
 }
 
@@ -561,7 +563,7 @@ hubTeamGrid.addEventListener("click", (event) => {
 hubFindMatchBtn.addEventListener("click", () => {
   const team = teamStore.getById(selectedHubTeamId);
   const check = team
-    ? validateTeamComposition(team, { championDB, emblems: EMBLEMS })
+    ? validateTeamComposition(team, { championDB, emblems: EMBLEMS, editMode })
     : { ok: false, errors: ["Pick a team first."] };
   if (!check.ok) {
     hubStatus.textContent = check.errors[0];
