@@ -10,5 +10,5 @@ export default {
   Speed: 250,
 
   classKey: "enchanter",
-  species: ["fairy", "numen", "magickin"],
+  species: ["fairy", "numen"],
 };

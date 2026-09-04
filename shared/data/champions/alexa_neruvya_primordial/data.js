@@ -10,5 +10,5 @@ export default {
 
   classKey: "mage",
   elementalAffinities: ["water"],
-  species: ["primordial dragon", "dragon", "magickin"],
+  species: ["primordial dragon", "dragon"],
 };

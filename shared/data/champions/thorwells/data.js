@@ -9,5 +9,5 @@ export default {
 
   classKey: "brawler",
   elementalAffinities: ["lightning"],
-  species: ["divinity", "magickin"],
+  species: ["divinity"],
 };

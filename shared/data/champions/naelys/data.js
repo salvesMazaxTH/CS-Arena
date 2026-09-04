@@ -8,5 +8,5 @@ export default {
 
   elementalAffinities: ["water"],
   classKey: "mage",
-  species: ["merfolk", "magickin"],
+  species: ["merfolk"],
 };

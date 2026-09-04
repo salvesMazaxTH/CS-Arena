@@ -11,5 +11,5 @@ export default {
 
   classKey: "tank",
   elementalAffinities: ["lightning"],
-  species: ["human", "magickin"],
+  species: ["human"],
 };
