@@ -154,7 +154,7 @@ const seymourSkills = [
 
     contact: false,
     damageMode: "standard",
-    hitVfx: "radiant_bolt",
+    hitVfx: "radiant_beam",
     priority: 0,
 
     targetSpec: ["enemy"],
