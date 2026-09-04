@@ -19,7 +19,7 @@ const seymourSkills = [
 
     bf: 55,
     healingReduction: 0.6,
-    sunbleachedDuration: 2,
+    bleachedDuration: 2,
 
     contact: false,
     damageMode: "standard",
@@ -29,7 +29,7 @@ const seymourSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Seymour narrows the star to a single white thread and lays it across the chosen target. Deals radiant magical damage and leaves them Sunbleached for ${this.sunbleachedDuration} turns — under that light almost nothing mends, and healing they receive is cut by ${this.healingReduction * 100}%.`;
+      return `Seymour narrows the light to a single white thread and lays it across the chosen target. Deals radiant magical damage and leaves them Bleached for ${this.bleachedDuration} turns — under that light almost nothing mends, and healing they receive is cut by ${this.healingReduction * 100}%.`;
     },
 
     resolve({ user, targets, context = {} }) {
@@ -48,16 +48,16 @@ const seymourSkills = [
 
       const hit = Array.isArray(result) ? result[0] : result;
 
-      if (effectConnected(hit, "sunbleached")) {
+      if (effectConnected(hit, "bleached")) {
         enemy.runtime.hookEffects = (enemy.runtime.hookEffects ?? []).filter(
-          (e) => e.key !== "sunbleached",
+          (e) => e.key !== "bleached",
         );
 
         enemy.addHookEffect(
           {
             type: "debuff",
-            key: "sunbleached",
-            expiresAtTurn: context.currentTurn + this.sunbleachedDuration,
+            key: "bleached",
+            expiresAtTurn: context.currentTurn + this.bleachedDuration,
             healingReduction: this.healingReduction,
             hookScope: { onBeforeHealing: "healTarget" },
             onBeforeHealing({ owner, amount }) {
@@ -68,7 +68,7 @@ const seymourSkills = [
               );
               return {
                 amount: reduced,
-                log: `<b>[Sunbleached]</b> the light lets almost nothing mend on ${formatChampionName(owner)} (${amount} → ${reduced}).`,
+                log: `<b>[Bleached]</b> the light lets almost nothing mend on ${formatChampionName(owner)} (${amount} → ${reduced}).`,
               };
             },
           },
@@ -76,7 +76,7 @@ const seymourSkills = [
         );
 
         context.registerDialog?.({
-          message: `${formatChampionName(user)} leaves ${formatChampionName(enemy)} <b>Sunbleached</b> — their wounds will barely close.`,
+          message: `${formatChampionName(user)} leaves ${formatChampionName(enemy)} <b>Bleached</b> — their wounds will barely close.`,
           sourceId: user.id,
           targetId: enemy.id,
         });
@@ -87,11 +87,11 @@ const seymourSkills = [
   },
 
   // ========================
-  // H2 — Corona Flare
+  // H2 — Overexposure
   // ========================
   {
-    key: "corona_flare",
-    name: "Corona Flare",
+    key: "overexposure",
+    name: "Overexposure",
 
     bf: 40,
     blindDuration: 1,
@@ -104,7 +104,7 @@ const seymourSkills = [
     targetSpec: ["all:enemy"],
 
     description() {
-      return `Seymour opens his hand and lets the star flare white across the whole enemy line. Deals radiant magical damage to every enemy and leaves them Blind for ${this.blindDuration} turn(s).`;
+      return `Seymour opens his hand and lets the light flare white across the whole enemy line. Deals radiant magical damage to every enemy and leaves them Blind for ${this.blindDuration} turn(s).`;
     },
 
     resolve({ user, targets, context = {} }) {
@@ -160,7 +160,7 @@ const seymourSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Seymour brings the star to the top of its arc and drops the whole of noon onto the chosen target. Deals heavy radiant magical damage, increased by ${this.setupBonus * 100}% if the target is Sunbleached or Blind.`;
+      return `Seymour lets the light reach its peak and brings the whole weight of it down on the chosen target. Deals heavy radiant magical damage, increased by ${this.setupBonus * 100}% if the target is Bleached or Blind.`;
     },
 
     resolve({ user, targets, context = {} }) {
@@ -168,7 +168,7 @@ const seymourSkills = [
 
       const primed =
         enemy.hasStatusEffect("blind") ||
-        (enemy.runtime?.hookEffects ?? []).some((e) => e.key === "sunbleached");
+        (enemy.runtime?.hookEffects ?? []).some((e) => e.key === "bleached");
 
       const baseDamage =
         ((user.Attack * this.bf) / 100) * (primed ? 1 + this.setupBonus : 1);

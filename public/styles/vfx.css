@@ -31,13 +31,13 @@
   z-index: 8;
 }
 
-/* Sunbleached VFX (Seymour — Bleaching Ray anti-heal) */
-.vfx-sunbleached {
+/* Bleached VFX (Seymour — Bleaching Ray anti-heal) */
+.vfx-bleached {
   mix-blend-mode: screen;
   z-index: 7;
 }
 
-.champion.is-sunbleached .portrait img {
+.champion.is-bleached .portrait img {
   filter: saturate(0.18) brightness(1.16) sepia(0.34) contrast(0.94);
   transition: filter 0.35s ease-out;
 }

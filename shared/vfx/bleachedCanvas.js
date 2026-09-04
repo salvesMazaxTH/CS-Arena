@@ -1,6 +1,6 @@
-// Sunbleached (Seymour — Bleaching Ray): while the anti-heal holds, a slow sun
+// Bleached (Seymour — Bleaching Ray): while the anti-heal holds, a slow rayed
 // sigil turns over the struck champion's portrait, the frame burns bright at the
-// edge, and the portrait itself is wrung of colour (the `is-sunbleached` class
+// edge, and the portrait itself is wrung of colour (the `is-bleached` class
 // this module owns). Sigil + aura baked once; per frame it is one drawImage, one
 // strokeRect and a few dots — no gradients or shadowBlur at runtime, canvas
 // resized only on the resize event.
@@ -48,10 +48,10 @@ function makeSigilSprite() {
   return s;
 }
 
-export function startSunbleached(canvas) {
+export function startBleached(canvas) {
   const ctx = canvas.getContext("2d");
   const championEl = canvas.closest(".champion");
-  championEl?.classList.add("is-sunbleached");
+  championEl?.classList.add("is-bleached");
 
   if (!sigilSprite) sigilSprite = makeSigilSprite();
 
@@ -136,7 +136,7 @@ export function startSunbleached(canvas) {
     stop() {
       running = false;
       window.removeEventListener("resize", resize);
-      championEl?.classList.remove("is-sunbleached");
+      championEl?.classList.remove("is-bleached");
     },
   };
 }

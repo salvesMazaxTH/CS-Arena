@@ -1,10 +1,10 @@
-// Radiant hit: Seymour's shaft of noon light in the shared #webgl-container,
-// same light recipe as the elemental bolts (persistent renderer, pixelRatio 1,
-// no post-processing). Opted into by name through a skill's hitVfx, since his
-// sun-keeper light is an authorial motif, not an element. It reads as bleach,
-// not fire: a hard thin blade on a near-flat path, a spoked overexposure on
-// impact, and a palette that runs white to sun-aged paper to a cold wrung-out
-// blue rather than anything warm.
+// Radiant hit: Seymour's shaft of hard white light in the shared
+// #webgl-container, same light recipe as the elemental bolts (persistent
+// renderer, pixelRatio 1, no post-processing). Opted into by name through a
+// skill's hitVfx, since his light is an authorial motif, not an element. It
+// reads as bleach, not fire: a hard thin blade on a near-flat path, a spoked
+// overexposure on impact, and a palette that runs white to aged paper to a
+// cold wrung-out blue rather than anything warm.
 
 import { getElementCenter } from "./animationUtils.js";
 import { getParticleScale, recordEffectFrame } from "./effectQuality.js";
@@ -14,7 +14,7 @@ const TRAVEL_DUR = 0.24;
 const POST_DUR = 0.4;
 
 const CORE = 0xfffef6; // paper white
-const EDGE = 0xf2d29a; // the amber the sun leaves on old paper
+const EDGE = 0xf2d29a; // the amber age leaves on old paper
 const COLD = 0x9fb0c4; // the wrung-out blue bleaching pulls toward
 
 function canvasTex(canvas) {
