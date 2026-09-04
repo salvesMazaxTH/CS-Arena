@@ -16,6 +16,7 @@ import {
 import {
   roundToFive,
   addShield,
+  breakShields,
   _checkAndConsumeShieldBlock,
   applyTaunt,
   isTauntedBy,
@@ -555,6 +556,10 @@ export class Champion {
 
   addShield(amount, decayPerTurn = 0, context, type = "regular", extra = {}) {
     return addShield(this, amount, decayPerTurn, context, type, extra);
+  }
+
+  breakShields(amount, options) {
+    return breakShields(this, amount, options);
   }
 
   applyTaunt(taunterId, duration, context) {

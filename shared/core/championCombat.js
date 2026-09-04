@@ -50,6 +50,32 @@ export function addShield(
   }
 }
 
+/** Drain up to `amount` off a champion's shields (oldest first) — addShield's
+ * counterpart. Only drains "regular" shields by default, since spell/supreme
+ * ones block a whole action rather than absorb a point pool; pass `types` to
+ * reach those too. Returns the amount actually removed. */
+export function breakShields(champion, amount, { types = ["regular"] } = {}) {
+  if (!Array.isArray(champion.runtime?.shields) || !(amount > 0)) return 0;
+
+  let remaining = amount;
+  let removed = 0;
+
+  champion.runtime.shields = champion.runtime.shields
+    .map((shield) => {
+      if (remaining <= 0 || !types.includes(shield.type || "regular")) {
+        return shield;
+      }
+      const drained = Math.min(shield.amount, remaining);
+      shield.amount -= drained;
+      remaining -= drained;
+      removed += drained;
+      return shield.amount > 0 ? shield : null;
+    })
+    .filter(Boolean);
+
+  return removed;
+}
+
 // Decays shields at the start of a turn. Two expiry modes: gradual
 // (decayPerTurn > 0, reduced each turn) and instant-at-end (expiresAtTurn set,
 // dropped whole once reached, checked first). Shields with neither are permanent.
