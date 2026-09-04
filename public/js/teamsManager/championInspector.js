@@ -36,10 +36,10 @@ function renderKitEntry(entry, { kind }) {
 
   return `
     <article class="tm-kit ${isUlt ? "is-ult" : ""} ${kind === "passive" ? "is-passive" : ""}">
-      <header class="tm-kit-head">
+      <div class="tm-kit-head">
         <span class="tm-kit-name">${escapeHtml(entry.name)}</span>
         ${tag}${cost}
-      </header>
+      </div>
       <p class="tm-kit-body">${escapeHtml(readDescription(entry))}</p>
     </article>
   `;
