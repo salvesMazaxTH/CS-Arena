@@ -126,19 +126,29 @@ function applySkillAffectGlows(envelope) {
 
   const harm = new Set();
   const boon = new Set();
+  // Whoever actually caused a visual event, per its own sourceId — not just
+  // the envelope's acting user. A bystander passive (e.g. Seymour's radiance
+  // firing off someone else's Claim) has its own real source, and glowing
+  // only the acting user would read as if they'd caused it themselves.
+  const actors = new Set();
 
   for (const ev of envelope.damageEvents ?? []) {
     if (ev?.targetId) harm.add(ev.targetId);
+    if (ev?.sourceId) actors.add(ev.sourceId);
   }
   for (const ev of envelope.lifestealEvents ?? []) {
     if (ev?.fromTargetId) harm.add(ev.fromTargetId);
     if (ev?.targetId) boon.add(ev.targetId);
+    if (ev?.sourceId) actors.add(ev.sourceId);
   }
   for (const key of ["healEvents", "shieldEvents", "buffEvents"]) {
     for (const ev of envelope[key] ?? []) {
       if (ev?.targetId) boon.add(ev.targetId);
+      if (ev?.sourceId) actors.add(ev.sourceId);
     }
   }
+
+  if (userId) actors.add(userId);
 
   boon.delete(userId);
   for (const id of harm) boon.delete(id);
@@ -154,7 +164,7 @@ function applySkillAffectGlows(envelope) {
     mounted.push(glow);
   };
 
-  if (userId) mount(userId, "user");
+  for (const id of actors) mount(id, "user");
   for (const id of harm) mount(id, "harm");
   for (const id of boon) mount(id, "boon");
 

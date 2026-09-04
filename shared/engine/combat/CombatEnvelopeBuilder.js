@@ -73,10 +73,15 @@ export class CombatEnvelopeBuilder {
     const userId = user?.id ?? null;
     const userName = user?.name ?? null;
 
-    // All affected targets (damage, heal, buff, shield), deduped, excluding the user.
+    // All affected targets (damage, heal, buff, shield) the user themselves
+    // actually caused, deduped, excluding the user. A bystander passive (e.g.
+    // Seymour's radiance firing off someone else's Claim) writes into this
+    // same shared context but its events carry a different sourceId — they
+    // are not this action's own doing and must not be read as its targets.
     const uniqueTargetIds = [
       ...new Set(
         [...damageEvents, ...healEvents, ...shieldEvents, ...buffEvents]
+          .filter((e) => e.sourceId === userId)
           .map((e) => e.targetId)
           .filter((id) => id && id !== userId),
       ),
