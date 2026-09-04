@@ -12,13 +12,13 @@ const STAT_FIELDS = [
   ["SPD", "Speed"],
 ];
 
-function readDescription(entry) {
+function readDescription(entry, champion) {
   return typeof entry.description === "function"
-    ? entry.description()
+    ? entry.description(champion)
     : entry.description || "";
 }
 
-function renderKitEntry(entry, { kind }) {
+function renderKitEntry(entry, { kind, champion }) {
   const isUlt = entry.isUltimate === true;
   const tag =
     kind === "passive"
@@ -40,7 +40,7 @@ function renderKitEntry(entry, { kind }) {
         <span class="tm-kit-name">${escapeHtml(entry.name)}</span>
         ${tag}${cost}
       </div>
-      <p class="tm-kit-body">${escapeHtml(readDescription(entry))}</p>
+      <p class="tm-kit-body">${readDescription(entry, champion)}</p>
     </article>
   `;
 }
@@ -61,6 +61,10 @@ export function renderChampionInspector(
 
   const species = getChampionSpecies(champion).map(toReadableLabel).join(" · ");
   const skills = Array.isArray(champion.skills) ? champion.skills : [];
+
+  // Descriptions are written against a live champion; outside a match the
+  // closest honest stand-in is one that has not acted yet.
+  const preview = { ...champion, runtime: { ...(champion.initialRuntime ?? {}) } };
 
   const actionLabel = duo
     ? inTeam
@@ -90,8 +94,8 @@ export function renderChampionInspector(
       </div>
 
       <div class="tm-kit-list">
-        ${champion.passive ? renderKitEntry(champion.passive, { kind: "passive" }) : ""}
-        ${skills.map((skill) => renderKitEntry(skill, { kind: "skill" })).join("")}
+        ${champion.passive ? renderKitEntry(champion.passive, { kind: "passive", champion: preview }) : ""}
+        ${skills.map((skill) => renderKitEntry(skill, { kind: "skill", champion: preview })).join("")}
       </div>
 
       <button type="button"
