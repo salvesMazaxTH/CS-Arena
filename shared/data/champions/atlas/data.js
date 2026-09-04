@@ -4,9 +4,9 @@ export default {
 
   unreleased: true,
 
-  HP: 400,
+  HP: 395,
   Attack: 155,
-  Defense: 160,
+  Defense: 170,
   Speed: 80,
 
   classKey: "tank",
