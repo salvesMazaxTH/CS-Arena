@@ -5,6 +5,7 @@ import { EMBLEMS } from "/shared/data/emblems/index.js";
 import {
   ELEMENT_IDENTITIES,
   CLASS_IDENTITIES,
+  renderIdentityIconMarkup,
 } from "/shared/ui/identityPalette.js";
 import { TEAM_SIZE, validateTeamComposition } from "/shared/data/teams/index.js";
 import {
@@ -186,7 +187,10 @@ export class TeamBuilder {
         chip.className = "tm-filter-chip";
         chip.dataset.key = key;
         chip.style.setProperty("--chip-tint", identity.background);
-        chip.innerHTML = `<span class="tm-filter-chip-icon">${identity.icon ?? "•"}</span>${identity.label}`;
+        chip.innerHTML = `${renderIdentityIconMarkup(identity, {
+          className: "tm-filter-chip-icon",
+          alt: identity.label,
+        })}${escapeHtml(identity.label)}`;
         chip.addEventListener("click", () => {
           this.filters[facet] = this.filters[facet] === key ? null : key;
           this._syncFilterChips();

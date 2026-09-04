@@ -75,7 +75,7 @@ function getChampionFrontBadges(champion) {
       type: "class",
       label: classInfo ? `Class: ${classInfo.label}` : "Class",
       iconText: champion.classIcon || classInfo?.icon || "?",
-      iconUrl: champion.classIconUrl || null,
+      iconUrl: champion.classIconUrl || classInfo?.iconUrl || null,
     });
   }
 

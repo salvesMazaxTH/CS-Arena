@@ -1304,35 +1304,32 @@
   box-shadow: 0 0 8px rgba(0, 200, 255, 0.2);
 }
 
-.champion-identity-badge-class {
-  border-color: rgba(255, 208, 0, 0.45);
-  box-shadow: 0 0 8px rgba(255, 208, 0, 0.2);
+/* Class badges are framed art — the icon carries its own border, so the badge
+   span drops every frame of its own and just sizes the image. */
+.champion-identity-badge:has(.champion-identity-badge-image) {
+  border: none;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
 }
 
 .champion-identity-badge-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
+  object-fit: contain;
 }
 
 /*
- * Identity badge colors — one distinct color per elemental affinity and per
- * champion class. The values come from `shared/ui/identityPalette.js`, which
- * publishes them as `--identity-<key>-bg` / `--identity-<key>-border` custom
- * properties on :root, so the palette is never duplicated here.
+ * Elemental-affinity badge colors. Values come from
+ * `shared/ui/identityPalette.js`, published as `--identity-<key>-bg` /
+ * `--identity-<key>-border` custom properties so the palette is never
+ * duplicated here. Class badges are art, not tinted chips, so they are absent.
  */
 .lineup-chip-identity-row .champion-identity-badge-affinity,
 .first-choice-chips .champion-identity-badge-affinity {
   box-shadow:
     0 0 8px rgba(0, 200, 255, 0.18),
     inset 0 0 8px rgba(255, 255, 255, 0.07);
-}
-.lineup-chip-identity-row .champion-identity-badge-class,
-.first-choice-chips .champion-identity-badge-class {
-  box-shadow:
-    0 0 8px rgba(120, 120, 220, 0.25),
-    inset 0 0 8px rgba(255, 255, 255, 0.08);
 }
 
 .lineup-chip-identity-row .champion-identity-badge-affinity[title*="Fire"],
@@ -1364,37 +1361,6 @@
 .first-choice-chips .champion-identity-badge-affinity[title*="Steel"] {
   background: var(--identity-steel-bg);
   border-color: var(--identity-steel-border);
-}
-
-.lineup-chip-identity-row .champion-identity-badge-class[title*="Brawler"],
-.first-choice-chips .champion-identity-badge-class[title*="Brawler"] {
-  background: var(--identity-brawler-bg);
-  border-color: var(--identity-brawler-border);
-}
-.lineup-chip-identity-row .champion-identity-badge-class[title*="Marksman"],
-.first-choice-chips .champion-identity-badge-class[title*="Marksman"] {
-  background: var(--identity-marksman-bg);
-  border-color: var(--identity-marksman-border);
-}
-.lineup-chip-identity-row .champion-identity-badge-class[title*="Mage"],
-.first-choice-chips .champion-identity-badge-class[title*="Mage"] {
-  background: var(--identity-mage-bg);
-  border-color: var(--identity-mage-border);
-}
-.lineup-chip-identity-row .champion-identity-badge-class[title*="Assassin"],
-.first-choice-chips .champion-identity-badge-class[title*="Assassin"] {
-  background: var(--identity-assassin-bg);
-  border-color: var(--identity-assassin-border);
-}
-.lineup-chip-identity-row .champion-identity-badge-class[title*="Tank"],
-.first-choice-chips .champion-identity-badge-class[title*="Tank"] {
-  background: var(--identity-tank-bg);
-  border-color: var(--identity-tank-border);
-}
-.lineup-chip-identity-row .champion-identity-badge-class[title*="Enchanter"],
-.first-choice-chips .champion-identity-badge-class[title*="Enchanter"] {
-  background: var(--identity-enchanter-bg);
-  border-color: var(--identity-enchanter-border);
 }
 
 /* Lineup banner (compact roster) */
@@ -1876,11 +1842,19 @@
   text-overflow: ellipsis;
 }
 
-/* Emoji (or spelled-out name, for species without one) of a requirement. */
+/* The icon of an emblem requirement: framed class art, an element emoji, or a
+   spelled-out name for species without one. */
 .emblem-requirement-marker {
   font-size: 0.78rem;
   line-height: 1;
   vertical-align: -1px;
+}
+
+.emblem-requirement-marker img.emblem-requirement-marker-art {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  vertical-align: -4px;
 }
 
 .emblem-option-state {
@@ -1895,13 +1869,19 @@
 .emblem-tooltip {
   position: fixed;
   z-index: 20000;
-  width: min(260px, calc(100vw - 24px));
+  width: min(300px, calc(100vw - 24px));
   background: rgba(10, 13, 20, 0.96);
   border: 1px solid rgba(152, 171, 255, 0.38);
   border-radius: 12px;
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.34);
-  padding: 10px 12px;
+  padding: 12px 14px;
   pointer-events: none;
+}
+
+.emblem-tooltip .emblem-requirement-marker img.emblem-requirement-marker-art {
+  width: 20px;
+  height: 20px;
+  vertical-align: -5px;
 }
 
 .emblem-tooltip-title {
@@ -1932,7 +1912,8 @@
   color: #dfeaff;
   text-transform: none;
   letter-spacing: normal;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
+  line-height: 1.6;
 }
 
 .lineup-meta-row {

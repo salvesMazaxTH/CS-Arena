@@ -46,44 +46,45 @@ const ELEMENT_IDENTITIES = Object.freeze({
   },
 });
 
+// Each class carries its own framed art (a round icon with its border baked in),
+// so `iconUrl` is what gets drawn wherever a class marker appears. `background` /
+// `border` are the class colour, sampled from that art.
 const CLASS_IDENTITIES = Object.freeze({
   brawler: {
     label: "Brawler",
-    icon: "🥊",
-    background: "rgba(181, 104, 46, 0.94)",
-    border: "rgba(255, 208, 160, 0.72)",
+    iconUrl: "/assets/indicators/brawler_class_icon.png",
+    background: "rgba(221, 42, 42, 0.94)",
+    border: "rgba(255, 170, 170, 0.72)",
   },
   marksman: {
     label: "Marksman",
-    icon: "🏹",
-    background: "rgba(52, 128, 146, 0.94)",
-    border: "rgba(165, 224, 234, 0.72)",
+    iconUrl: "/assets/indicators/marksman_class_icon.png",
+    background: "rgba(139, 71, 227, 0.94)",
+    border: "rgba(214, 183, 255, 0.74)",
   },
   mage: {
     label: "Mage",
-    icon: "✦",
-    background: "rgba(118, 73, 168, 0.94)",
-    border: "rgba(213, 187, 255, 0.72)",
+    iconUrl: "/assets/indicators/mage_class_icon.png",
+    background: "rgba(42, 116, 246, 0.95)",
+    border: "rgba(176, 208, 255, 0.74)",
   },
-  // Assassin used to fall back to the generic class background, which read as
-  // the same purple as Mage — it now owns a crimson of its own.
   assassin: {
     label: "Assassin",
-    icon: "🗡",
-    background: "rgba(158, 40, 86, 0.94)",
-    border: "rgba(255, 168, 201, 0.72)",
+    iconUrl: "/assets/indicators/assassin_class_icon.png",
+    background: "rgba(228, 38, 128, 0.94)",
+    border: "rgba(255, 175, 214, 0.74)",
   },
   tank: {
     label: "Tank",
-    icon: "🛡",
-    background: "rgba(93, 108, 132, 0.94)",
-    border: "rgba(198, 214, 233, 0.72)",
+    iconUrl: "/assets/indicators/tank_class_icon.png",
+    background: "rgba(183, 132, 42, 0.95)",
+    border: "rgba(240, 210, 150, 0.72)",
   },
   enchanter: {
     label: "Enchanter",
-    icon: "✧",
-    background: "rgba(46, 148, 128, 0.94)",
-    border: "rgba(175, 236, 226, 0.72)",
+    iconUrl: "/assets/indicators/enchanter_class_icon.png",
+    background: "rgba(74, 173, 40, 0.94)",
+    border: "rgba(180, 240, 160, 0.72)",
   },
 });
 
@@ -164,6 +165,19 @@ function getRequirementIdentity(kind, key) {
 }
 
 /**
+ * Inline markup for an identity's marker: its own framed art when it has one,
+ * the emoji otherwise. `alt` is the image alt text and the emoji-less fallback.
+ * Callers pass their own already-safe label strings.
+ */
+function renderIdentityIconMarkup(identity, { className = "", alt = "" } = {}) {
+  const cls = className ? ` class="${className}"` : "";
+  if (identity?.iconUrl) {
+    return `<img${cls} src="${identity.iconUrl}" alt="${alt}">`;
+  }
+  return `<span${cls}>${identity?.icon ?? alt}</span>`;
+}
+
+/**
  * Builds the background for an emblem tile out of its requirement colors:
  * one requirement paints a vertical shade of a single color, two (or more)
  * paint a diagonal gradient that splits the tile between them.
@@ -221,6 +235,7 @@ export {
   getClassIdentity,
   getSpeciesIcon,
   getRequirementIdentity,
+  renderIdentityIconMarkup,
   toIdentityLabel,
   buildIdentityGradient,
   identityPaletteCssVariables,

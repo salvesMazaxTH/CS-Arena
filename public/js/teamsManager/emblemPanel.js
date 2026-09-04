@@ -3,6 +3,7 @@ import { championDB } from "/shared/data/championDB.js";
 import {
   getRequirementIdentity,
   buildIdentityGradient,
+  renderIdentityIconMarkup,
 } from "/shared/ui/identityPalette.js";
 import { MAX_TEAM_EMBLEMS } from "/shared/data/teams/index.js";
 import {
@@ -121,8 +122,11 @@ export function getEmblemShortCode(emblem) {
 }
 
 function renderRequirementMarkerMarkup({ identity, label }) {
-  const marker = identity.icon ?? identity.label ?? label;
-  return `<span class="emblem-requirement-marker" title="${escapeHtml(label)}">${escapeHtml(marker)}</span>`;
+  const marker = renderIdentityIconMarkup(identity, {
+    className: "emblem-requirement-marker-art",
+    alt: identity.icon ?? identity.label ?? label,
+  });
+  return `<span class="emblem-requirement-marker" title="${escapeHtml(label)}">${marker}</span>`;
 }
 
 function renderRequirementCountsMarkup(checks) {
