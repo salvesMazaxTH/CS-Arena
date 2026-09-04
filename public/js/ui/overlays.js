@@ -28,17 +28,38 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
 
   // --- Glossary ---
 
+  // Every key and alias, longest first, so "Absolute Immunity" claims the whole
+  // phrase before "absolute" can take its first word.
+  const GLOSSARY_TERMS = Object.entries(GAME_GLOSSARY)
+    .flatMap(([key, data]) =>
+      [key, ...(data.aliases || [])].map((term) => ({ key, term })),
+    )
+    .sort((a, b) => b.term.length - a.term.length);
+
+  // One alternation rather than one regex per term: matching the whole glossary
+  // in a single pass is what stops a shorter term from claiming text a longer
+  // one already took, and what keeps the markup below out of its own way.
+  const GLOSSARY_PATTERN = new RegExp(
+    GLOSSARY_TERMS.map(
+      ({ term }) => `\\b(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})\\w*`,
+    ).join("|"),
+    "gi",
+  );
+
+  /** The key behind a match, found through whichever alternative filled a group. */
+  function matchedKey(match) {
+    for (let i = 1; i < match.length; i++) {
+      if (match[i] !== undefined) return GLOSSARY_TERMS[i - 1].key;
+    }
+    return null;
+  }
+
   function extractGlossaryKeys(text) {
     const keys = new Set();
 
-    for (const [key, data] of Object.entries(GAME_GLOSSARY)) {
-      const terms = [key, ...(data.aliases || [])];
-      for (const term of terms) {
-        if (new RegExp(`\\b${term}\\w*`, "i").test(text)) {
-          keys.add(key);
-          break;
-        }
-      }
+    for (const match of String(text ?? "").matchAll(GLOSSARY_PATTERN)) {
+      const key = matchedKey(match);
+      if (key) keys.add(key);
     }
 
     return [...keys];
@@ -47,19 +68,13 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
   function renderGlossaryStatusEffects(text) {
     if (!text) return text;
 
-    let result = text;
-    for (const [key, data] of Object.entries(GAME_GLOSSARY)) {
-      const terms = [key, ...(data.aliases || [])];
-      for (const term of terms) {
-        const regex = new RegExp(`\\b${term}\\w*`, "gi");
-        result = result.replace(
-          regex,
-          `<span class="glossary-statusEffect" data-key="${key}">$&</span>`,
-        );
-      }
-    }
+    return text.replace(GLOSSARY_PATTERN, (...args) => {
+      const match = args.slice(0, -2);
+      const key = matchedKey(match);
+      if (!key) return match[0];
 
-    return result;
+      return `<span class="glossary-statusEffect" data-key="${key}">${match[0]}</span>`;
+    });
   }
 
   function renderGlossaryPanel(keys) {

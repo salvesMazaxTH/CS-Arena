@@ -146,7 +146,7 @@ const sereneSkills = [
     description() {
       return `Serene crosses into the Quietude and stands at the Threshold of Existence, where the newly dead have not yet finished dying. What she carries back settles over her and her allies as ${this.damageReduction}% damage reduction for ${this.reductionDuration} turn(s).
 
-      While that stillness lingers (${this.auraDuration} turn(s)), the first ally who would take lethal damage is held at the Threshold instead: they survive with ${this.surviveHP} HP and become Immune for ${this.immunityDuration} turn(s), spending the aura and dispelling it for the whole team. At the start of the next turn, they come back across and are restored by ${this.reviveHealPercent}% of their Max HP.`;
+      While that stillness lingers (${this.auraDuration} turn(s)), the first ally who would take lethal damage is held at the Threshold instead: they survive with ${this.surviveHP} HP and gain Absolute Immunity for ${this.immunityDuration} turn(s), spending the aura and dispelling it for the whole team. At the start of the next turn, they come back across and are restored by ${this.reviveHealPercent}% of their Max HP.`;
     },
 
     targetSpec: ["self"],

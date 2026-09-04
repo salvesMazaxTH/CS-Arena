@@ -27,6 +27,11 @@ export const GAME_GLOSSARY = {
     description:
       "The champion is snared, unable to act with abilities that require contact. Applies on any hit that connects, even one that deals no damage.",
   },
+  blind: {
+    title: "Blind",
+    description:
+      "An ability aimed at a single enemy has a 75% chance to miss. Area abilities are unaffected, and so is any target the player did not choose.",
+  },
   poisoned: {
     title: "Poisoned",
     description:
@@ -34,11 +39,19 @@ export const GAME_GLOSSARY = {
   },
   healBlock: {
     title: "Heal Block",
+    aliases: ["Heal Block"],
     description:
       "The champion cannot recover HP by any means, lifesteal included. Requires the attack to deal damage.",
   },
+  afflictionWard: {
+    title: "Affliction Ward",
+    aliases: ["Affliction Ward"],
+    description:
+      "The first negative effect that would take hold never does, and the ward is spent turning it away. It stops nothing that merely deals damage.",
+  },
   spell_shield: {
     title: "Spell Shield",
+    aliases: ["Spell Shield"],
     description:
       "The champion receives a shield that absorbs the next magic damage.",
   },
@@ -49,6 +62,7 @@ export const GAME_GLOSSARY = {
   },
   absolute_immunity: {
     title: "Absolute Immunity",
+    aliases: ["Absolute Immunity"],
     description:
       "The champion is immune to all types of negative effects (including damage).",
   },
