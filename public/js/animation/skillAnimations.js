@@ -53,12 +53,15 @@ const BIG_EARTHBOLT_SKILLS = new Set();
 // `hit` is the individual DamageEvent's own element/contact, which override the
 // skill's: one skill can throw hits of different elements, or a ranged sub-hit.
 function resolveDefaultAnimationKey(skill, hit) {
-  if (!skill || typeof skill !== "object") return null;
-
   // Authorial motif, from the hit when it names one. It wins over the element
   // fallback and applies to melee too, since a cut is usually contact-based.
-  const motif = hit?.hitVfx ?? skill.hitVfx;
+  // Checked before the skill-object guard below: a passive's hit carries its
+  // own hitVfx but the passive itself is never a member of champion.skills,
+  // so `skill` legitimately comes back undefined for it.
+  const motif = hit?.hitVfx ?? skill?.hitVfx;
   if (motif) return `default_${motif}`;
+
+  if (!skill || typeof skill !== "object") return null;
 
   const contact = hit?.contact ?? skill.contact;
   const element = hit?.element ?? skill.element;

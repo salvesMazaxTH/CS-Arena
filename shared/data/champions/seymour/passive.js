@@ -10,7 +10,13 @@ export default {
   killScore: 1,
 
   hits: [
-    { id: "radiance", type: "magical", contact: false, damageMode: "standard" },
+    {
+      id: "radiance",
+      type: "magical",
+      contact: false,
+      damageMode: "standard",
+      hitVfx: "radiant_bolt",
+    },
   ],
 
   description() {
