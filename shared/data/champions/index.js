@@ -1,3 +1,5 @@
+import atlas from "./atlas/index.js";
+import selina from "./selina/index.js";
 import ralia from "./ralia/index.js";
 import naelthos from "./naelthos/index.js";
 import naelys from "./naelys/index.js";
@@ -56,6 +58,8 @@ import vorn_omega from "./vorn_omega/index.js";
 import seymour from "./seymour/index.js";
 
 const championDB = {
+  atlas,
+  selina,
   ralia,
   naelthos,
   naelys,
