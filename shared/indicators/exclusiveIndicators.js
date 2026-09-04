@@ -53,6 +53,15 @@ registerExclusiveIndicator("sky_courts_indicted", {
   label: "Indicted",
 });
 
+// Seymour's Bleaching Ray: the hookEffect key on each Sunbleached enemy, whose
+// healing is cut while it holds.
+registerExclusiveIndicator("sunbleached", {
+  type: "emoji",
+  value: "☀️",
+  background: "rgba(214, 178, 106, 0.85)",
+  label: "Sunbleached",
+});
+
 // Zyrelle's revolver: current rounds loaded (runtime.zyrelleAmmo), 0-6.
 registerRuntimeCounterIndicator("zyrelle_ammo", "zyrelleAmmo", {
   type: "image",
