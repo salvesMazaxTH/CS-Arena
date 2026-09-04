@@ -36,10 +36,11 @@ function championAffinityKeys(champion) {
  * full kit in the centre, and the ordered line-up plus Emblems on the right.
  */
 export class TeamBuilder {
-  constructor({ root, onSave, onCancel, editMode = {} }) {
+  constructor({ root, onSave, onCancel, onNotify, editMode = {} }) {
     this.root = root;
     this.onSave = onSave;
     this.onCancel = onCancel;
+    this.onNotify = onNotify;
     this.editMode = editMode;
     this.draft = null;
     this.focusKey = null;
@@ -213,11 +214,13 @@ export class TeamBuilder {
 
   _wireZoneTabs() {
     this.root.querySelectorAll(".tm-zone-tab").forEach((tab) => {
-      tab.addEventListener("click", () => {
-        this.workbench.dataset.activeZone = tab.dataset.zone;
-        this._syncZoneTabs();
-      });
+      tab.addEventListener("click", () => this._showZone(tab.dataset.zone));
     });
+    this._syncZoneTabs();
+  }
+
+  _showZone(zone) {
+    this.workbench.dataset.activeZone = zone;
     this._syncZoneTabs();
   }
 
@@ -303,14 +306,18 @@ export class TeamBuilder {
 
     grid.querySelectorAll(".tm-roster-tile").forEach((tile) => {
       const { championKey, duoKey } = tile.dataset;
-      tile.addEventListener("click", () => {
-        if (duoKey) {
-          this._handleDuoClick(duoDB[duoKey]);
-          this._setFocus(duoDB[duoKey].cores[0]);
-        } else {
-          this._setFocus(championKey);
-        }
+      const focusKey = duoKey ? duoDB[duoKey].cores[0] : championKey;
+
+      tile.querySelector('[data-act="pick"]').addEventListener("click", () => {
+        this.focusKey = focusKey;
+        if (duoKey) this._handleDuoClick(duoDB[duoKey]);
+        else this._addChampion(championKey);
       });
+      tile.querySelector('[data-act="peek"]').addEventListener("click", () => {
+        this._setFocus(focusKey);
+        this._showZone("inspector");
+      });
+
       tile.addEventListener("dragstart", (event) => {
         this._draggedKey = duoKey || championKey;
         this._draggedFromSlot = -1;
@@ -325,28 +332,41 @@ export class TeamBuilder {
 
   _rosterTileMarkup(key) {
     const champion = championDB[key];
-    return `
-      <button type="button" class="tm-roster-tile" draggable="true"
-        data-champion-key="${key}" title="${escapeHtml(champion.name)}">
-        <span class="tm-roster-portrait">
-          <img src="${escapeHtml(champion.portrait)}" alt="" loading="lazy">
-        </span>
-        <span class="tm-roster-name">${escapeHtml(champion.name)}</span>
-        <span class="tm-roster-dots">${renderChampionIdentityBadgesMarkup(champion)}</span>
-      </button>
-    `;
+    return this._tileMarkup({
+      attribute: `data-champion-key="${key}"`,
+      extraClass: "",
+      name: champion.name,
+      portrait: champion.portrait,
+      footer: renderChampionIdentityBadgesMarkup(champion),
+    });
   }
 
   _duoTileMarkup(duo) {
+    return this._tileMarkup({
+      attribute: `data-duo-key="${duo.key}"`,
+      extraClass: " tm-roster-tile-duo",
+      name: duo.name,
+      portrait: duo.portrait,
+      footer: `<span class="tm-duo-badge">${duo.cores.length} slots</span>`,
+    });
+  }
+
+  _tileMarkup({ attribute, extraClass, name, portrait, footer }) {
+    const safeName = escapeHtml(name);
     return `
-      <button type="button" class="tm-roster-tile tm-roster-tile-duo" draggable="true"
-        data-duo-key="${duo.key}" title="${escapeHtml(duo.name)}">
-        <span class="tm-roster-portrait">
-          <img src="${escapeHtml(duo.portrait)}" alt="" loading="lazy">
-        </span>
-        <span class="tm-roster-name">${escapeHtml(duo.name)}</span>
-        <span class="tm-roster-dots"><span class="tm-duo-badge">${duo.cores.length} slots</span></span>
-      </button>
+      <div class="tm-roster-tile${extraClass}" draggable="true" ${attribute}>
+        <button type="button" class="tm-roster-pick" data-act="pick">
+          <span class="tm-roster-portrait">
+            <img src="${escapeHtml(portrait)}" alt="" loading="lazy">
+          </span>
+          <span class="tm-roster-name">${safeName}</span>
+          <span class="tm-roster-dots">${footer}</span>
+        </button>
+        <button type="button" class="tm-roster-peek" data-act="peek"
+          title="Read ${safeName}'s kit" aria-label="Read ${safeName}'s kit">
+          <i class="bx bx-book-reader"></i>
+        </button>
+      </div>
     `;
   }
 
@@ -361,6 +381,11 @@ export class TeamBuilder {
         : championKey === this.focusKey;
       tile.classList.toggle("is-selected", inTeam);
       tile.classList.toggle("is-focused", focused);
+
+      const name = duoKey ? duoDB[duoKey].name : championDB[championKey].name;
+      const pick = tile.querySelector('[data-act="pick"]');
+      pick.title = inTeam ? `Remove ${name} from the line-up` : `Add ${name} to the line-up`;
+      pick.setAttribute("aria-pressed", String(inTeam));
     });
   }
 
@@ -580,7 +605,10 @@ export class TeamBuilder {
       this.draft.champions[existing] = null;
     } else {
       const free = this.draft.champions.indexOf(null);
-      if (free === -1) return;
+      if (free === -1) {
+        this._reportLineupFull(championDB[key].name);
+        return;
+      }
       this.draft.champions[free] = key;
     }
     this._refresh();
@@ -592,10 +620,20 @@ export class TeamBuilder {
       layout.remove(duo);
     } else {
       const start = layout.findPlacement(duo);
-      if (start === -1) return;
+      if (start === -1) {
+        this._reportLineupFull(duo.name);
+        return;
+      }
       layout.place(duo, start);
     }
     this._refresh();
+  }
+
+  _reportLineupFull(name) {
+    this._refresh();
+    this.onNotify?.(
+      `No room for ${name} — remove someone from the line-up first.`,
+    );
   }
 
   _autofill() {

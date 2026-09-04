@@ -34,6 +34,7 @@ const builder = new TeamBuilder({
     flashToast(`"${saved.name}" saved.`);
   },
   onCancel: showList,
+  onNotify: flashToast,
 });
 
 function teamValidity(team) {

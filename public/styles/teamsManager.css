@@ -420,20 +420,68 @@ img.tm-filter-chip-icon {
 }
 
 .tm-roster-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 9px 11px;
+  position: relative;
   border-radius: 12px;
   border: 1px solid var(--tm-line);
   background: var(--tm-raised);
   color: var(--tm-text);
-  font: inherit;
-  cursor: pointer;
   transition:
     border-color 0.1s ease,
     background 0.1s ease;
+}
+
+.tm-roster-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 9px 11px;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tm-roster-peek {
+  position: absolute;
+  top: 16px;
+  left: 15px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(4, 10, 8, 0.72);
+  color: #cfe8dd;
+  font-size: 0.95rem;
+  cursor: pointer;
+  opacity: 0.35;
+  transition:
+    opacity 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.tm-roster-tile:hover .tm-roster-peek,
+.tm-roster-peek:hover,
+.tm-roster-peek:focus-visible {
+  opacity: 1;
+}
+
+.tm-roster-peek:hover,
+.tm-roster-peek:focus-visible {
+  color: var(--tm-signal);
+  border-color: var(--tm-signal);
+}
+
+.tm-roster-pick:focus-visible,
+.tm-roster-peek:focus-visible {
+  outline: 2px solid var(--tm-signal);
+  outline-offset: 2px;
 }
 
 .tm-roster-tile:hover {
@@ -450,8 +498,9 @@ img.tm-filter-chip-icon {
   border-color: rgba(0, 255, 150, 0.45);
 }
 
-.tm-roster-tile.is-selected .tm-roster-portrait::after {
-  content: "✓";
+.tm-roster-tile.is-selected .tm-roster-portrait::after,
+.tm-roster-tile:not(.is-selected):hover .tm-roster-portrait::after,
+.tm-roster-tile:not(.is-selected) .tm-roster-pick:focus-visible .tm-roster-portrait::after {
   position: absolute;
   inset: auto 4px 4px auto;
   width: 22px;
@@ -463,6 +512,16 @@ img.tm-filter-chip-icon {
   font-weight: 800;
   color: #04140d;
   background: var(--tm-signal);
+}
+
+.tm-roster-tile.is-selected .tm-roster-portrait::after {
+  content: "✓";
+}
+
+.tm-roster-tile:not(.is-selected):hover .tm-roster-portrait::after,
+.tm-roster-tile:not(.is-selected) .tm-roster-pick:focus-visible .tm-roster-portrait::after {
+  content: "+";
+  background: rgba(0, 255, 150, 0.82);
 }
 
 .tm-roster-tile.dragging {
