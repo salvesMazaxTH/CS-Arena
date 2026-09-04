@@ -1,7 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import { isSorcerer } from "./sorcerer.js";
 import totalBlock from "../generic/totalBlock.js";
 
 const dorianSkills = [
@@ -112,7 +111,7 @@ const dorianSkills = [
     key: "wheel_of_reckoning",
     name: "Wheel of Reckoning",
     bf: 120,
-    sorcererMaxHPPercent: 10,
+    enchanterMaxHPPercent: 10,
     healBlockDuration: 2,
     killBankCap: 3,
     contact: false,
@@ -123,7 +122,7 @@ const dorianSkills = [
     priority: 0,
 
     description() {
-      return `The wires snap taut and every wheel comes round at once, the whole account brought down on the chosen target. Deals heavy ranged physical damage and leaves the target with Heal Block for ${this.healBlockDuration} turns. Against a sorcerer it also bites for bonus Absolute Damage equal to ${this.sorcererMaxHPPercent}% of their Max HP. If the strike kills, Dorian's team scores points equal to his current Grudge, up to ${this.killBankCap}, and the ledger empties.`;
+      return `The wires snap taut and every wheel comes round at once, the whole account brought down on the chosen target. Deals heavy ranged physical damage and leaves the target with Heal Block for ${this.healBlockDuration} turns. Against an enchanter it also bites for bonus Absolute Damage equal to ${this.enchanterMaxHPPercent}% of their Max HP. If the strike kills, Dorian's team scores points equal to his current Grudge, up to ${this.killBankCap}, and the ledger empties.`;
     },
 
     targetSpec: ["enemy"],
@@ -152,9 +151,9 @@ const dorianSkills = [
         });
       }
 
-      if (landed && enemy.alive && isSorcerer(enemy)) {
+      if (landed && enemy.alive && enemy.classKey === "enchanter") {
         const bonus = Math.floor(
-          (enemy.maxHP * this.sorcererMaxHPPercent) / 100,
+          (enemy.maxHP * this.enchanterMaxHPPercent) / 100,
         );
 
         if (bonus > 0) {
@@ -175,7 +174,7 @@ const dorianSkills = [
         }
 
         context.registerDialog?.({
-          message: `${formatChampionName(enemy)} is a sorcerer — the wheels bite deeper.`,
+          message: `${formatChampionName(enemy)} is an enchanter — the wheels bite deeper.`,
           sourceId: user.id,
           targetId: enemy.id,
         });

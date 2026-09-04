@@ -1,6 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
-import { isSorcerer } from "./sorcerer.js";
 
 export default {
   key: "ledger_of_old_wounds",
@@ -12,7 +11,7 @@ export default {
   description(champion) {
     const grudge = champion?.runtime?.dorianGrudge || 0;
 
-    return `Every sorcerer Dorian has bled is a mark under his skin, sealed in the vials he carved into himself, and the account never closes on its own. Each turn he wounds an enemy sorcerer he keeps one Grudge (max ${this.maxGrudge}); his next Claim cashes the whole ledger for 1 extra point per ${this.grudgePerPoint} Grudge spent, while a lone Grudge — or a wound torn from anyone who is not a sorcerer — pays nothing.
+    return `Every enchanter Dorian has bled is a mark under his skin, sealed in the vials he carved into himself, and the account never closes on its own. Each turn he wounds an enemy enchanter he keeps one Grudge (max ${this.maxGrudge}); his next Claim cashes the whole ledger for 1 extra point per ${this.grudgePerPoint} Grudge spent, while a lone Grudge — or a wound torn from anyone who is not an enchanter — pays nothing.
 
     Grudge: <b>${grudge}/${this.maxGrudge}</b>`;
   },
@@ -24,7 +23,7 @@ export default {
 
   onAfterDmgDealing({ owner, defender, actualDmg, context }) {
     if (!(actualDmg > 0) || !defender || defender.team === owner.team) return;
-    if (!isSorcerer(defender)) return;
+    if (defender.classKey !== "enchanter") return;
     if (context.currentTurn === owner.runtime.dorianGrudgeTurn) return;
 
     const before = owner.runtime.dorianGrudge ?? 0;
