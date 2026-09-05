@@ -143,22 +143,24 @@ const raliaSkills = [
       const mainResult = results[0];
 
       const effectiveDamage = mainResult.totalDamage || 0;
-      const healingAmount = Math.max(
-        this.minHeal,
-        Math.floor(effectiveDamage * (this.healPercent / 100)),
-      );
 
-      // Log what she actually recovered, which is less than she asked for when
-      // the heal runs into her HP ceiling.
-      const healed = new HealEvent({
-        target: user,
-        amount: healingAmount,
-        context,
-      }).execute();
+      if (effectiveDamage > 0) {
+        const healingAmount = Math.max(
+          this.minHeal,
+          Math.floor(effectiveDamage * (this.healPercent / 100)),
+        );
 
-      if (healed > 0) {
-        // Extend the engine's log instead of replacing it.
-        mainResult.log += `\n${formatChampionName(user)} restores ${healed} HP.`;
+        // Log what she actually recovered, which is less than she asked for when
+        // the heal runs into her HP ceiling.
+        const healed = new HealEvent({
+          target: user,
+          amount: healingAmount,
+          context,
+        }).execute();
+
+        if (healed > 0) {
+          mainResult.log += `\n${formatChampionName(user)} restores ${healed} HP.`;
+        }
       }
 
       const didKill = results.some(
