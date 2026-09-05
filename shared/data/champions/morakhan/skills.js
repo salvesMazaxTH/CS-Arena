@@ -61,6 +61,15 @@ const morakhanSkills = [
         },
         context,
       );
+
+      context.registerDialog({
+        message: `${formatChampionName(user)} recites the <b>${this.name}</b>.`,
+        sourceId: user.id,
+      });
+
+      return {
+        log: `${formatChampionName(user)} braces behind the <b>${this.name}</b>: the first blow this turn feeds a shield.`,
+      };
     },
   },
 
@@ -183,6 +192,7 @@ const morakhanSkills = [
       const effect = {
         type: "buff",
         key: "mountain_stance",
+        expiresAtTurn: context.currentTurn + 1,
 
         hookScope: {
           onBeforeDmgTaking: "defender",
@@ -255,6 +265,15 @@ const morakhanSkills = [
       );
 
       user.addHookEffect(effect, context);
+
+      context.registerDialog({
+        message: `${formatChampionName(user)} settles into <b>${this.name}</b>.`,
+        sourceId: user.id,
+      });
+
+      return {
+        log: `${formatChampionName(user)} takes <b>${this.name}</b>: crowd control fails against him, half of every blow rebounds on its source, and he stands behind heavy guard this turn.`,
+      };
     },
   },
 ];

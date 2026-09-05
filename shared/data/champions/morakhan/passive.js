@@ -1,6 +1,8 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
 
+const STABILITY_BURST_KEY = "morakhan_adamantine_stability_burst";
+
 export default {
   key: "first_sutra_adamantine_heart",
   name: "First Sutra: Adamantine Heart",
@@ -17,7 +19,9 @@ export default {
 
     Whenever he takes Physical Damage, he gains 1 <b>Stability</b> stack (Max: ${this.stabilityStacksCap}). A CLAIM, taken in stillness, grants 1 stack as well.
 
-    When a hit would deal more than ${this.significantHitRatio * 100}% of his Max HP, he consumes all Stability stacks to reduce that damage by an additional 10% per stack and doubles his damage dealt for the next ${this.dmgBuffAuraDuration} turn(s).
+    When a hit would deal more than ${this.significantHitRatio * 100}% of his Max HP, he consumes all Stability stacks to reduce that damage by an additional 10% per stack, then doubles his damage dealt for the next ${this.dmgBuffAuraDuration} turns.
+
+    While already at maximum Stability, the next stack he would gain — whether from a Physical hit or a CLAIM — is spent immediately instead: no damage is reduced, but the doubling still triggers.
 
     <b>Current Stacks: ${stacks}</b>`;
   },
@@ -28,55 +32,22 @@ export default {
     onActionResolved: "actionSource",
   },
 
-  onActionResolved({ owner, skill }) {
-    if (skill?.key !== CLAIM_ACTION_KEY) return;
-
-    const runtime = (owner.runtime ??= {});
-    const stacks = runtime.stabilityStacks || 0;
-    if (stacks >= this.stabilityStacksCap) return;
-
-    runtime.stabilityStacks = stacks + 1;
-
-    return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} recites a sutra through the CLAIM and gains 1 Stability stack (${runtime.stabilityStacks}/${this.stabilityStacksCap}).`,
-    };
-  },
-
-  onBeforeDmgTaking({ damage, skill, context, owner, defender, type }) {
-    // type: "physical" | "magical" | ...
-    const isPhysical = type === "physical";
-    const stacks = owner.runtime?.stabilityStacks || 0;
-
-    let finalDamage = damage;
-
-    if (isPhysical) {
-      finalDamage = Math.max(5, finalDamage - this.flatReductionVSPhysical);
-    }
-
-    finalDamage *= 0.9;
-
-    // Measured against the post-mitigation figure, not the raw incoming hit.
-    const isSignificantHit =
-      finalDamage > owner.maxHP * this.significantHitRatio;
-
-    if (!stacks || !isSignificantHit) {
-      return { damage: finalDamage };
-    }
-
-    finalDamage *= 1 - 0.1 * stacks;
+  // Empties Stability and arms the damage-doubling aura. Returns the summary line.
+  consumeStability(owner, context, consumedStacks) {
     owner.runtime.stabilityStacks = 0;
 
     owner.runtime.hookEffects ??= [];
     owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
-      (effect) => effect.key !== "morakhan_adamantine_stability_burst",
+      (effect) => effect.key !== STABILITY_BURST_KEY,
     );
 
     owner.addHookEffect(
       {
         type: "buff",
-        key: "morakhan_adamantine_stability_burst",
+        key: STABILITY_BURST_KEY,
         name: "Empowered Adamantine Stability",
-        expiresAtTurn: context.currentTurn + 2,
+        // +1 so the aura covers dmgBuffAuraDuration full playable turns.
+        expiresAtTurn: context.currentTurn + this.dmgBuffAuraDuration + 1,
 
         hookScope: {
           onBeforeDmgDealing: "attacker",
@@ -109,27 +80,71 @@ export default {
 
     const msg = `<b>[Passive — ${this.name}]</b> ${formatChampionName(
       owner,
-    )} consumed ${stacks} Stability stack(s)!`;
+    )} consumed ${consumedStacks} Stability stack(s)!`;
 
-    context.registerDialog?.({
+    context.registerDialog({
       message: msg,
       sourceId: owner.id,
-      targetId: defender.id,
+      targetId: owner.id,
     });
 
+    return msg;
+  },
+
+  onActionResolved({ owner, skill, context }) {
+    if (skill?.key !== CLAIM_ACTION_KEY) return;
+
+    const runtime = (owner.runtime ??= {});
+    const stacks = runtime.stabilityStacks || 0;
+
+    if (stacks >= this.stabilityStacksCap) {
+      return { log: this.consumeStability(owner, context, stacks) };
+    }
+
+    runtime.stabilityStacks = stacks + 1;
+
     return {
-      damage: finalDamage,
-      log: msg,
+      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} recites a sutra through the CLAIM and gains 1 Stability stack (${runtime.stabilityStacks}/${this.stabilityStacksCap}).`,
     };
   },
 
-  onAfterDmgTaking({ actualDmg, owner, type }) {
+  onBeforeDmgTaking({ damage, context, owner, type }) {
+    const isPhysical = type === "physical";
+    const stacks = owner.runtime?.stabilityStacks || 0;
+
+    let finalDamage = damage;
+
+    if (isPhysical) {
+      finalDamage = Math.max(5, finalDamage - this.flatReductionVSPhysical);
+    }
+
+    finalDamage *= 0.9;
+
+    // Measured against the post-mitigation figure, not the raw incoming hit.
+    const isSignificantHit =
+      finalDamage > owner.maxHP * this.significantHitRatio;
+
+    if (!stacks || !isSignificantHit) {
+      return { damage: finalDamage };
+    }
+
+    finalDamage *= 1 - 0.1 * stacks;
+
+    return {
+      damage: finalDamage,
+      log: this.consumeStability(owner, context, stacks),
+    };
+  },
+
+  onAfterDmgTaking({ actualDmg, owner, type, context }) {
     if (!(actualDmg > 0) || type !== "physical") return;
 
     const runtime = (owner.runtime ??= {});
     const stacks = runtime.stabilityStacks || 0;
 
-    if (stacks >= this.stabilityStacksCap) return;
+    if (stacks >= this.stabilityStacksCap) {
+      return { log: this.consumeStability(owner, context, stacks) };
+    }
 
     runtime.stabilityStacks = stacks + 1;
 
