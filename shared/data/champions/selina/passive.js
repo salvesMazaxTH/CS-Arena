@@ -8,7 +8,7 @@ export default {
 
   lowHpThreshold: 50,
   healAmplifyPercent: 40,
-  claimHealPercent: 25,
+  claimHealPercent: 20,
 
   description() {
     return `Selina was raised in gilded halls, but her light bends first toward whoever is closest to breaking. Whenever she restores HP to an ally at or below ${this.lowHpThreshold}% HP, the mending is worth ${this.healAmplifyPercent}% more. Whenever an ally uses CLAIM, herself included, her light answers on its own — restoring HP equal to ${this.claimHealPercent}% of her Attack.`;

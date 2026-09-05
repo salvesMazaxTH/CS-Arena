@@ -111,6 +111,7 @@ const selinaSkills = [
     damageMode: "standard",
     isUltimate: true,
     momentumCost: 60,
+    hitVfx: "radiant_bolt",
     priority: 0,
 
     description() {
