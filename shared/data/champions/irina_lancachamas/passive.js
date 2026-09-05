@@ -5,7 +5,7 @@ export default {
   key: "redline_rapture",
   name: "Redline Rapture",
 
-  attackPerRecoil: 20,
+  attackPerRecoil: 15,
   attackPerClaim: 10,
   claimAttackCap: 40,
 
@@ -60,8 +60,8 @@ export default {
     },
   },
 
-  onAfterDmgTaking({ owner, hitId, context }) {
-    if (hitId !== "overheat") return;
+  onAfterDmgTaking({ owner, hitId, actualDmg, context }) {
+    if (hitId !== "overheat" || !(actualDmg > 0)) return;
 
     owner.modifyStat({
       statName: "Attack",

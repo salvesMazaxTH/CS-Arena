@@ -13,7 +13,7 @@ function applyWeaponOverheat({ user, baseDamage, recoilPercent, context }) {
   const recoilDamage = Math.floor(baseDamage * (recoilPercent / 100));
   if (recoilDamage <= 0) return [];
 
-  context.registerDialog?.({
+  context.registerDialog({
     message: `${formatChampionName(user)}'s flamethrower redlines and scorches her own hands for ${recoilDamage}!`,
     sourceId: user.id,
     targetId: user.id,
