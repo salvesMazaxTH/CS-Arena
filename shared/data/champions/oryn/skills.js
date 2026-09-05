@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import totalBlock from "../generic/totalBlock.js";
 
@@ -20,7 +21,7 @@ const orynSkills = [
     name: "Draw the Sky Down",
 
     tauntDuration: 2,
-    damageReductionAmount: 12,
+    damageReductionPercent: 12,
     damageReductionDuration: 2,
 
     contact: false,
@@ -28,7 +29,7 @@ const orynSkills = [
     element: "lightning",
 
     description() {
-      return `Oryn lifts the pins in his forearms and the air leans toward him. He Taunts two chosen enemies for ${this.tauntDuration} turn(s) and braces for the answer, gaining ${this.damageReductionAmount} Damage Reduction for ${this.damageReductionDuration} turn(s).`;
+      return `Oryn lifts the pins in his forearms and the air leans toward him. He Taunts two chosen enemies for ${this.tauntDuration} turn(s) and braces for the answer, gaining ${this.damageReductionPercent}% Damage Reduction for ${this.damageReductionDuration} turn(s).`;
     },
 
     targetSpec: [
@@ -38,8 +39,9 @@ const orynSkills = [
 
     resolve({ user, targets, context = {} }) {
       user.applyDamageReduction({
-        amount: this.damageReductionAmount,
+        amount: this.damageReductionPercent,
         duration: this.damageReductionDuration,
+        type: "percent",
         source: this.key,
         context,
       });
@@ -52,7 +54,7 @@ const orynSkills = [
       }
 
       logs.unshift({
-        log: `${formatChampionName(user)} uses <b>Draw the Sky Down</b> and braces, gaining ${this.damageReductionAmount} Damage Reduction.`,
+        log: `${formatChampionName(user)} uses <b>Draw the Sky Down</b> and braces, gaining ${this.damageReductionPercent}% Damage Reduction.`,
       });
       return logs;
     },
@@ -112,6 +114,7 @@ const orynSkills = [
     paralyzeDuration: 2,
     maxDischarges: 2,
     shieldAmount: 90,
+    shieldDecayPerTurn: 45,
 
     contact: false,
     isUltimate: true,
@@ -119,13 +122,23 @@ const orynSkills = [
     priority: 2,
     element: "lightning",
 
+    hits: [
+      {
+        id: "discharge",
+        type: "magical",
+        damageMode: "piercing",
+        piercingPercentage: 40,
+      },
+    ],
+
     description() {
-      return `The pins in Oryn's body finish their work and the sky-courts hand down their sentence on the whole enemy line — a sentence, not a blow. For ${this.indictDuration} turns, the first time each Indicted enemy deals damage the charge grounds through them for Lightning magical damage equal to ${this.dischargePercent}% of that blow, following the path of least resistance past ${this.dischargePiercing}% of their Defense, leaving them Paralyzed for ${this.paralyzeDuration} turn(s) and banking Oryn's team 1 point; at most once per turn and ${this.maxDischarges} times each, and nothing if Oryn has fallen. He stands under a ${this.shieldAmount} Shield while the courts sit.`;
+      return `The pins in Oryn's body finish their work and the sky-courts hand down their sentence on the whole enemy line — a sentence, not a blow. For ${this.indictDuration} turns, the first time each Indicted enemy deals damage the charge grounds through them for Lightning magical damage equal to ${this.dischargePercent}% of that blow, following the path of least resistance past ${this.dischargePiercing}% of their Defense, leaving them Paralyzed for ${this.paralyzeDuration} turn(s) and banking Oryn's team 1 point; at most once per turn and ${this.maxDischarges} times each, and nothing if Oryn has fallen. He stands under a ${this.shieldAmount} Shield that thins as the courts sit.`;
     },
 
     targetSpec: ["all:enemy"],
 
     resolve({ user, targets, context = {} }) {
+      const skill = this;
       const list = Array.isArray(targets) ? targets : targets ? [targets] : [];
       const castTurn = context.currentTurn;
       const marked = [];
@@ -147,8 +160,6 @@ const orynSkills = [
             ownerId: user.id,
             expiresAtTurn: castTurn + this.indictDuration + 1,
             castTurn,
-            dischargePercent: this.dischargePercent,
-            dischargePiercing: this.dischargePiercing,
             paralyzeDuration: this.paralyzeDuration,
             maxDischarges: this.maxDischarges,
             dischargesUsed: 0,
@@ -173,22 +184,12 @@ const orynSkills = [
                 );
               }
 
-              const result = new DamageEvent({
-                baseDamage: (damage * this.dischargePercent) / 100,
-                attacker: oryn,
-                defender: owner,
-                skill: {
-                  key: "sentence_of_the_sky_courts",
-                  name: "Sentence of the Sky-Courts",
-                  element: "lightning",
-                  contact: false,
-                },
-                type: "magical",
-                mode: "piercing",
-                piercingPercentage: this.dischargePiercing,
+              const result = SkillHits.run(skill, "discharge", {
+                user: oryn,
+                target: owner,
+                baseDamage: (damage * skill.dischargePercent) / 100,
                 context,
-                allChampions: context.allChampions,
-              }).execute();
+              });
 
               const arr = Array.isArray(result) ? result : [result];
 
@@ -228,7 +229,7 @@ const orynSkills = [
         marked.push(formatChampionName(enemy));
       }
 
-      user.addShield(this.shieldAmount, 0, context);
+      user.addShield(this.shieldAmount, this.shieldDecayPerTurn, context);
 
       context.registerDialog?.({
         message: `⚖️ The sky-courts sit — ${marked.length} enem${marked.length === 1 ? "y is" : "ies are"} Indicted.`,
