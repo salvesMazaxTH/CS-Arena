@@ -102,7 +102,7 @@ const toxViprannaSkills = [
 
       Enemies that make contact attacks against her are afflicted with ${this.poisonedStacks} stacks of Poisoned.
 
-      The next time she uses CLAIM, she draws the coating back in and restores ${this.claimHeal} HP.`;
+      If she uses CLAIM while the coating still holds, she draws it back in and restores ${this.claimHeal} HP.`;
     },
 
     resolve({ user, context = {} }) {
@@ -166,6 +166,7 @@ const toxViprannaSkills = [
         type: "buff",
         key: TOXIC_COATING_CLAIM_HEAL_KEY,
         group: "skill",
+        expiresAtTurn: activatedTurn + this.auraDuration,
 
         hookScope: {
           onActionResolved: "actionSource",
@@ -192,7 +193,7 @@ const toxViprannaSkills = [
         },
       }, context);
 
-      context.registerDialog?.({
+      context.registerDialog({
         message: `${formatChampionName(
           user,
         )} activates <b>Toxic Coating</b>!`,
@@ -239,7 +240,7 @@ const toxViprannaSkills = [
       if (!enemy?.hasStatusEffect("poisoned")) {
         const failMessage = "But it failed.";
 
-        context.registerDialog?.({
+        context.registerDialog({
           message: failMessage,
           sourceId: user.id,
           targetId: enemy?.id ?? user.id,
@@ -251,28 +252,13 @@ const toxViprannaSkills = [
       }
 
       const poisonInstance = enemy.getStatusEffect("poisoned");
-      const stacks = Number(poisonInstance.stacks) || 0;
+      const currentStacks = Number(poisonInstance.stacks) || 0;
+      const consumedStacks = Math.max(1, currentStacks * 2);
 
-      if (poisonInstance) {
-        const doubledStacks = Math.max(1, stacks * 2);
-
-        poisonInstance.stacks = doubledStacks;
-        poisonInstance.stackCount = doubledStacks;
-        poisonInstance.metadata = {
-          ...(poisonInstance.metadata || {}),
-          stacks: doubledStacks,
-          stackCount: doubledStacks,
-        };
-
-        enemy.removeStatusEffect("poisoned");
-      }
+      enemy.removeStatusEffect("poisoned");
 
       const lostHP = Math.max(0, enemy.maxHP - enemy.HP);
-
-      const baseDamage =
-        Math.max(1, Number(poisonInstance.stacks) || 1) *
-        this.damageRatioPerStack *
-        lostHP;
+      const baseDamage = consumedStacks * this.damageRatioPerStack * lostHP;
 
       const result = new DamageEvent({
         baseDamage,

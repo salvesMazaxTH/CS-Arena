@@ -173,13 +173,16 @@ const torrenSkills = [
         context,
       );
 
+      const connected =
+        damageEvent?.landed && damageEvent?.totalDamage > 0;
+
       // Actual weakness condition.
       const isWeakEnough =
         targetScore >= torrenScore * this.thresholdMultiplier;
 
       let tauntLog = null;
 
-      if (isWeakEnough) {
+      if (connected && isWeakEnough) {
         tauntLog = target.applyTaunt(user.id, this.tauntDuration, context);
 
         target.damageModifiers = target.damageModifiers.filter(

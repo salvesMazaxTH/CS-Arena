@@ -200,12 +200,14 @@ const eryonSkills = [
         damageMap.set(hit.id, damageMap.get(hit.id) + this.damagePerUnit);
       }
 
+      const results = [];
+
       for (const target of targets) {
         const damage = damageMap.get(target.id);
 
         if (damage <= 0) continue;
 
-        new DamageEvent({
+        const result = new DamageEvent({
           baseDamage: damage,
           attacker: user,
           defender: target,
@@ -214,11 +216,16 @@ const eryonSkills = [
           context,
           allChampions: context.allChampions,
         }).execute();
+
+        if (Array.isArray(result)) results.push(...result);
+        else if (result) results.push(result);
       }
 
-      return {
+      results.push({
         log: `${formatChampionName(user)} collapsed the Eidolic flow (${consumed} Momentum).`,
-      };
+      });
+
+      return results;
     },
   },
 ];
