@@ -55,7 +55,7 @@ export default {
     if (!shattered.length) return;
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> The ground answers Atlas's Claim — ${shattered.join(", ")} loses Shield to the tremor.`,
+      log: `<b>[Passive — ${this.name}]</b> The ground answers Atlas's CLAIM — ${shattered.join(", ")} loses Shield to the tremor.`,
     };
   },
 };

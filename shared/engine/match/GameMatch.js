@@ -608,7 +608,7 @@ class CombatState {
       Math.max(0, Number(champion.runtime?.claimValueBeforeDeath ?? 0) || 0),
     );
 
-    // Every death concedes the claim value of the dead champion at the moment of death (even if 0) plus a fixed 2pts bonus for the kill itself.
+    // Every death concedes the CLAIM value of the dead champion at the moment of death (even if 0) plus a fixed 2pts bonus for the kill itself.
     const deathBonus = 2;
     // If the team receiving the points is 10pts or more behind on the scoreboard, they get
     // an additional 2pts bonus (totaling 4pts bonus for the kill).

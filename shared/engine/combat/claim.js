@@ -1,7 +1,7 @@
 export const CLAIM_ACTION_KEY = "claim";
 export const CLAIM_MIN_MOMENTUM = 25;
 export const CLAIM_MAX_POINTS = 5;
-// Minions são alvos mais baratos: seu claim (e o valor concedido na morte) vai só até 3.
+// Minions are cheaper targets: their CLAIM (and what their death concedes) caps at 3.
 export const CLAIM_MAX_POINTS_MINION = 3;
 
 export function getClaimMaxPoints(champion) {

@@ -119,7 +119,7 @@ const arenMarevothSkills = [
     bonusClaimPoints: 1,
 
     description() {
-      return `Gain Spellshield. The next time this champion uses Claim, restore ${this.healPercent}% of his Max HP and gain ${this.bonusClaimPoints} additional point.`;
+      return `Gain Spellshield. The next time this champion uses CLAIM, restore ${this.healPercent}% of his Max HP and gain ${this.bonusClaimPoints} additional point.`;
     },
 
     targetSpec: ["self"],
@@ -162,7 +162,7 @@ const arenMarevothSkills = [
             }).execute();
 
             return {
-              log: `${formatChampionName(owner)} restored ${restored} HP and gained ${bonusClaimPoints} additional Claim point from Blessing of the Ocean Depths.`,
+              log: `${formatChampionName(owner)} restored ${restored} HP and gained ${bonusClaimPoints} additional CLAIM point from Blessing of the Ocean Depths.`,
               type: "score",
               amount: bonusClaimPoints,
               scoringSlot: owner.team - 1,
@@ -198,7 +198,7 @@ const arenMarevothSkills = [
     element: "water",
 
     description() {
-      return `When this ability hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} absolute damage and strip up to ${this.positiveEffectsStripped} positive status effects or stat buffs from them.\n\nThe next time this champion uses Claim while possessing ${this.claimPointsRequired} or more Value Points, increase his Max HP by ${this.maxHPBonusPercent}% permanently. Max: +${this.maxHPBonusPercent * this.maxHPBonusStacks}%.`;
+      return `When this ability hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} absolute damage and strip up to ${this.positiveEffectsStripped} positive status effects or stat buffs from them.\n\nThe next time this champion uses CLAIM while possessing ${this.claimPointsRequired} or more Value Points, increase his Max HP by ${this.maxHPBonusPercent}% permanently. Max: +${this.maxHPBonusPercent * this.maxHPBonusStacks}%.`;
     },
 
     targetSpec: ["enemy"],

@@ -118,7 +118,7 @@ const vaelSkills = [
     priority: 0,
 
     description() {
-      return `Vael delivers a devastating strike with his silent blade, dealing massive damage to the chosen target. If this attack kills the target, Vael scores points equal to his current Claim value.`;
+      return `Vael delivers a devastating strike with his silent blade, dealing massive damage to the chosen target. If this attack kills the target, Vael scores points equal to his current CLAIM value.`;
     },
 
     targetSpec: ["enemy"],

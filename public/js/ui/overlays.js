@@ -165,7 +165,7 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
     isClaim
       ? `
         <div class="skill-overlay-claim-value">
-          <span class="meta-label">Claim Value:</span>
+          <span class="meta-label">CLAIM Value:</span>
           <span class="meta-value">${claimPoints} points</span>
         </div>
       `

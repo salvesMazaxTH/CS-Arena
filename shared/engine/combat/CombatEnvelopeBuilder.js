@@ -75,7 +75,7 @@ export class CombatEnvelopeBuilder {
 
     // All affected targets (damage, heal, buff, shield) the user themselves
     // actually caused, deduped, excluding the user. A bystander passive (e.g.
-    // Seymour's radiance firing off someone else's Claim) writes into this
+    // Seymour's radiance firing off someone else's CLAIM) writes into this
     // same shared context but its events carry a different sourceId — they
     // are not this action's own doing and must not be read as its targets.
     const uniqueTargetIds = [

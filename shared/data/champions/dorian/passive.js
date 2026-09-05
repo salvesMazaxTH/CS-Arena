@@ -11,7 +11,7 @@ export default {
   description(champion) {
     const grudge = champion?.runtime?.dorianGrudge || 0;
 
-    return `Every enchanter Dorian has bled is a mark under his skin, sealed in the vials he carved into himself, and the account never closes on its own. Each turn he wounds an enemy enchanter he keeps one Grudge (max ${this.maxGrudge}); his next Claim cashes the whole ledger for 1 extra point per ${this.grudgePerPoint} Grudge spent, while a lone Grudge — or a wound torn from anyone who is not an enchanter — pays nothing.
+    return `Every enchanter Dorian has bled is a mark under his skin, sealed in the vials he carved into himself, and the account never closes on its own. Each turn he wounds an enemy enchanter he keeps one Grudge (max ${this.maxGrudge}); his next CLAIM cashes the whole ledger for 1 extra point per ${this.grudgePerPoint} Grudge spent, while a lone Grudge — or a wound torn from anyone who is not an enchanter — pays nothing.
 
     Grudge: <b>${grudge}/${this.maxGrudge}</b>`;
   },
@@ -54,7 +54,7 @@ export default {
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} cashes the ledger on his Claim — ${points} extra point(s), ${owner.runtime.dorianGrudge} Grudge left over.`,
+      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} cashes the ledger on his CLAIM — ${points} extra point(s), ${owner.runtime.dorianGrudge} Grudge left over.`,
     };
   },
 };

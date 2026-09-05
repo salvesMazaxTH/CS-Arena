@@ -20,10 +20,10 @@ export default {
   ],
 
   description() {
-    return `Seymour read the appointed hour in the orrery long ago, and the sky keeps its word. Whenever any champion resolves a Claim while he stands on the field, his star answers over the enemy line for ${this.radiancePerPoint} radiant damage per point that Claim was worth. If the light puts one of them down, his team takes ${this.killScore} point.`;
+    return `Seymour read the appointed hour in the orrery long ago, and the sky keeps its word. Whenever any champion resolves a CLAIM while he stands on the field, his star answers over the enemy line for ${this.radiancePerPoint} radiant damage per point that CLAIM was worth. If the light puts one of them down, his team takes ${this.killScore} point.`;
   },
 
-  // No hookScope for onActionResolved: it must see every Claim on the field,
+  // No hookScope for onActionResolved: it must see every CLAIM on the field,
   // both teams', not only Seymour's own.
   onActionResolved({ owner, skill, context }) {
     if (skill?.key !== CLAIM_ACTION_KEY) return;

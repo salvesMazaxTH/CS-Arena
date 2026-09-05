@@ -39,7 +39,7 @@ export default {
     }).execute();
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(actionSource)}'s Claim draws Selina's light — ${healed} HP restored.`,
+      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(actionSource)}'s CLAIM draws Selina's light — ${healed} HP restored.`,
     };
   },
 };

@@ -62,7 +62,7 @@ const avarikSkills = [
     description() {
       return `Avarik tears a slab of bedrock loose and swallows it whole, restoring ${this.healPercent}% of his Max HP.
 
-      His appetite then carries over to the ledger: the next time this champion uses Claim, he seizes ${this.bonusClaimPoints} additional points.`;
+      His appetite then carries over to the ledger: the next time this champion uses CLAIM, he seizes ${this.bonusClaimPoints} additional points.`;
     },
 
     targetSpec: ["self"],
@@ -91,7 +91,7 @@ const avarikSkills = [
           key: GLUTTONS_TOLL_HOOK_KEY,
           group: "skill",
           hookScope: {
-            // Avarik only collects this toll from his own Claim.
+            // Avarik only collects this toll from his own CLAIM.
             onActionResolved: "actionSource",
           },
 
@@ -106,14 +106,14 @@ const avarikSkills = [
               type: "score",
               amount: bonusClaimPoints,
               scoringSlot: owner.team - 1,
-              log: `${formatChampionName(owner)} collected <b>Glutton's Toll</b> from his own Claim, seizing ${bonusClaimPoints} additional point(s).`,
+              log: `${formatChampionName(owner)} collected <b>Glutton's Toll</b> from his own CLAIM, seizing ${bonusClaimPoints} additional point(s).`,
             };
           },
         }, context);
       }
 
       return {
-        log: `${formatChampionName(user)} swallowed a slab of bedrock, restoring ${restored} HP and setting <b>Glutton's Toll</b> on his next Claim.`,
+        log: `${formatChampionName(user)} swallowed a slab of bedrock, restoring ${restored} HP and setting <b>Glutton's Toll</b> on his next CLAIM.`,
       };
     },
   },

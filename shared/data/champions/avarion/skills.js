@@ -89,7 +89,7 @@ const avarionSkills = [
     description() {
       return `Avarion draws the loose crystal of the field into his own hand, increasing his Attack by ${this.attackBonusPercent}% for ${this.attackBonusDuration} turns.
 
-      He then hangs his toll gate over the enemy ledger: the next time an enemy champion uses Claim, that champion scores ${this.tollPoints} fewer points and Avarion's team collects those points instead.`;
+      He then hangs his toll gate over the enemy ledger: the next time an enemy champion uses CLAIM, that champion scores ${this.tollPoints} fewer points and Avarion's team collects those points instead.`;
     },
 
     targetSpec: ["self"],
@@ -116,7 +116,7 @@ const avarionSkills = [
           type: "buff",
           key: MISERS_TOLL_HOOK_KEY,
           group: "skill",
-          // No hookScope: the toll watches the enemy's Claim, not Avarion's
+          // No hookScope: the toll watches the enemy's CLAIM, not Avarion's
           // own actions, so this hook must run on every resolved action rather
           // than only on the ones Avarion is the source of.
 
@@ -125,7 +125,7 @@ const avarionSkills = [
             if (!owner?.alive) return;
             if (!actionSource || actionSource.team === owner.team) return;
 
-            // The Claim has already scored by the time this hook runs.
+            // The CLAIM has already scored by the time this hook runs.
             // `preActionClaimPoints` is the number the resolver actually
             // awarded; recomputing it is only a fallback for contexts that do
             // not publish it.
@@ -134,8 +134,8 @@ const avarionSkills = [
                 getClaimPoints(actionSource, context?.currentTurn),
             );
 
-            // A toll can never take back more than the Claim brought in, even
-            // if several tolls land on the same Claim, so what previous tolls
+            // A toll can never take back more than the CLAIM brought in, even
+            // if several tolls land on the same CLAIM, so what previous tolls
             // already took is tracked on the action's own context.
             const alreadyTolled = Number(context?.misersTollCollected ?? 0);
             const collected = Math.min(
@@ -164,7 +164,7 @@ const avarionSkills = [
               type: "score",
               amount: -collected,
               scoringSlot: actionSource.team - 1,
-              log: `${formatChampionName(owner)} levied <b>Miser's Toll</b> on ${formatChampionName(actionSource)}'s Claim, diverting ${collected} point(s) to his own ledger.`,
+              log: `${formatChampionName(owner)} levied <b>Miser's Toll</b> on ${formatChampionName(actionSource)}'s CLAIM, diverting ${collected} point(s) to his own ledger.`,
             };
           },
         }, context);

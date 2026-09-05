@@ -128,7 +128,7 @@ const torrenSkills = [
       }).execute();
 
       // The scornful aura opens on every cast; the bonus only pays out on a
-      // Claim made while a Torren-taunt is still holding a foe.
+      // CLAIM made while a Torren-taunt is still holding a foe.
       user.runtime ??= {};
       user.runtime.hookEffects ??= [];
       user.runtime.hookEffects = user.runtime.hookEffects.filter(

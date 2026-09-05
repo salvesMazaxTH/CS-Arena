@@ -128,7 +128,7 @@ function applySkillAffectGlows(envelope) {
   const boon = new Set();
   // Whoever actually caused a visual event, per its own sourceId — not just
   // the envelope's acting user. A bystander passive (e.g. Seymour's radiance
-  // firing off someone else's Claim) has its own real source, and glowing
+  // firing off someone else's CLAIM) has its own real source, and glowing
   // only the acting user would read as if they'd caused it themselves.
   const actors = new Set();
 

@@ -11,7 +11,7 @@ export default {
   claimBonusPoints: 2,
 
   description() {
-    return `Ysvane is old enough to be the vault rather than its warden, and what she wards is not allowed to slip. An ally she lays her Affliction Ward over is Kept for ${KEPT_DURATION} turn(s); when a Kept ally uses Claim the grab holds fast in the cold, and their team banks ${this.claimBonusPoints} extra point(s) from it.`;
+    return `Ysvane is old enough to be the vault rather than its warden, and what she wards is not allowed to slip. An ally she lays her Affliction Ward over is Kept for ${KEPT_DURATION} turn(s); when a Kept ally uses CLAIM the grab holds fast in the cold, and their team banks ${this.claimBonusPoints} extra point(s) from it.`;
   },
 
   onActionResolved({ owner, actionSource, skill, context }) {
@@ -29,7 +29,7 @@ export default {
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(actionSource)}'s Claim holds fast in the cold — ${this.claimBonusPoints} extra point(s).`,
+      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(actionSource)}'s CLAIM holds fast in the cold — ${this.claimBonusPoints} extra point(s).`,
     };
   },
 };
