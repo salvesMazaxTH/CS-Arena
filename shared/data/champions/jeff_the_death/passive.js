@@ -5,6 +5,8 @@ const BUFFS_PER_DEATH = [
   { stat: "Defense", amount: 30, isPercent: true },
 ];
 
+const REVIVE_HP_PERCENT = 75;
+
 // Called from both death hooks; revivalScheduledForTurn makes the second
 // call a no-op.
 function scheduleRevival(champion, context, passiveName) {
@@ -36,7 +38,7 @@ function scheduleRevival(champion, context, passiveName) {
       onSpawn: (revived, spawnContext, reviveFrom) => {
         restoreRevivedState(revived, reviveFrom);
 
-        revived.HP = Math.floor(revived.maxHP * 0.75);
+        revived.HP = Math.floor(revived.maxHP * (REVIVE_HP_PERCENT / 100));
 
         // Buff from Jeff's own death, since onChampionDeath skips the owner.
         BUFFS_PER_DEATH.forEach((buff) => {
@@ -52,9 +54,9 @@ function scheduleRevival(champion, context, passiveName) {
     },
 
     dialog: {
-      message: `[Passive - <b>${passiveName}</b>] ${formatChampionName(
+      message: `<b>[Passive — ${passiveName}]</b> you cannot kill Death itself — ${formatChampionName(
         champion,
-      )} returns to the battlefield!`,
+      )} steps back onto the field.`,
       sourceId: null,
       targetId: null,
     },
@@ -116,7 +118,7 @@ export default {
   name: "The Jeff Does Not End",
 
   description(champion) {
-    return `When Jeff is defeated, he returns to the battlefield at the start of the next turn with 75% of his Max HP, retaining his accumulated buffs and stacks. Whenever a character dies, Jeff gains +30% permanent Attack and +30% permanent Defense.
+    return `Death does not attend its own funeral. Cut down, Jeff returns at the start of the next turn with ${REVIVE_HP_PERCENT}% of his Max HP and every buff and stack still on him. Every death the field sees — his own among them — settles into him as +${BUFFS_PER_DEATH[0].amount}% permanent Attack and +${BUFFS_PER_DEATH[1].amount}% permanent Defense.
 
     <b>Jeff's Death Count:</b> ${champion.runtime.deathCounter ?? 0}`;
   },
