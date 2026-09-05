@@ -50,10 +50,10 @@ const isarelisSkills = [
     key: "shadowstep",
     name: "Shadowstep",
 
-    invisibleDuration: 2,
+    invisibleDuration: 3,
 
     description() {
-      return "Becomes Invisible until her next action. Cannot be targeted by enemies.";
+      return `Becomes Invisible for up to ${this.invisibleDuration} turns, ending early the moment she acts again. Cannot be targeted by enemies while it holds.`;
     },
 
     targetSpec: ["self"],
@@ -74,7 +74,7 @@ const isarelisSkills = [
         {
           log: `${formatChampionName(
             user,
-          )} disappears into the shadows and becomes <b>Invisible</b> until her next action.`,
+          )} disappears into the shadows and becomes <b>Invisible</b> for up to ${this.invisibleDuration} turns.`,
         },
       ];
     },
