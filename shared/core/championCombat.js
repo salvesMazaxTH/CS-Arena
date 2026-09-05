@@ -50,10 +50,7 @@ export function addShield(
   }
 }
 
-/** Drain up to `amount` off a champion's shields (oldest first) — addShield's
- * counterpart. Only drains "regular" shields by default, since spell/supreme
- * ones block a whole action rather than absorb a point pool; pass `types` to
- * reach those too. Returns the amount actually removed. */
+/** Drain up to `amount` off a champion's shields (oldest first); only "regular" unless `types` says otherwise. */
 export function breakShields(champion, amount, { types = ["regular"] } = {}) {
   if (!Array.isArray(champion.runtime?.shields) || !(amount > 0)) return 0;
 

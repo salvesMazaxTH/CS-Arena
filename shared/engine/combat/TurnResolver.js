@@ -866,6 +866,8 @@ export class TurnResolver {
     visualPhase = null,
     visualAfterHooks = false,
     debugLabel = null,
+    // For a steal, not a cost payment: takes whatever's available instead of failing outright.
+    clampToAvailable = false,
   }) {
     const requestedAmount = Number(amount) || 0;
     if (!target || requestedAmount === 0) {
@@ -877,11 +879,20 @@ export class TurnResolver {
       ? this.combat.activeChampions.get(sourceId) || null
       : null;
 
+    const effectiveAmount =
+      clampToAvailable && requestedAmount < 0
+        ? -Math.min(Math.abs(requestedAmount), beforeMomentum)
+        : requestedAmount;
+
+    if (effectiveAmount === 0) {
+      return { applied: 0, hookResults: [] };
+    }
+
     // 1. Backend State Change (Champion)
     const applied =
-      requestedAmount > 0
-        ? target.addMomentum(requestedAmount)
-        : target.spendMomentum(Math.abs(requestedAmount));
+      effectiveAmount > 0
+        ? target.addMomentum(effectiveAmount)
+        : target.spendMomentum(Math.abs(effectiveAmount));
 
     const afterMomentum = Number(target.momentum) || 0;
 
