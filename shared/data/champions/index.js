@@ -1,5 +1,7 @@
 import atlas from "./atlas/index.js";
 import selina from "./selina/index.js";
+import sebastian_ignis from "./sebastian_ignis/index.js";
+import kyle_hayato from "./kyle_hayato/index.js";
 import ralia from "./ralia/index.js";
 import naelthos from "./naelthos/index.js";
 import naelys from "./naelys/index.js";
@@ -60,6 +62,8 @@ import seymour from "./seymour/index.js";
 const championDB = {
   atlas,
   selina,
+  sebastian_ignis,
+  kyle_hayato,
   ralia,
   naelthos,
   naelys,
