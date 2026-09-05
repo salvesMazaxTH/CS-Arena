@@ -886,7 +886,7 @@ export function createCombatAnimationManager(deps) {
   //  RESOURCE REGEN ANIMATION
   // ============================================================
 
-  function animateResourceChange(effect, direction = null) {
+  async function animateResourceChange(effect, direction = null) {
     const { targetId, amount } = effect || {};
     const normalizedAmount = Math.abs(Number(amount) || 0);
     if (!targetId || normalizedAmount <= 0) return;
@@ -914,6 +914,8 @@ export function createCombatAnimationManager(deps) {
       targetId,
       eventDirection >= 0 ? normalizedAmount : -normalizedAmount,
     );
+
+    await wait(300);
   }
 
   // ============================================================
