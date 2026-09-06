@@ -1,0 +1,15 @@
+export default {
+  name: "Ethan",
+  portrait: "/assets/portraits/ethan.webp",
+
+  unreleased: true,
+
+  HP: 330,
+  Attack: 270,
+  Defense: 85,
+  Speed: 70,
+  Critical: 10,
+
+  classKey: "assassin",
+  species: ["human"],
+};

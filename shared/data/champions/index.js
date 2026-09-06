@@ -5,6 +5,7 @@ import kyle_hayato from "./kyle_hayato/index.js";
 import clay from "./clay/index.js";
 import clay_godslayer from "./clay_godslayer/index.js";
 import lord_of_the_shadowflame from "./lord_of_the_shadowflame/index.js";
+import ethan from "./ethan/index.js";
 import ralia from "./ralia/index.js";
 import naelthos from "./naelthos/index.js";
 import naelys from "./naelys/index.js";
@@ -70,6 +71,7 @@ const championDB = {
   clay,
   clay_godslayer,
   lord_of_the_shadowflame,
+  ethan,
   ralia,
   naelthos,
   naelys,
