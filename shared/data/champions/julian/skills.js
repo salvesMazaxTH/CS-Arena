@@ -124,7 +124,7 @@ const julianSkills = [
           sourceId: user.id,
         });
 
-        context.registerDialog?.({
+        context.registerDialog({
           message: `${formatChampionName(user)} collects on a well-poisoned mark — +${this.scorePoints} point.`,
           sourceId: user.id,
           targetId: enemy.id,
