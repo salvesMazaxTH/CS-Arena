@@ -87,11 +87,14 @@ const reyskaroneSkills = [
       }).execute();
 
       const results = Array.isArray(result) ? result : [result];
-      const landed = results.some((r) => r?.targetId === enemy.id && r?.landed);
+      const connected = results.some(
+        (r) =>
+          r?.targetId === enemy.id && r?.landed && (r?.totalDamage ?? 0) > 0,
+      );
 
       // Like any post-damage status: the brand only takes hold on a strike that
       // connects, and wards turn it away through the normal hook-incoming path.
-      if (landed) {
+      if (connected) {
         enemy.runtime.hookEffects ??= [];
         // Recasting refreshes the brand rather than stacking a second one.
         enemy.runtime.hookEffects = enemy.runtime.hookEffects.filter(
@@ -121,8 +124,8 @@ const reyskaroneSkills = [
               };
             },
 
-            onAfterDmgTaking: ({ attacker, context }) => {
-              if (attacker.team !== user.team) return;
+            onAfterDmgTaking: ({ attacker, actualDmg, context }) => {
+              if (attacker.team !== user.team || !(actualDmg > 0)) return;
 
               // The brand is Reyskarone's, so the healing is credited to him.
               new HealEvent({
