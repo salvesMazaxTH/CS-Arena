@@ -9,6 +9,6 @@ export default {
   Speed: 85,
   Critical: 20,
 
-  classKey: "assassin",
-  species: ["human"],
+  classKey: "brawler",
+  species: ["human", "enhanced"],
 };

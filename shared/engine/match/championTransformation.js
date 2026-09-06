@@ -185,6 +185,10 @@ export function applyChampionTransformation({
   transferCombatState({ sourceChampion, nextChampion: transformedChampion });
 
   transformedChampion.championKey = newChampionKey;
+
+  const originPortrait = baseData.portraitByOrigin?.[originalChampionKey];
+  if (originPortrait) transformedChampion.portrait = originPortrait;
+
   transformedChampion.runtime = {
     ...transformedChampion.runtime,
     ...sourceChampion.runtime,
