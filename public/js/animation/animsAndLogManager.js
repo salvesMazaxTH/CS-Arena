@@ -560,13 +560,13 @@ export function createCombatAnimationManager(deps) {
 
   // Resolves the DOM + model handles for a target and scrolls it into view.
   // Returns null when the champion element is absent so callers can bail early.
-  function resolveTargetVisual(targetId) {
+  function resolveTargetVisual(targetId, { scroll = true } = {}) {
     const championEl = getChampionElement(targetId);
     if (!championEl) return null;
 
     const portraitWrapper = championEl.querySelector(".portrait-wrapper");
     const portrait = portraitWrapper?.querySelector(".portrait");
-    if (portrait) scrollIfNeeded(portrait, { threshold: 0.85 });
+    if (scroll && portrait) scrollIfNeeded(portrait, { threshold: 0.85 });
 
     const champion = deps.activeChampions.get(targetId);
     return {
@@ -891,7 +891,7 @@ export function createCombatAnimationManager(deps) {
     const normalizedAmount = Math.abs(Number(amount) || 0);
     if (!targetId || normalizedAmount <= 0) return;
 
-    const target = resolveTargetVisual(targetId);
+    const target = resolveTargetVisual(targetId, { scroll: false });
     if (!target) return;
 
     const eventDirection =
