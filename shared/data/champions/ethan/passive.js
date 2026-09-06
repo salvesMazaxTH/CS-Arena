@@ -34,7 +34,7 @@ export default {
 
     owner.runtime.ethanCorrupted = true;
 
-    const shadowflameClaimed = context.allChampions?.some(
+    const shadowflameClaimed = context.aliveChampions.some(
       (c) => c.championKey === this.corruptsInto,
     );
     if (shadowflameClaimed) return;

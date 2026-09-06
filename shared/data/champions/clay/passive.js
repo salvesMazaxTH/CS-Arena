@@ -23,11 +23,17 @@ export default {
     onAfterDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
   },
 
-  onBeforeDmgDealing({ attacker, owner, defender, damage }) {
+  onBeforeDmgDealing({ attacker, owner, defender, damage, context }) {
     if (attacker !== owner) return;
     if (!Array.isArray(defender?.species)) return;
     if (!defender.species.some((s) => s === "divinity" || s === "demigod"))
       return;
+
+    context.registerDialog({
+      message: `${formatChampionName(owner)} bears down harder — divine blood bleeds the same as any master's did.`,
+      sourceId: owner.id,
+      targetId: defender.id,
+    });
 
     return {
       damage: Number(damage) * (1 + this.bonusDmgPercent / 100),
@@ -41,7 +47,7 @@ export default {
 
     owner.runtime.clayAscended = true;
 
-    const shadowflameClaimed = context.allChampions?.some(
+    const shadowflameClaimed = context.aliveChampions.some(
       (c) => c.championKey === this.corruptsInto,
     );
     const bySelf = attacker === owner;

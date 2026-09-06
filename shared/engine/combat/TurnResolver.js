@@ -264,6 +264,9 @@ export class TurnResolver {
       }
     }
 
+    // Death hooks queue mutations on this context too, and no action owns it.
+    if (context) this.processImmediateChampionMutations(context);
+
     return results;
   }
 
