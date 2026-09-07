@@ -34,6 +34,7 @@ export class SkillHits {
       hitVfx: inherit("hitVfx"),
       bonusDamage: spec.bonusDamage ?? skill.bonusDamage,
       piercingPercentage: spec.piercingPercentage,
+      ignoreDamageReduction: spec.ignoreDamageReduction,
       hitLabel: spec.label ?? null,
       suppressLog: spec.suppressLog ?? skill.suppressLog ?? false,
       context,

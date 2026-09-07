@@ -125,6 +125,7 @@ const rakhanaSkills = [
         contact: false,
         damageMode: "piercing",
         piercingPercentage: 100,
+        ignoreDamageReduction: true,
       },
     ],
 

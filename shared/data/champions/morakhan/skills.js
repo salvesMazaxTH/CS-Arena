@@ -174,6 +174,7 @@ const morakhanSkills = [
         contact: false,
         damageMode: "piercing",
         piercingPercentage: 100,
+        ignoreDamageReduction: true,
       },
     ],
 
