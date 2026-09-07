@@ -25,7 +25,7 @@ const ethanSkills = [
     priority: 0,
 
     description() {
-      return `Ethan doesn't waste a cut he hasn't already placed in his head. Deals physical contact damage equal to ${this.bf}% of his Attack and reduces the target's Evasion by ${this.evasionDebuff} for ${this.debuffDuration} turn(s).`;
+      return `Ethan doesn't waste a cut he hasn't already placed in his head. Deals physical contact damage, reducing the target's Evasion by ${this.evasionDebuff} for ${this.debuffDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -65,14 +65,14 @@ const ethanSkills = [
     name: "Choke Hold",
 
     bf: 30,
-    rootDuration: 2,
+    snareDuration: 2,
 
     contact: true,
     damageMode: "standard",
     priority: 1,
 
     description() {
-      return `He doesn't need the blade for this part — just leverage and patience. Deals minor physical contact damage equal to ${this.bf}% of his Attack and Roots the target for ${this.rootDuration} turn(s).`;
+      return `He doesn't need the blade for this part — just leverage and patience. Deals physical contact damage, Snaring the target for ${this.snareDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -93,8 +93,8 @@ const ethanSkills = [
 
       const arr = Array.isArray(result) ? result : [result];
 
-      if (effectConnected(arr[0], "rooted")) {
-        enemy.applyStatusEffect("rooted", this.rootDuration, context, {
+      if (effectConnected(arr[0], "snared")) {
+        enemy.applyStatusEffect("snared", this.snareDuration, context, {
           sourceId: user.id,
         });
       }
@@ -117,16 +117,15 @@ const ethanSkills = [
     priority: 0,
 
     description() {
-      return `Every debt gets collected eventually — Ethan just keeps the books. Deals massive physical contact damage equal to ${this.bf}% of his Attack, or ${this.bf + this.clayBonusPercent}% if Clay is fighting at his side.`;
+      return `Every debt gets collected eventually — Ethan just keeps the books. Deals physical contact damage, striking with an extra ${this.clayBonusPercent}% force if Clay is fighting at his side.`;
     },
 
     targetSpec: ["enemy"],
 
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
-      const clayAtSide = context.allChampions?.some(
+      const clayAtSide = context.aliveChampions?.some(
         (c) =>
-          c.alive &&
           c.team === user.team &&
           (c.championKey === "clay" || c.championKey === "clay_godslayer"),
       );
