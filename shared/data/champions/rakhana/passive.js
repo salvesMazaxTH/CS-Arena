@@ -5,15 +5,14 @@ export default {
   name: "Silver Flow",
 
   maxStacks: 3,
-  damageConversionPercent: 0.70,
-  bonusAbsoluteDamage: 30,
+  absoluteBonusPercent: 25,
 
   description(champion) {
     const stacks = champion.runtime?.silverFlowStacks || 0;
 
     return `Whenever Rakhana deals damage to an enemy, she gains 1 <b>Flow</b> stack (Max: ${this.maxStacks}).
 
-    At 3 stacks, her next attack consumes all Flow, dealing ${this.damageConversionPercent * 100}% of its damage plus ${this.bonusAbsoluteDamage} bonus damage as <b>Absolute Damage</b>.
+    At ${this.maxStacks} stacks, her next attack consumes all Flow: it lands as <b>Absolute Damage</b> for ${this.absoluteBonusPercent}% more than the hit would otherwise deal through the target's defenses.
 
     <b>Current Flow: ${stacks}/${this.maxStacks}</b>`;
   },
@@ -41,23 +40,27 @@ export default {
     };
   },
 
-  onBeforeDmgDealing({ owner, damage }) {
+  onBeforeDmgDealing({ owner, damage, bonusDamage }) {
     const stacks = owner.runtime?.silverFlowStacks || 0;
 
     if (stacks < this.maxStacks) return;
 
     owner.runtime.silverFlowStacks = 0;
 
-    const convertedDamage =
-      damage * this.damageConversionPercent +
-      this.bonusAbsoluteDamage;
+    // `damage` is already past the target's defenses and includes any bonusDamage
+    // rider, which is unreducible on its own and is re-added in composeDamage.
+    // Amplify only the mitigated part, then pin preMitigationDamage so the
+    // recompose keeps exactly this figure.
+    const rider = bonusDamage || 0;
+    const amplified = (damage - rider) * (1 + this.absoluteBonusPercent / 100);
 
     return {
-      damage: convertedDamage,
       mode: "absolute",
+      baseDamage: amplified,
+      preMitigationDamage: amplified,
       log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
         owner,
-      )} releases her accumulated Flow, converting ${this.damageConversionPercent * 100}% of the attack's damage into Absolute Damage and adding ${this.bonusAbsoluteDamage} bonus Absolute Damage!`,
+      )} releases her accumulated Flow — the blow lands whole, ${this.absoluteBonusPercent}% past what the target's defenses would have spared.`,
     };
   },
 };
