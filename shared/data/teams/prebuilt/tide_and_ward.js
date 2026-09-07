@@ -8,7 +8,7 @@ export const tideAndWard = {
   champions: [
     "naelthos",
     "reyskarone",
-    "blyskartri",
+    "ysvane",
     "serene",
     "noyre",
     "naelys",
