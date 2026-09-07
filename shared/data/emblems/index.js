@@ -1,6 +1,6 @@
 import { firelord } from "./fire_lord.js";
 import { thunderRoar } from "./thunder_roar.js";
-import { ironclad } from "./ironclad.js";
+import { impervious_steel } from "./impervious_steel.js";
 import { earthshaker } from "./earthshaker.js";
 import { earthenWard } from "./earthen_ward.js";
 import { oceanGrace } from "./ocean_grace.js";
@@ -21,7 +21,7 @@ export { evaluateEmblemEligibilityForRoster } from "./eligibility.js";
 export const EMBLEMS = [
   firelord,
   thunderRoar,
-  ironclad,
+  impervious_steel,
   earthshaker,
   earthenWard,
   oceanGrace,
@@ -37,4 +37,3 @@ export const EMBLEMS = [
   assassinsAmbush,
   permafrost,
 ];
-
