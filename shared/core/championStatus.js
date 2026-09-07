@@ -1,4 +1,7 @@
-import { revertStatModifiersFromStatus } from "./championCombat.js";
+import {
+  revertStatModifiersFromStatus,
+  runAsStatusModifierSource,
+} from "./championCombat.js";
 import { ElementalInteractions } from "../engine/combat/ElementalInteractions.js";
 import {
   EvolvedStatusByBase,
@@ -177,11 +180,13 @@ function applyStatusEffectCore({
   if (typeof effectInstance.onStatusEffectAdded === "function") {
     const ownModifiersFrom = champion.statModifiers.length;
 
-    const added = effectInstance.onStatusEffectAdded({
-      owner: champion,
-      duration: resolvedDuration,
-      context,
-    });
+    const added = runAsStatusModifierSource(statusEffectKey, () =>
+      effectInstance.onStatusEffectAdded({
+        owner: champion,
+        duration: resolvedDuration,
+        context,
+      }),
+    );
 
     if (added?.message) {
       context.registerDialog({

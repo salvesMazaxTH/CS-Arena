@@ -8,6 +8,7 @@ const frozen = {
   name: "Frozen",
   type: "debuff",
   subtypes: ["hardCC", "ice"],
+  locksStats: ["Speed", "Attack"],
 
   // Evolved form of Chilled: replaces it on apply, decays back into it on expiry.
   evolvesFrom: "chilled",
@@ -88,6 +89,7 @@ ${reaction.log}`,
         name: this.name,
         type: this.type,
         subtypes: this.subtypes,
+        locksStats: this.locksStats,
         hookScope: this.hookScope,
         onStatusEffectAdded: this.onStatusEffectAdded,
         onValidateAction: this.onValidateAction,

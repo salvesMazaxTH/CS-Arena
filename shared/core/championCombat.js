@@ -251,6 +251,36 @@ const STAT_LIMITS = {
 
 const statLimitsFor = (statName) => STAT_LIMITS[statName] || STAT_LIMITS.default;
 
+/** No stat may ever hold a negative value, whatever a caller asks for. */
+function clampStat(statName, value, ignoreMinimum) {
+  const { min, max } = statLimitsFor(statName);
+  const floor = Math.max(0, ignoreMinimum ? 0 : min);
+  return Math.max(floor, Math.min(value, max));
+}
+
+// A status effect names stats in `locksStats`: while it is on the champion,
+// nothing else may move them. Modifiers still record and expire normally, so
+// the recompute that runs once the status leaves folds in whatever piled up.
+let statusApplyingOwnModifiers = null;
+
+export function runAsStatusModifierSource(statusKey, fn) {
+  const previous = statusApplyingOwnModifiers;
+  statusApplyingOwnModifiers = statusKey;
+  try {
+    return fn();
+  } finally {
+    statusApplyingOwnModifiers = previous;
+  }
+}
+
+function statIsLocked(champion, statName) {
+  for (const effect of champion.statusEffects.values()) {
+    if (effect.key === statusApplyingOwnModifiers) continue;
+    if (effect.locksStats?.includes(statName)) return true;
+  }
+  return false;
+}
+
 /** Core stat mutation: rounds, clamps to per-stat limits, records the modifier. */
 export function applyStatModifier(
   champion,
@@ -285,11 +315,10 @@ export function applyStatModifier(
     amount = roundToFive(amount);
   }
 
-  const { min, max } = statLimitsFor(statName);
-
   const previous = champion[statName];
-  const effectiveMin = ignoreMinimum ? 0 : min;
-  const clamped = Math.max(effectiveMin, Math.min(previous + amount, max));
+  const clamped = statIsLocked(champion, statName)
+    ? previous
+    : clampStat(statName, previous + amount, ignoreMinimum);
   const appliedAmount = clamped - previous;
 
   champion[statName] = clamped;
@@ -662,15 +691,14 @@ function _recomputeStats(champion, remaining, affectedStats) {
     const baseValue = champion[baseKey];
     if (baseValue === undefined) continue;
 
-    const { max } = statLimitsFor(statName);
+    if (statIsLocked(champion, statName)) continue;
 
     const previousValue = champion[statName];
-    let newValue = baseValue;
+    let newValue = clampStat(statName, baseValue, true);
 
     for (const mod of remaining) {
       if (mod.statName === statName) {
-        const effectiveMin = mod.ignoreMinimum ? 0 : statLimitsFor(statName).min;
-        newValue = Math.max(effectiveMin, Math.min(newValue + mod.amount, max));
+        newValue = clampStat(statName, newValue + mod.amount, mod.ignoreMinimum);
       }
     }
 
