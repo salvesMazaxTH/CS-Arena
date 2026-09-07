@@ -152,22 +152,14 @@ const nytheraSkills = [
       const isFrozen = target.hasStatusEffect("frozen");
       const isChilled = target.hasStatusEffect("chilled");
 
-      let baseDamage;
-
-      // Base force.
-      if (isChilled || isFrozen) {
-        baseDamage = (user.Attack * this.bfIfCold) / 100;
-      } else {
-        baseDamage = (user.Attack * this.bf) / 100;
-      }
-
-      // Extra bonus if the target is already Frozen.
-      if (isFrozen) {
-        baseDamage += this.bonusIfFrozen;
-      }
+      const baseDamage =
+        isChilled || isFrozen
+          ? (user.Attack * this.bfIfCold) / 100
+          : (user.Attack * this.bf) / 100;
 
       const result = new DamageEvent({
         baseDamage,
+        bonusDamage: isFrozen ? this.bonusIfFrozen : 0,
         attacker: user,
         defender: target,
         skill: this,

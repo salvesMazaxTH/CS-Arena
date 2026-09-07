@@ -45,7 +45,7 @@ const arenMarevothSkills = [
     positiveEffectsStripped: 2,
 
     description() {
-      return `When this ability hits a target, it applies Tide to them. When it hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} absolute damage and strip up to ${this.positiveEffectsStripped} positive status effects or stat buffs from them.`;
+      return `When this ability hits a target, it applies Tide to them. When it hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} bonus damage and strip up to ${this.positiveEffectsStripped} positive status effects or stat buffs from them.`;
     },
 
     targetSpec: ["enemy"],
@@ -54,10 +54,11 @@ const arenMarevothSkills = [
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
 
-      const currentTideStacks = getTideStacks(enemy);
+      const willConsumeTide = getTideStacks(enemy) >= this.tideThreshold;
 
       const result = new DamageEvent({
         baseDamage,
+        bonusDamage: willConsumeTide ? this.tideBonusDamage : 0,
         attacker: user,
         defender: enemy,
         skill: this,
@@ -70,29 +71,13 @@ const arenMarevothSkills = [
       const hitSuccess = results.some((r) => r?.landed);
 
       if (hitSuccess) {
-        if (currentTideStacks >= this.tideThreshold) {
+        if (willConsumeTide) {
           consumeTide(enemy);
-
-          const bonusResult = new DamageEvent({
-            baseDamage: this.tideBonusDamage,
-            attacker: user,
-            defender: enemy,
-            skill: this,
-            type: "magical",
-            mode: DamageEvent.Modes.ABSOLUTE,
-            context,
-            allChampions: context?.allChampions,
-          }).execute();
-
-          const bonusResults = Array.isArray(bonusResult)
-            ? bonusResult
-            : [bonusResult];
-          results.push(...bonusResults);
 
           const stripped = stripPositiveEffects(enemy, this.positiveEffectsStripped);
 
           context.registerDialog?.({
-            message: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing ${this.tideBonusDamage} absolute damage and stripping ${stripped} positive effect(s)!`,
+            message: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing ${this.tideBonusDamage} bonus damage and stripping ${stripped} positive effect(s)!`,
             sourceId: user.id,
             targetId: enemy.id,
           });
@@ -198,7 +183,7 @@ const arenMarevothSkills = [
     element: "water",
 
     description() {
-      return `When this ability hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} absolute damage and strip up to ${this.positiveEffectsStripped} positive status effects or stat buffs from them.\n\nThe next time this champion uses CLAIM while possessing ${this.claimPointsRequired} or more Value Points, increase his Max HP by ${this.maxHPBonusPercent}% permanently. Max: +${this.maxHPBonusPercent * this.maxHPBonusStacks}%.`;
+      return `When this ability hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} bonus damage and strip up to ${this.positiveEffectsStripped} positive status effects or stat buffs from them.\n\nThe next time this champion uses CLAIM while possessing ${this.claimPointsRequired} or more Value Points, increase his Max HP by ${this.maxHPBonusPercent}% permanently. Max: +${this.maxHPBonusPercent * this.maxHPBonusStacks}%.`;
     },
 
     targetSpec: ["enemy"],
@@ -207,13 +192,14 @@ const arenMarevothSkills = [
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
 
-      const currentTideStacks = getTideStacks(enemy);
+      const willConsumeTide = getTideStacks(enemy) >= this.tideThreshold;
       const claimPointsRequired = this.claimPointsRequired;
       const maxHPBonusPercent = this.maxHPBonusPercent;
       const maxHPBonusStacks = this.maxHPBonusStacks;
 
       const result = new DamageEvent({
         baseDamage,
+        bonusDamage: willConsumeTide ? this.tideBonusDamage : 0,
         attacker: user,
         defender: enemy,
         skill: this,
@@ -225,29 +211,13 @@ const arenMarevothSkills = [
       const results = Array.isArray(result) ? result : [result];
       const hitSuccess = results.some((r) => r?.landed);
 
-      if (hitSuccess && currentTideStacks >= this.tideThreshold) {
+      if (hitSuccess && willConsumeTide) {
         consumeTide(enemy);
-
-        const bonusResult = new DamageEvent({
-          baseDamage: this.tideBonusDamage,
-          attacker: user,
-          defender: enemy,
-          skill: this,
-          type: "physical",
-          mode: DamageEvent.Modes.ABSOLUTE,
-          context,
-          allChampions: context?.allChampions,
-        }).execute();
-
-        const bonusResults = Array.isArray(bonusResult)
-          ? bonusResult
-          : [bonusResult];
-        results.push(...bonusResults);
 
         const stripped = stripPositiveEffects(enemy, this.positiveEffectsStripped);
 
         context.registerDialog?.({
-          message: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing ${this.tideBonusDamage} absolute damage and stripping ${stripped} positive effect(s)!`,
+          message: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing ${this.tideBonusDamage} bonus damage and stripping ${stripped} positive effect(s)!`,
           sourceId: user.id,
           targetId: enemy.id,
         });

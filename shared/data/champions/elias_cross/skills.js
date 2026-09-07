@@ -19,13 +19,12 @@ const eliasCrossSkills = [
     contact: false,
     damageMode: "standard",
     damageBonus: 15,
-    damageBonusMode: "absolute",
     priority: 0,
     cannotBeEvaded: true,
     element: "lightning",
 
     description() {
-      return `If the target has Conductor, deals ${this.damageBonus} bonus Absolute Damage. This attack cannot be evaded.`;
+      return `If the target has Conductor, deals ${this.damageBonus} bonus damage. This attack cannot be evaded.`;
     },
 
     targetSpec: ["enemy"],
@@ -33,21 +32,9 @@ const eliasCrossSkills = [
     resolve({ user, targets, context }) {
       const [enemy] = targets;
 
-      if (enemy.hasStatusEffect("conductor")) {
-        context.extraDamageQueue ??= [];
-
-        context.extraDamageQueue.push({
-          baseDamage: this.damageBonus,
-          mode: this.damageBonusMode,
-          attacker: user,
-          defender: enemy,
-          skill: this,
-          type: "magical",
-        });
-      }
-
       const result = new DamageEvent({
         baseDamage: (user.Attack * this.bf) / 100,
+        bonusDamage: enemy.hasStatusEffect("conductor") ? this.damageBonus : 0,
         attacker: user,
         defender: enemy,
         skill: this,
@@ -67,7 +54,6 @@ const eliasCrossSkills = [
     contact: false,
     damageMode: "standard",
     damageBonus: 15,
-    damageBonusMode: "absolute",
     priority: 0,
     element: "lightning",
 
@@ -75,7 +61,7 @@ const eliasCrossSkills = [
     conductorDuration: 2,
 
     description() {
-      return `Elias Cross gains +${this.passiveChanceBonus}% Passive chance this turn and the next. If the target has Conductor, deals ${this.damageBonus} bonus Absolute Damage. Marks the target as a Conductor for ${this.conductorDuration} turn(s).`;
+      return `Elias Cross gains +${this.passiveChanceBonus}% Passive chance this turn and the next. If the target has Conductor, deals ${this.damageBonus} bonus damage. Marks the target as a Conductor for ${this.conductorDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -107,21 +93,9 @@ const eliasCrossSkills = [
         });
       }
 
-      if (enemy.hasStatusEffect("conductor")) {
-        context.extraDamageQueue ??= [];
-
-        context.extraDamageQueue.push({
-          baseDamage: this.damageBonus,
-          mode: this.damageBonusMode,
-          attacker: user,
-          defender: enemy,
-          skill: this,
-          type: "magical",
-        });
-      }
-
       const result = new DamageEvent({
         baseDamage: (user.Attack * this.bf) / 100,
+        bonusDamage: enemy.hasStatusEffect("conductor") ? this.damageBonus : 0,
         attacker: user,
         defender: enemy,
         skill: this,

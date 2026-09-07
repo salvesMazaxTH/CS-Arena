@@ -275,7 +275,7 @@ const rakhanaSkills = [
     description() {
       return `Rakhana descends upon the target with overwhelming force, dealing high damage and ignoring ${this.piercingPercentage}% of the target's Defense.
 
-      If the target is below ${this.threshold * 100}% HP, deals additional Absolute Damage equal to ${this.missingHpPercent * 100}% of their missing HP.`;
+      If the target is below ${this.threshold * 100}% HP, deals bonus damage equal to ${this.missingHpPercent * 100}% of their missing HP.`;
     },
 
     targetSpec: ["enemy"],
@@ -285,9 +285,15 @@ const rakhanaSkills = [
 
       const baseDamage = (user.Attack * this.bf) / 100;
 
+      const belowThreshold = enemy.HP / enemy.maxHP < this.threshold;
+      const executeBonus = belowThreshold
+        ? (enemy.maxHP - enemy.HP) * this.missingHpPercent
+        : 0;
+
       const result = new DamageEvent({
         baseDamage,
         mode: this.damageMode,
+        bonusDamage: executeBonus,
         piercingPercentage: this.piercingPercentage,
         attacker: user,
         defender: enemy,
@@ -297,29 +303,7 @@ const rakhanaSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      const results = Array.isArray(result) ? result : [result];
-
-      if (enemy.alive && enemy.HP / enemy.maxHP < this.threshold) {
-        const missingHP = enemy.maxHP - enemy.HP;
-        const executeDamage = missingHP * this.missingHpPercent;
-
-        const executeResult = new DamageEvent({
-          baseDamage: executeDamage,
-          mode: DamageEvent.Modes.ABSOLUTE,
-          attacker: user,
-          defender: enemy,
-          skill: this,
-          type: "physical",
-          context,
-          allChampions: context?.allChampions,
-        }).execute();
-
-        results.push(
-          ...(Array.isArray(executeResult) ? executeResult : [executeResult]),
-        );
-      }
-
-      return results;
+      return Array.isArray(result) ? result : [result];
     },
   },
 ];

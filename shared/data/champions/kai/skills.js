@@ -196,12 +196,9 @@ const kaiSkills = [
       for (let i = 0; i < this.hits; i++) {
         const target = enemies[Math.floor(Math.random() * enemies.length)];
 
-        const directBonus = target.hasStatusEffect("burning")
-          ? this.burningBonus
-          : 0;
-
         const result = new DamageEvent({
-          baseDamage: this.damagePerHit + directBonus,
+          baseDamage: this.damagePerHit,
+          bonusDamage: target.hasStatusEffect("burning") ? this.burningBonus : 0,
           mode: "standard",
           attacker: user,
           defender: target,

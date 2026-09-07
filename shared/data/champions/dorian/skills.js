@@ -122,7 +122,7 @@ const dorianSkills = [
     priority: 0,
 
     description() {
-      return `The wires snap taut and every wheel comes round at once, the whole account brought down on the chosen target. Deals heavy ranged physical damage and leaves the target with Heal Block for ${this.healBlockDuration} turns. Against an enchanter it also bites for bonus Absolute Damage equal to ${this.enchanterMaxHPPercent}% of their Max HP. If the strike kills, Dorian's team scores points equal to his current Grudge, up to ${this.killBankCap}, and the ledger empties.`;
+      return `The wires snap taut and every wheel comes round at once, the whole account brought down on the chosen target. Deals heavy ranged physical damage and leaves the target with Heal Block for ${this.healBlockDuration} turns. Against an enchanter it also bites for bonus damage equal to ${this.enchanterMaxHPPercent}% of their Max HP. If the strike kills, Dorian's team scores points equal to his current Grudge, up to ${this.killBankCap}, and the ledger empties.`;
     },
 
     targetSpec: ["enemy"],
@@ -131,8 +131,14 @@ const dorianSkills = [
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
 
+      const enchanterBonus =
+        enemy.classKey === "enchanter"
+          ? Math.floor((enemy.maxHP * this.enchanterMaxHPPercent) / 100)
+          : 0;
+
       const result = new DamageEvent({
         baseDamage,
+        bonusDamage: enchanterBonus,
         attacker: user,
         defender: enemy,
         skill: this,
@@ -151,28 +157,7 @@ const dorianSkills = [
         });
       }
 
-      if (landed && enemy.alive && enemy.classKey === "enchanter") {
-        const bonus = Math.floor(
-          (enemy.maxHP * this.enchanterMaxHPPercent) / 100,
-        );
-
-        if (bonus > 0) {
-          const bonusResult = new DamageEvent({
-            baseDamage: bonus,
-            attacker: user,
-            defender: enemy,
-            skill: this,
-            type: "physical",
-            mode: DamageEvent.Modes.ABSOLUTE,
-            context,
-            allChampions: context?.allChampions,
-          }).execute();
-
-          results.push(
-            ...(Array.isArray(bonusResult) ? bonusResult : [bonusResult]),
-          );
-        }
-
+      if (landed && enchanterBonus > 0) {
         context.registerDialog?.({
           message: `${formatChampionName(enemy)} is an enchanter — the wheels bite deeper.`,
           sourceId: user.id,

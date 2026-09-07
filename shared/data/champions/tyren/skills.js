@@ -166,7 +166,7 @@ const tyrenSkills = [
     description() {
       return `Tyren unleashes a massive wave of living steel, dealing powerful Steel magical damage.
 
-      If the target is under Crowd Control, the metal violently crystallizes around them, dealing an additional ${this.empoweredPercent}% of this ability's base damage as Absolute Damage and extending their current Crowd Control by ${this.stunDuration} turn.
+      If the target is under Crowd Control, the metal violently crystallizes around them, dealing an additional ${this.empoweredPercent}% of this ability's base damage as bonus damage and extending their current Crowd Control by ${this.stunDuration} turn.
 
       Otherwise, the target becomes Stunned for ${this.stunDuration} turn.`;
     },
@@ -178,8 +178,17 @@ const tyrenSkills = [
 
       const baseDamage = (user.Attack * this.bf) / 100;
 
+      // Any active Crowd Control counts: softCC or hardCC.
+      const controlEffects = enemy.getStatusEffects({
+        subtype: ["softCC", "hardCC"],
+      });
+      const wasControlled = controlEffects.length > 0;
+
       const result = new DamageEvent({
         baseDamage,
+        bonusDamage: wasControlled
+          ? baseDamage * (this.empoweredPercent / 100)
+          : 0,
         attacker: user,
         defender: enemy,
         skill: this,
@@ -194,35 +203,10 @@ const tyrenSkills = [
 
       if (!effectConnected(mainHit, "stunned") || !enemy.alive) return results;
 
-      // Any active Crowd Control counts:
-      // softCC or hardCC.
-      const controlEffects = enemy.getStatusEffects({
-        subtype: ["softCC", "hardCC"],
-      });
-
-      if (controlEffects.length > 0) {
-        const activeControl = controlEffects[0];
-
-        const bonusDamage = baseDamage * (this.empoweredPercent / 100);
-
-        const bonusResult = new DamageEvent({
-          baseDamage: bonusDamage,
-          mode: DamageEvent.Modes.ABSOLUTE,
-          attacker: user,
-          defender: enemy,
-          skill: this,
-          type: "magical",
-          context,
-          allChampions: context?.allChampions,
-        }).execute();
-
-        results.push(
-          ...(Array.isArray(bonusResult) ? bonusResult : [bonusResult]),
-        );
-
+      if (wasControlled) {
         // Preserve the existing Crowd Control and extend
         // its expiration instead of replacing it with Stun.
-        activeControl.expiresAtTurn += this.stunDuration;
+        controlEffects[0].expiresAtTurn += this.stunDuration;
       } else {
         // No Crowd Control: apply the default Stun.
         enemy.applyStatusEffect("stunned", this.stunDuration, context);
