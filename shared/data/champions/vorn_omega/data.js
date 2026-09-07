@@ -9,6 +9,7 @@ export default {
   Defense: 145,
   Speed: 40,
 
+  elementalAffinities: ["steel"],
   classKey: "brawler",
   species: ["robot", "android", "construct"],
 };
