@@ -1,11 +1,11 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import basicStrike from "../generic/basicStrike.js";
+import totalBlock from "../generic/totalBlock.js";
 import { BLEEDING_DAMAGE_PER_STACK_RATIO } from "../../statusEffects/bleeding.js";
 
 const drexSkills = [
-  basicStrike,
+  totalBlock,
 
   {
     key: "crimson_incision",
@@ -128,10 +128,11 @@ const drexSkills = [
           enemy.maxHP * BLEEDING_DAMAGE_PER_STACK_RATIO,
         );
 
-        // Existing Bleeding stacks trigger immediate damage.
-        for (let index = 0; index < existingStacks; index += 1) {
+        // One instance scaled by the stacks, exactly as Bleeding's own turn
+        // tick does, so replaying the wound is worth a single proc.
+        if (existingStacks > 0) {
           const tickResult = new DamageEvent({
-            baseDamage: tickDamage,
+            baseDamage: tickDamage * existingStacks,
             attacker: user,
             defender: enemy,
             skill: {
