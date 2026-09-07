@@ -27,7 +27,7 @@ const sebastianIgnisSkills = [
     priority: 1,
 
     description() {
-      return `Sebastian barely raises the blade, a flick of flame that costs him nothing he wasn't already carrying. Deals physical damage equal to ${this.bf}% of his Attack, plus ${this.apathyBonusFlat} bonus damage per Apathy stack spent, and always sets the chosen enemy Burning for ${this.burnDuration} turn(s).`;
+      return `Sebastian barely raises the blade, a flick of flame that costs him nothing he wasn't already carrying. Deals physical contact damage, plus ${this.apathyBonusFlat} bonus damage per Apathy stack spent, and always sets the chosen enemy Burning for ${this.burnDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -61,13 +61,15 @@ const sebastianIgnisSkills = [
       }
 
       if (stacks > 0) {
-        const spentLine = `${formatChampionName(user)} finally moves — ${stacks} Apathy stack(s) spent.`;
         context.registerDialog({
-          message: spentLine,
+          message: `${formatChampionName(user)} finally moves, and everything he saved goes into the swing.`,
           sourceId: user.id,
           targetId: user.id,
         });
-        arr.push({ log: spentLine });
+
+        arr.push({
+          log: `${formatChampionName(user)} finally moves — ${stacks} Apathy stack(s) spent.`,
+        });
       }
 
       return arr;
@@ -115,7 +117,7 @@ const sebastianIgnisSkills = [
 
       if (stacks > 0) {
         context.registerDialog({
-          message: `${formatChampionName(user)} lets the whole bank go into the harp — ${stacks} Apathy stack(s) spent.`,
+          message: `${formatChampionName(user)} lets the whole bank go into the harp.`,
           sourceId: user.id,
           targetId: user.id,
         });
@@ -143,7 +145,7 @@ const sebastianIgnisSkills = [
     priority: 0,
 
     description() {
-      return `Every stack of neglect Sebastian's been banking comes due at once, and for a moment he commits completely — the ground around the chosen enemy goes up with them. Deals physical damage equal to ${this.bf}% of his Attack, plus ${this.apathyBonusPercent}% more per Apathy stack spent, to them and whoever stands beside them, always setting each one Burning for ${this.burnDuration} turn(s).`;
+      return `Every stack of neglect Sebastian's been banking comes due at once, and for a moment he commits completely — the ground around the chosen enemy goes up with them. Deals physical contact damage, plus ${this.apathyBonusPercent}% more per Apathy stack spent, to them and whoever stands beside them, always setting each one Burning for ${this.burnDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -183,13 +185,15 @@ const sebastianIgnisSkills = [
       }
 
       if (stacks > 0) {
-        const spentLine = `${formatChampionName(user)} finally commits — ${stacks} Apathy stack(s) spent.`;
         context.registerDialog({
-          message: spentLine,
+          message: `${formatChampionName(user)} finally commits — everything he banked comes due at once.`,
           sourceId: user.id,
           targetId: user.id,
         });
-        results.push({ log: spentLine });
+
+        results.push({
+          log: `${formatChampionName(user)} finally commits — ${stacks} Apathy stack(s) spent.`,
+        });
       }
 
       return results;
