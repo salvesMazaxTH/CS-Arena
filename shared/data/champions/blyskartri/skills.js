@@ -46,7 +46,7 @@ const blyskartriSkills = [
 
     name: "Vital Conductance",
 
-    piercingDamageBonus: 50,
+    counterDamage: 50,
 
     priority: 1,
 
@@ -63,15 +63,14 @@ const blyskartriSkills = [
         id: "counter",
         type: "physical",
         contact: false,
-        damageMode: "piercing",
-        piercingPercentage: 100,
+        damageMode: "absolute",
       },
     ],
 
     description() {
       return `Blyskartri turns the chosen ally into a living conductor for ${this.buffsDuration} turn(s), granting +${this.speedBuff} Speed and tripling their Evasion.
 
-      While the current holds, every attack the ally slips past is answered: the aggressor takes ${this.piercingDamageBonus} piercing damage.`;
+      While the current holds, every attack the ally slips past is answered: the aggressor takes ${this.counterDamage} absolute damage.`;
     },
 
     targetSpec: ["select:ally"],
@@ -106,7 +105,7 @@ const blyskartriSkills = [
       );
 
       const skill = this;
-      const piercingDamageBonus = this.piercingDamageBonus;
+      const counterDamage = this.counterDamage;
 
       ally.addHookEffect({
         type: "buff",
@@ -124,7 +123,7 @@ const blyskartriSkills = [
           SkillHits.run(skill, "counter", {
             user,
             target: attacker,
-            baseDamage: piercingDamageBonus,
+            baseDamage: counterDamage,
             context,
           });
 

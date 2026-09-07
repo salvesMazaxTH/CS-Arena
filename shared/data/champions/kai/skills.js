@@ -39,7 +39,7 @@ const kaiSkills = [
     name: "Living Ember Stance",
     contact: false,
     damageReduction: 25,
-    counterAtkDmg: 15,
+    counterAtkDmg: 35,
     stanceDuration: 2,
     burnDuration: 2,
     priority: 2,
@@ -52,15 +52,14 @@ const kaiSkills = [
         type: "physical",
         element: null,
         contact: true,
-        damageMode: "piercing",
-        piercingPercentage: 100,
+        damageMode: "absolute",
       },
     ],
 
     description() {
       return `Kai settles into a stance that glows from the inside out, taking ${this.damageReduction}% less damage during this turn and the next.
 
-      Anyone who strikes him in contact is answered on the spot with ${this.counterAtkDmg} piercing damage and left Burning.
+      Anyone who strikes him in contact is answered on the spot with ${this.counterAtkDmg} absolute damage and left Burning.
 
       The moment Kai deals damage, the stance catches: Living Ember burns for ${this.stanceDuration} turn(s), his attacks deal +${kindledFists.livingEmberBonusDamage} bonus damage and always apply Burning.`;
     },

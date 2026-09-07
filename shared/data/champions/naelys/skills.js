@@ -107,12 +107,12 @@ const naelysSkills = [
         type: "physical",
         element: null,
         contact: false,
-        damageMode: "standard",
+        damageMode: "absolute",
       },
     ],
 
     description() {
-      return `Naelys assumes a maritime stance until the end of the next turn, gaining ${this.damageReduction}% damage reduction. The first time she is hit each turn, she counterattacks the attacker with Basic Strike.`;
+      return `Naelys assumes a maritime stance until the end of the next turn, gaining ${this.damageReduction}% damage reduction. The first time she is hit each turn, she counterattacks the attacker for Basic Strike damage, dealt as absolute damage.`;
     },
 
     targetSpec: ["self"],

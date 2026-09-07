@@ -147,6 +147,7 @@ const jeffTheDeathSkills = [
       enemy.addHookEffect({
         type: "debuff",
         key: "deaths_embrace_mark",
+        subtypes: ["dot", "magical"],
         expiresAtTurn:
           context.currentTurn + this.markDuration,
 
