@@ -62,6 +62,19 @@ registerExclusiveIndicator("bleached", {
   label: "Bleached",
 });
 
+// Kyle Hayato's Shadowstorm (runtime.shadowstormMarkUntilTurn): an enemy who
+// CLAIMed, whose points his ultimate can usurp while the mark holds.
+registerRuntimeCounterIndicator(
+  "shadowstorm_mark",
+  "shadowstormMarkUntilTurn",
+  {
+    type: "emoji",
+    value: "🌩️",
+    background: "rgba(96, 78, 190, 0.85)",
+    label: "Marked",
+  },
+);
+
 // Zyrelle's revolver: current rounds loaded (runtime.zyrelleAmmo), 0-6.
 registerRuntimeCounterIndicator("zyrelle_ammo", "zyrelleAmmo", {
   type: "image",

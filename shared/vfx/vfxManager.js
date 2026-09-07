@@ -30,6 +30,7 @@ import { startInvisibilityCanvas } from "./invisibilityCanvas.js";
 import { startConcealedCanvas } from "./concealedCanvas.js";
 import { startCrimsonFrenzy } from "./crimsonFrenzyCanvas.js";
 import { startBleached } from "./bleachedCanvas.js";
+import { startShadowstormMark } from "./shadowstormMarkCanvas.js";
 
 // no futuro:
 // import { startBurn } from "./burnCanvas.js";
@@ -72,6 +73,9 @@ const ExclusiveVFXTriggers = {
     (champion.runtime?.hookEffectData ?? []).some(
       (e) => e.key === "bleached",
     ),
+
+  shadowstormMark: (champion) =>
+    champion.runtime?.shadowstormMarkUntilTurn !== undefined,
   // Adicione outros triggers exclusivos seguindo o critério acima
 };
 
@@ -255,6 +259,10 @@ export function playVFX(type, canvas, data = {}) {
 
     case "bleached":
       controller = startBleached(canvas, data);
+      break;
+
+    case "shadowstormMark":
+      controller = startShadowstormMark(canvas, data);
       break;
 
     default:

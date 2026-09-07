@@ -205,11 +205,14 @@ const kyleHayatoSkills = [
         });
       }
 
-      const markTurn = enemy.runtime?.shadowstormMarkTurn;
-      const markPoints = enemy.runtime?.shadowstormMarkPoints || 0;
-      const markAge = context.currentTurn - (markTurn ?? -Infinity);
+      const markUntil = enemy.runtime.shadowstormMarkUntilTurn;
+      const markPoints = enemy.runtime.shadowstormMarkPoints || 0;
 
-      if (markTurn !== undefined && markAge <= this.markWindow && markPoints > 0) {
+      if (markUntil !== undefined && markUntil > context.currentTurn) {
+        // The bolt spends the mark whether or not there is score left to take.
+        delete enemy.runtime.shadowstormMarkUntilTurn;
+        delete enemy.runtime.shadowstormMarkPoints;
+
         const diverted = Math.min(
           Math.round(markPoints * (this.claimDivertPercent / 100)),
           context.getScore(enemy.team - 1),
@@ -227,6 +230,12 @@ const kyleHayatoSkills = [
             scoringSlot: enemy.team - 1,
             reason: this.key,
             sourceId: user.id,
+          });
+
+          context.registerDialog({
+            message: `${formatChampionName(user)} comes down on ${formatChampionName(enemy)} and leaves with what they climbed for.`,
+            sourceId: user.id,
+            targetId: enemy.id,
           });
 
           arr.push({
