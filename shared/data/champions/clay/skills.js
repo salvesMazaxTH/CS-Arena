@@ -24,7 +24,7 @@ const claySkills = [
     priority: 0,
 
     description() {
-      return `Clay swings his whole weight into a single blow, no finesse, just force. Deals physical contact damage equal to ${this.bf}% of his Attack.`;
+      return `Clay swings his whole weight into a single blow, no finesse, just force.`;
     },
 
     targetSpec: ["enemy"],
@@ -57,7 +57,7 @@ const claySkills = [
     priority: 0,
 
     description() {
-      return `The worse off Clay already is, the less he holds back. Deals physical contact damage equal to ${this.bf}% of his Attack, plus up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost.`;
+      return `The worse off Clay already is, the less he holds back — the wound itself becomes a weapon, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost.`;
     },
 
     targetSpec: ["enemy"],
@@ -106,7 +106,7 @@ const claySkills = [
     ],
 
     description() {
-      return `Clay throws everything he has at the chosen target and pays for it out of his own body. Deals physical contact damage equal to ${this.bf}% of his Attack, and costs him Absolute recoil damage equal to ${this.recoilPercentOfMaxHP}% of his Max HP whether the blow lands or not — which may be exactly what drives him over the edge.`;
+      return `Clay throws everything he has at the chosen target and pays for it out of his own body — Absolute recoil damage equal to ${this.recoilPercentOfMaxHP}% of his Max HP, whether the blow lands or not, which may be exactly what drives him over the edge.`;
     },
 
     targetSpec: ["enemy"],
@@ -130,8 +130,8 @@ const claySkills = [
         (user.maxHP * this.recoilPercentOfMaxHP) / 100,
       );
 
-      context.registerDialog?.({
-        message: `${formatChampionName(user)} tears himself open for ${recoilDamage} to swing that hard.`,
+      context.registerDialog({
+        message: `${formatChampionName(user)} tears himself open to swing that hard.`,
         sourceId: user.id,
         targetId: user.id,
       });
@@ -143,9 +143,15 @@ const claySkills = [
         context: { ...context, damageDepth: 1 },
       });
 
-      results.push(
-        ...(Array.isArray(recoilResult) ? recoilResult : [recoilResult]),
-      );
+      const recoilEntries = Array.isArray(recoilResult)
+        ? recoilResult
+        : [recoilResult];
+      results.push(...recoilEntries);
+
+      const userName = formatChampionName(user);
+      results.push({
+        log: `${userName} takes ${recoilEntries[0].totalDamage} Absolute recoil damage from <b>${this.name}</b>.\nfinal HP of ${userName}: ${recoilEntries[0].finalHP}/${user.maxHP}`,
+      });
 
       return results;
     },

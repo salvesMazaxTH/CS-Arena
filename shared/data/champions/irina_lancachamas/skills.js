@@ -14,7 +14,7 @@ function applyWeaponOverheat({ user, baseDamage, recoilPercent, context }) {
   if (recoilDamage <= 0) return [];
 
   context.registerDialog({
-    message: `${formatChampionName(user)}'s flamethrower redlines and scorches her own hands for ${recoilDamage}!`,
+    message: `${formatChampionName(user)}'s flamethrower redlines and scorches her own hands!`,
     sourceId: user.id,
     targetId: user.id,
   });
@@ -26,7 +26,15 @@ function applyWeaponOverheat({ user, baseDamage, recoilPercent, context }) {
     context: { ...context, damageDepth: 1 },
   });
 
-  return Array.isArray(result) ? result : [result];
+  const entries = Array.isArray(result) ? result : [result];
+  const userName = formatChampionName(user);
+
+  return [
+    ...entries,
+    {
+      log: `${userName} takes ${entries[0].totalDamage} Absolute recoil damage from <b>${redlineRapture.name}</b>.\nfinal HP of ${userName}: ${entries[0].finalHP}/${user.maxHP}`,
+    },
+  ];
 }
 
 const irinaSkills = [

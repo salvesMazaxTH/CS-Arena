@@ -17,8 +17,8 @@ function applyOverchargeRecoil({ user, baseDamage, context }) {
     : Math.floor((baseDamage * unstableOvercharge.recoilPercent) / 100);
   if (recoilDamage <= 0) return [];
 
-  context.registerDialog?.({
-    message: `${formatChampionName(user)} is torn by her own current for ${recoilDamage} — <b>Unstable Overcharge</b>.`,
+  context.registerDialog({
+    message: `${formatChampionName(user)} is torn by her own current — <b>Unstable Overcharge</b>.`,
     sourceId: user.id,
     targetId: user.id,
   });
@@ -30,7 +30,15 @@ function applyOverchargeRecoil({ user, baseDamage, context }) {
     context: { ...context, damageDepth: 1 },
   });
 
-  return Array.isArray(result) ? result : [result];
+  const entries = Array.isArray(result) ? result : [result];
+  const userName = formatChampionName(user);
+
+  return [
+    ...entries,
+    {
+      log: `${userName} takes ${entries[0].totalDamage} Absolute recoil damage from <b>${unstableOvercharge.name}</b>.\nfinal HP of ${userName}: ${entries[0].finalHP}/${user.maxHP}`,
+    },
+  ];
 }
 
 const voltexzSkills = [
