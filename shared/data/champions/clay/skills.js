@@ -1,5 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 
@@ -51,13 +52,14 @@ const claySkills = [
 
     bf: 45,
     missingHpScalingPercent: 70,
+    bleedingStacks: 1,
 
     contact: true,
     damageMode: "standard",
     priority: 0,
 
     description() {
-      return `The worse off Clay already is, the less he holds back — the wound itself becomes a weapon. Deals physical contact damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost.`;
+      return `The worse off Clay already is, the less he holds back — the wound itself becomes a weapon. Deals physical contact damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost, and leaves the target Bleeding for ${this.bleedingStacks} stack(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -69,7 +71,7 @@ const claySkills = [
         (user.Attack * this.bf) / 100 +
         (user.Attack * this.missingHpScalingPercent * missingHpRatio) / 100;
 
-      return new DamageEvent({
+      const result = new DamageEvent({
         baseDamage,
         attacker: user,
         defender: enemy,
@@ -78,6 +80,16 @@ const claySkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
+
+      const arr = Array.isArray(result) ? result : [result];
+
+      if (effectConnected(arr[0], "bleeding")) {
+        enemy.applyStatusEffect("bleeding", this.bleedingStacks, context, {
+          sourceId: user.id,
+        });
+      }
+
+      return arr;
     },
   },
 

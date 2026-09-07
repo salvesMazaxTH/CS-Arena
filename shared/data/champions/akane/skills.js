@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 
@@ -12,6 +13,7 @@ const akaneSkills = [
     key: "violet_slash",
     name: "Violet Slash",
     bf: 65,
+    bleedingStacks: 1,
     contact: true,
     damageMode: "standard",
     hitVfx: "slash",
@@ -19,7 +21,7 @@ const akaneSkills = [
     priority: 0,
 
     description() {
-      return `Akane unsheathes a single katana and draws it across the chosen target in one clean violet arc, the blade back at her hip before the cut is even felt, dealing damage.`;
+      return `Akane unsheathes a single katana and draws it across the chosen target in one clean violet arc, the blade back at her hip before the cut is even felt, dealing damage and leaving them Bleeding for ${this.bleedingStacks} stack(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -27,7 +29,7 @@ const akaneSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
 
-      return new DamageEvent({
+      const result = new DamageEvent({
         baseDamage: (user.Attack * this.bf) / 100,
         attacker: user,
         defender: enemy,
@@ -36,6 +38,16 @@ const akaneSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
+
+      const arr = Array.isArray(result) ? result : [result];
+
+      if (effectConnected(arr[0], "bleeding")) {
+        enemy.applyStatusEffect("bleeding", this.bleedingStacks, context, {
+          sourceId: user.id,
+        });
+      }
+
+      return arr;
     },
   },
 

@@ -19,13 +19,14 @@ const ethanSkills = [
     bf: 70,
     evasionDebuff: 15,
     debuffDuration: 2,
+    bleedingStacks: 1,
 
     contact: true,
     damageMode: "standard",
     priority: 0,
 
     description() {
-      return `Ethan doesn't waste a cut he hasn't already placed in his head. Deals physical contact damage, reducing the target's Evasion by ${this.evasionDebuff} for ${this.debuffDuration} turn(s).`;
+      return `Ethan doesn't waste a cut he hasn't already placed in his head. Deals physical contact damage, reducing the target's Evasion by ${this.evasionDebuff} for ${this.debuffDuration} turn(s) and leaving them Bleeding for ${this.bleedingStacks} stack(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -53,6 +54,12 @@ const ethanSkills = [
           duration: this.debuffDuration,
           context,
           statModifierSrc: user,
+        });
+      }
+
+      if (effectConnected(arr[0], "bleeding")) {
+        enemy.applyStatusEffect("bleeding", this.bleedingStacks, context, {
+          sourceId: user.id,
         });
       }
 
