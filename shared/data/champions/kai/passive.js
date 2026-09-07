@@ -9,7 +9,7 @@ export default {
   livingEmberBurnDuration: 2,
 
   description() {
-    return `Kai's knuckles never fully cool. Whenever he deals damage with a Basic Strike, the heat lands with it as ${this.flamingFistsDamage} bonus piercing damage, and the target catches fire unless their element already knows the burn.
+    return `Kai's knuckles never fully cool. Whenever he deals damage with a Basic Strike, the heat lands with it as ${this.flamingFistsDamage} bonus damage, and the target catches fire unless their element already knows the burn.
 
     Under Living Ember, nothing is spared: all of his attacks deal ${this.livingEmberBonusDamage} bonus damage and always apply Burning, whatever the target's elemental affinity.`;
   },
@@ -19,19 +19,17 @@ export default {
     onBeforeDmgDealing: "attacker",
   },
 
-  onBeforeDmgDealing({ attacker, owner, skill, damage }) {
+  onBeforeDmgDealing({ attacker, owner, skill }) {
     if (attacker !== owner) return;
 
     const isLivingEmber = owner.runtime?.fireStance === "livingEmber";
 
     if (!isLivingEmber && skill?.key !== "basic_strike") return;
 
-    const bonus = isLivingEmber
-      ? this.livingEmberBonusDamage
-      : this.flamingFistsDamage;
-
     return {
-      damage: damage + bonus,
+      bonusDamage: isLivingEmber
+        ? this.livingEmberBonusDamage
+        : this.flamingFistsDamage,
     };
   },
 

@@ -39,11 +39,9 @@ const sebastianIgnisSkills = [
       const stacks = user.runtime.apathyStacks || 0;
       user.runtime.apathyStacks = 0;
 
-      const baseDamage =
-        (user.Attack * this.bf) / 100 + this.apathyBonusFlat * stacks;
-
       const result = new DamageEvent({
-        baseDamage,
+        baseDamage: (user.Attack * this.bf) / 100,
+        bonusDamage: this.apathyBonusFlat * stacks,
         attacker: user,
         defender: enemy,
         skill: this,

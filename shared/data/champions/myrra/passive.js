@@ -36,7 +36,7 @@ export default {
     });
   },
 
-  onBeforeDmgDealing({ owner, damage, crit }) {
+  onBeforeDmgDealing({ owner, crit }) {
     let bonusDamage = 0;
 
     // Convert excess Critical into bonus damage.
@@ -52,8 +52,6 @@ export default {
 
     if (bonusDamage <= 0) return;
 
-    return {
-      damage: damage + bonusDamage,
-    };
+    return { bonusDamage };
   },
 };

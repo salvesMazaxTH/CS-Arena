@@ -13,37 +13,18 @@ export const firelord = {
   },
 
   description() {
-    return `Seus ataques de Fogo causam ${this.bonusDmg} de dano adicional.`;
+    return `Your Fire attacks deal ${this.bonusDmg} bonus damage.`;
   },
 
-  onBeforeDmgDealing({ attacker, skill, damage, owner }) {
-    console.log("[FIRE LORD] Hook chamado:", {
-      owner: owner?.name,
-      ownerTeam: owner?.team,
-      attacker: attacker?.name,
-      attackerTeam: attacker?.team,
-      skill: skill?.name,
-      element: skill?.element,
-      damage,
-    });
-
+  onBeforeDmgDealing({ attacker, skill, owner }) {
     if (!attacker || !skill) return;
 
     if (attacker.team !== owner.team) return;
 
     if (skill.element !== "fire") return;
 
-    const newDamage = Number(damage) + this.bonusDmg;
-
-    console.log("[FIRE LORD] BÔNUS APLICADO:", {
-      owner: owner.name,
-      before: damage,
-      bonus: this.bonusDmg,
-      after: newDamage,
-    });
-
     return {
-      damage: newDamage,
+      bonusDamage: this.bonusDmg,
     };
   },
 };

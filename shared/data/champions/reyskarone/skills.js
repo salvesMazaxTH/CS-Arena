@@ -116,11 +116,11 @@ const reyskaroneSkills = [
               onAfterDmgTaking: "defender",
             },
 
-            onBeforeDmgTaking: ({ attacker, damage }) => {
+            onBeforeDmgTaking: ({ attacker }) => {
               if (attacker.team !== user.team) return;
 
               return {
-                damage: damage + this.titheBonusDamage,
+                bonusDamage: this.titheBonusDamage,
               };
             },
 

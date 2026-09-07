@@ -27,23 +27,23 @@ export const mageArcana = {
     },
   },
 
+  bonusDamage: 20,
+
   description() {
-    return "Skill attacks used by your Mage class champions deal +20 additional damage.";
+    return `Skill attacks used by your Mage class champions deal ${this.bonusDamage} bonus damage.`;
   },
 
   hookScope: {
     onBeforeDmgDealing: "attacker",
   },
 
-  onBeforeDmgDealing({ attacker, skill, damage, owner }) {
+  onBeforeDmgDealing({ attacker, skill, owner }) {
     if (!attacker || !skill) return;
     if (attacker.team !== owner?.team) return;
     if (!isMage(attacker)) return;
 
-    const newDamage = Number(damage) + 20;
-
     return {
-      damage: newDamage,
+      bonusDamage: this.bonusDamage,
     };
   },
 };
