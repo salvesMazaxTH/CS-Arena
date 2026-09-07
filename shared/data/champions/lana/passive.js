@@ -37,12 +37,21 @@ export default {
     onAfterDmgTaking: "defender",
   },
 
+  // Reaches Tutu even on an absolute blow; a DoT tick is filtered inside the hook.
+  hookPolicies: {
+    onBeforeDmgTaking: {
+      allowOnAbsolute: true,
+    },
+  },
+
   onBeforeDmgTaking({ owner, damage, context }) {
     owner.runtime.lana ??= {
       triggered: false,
     };
 
     if (owner.runtime.lana.triggered) return;
+    // Tutu blocks a blow, not a poison or burn tick.
+    if (context.isDot) return;
     if (owner.HP - damage > 0) return;
 
     owner.runtime.lana.triggered = true;
