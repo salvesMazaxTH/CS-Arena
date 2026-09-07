@@ -1013,9 +1013,15 @@ skill.resolve({ user, targets, context })
 ├── emitCombatEvent("onBeforeDmgDealing", ...)
 └── emitCombatEvent("onBeforeDmgTaking", ...)
 
-Retornos podem sobrescrever: damage, crit, logs, effects
+Retornos podem sobrescrever: damage, crit, mode, baseDamage, preMitigationDamage,
+piercingPercentage, damageCap, bonusDamage, logs, effects
 `damage` no payload já é (primário mitigado + bonusDamage); um retorno `damage`/`damageCap`
 escala o total inteiro (o rider não é protegido de hooks reativos, só da defesa/DR do sistema).
+Um retorno `{ bonusDamage: X }` acrescenta X flat semi-absolute ao total (somado
+em event.bonusDamage e event.damage, re-teto 999); vários hooks podem somar.
+Um retorno que muda `mode` dispara o recompose: para não errar o número, fixe
+`baseDamage` + `preMitigationDamage` no valor cru pretendido e NÃO devolva `damage`
+cru junto (senão o delta é reaplicado). isarelis/passive.js é o modelo correto.
 
 Em mode "absolute" o step roda, mas `canRunHook` filtra TODO listener, exceto os
 que declaram `hookPolicies.<event>.allowOnAbsolute: true` (opt-in extremamente

@@ -150,6 +150,7 @@ function _processHook(event, eventName, payload) {
   let sawDamageOverride = false;
   let smallestRequestedDamage = Infinity;
   let damageCap = Infinity;
+  let bonusAdded = 0;
 
   for (const r of results) {
     if (!r) continue;
@@ -175,6 +176,11 @@ function _processHook(event, eventName, payload) {
     // A ceiling, not a damage value: it must not scale with the hit.
     if (r.damageCap !== undefined) {
       damageCap = Math.min(damageCap, Number(r.damageCap));
+    }
+    // A flat semi-absolute rider: joins the total unmitigated, like a skill's
+    // bonusDamage. Additive so several hooks can each contribute.
+    if (r.bonusDamage !== undefined) {
+      bonusAdded += Number(r.bonusDamage) || 0;
     }
     if (r.baseDamage !== undefined) {
       event.baseDamage = Number(r.baseDamage);
@@ -220,6 +226,17 @@ function _processHook(event, eventName, payload) {
   if (Number.isFinite(damageCap)) {
     event.damage = Math.min(event.damage, damageCap);
     summary.damageCap = damageCap;
+  }
+
+  if (bonusAdded) {
+    event.bonusDamage = (Number(event.bonusDamage) || 0) + bonusAdded;
+    // composeDamage already folded the pre-hook rider into event.damage; keep it
+    // in sync here. A later recompose resets from preMitigation and re-adds the
+    // whole event.bonusDamage, so this never double-counts.
+    event.damage += bonusAdded;
+
+    const cap = event.constructor?.GLOBAL_DMG_CAP;
+    if (Number.isFinite(cap)) event.damage = Math.min(event.damage, cap);
   }
 
   return summary;
