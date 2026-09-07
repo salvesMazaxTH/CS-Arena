@@ -6,7 +6,7 @@ const ysvaneSkills = [
   // ========================
   // Basic Shot (global)
   // ========================
-  { ...basicShot, type: "magical" },
+  { ...basicShot, type: "magical", hitVfxPalette: "glacial" },
 
   // ========================
   // Special Abilities

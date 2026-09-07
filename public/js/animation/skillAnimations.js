@@ -9,6 +9,7 @@
 //  function, then register it at the bottom of this file.
 // ============================================================
 
+import { createArcaneBoltGL } from "./arcaneBoltGLAnimation.js";
 import { createEarthBoltGL } from "./earthBoltGLAnimation.js";
 import { createFireBoltGL } from "./fireBoltGLAnimation.js";
 import { createIceBoltGL } from "./iceBoltGLAnimation.js";
@@ -68,6 +69,12 @@ function resolveDefaultAnimationKey(skill, hit) {
 
   if (!skill || typeof skill !== "object") return null;
 
+  // Basic Shot is one shared skill whose `type` each champion overrides, so the
+  // magical version is told apart here rather than by a motif on every kit.
+  if (skill.key === "basic_shot" && skill.type === "magical") {
+    return "default_arcane_bolt";
+  }
+
   const element = hit?.element ?? skill.element;
 
   // No damage gate here: this only runs from the DamageEvent handler.
@@ -125,6 +132,8 @@ export async function animateSkill(skillKey, opts = {}) {
 }
 
 registerSkillAnimation("default_contact", playContactLunge);
+registerSkillAnimation("default_arcane_bolt", createArcaneBoltGL(1));
+registerSkillAnimation("default_arcane_bolt_big", createArcaneBoltGL(1.4));
 registerSkillAnimation("quick_hook", playMeleePunch);
 registerSkillAnimation("blazing_fist_barrage", playMeleePunch);
 registerSkillAnimation("default_lightning", createLightningBolt());
