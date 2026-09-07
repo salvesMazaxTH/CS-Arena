@@ -26,7 +26,7 @@ const lordOfTheShadowflameSkills = [
     priority: 0,
 
     description() {
-      return `It doesn't grip so much as ignite. Deals physical contact fire damage equal to ${this.bf}% of its Attack and always sets the target Burning for ${this.burnDuration} turn(s).`;
+      return `It doesn't grip so much as ignite. Deals physical contact damage and always sets the target Burning for ${this.burnDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -82,7 +82,7 @@ const lordOfTheShadowflameSkills = [
     ],
 
     description() {
-      return `There was never anything left to hold back — the Flame spends this body like it's already spent. Deals massive physical contact fire damage equal to ${this.bf}% of its Attack, and takes ${this.recoilPercentOfMaxHP}% of its Max HP as Absolute recoil damage whether the blow lands or not.`;
+      return `There was never anything left to hold back — the Flame spends this body like it's already spent. Deals physical contact damage, taking ${this.recoilPercentOfMaxHP}% of its Max HP as Absolute recoil damage whether the blow lands or not.`;
     },
 
     targetSpec: ["enemy"],

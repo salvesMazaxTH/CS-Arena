@@ -24,7 +24,7 @@ const clayGodslayerSkills = [
     priority: 0,
 
     description() {
-      return `Clay never came back from the brink — he just learned to fight from there. Deals physical contact damage equal to ${this.bf}% of his Attack, plus up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost.`;
+      return `Clay never came back from the brink — he just learned to fight from there. Deals physical contact damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost.`;
     },
 
     targetSpec: ["enemy"],
