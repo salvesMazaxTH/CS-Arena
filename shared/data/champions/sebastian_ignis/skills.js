@@ -61,9 +61,13 @@ const sebastianIgnisSkills = [
       }
 
       if (stacks > 0) {
-        arr.push({
-          log: `${formatChampionName(user)} finally moves — ${stacks} Apathy stack(s) spent.`,
+        const spentLine = `${formatChampionName(user)} finally moves — ${stacks} Apathy stack(s) spent.`;
+        context.registerDialog({
+          message: spentLine,
+          sourceId: user.id,
+          targetId: user.id,
         });
+        arr.push({ log: spentLine });
       }
 
       return arr;
@@ -74,26 +78,34 @@ const sebastianIgnisSkills = [
     key: "a_song_he_already_knows",
     name: "A Song He Already Knows",
 
-    damageReductionPercent: 15,
-    duration: 4,
+    damageReductionPercent: 12,
+    perStackPercent: 1,
+    duration: 3,
 
     contact: false,
     priority: 3,
 
     description() {
-      return `Sebastian plays a few bars on the harp, the same ones he always plays, and doesn't bother learning a new one for the occasion — it works anyway. Every ally takes ${this.damageReductionPercent}% less damage for ${this.duration} turn(s).`;
+      return `Sebastian plays a few bars on the harp, the same ones he always plays, and doesn't bother learning a new one for the occasion — it works anyway. Every ally takes ${this.damageReductionPercent}% less damage for ${this.duration} turn(s), plus ${this.perStackPercent}% for every Apathy stack spent.`;
     },
 
     targetSpec: ["self"],
 
     resolve({ user, context = {} }) {
+      user.runtime ??= {};
+      const stacks = user.runtime.apathyStacks || 0;
+      user.runtime.apathyStacks = 0;
+
+      const reduction =
+        this.damageReductionPercent + this.perStackPercent * stacks;
+
       const allies = (context.aliveChampions ?? []).filter(
         (c) => c.team === user.team,
       );
 
       for (const ally of allies) {
         ally.applyDamageReduction({
-          amount: this.damageReductionPercent,
+          amount: reduction,
           duration: this.duration,
           type: "percent",
           source: this.key,
@@ -101,8 +113,16 @@ const sebastianIgnisSkills = [
         });
       }
 
+      if (stacks > 0) {
+        context.registerDialog({
+          message: `${formatChampionName(user)} lets the whole bank go into the harp — ${stacks} Apathy stack(s) spent.`,
+          sourceId: user.id,
+          targetId: user.id,
+        });
+      }
+
       return {
-        log: `${formatChampionName(user)} plays <b>A Song He Already Knows</b> — the whole team hurts a little less for a while.`,
+        log: `${formatChampionName(user)} plays <b>A Song He Already Knows</b> — the whole team takes ${reduction}% less damage for a while.`,
       };
     },
   },
@@ -163,9 +183,13 @@ const sebastianIgnisSkills = [
       }
 
       if (stacks > 0) {
-        results.push({
-          log: `${formatChampionName(user)} finally commits — ${stacks} Apathy stack(s) spent.`,
+        const spentLine = `${formatChampionName(user)} finally commits — ${stacks} Apathy stack(s) spent.`;
+        context.registerDialog({
+          message: spentLine,
+          sourceId: user.id,
+          targetId: user.id,
         });
+        results.push({ log: spentLine });
       }
 
       return results;
