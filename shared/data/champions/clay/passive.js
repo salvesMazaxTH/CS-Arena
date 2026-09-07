@@ -47,9 +47,11 @@ export default {
 
     owner.runtime.clayAscended = true;
 
-    const shadowflameClaimed = context.aliveChampions.some(
-      (c) => c.championKey === this.corruptsInto,
-    );
+    const shadowflameClaimed =
+      context.matchChampions.some((c) => c.championKey === this.corruptsInto) ||
+      (context.flags.championMutationRequests ?? []).some(
+        (r) => r.newChampionKey === this.corruptsInto,
+      );
     const bySelf = attacker === owner;
     const newChampionKey =
       bySelf || shadowflameClaimed ? this.ascendsInto : this.corruptsInto;

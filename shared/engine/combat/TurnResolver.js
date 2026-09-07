@@ -1157,6 +1157,14 @@ export class TurnResolver {
       editMode,
       allChampions: combat.activeChampions,
       aliveChampions: aliveChampionsArray,
+      // Every champion this match has produced, on the field, benched or dead.
+      get matchChampions() {
+        return [
+          ...combat.activeChampions.values(),
+          ...combat.inactiveChampions.values(),
+          ...combat.deadChampions.values(),
+        ];
+      },
       // eventIndex: 0, // para controle interno de ordem de eventos dentro da resolução de uma ação
       players: this.match.players,
 
