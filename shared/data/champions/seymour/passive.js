@@ -6,7 +6,7 @@ export default {
   key: "the_hour_is_kept",
   name: "The Hour Is Kept",
 
-  radiancePerPoint: 25,
+  radiancePerPoint: 15,
   killScore: 1,
 
   hits: [
@@ -20,7 +20,7 @@ export default {
   ],
 
   description() {
-    return `Seymour read the appointed hour in the orrery long ago, and the sky keeps its word. Whenever any champion resolves a CLAIM while he stands on the field, his star answers over the enemy line for ${this.radiancePerPoint} radiant damage per point that CLAIM was worth. If the light puts one of them down, his team takes ${this.killScore} point.`;
+    return `Seymour read the appointed hour in the orrery long ago, and the sky keeps its word. The first CLAIM resolved on the field each turn, by either side, makes his star answer over the enemy line for ${this.radiancePerPoint} radiant damage per point that CLAIM was worth. If the light puts one of them down, his team takes ${this.killScore} point. The sky answers only once a turn, however the hour is called.`;
   },
 
   // No hookScope for onActionResolved: it must see every CLAIM on the field,
@@ -31,9 +31,12 @@ export default {
 
     const points = Number(context?.preActionClaimPoints) || 0;
     if (points <= 0) return;
+    if (owner.runtime.lastRadianceTurn === context.currentTurn) return;
 
-    const enemies = (context.aliveChampions ?? context.allChampions ?? []).filter(
-      (c) => c?.alive && c.team !== owner.team,
+    owner.runtime.lastRadianceTurn = context.currentTurn;
+
+    const enemies = context.aliveChampions.filter(
+      (c) => c.alive && c.team !== owner.team,
     );
     if (!enemies.length) return;
 
@@ -53,13 +56,13 @@ export default {
       if (arr.some((r) => r?.killed)) felled = true;
     }
 
-    context.registerDialog?.({
+    context.registerDialog({
       message: `<b>[Passive — ${this.name}]</b> the hour is kept — ${formatChampionName(owner)}'s star burns over the enemy line.`,
       sourceId: owner.id,
     });
 
     if (felled) {
-      context.registerScore?.({
+      context.registerScore({
         amount: this.killScore,
         scoringSlot: owner.team - 1,
         reason: this.key,

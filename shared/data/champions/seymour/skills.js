@@ -1,7 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import { BLIND_MISS_CHANCE } from "../../statusEffects/blind.js";
 import totalBlock from "../generic/totalBlock.js";
 
 const seymourSkills = [
@@ -93,13 +92,13 @@ const seymourSkills = [
     key: "overexposure",
     name: "Overexposure",
 
-    bf: 40,
+    bf: 35,
     blindDuration: 1,
 
     contact: false,
     damageMode: "standard",
     hitVfx: "radiant_bolt",
-    priority: 0,
+    priority: 1,
 
     targetSpec: ["all:enemy"],
 
