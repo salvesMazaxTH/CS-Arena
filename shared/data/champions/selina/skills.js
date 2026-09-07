@@ -2,13 +2,13 @@ import { formatChampionName } from "../../../ui/formatters.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
-import basicShot from "../generic/basicShot.js";
+import totalBlock from "../generic/totalBlock.js";
 
 const selinaSkills = [
   // ========================
-  // Basic Shot (global)
+  // Total Block (global)
   // ========================
-  { ...basicShot, type: "magical" },
+  totalBlock,
 
   // ========================
   // Special Abilities
@@ -144,13 +144,19 @@ const selinaSkills = [
 
       const healAmount = (user.Attack * this.allyHealPercent) / 100;
       for (const ally of allies) {
-        new HealEvent({
+        const healed = new HealEvent({
           target: ally,
           amount: healAmount,
           context,
           source: user,
           allChampions: context?.allChampions,
         }).execute();
+
+        if (healed > 0) {
+          results.push({
+            log: `${formatChampionName(ally)} is mended by the flare (+${healed} HP).`,
+          });
+        }
 
         ally.applyDamageReduction({
           amount: this.allyDamageReductionPercent,

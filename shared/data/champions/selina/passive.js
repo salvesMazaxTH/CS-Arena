@@ -38,6 +38,8 @@ export default {
       allChampions: context?.allChampions,
     }).execute();
 
+    if (healed <= 0) return;
+
     return {
       log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(actionSource)}'s CLAIM draws Selina's light — ${healed} HP restored.`,
     };
