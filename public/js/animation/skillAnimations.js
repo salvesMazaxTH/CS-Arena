@@ -22,6 +22,7 @@ import { playMeleePunch } from "./meleePunchAnimation.js";
 import { playMultislash } from "./multislashAnimation.js";
 import { playSlash } from "./slashAnimation.js";
 import { createWaterBoltGL } from "./waterBoltGLAnimation.js";
+import { playContactLunge } from "./contactLungeAnimation.js";
 
 const skillAnimationRegistry = new Map();
 
@@ -61,12 +62,13 @@ function resolveDefaultAnimationKey(skill, hit) {
   const motif = hit?.hitVfx ?? skill?.hitVfx;
   if (motif) return `default_${motif}`;
 
+  // Before the skill guard for the same reason the motif is: a passive's own
+  // contact hit deserves the lunge too.
+  if ((hit?.contact ?? skill?.contact) === true) return "default_contact";
+
   if (!skill || typeof skill !== "object") return null;
 
-  const contact = hit?.contact ?? skill.contact;
   const element = hit?.element ?? skill.element;
-
-  if (contact !== false) return null;
 
   // No damage gate here: this only runs from the DamageEvent handler.
   const key = DEFAULT_ELEMENT_ANIMATIONS[element] || null;
@@ -122,6 +124,7 @@ export async function animateSkill(skillKey, opts = {}) {
   await factory(opts);
 }
 
+registerSkillAnimation("default_contact", playContactLunge);
 registerSkillAnimation("quick_hook", playMeleePunch);
 registerSkillAnimation("blazing_fist_barrage", playMeleePunch);
 registerSkillAnimation("default_lightning", createLightningBolt());
