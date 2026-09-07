@@ -2,7 +2,8 @@ import { emitCombatEvent } from "../combatEvents.js";
 import { composeDamage } from "./03_composeDamage.js";
 
 export function runBeforeHooks(event) {
-  if (event.mode === event.constructor.Modes.ABSOLUTE) return;
+  // Absolute hits reach the hooks too, but canRunHook filters every listener
+  // out unless its kit opts in with hookPolicies.<event>.allowOnAbsolute.
 
   const preHookCrit = _snapshotCrit(event.crit);
   const basePreMitigationDamage = event.preMitigationDamage ?? event.damage;
@@ -81,6 +82,7 @@ function _applyBeforeDealingPassive(event) {
     mode: event.mode,
     damage: event.damage,
     baseDamage: event.baseDamage,
+    bonusDamage: event.bonusDamage,
     preMitigationDamage: event.preMitigationDamage,
     piercingPercentage: event.piercingPercentage,
     crit: event.crit,
@@ -99,6 +101,7 @@ function _applyBeforeTakingPassive(event) {
     mode: event.mode,
     damage: event.damage,
     baseDamage: event.baseDamage,
+    bonusDamage: event.bonusDamage,
     preMitigationDamage: event.preMitigationDamage,
     piercingPercentage: event.piercingPercentage,
     crit: event.crit,

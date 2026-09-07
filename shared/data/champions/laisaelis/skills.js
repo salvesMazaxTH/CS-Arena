@@ -222,7 +222,11 @@ const laisaelisSkills = [
           },
 
           hookPolicies: {
-            onBeforeDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
+            onBeforeDmgTaking: {
+              allowOnDot: true,
+              allowOnNestedDamage: true,
+              allowOnAbsolute: true,
+            },
           },
 
           onBeforeDmgTaking({ defender, owner, damage, context }) {

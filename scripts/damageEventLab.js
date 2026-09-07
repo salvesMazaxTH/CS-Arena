@@ -1,5 +1,6 @@
 import { Champion } from "../shared/core/Champion.js";
 import { emitCombatEvent } from "../shared/engine/combat/combatEvents.js";
+import { DamageEvent } from "../shared/engine/combat/DamageEvent.js";
 import { championDB } from "../shared/data/championDB.js";
 
 function parseValue(raw) {
@@ -103,6 +104,7 @@ function parseArgs(argv) {
     skill: "impacto_da_couraça",
     turn: 1,
     stacks: null,
+    bonusDamage: null,
     comparePassive: false,
     comparePath: null,
     compareMin: 0,
@@ -204,6 +206,7 @@ function parseArgs(argv) {
     else if (key === "skill") out.skill = next;
     else if (key === "turn") out.turn = Number(next);
     else if (key === "stacks") out.stacks = Number(next);
+    else if (key === "bonus-damage") out.bonusDamage = Number(next);
     else if (key === "crit") out.crit = String(next);
     else if (key === "compare-path") out.comparePath = next;
     else if (key === "compare-min") out.compareMin = Number(next);
@@ -249,6 +252,12 @@ function createContext({ allChampions, turn, sourceId }) {
     activeChampions,
     registerDialog(entry) {
       this.dialogs.push(entry);
+    },
+    registerHookLogs(hookResults) {
+      for (const r of hookResults || []) {
+        if (r?.log) this.logs.push(r.log);
+        if (Array.isArray(r?.logs)) this.logs.push(...r.logs);
+      }
     },
     registerDamage(entry) {
       this.damageEvents.push(entry);
@@ -550,6 +559,79 @@ function runScenario(options, tag) {
   return summary;
 }
 
+// Direct DamageEvent probe: fires one hit with an explicit bonusDamage rider so
+// the semi-absolute merge can be eyeballed without touching any champion kit.
+function runBonusProbe(options) {
+  const attacker = pickChampion(options.attacker, "p1-a", "player1", 0);
+  const defender = pickChampion(options.defender, "p2-b", "player2", 0);
+
+  if (options.attackerAttack != null) {
+    attacker.Attack = options.attackerAttack;
+    attacker.baseAttack = options.attackerAttack;
+  }
+  if (options.defenderDefense != null) {
+    defender.Defense = options.defenderDefense;
+    defender.baseDefense = options.defenderDefense;
+  }
+  if (options.noPassive) attacker.passive = null;
+
+  applyAssignments(attacker, options.attackerSet || []);
+  applyAssignments(defender, options.defenderSet || []);
+
+  const context = createContext({
+    allChampions: [attacker, defender],
+    turn: options.turn,
+    sourceId: attacker.id,
+  });
+  applyAssignments(context, options.contextSet || []);
+  applyCritOptionToContext(context, options.crit);
+
+  const skill = getSkill(attacker, options.skill);
+  const [target] = resolveTargets({ user: attacker, defender, skill });
+  const baseDamage = estimateSkillBaseDamage(attacker, skill) ?? 100;
+
+  const result = new DamageEvent({
+    baseDamage,
+    bonusDamage: options.bonusDamage,
+    mode: skill.damageMode,
+    type: skill.type ?? "physical",
+    attacker,
+    defender: target,
+    skill,
+    context,
+    allChampions: context.allChampions,
+  }).execute();
+
+  const main = Array.isArray(result) ? result[0] : result;
+  const j = main?.journey ?? {};
+
+  console.log(`\n=== Bonus-damage probe ===`);
+  console.log(
+    `${attacker.name} -> ${target.name} | skill: ${skill.key} (mode: ${skill.damageMode ?? "standard"})`,
+  );
+  console.log(
+    `baseDamage: ${baseDamage.toFixed(2)} | bonusDamage: ${options.bonusDamage}`,
+  );
+  console.log(
+    `journey: base=${j.base} bonus=${j.bonus} mitigated=${j.mitigated} actual=${j.actual}`,
+  );
+  console.log(`Applied damage (HP delta): ${main?.totalDamage}`);
+  console.log(`Defender HP after: ${target.HP}/${target.maxHP}`);
+
+  if (main?.log) {
+    console.log("--- Log ---");
+    console.log(main.log);
+  }
+  if (context.dialogs.length) {
+    console.log("--- Dialogs ---");
+    for (const d of context.dialogs) console.log(d.message);
+  }
+  if (options.showJson) {
+    console.log("\n--- JSON ---");
+    console.log(JSON.stringify(result, null, 2));
+  }
+}
+
 function printSummary(summary) {
   console.log(`\n=== ${summary.tag} ===`);
   console.log(
@@ -597,6 +679,11 @@ function main() {
 
   if (options.stacks != null && !options.track.length) {
     options.track.push("attacker.runtime.theopetraStacks");
+  }
+
+  if (options.bonusDamage != null) {
+    runBonusProbe(options);
+    return;
   }
 
   if (options.comparePassive) {

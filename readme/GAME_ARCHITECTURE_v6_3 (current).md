@@ -889,6 +889,18 @@ Não cruzar aliases entre camadas.
   - `basicShot` usa `damageMode: "standard"`.
   - `totalBlock` é skill defensiva de hook e não instancia `DamageEvent` (sem fluxo de dano direto).
 
+### `bonusDamage` (dano semi-absoluto)
+
+Rider aditivo opcional (`params.bonusDamage`, número plano `>= 0`) para bônus
+flat de kit ("causa X de dano a mais"). Ele **pula** a curva de defesa do alvo,
+a `getTotalDamageReduction` (flat + percent), o crítico e a afinidade elemental;
+**respeita** evasão, block de spell/supreme shield, imunidade/cancel, shields
+regulares, o cap global de 999 sobre a soma e os hooks reativos
+`onBeforeDmg*` / `onAfterDmg*` — que leem e podem modificar o total somado
+(bônus incluído). É unido ao dano no fim de `composeDamage`. Um primário
+`mode: "absolute"` continua pulando `runBeforeHooks` por inteiro, então um bônus
+carregado nele também não é lido por hooks. Não cruza para o cliente.
+
 ### Uso
 
 ```js
@@ -901,6 +913,7 @@ const result = new DamageEvent({
   context,
   mode: skill.damageMode ?? DamageEvent.Modes.STANDARD,
   piercingPercentage, // % da defesa do alvo a ignorar (0-100, modo piercing, default 100)
+  bonusDamage, // rider flat semi-absoluto (default 0): pula defesa/DR/crit/afinidade
   critOptions, // { force?, disable? }
   allChampions, // Map — necessário para hooks
 }).execute();
@@ -911,8 +924,9 @@ const result = new DamageEvent({
 ```js
 this.baseDamage; // valor original recebido (imutável)
 this.damage; // valor em transformação
-this.finalDamage; // foto após composeDamage
-this.preMitigationDamage; // foto antes da defesa
+this.bonusDamage; // rider flat semi-absoluto (default 0); unido no fim de composeDamage
+this.finalDamage; // foto após composeDamage (obs: campo legado, não é mais escrito)
+this.preMitigationDamage; // foto do primário antes da defesa (não inclui bonusDamage)
 this.actualDmg; // dano efetivamente descontado do HP
 this.hpAfter; // HP do defender após apply
 this.crit; // { didCrit, bonus, roll, forced, critExtra, critBonusFactor }
@@ -977,30 +991,39 @@ skill.resolve({ user, targets, context })
 #### `03_composeDamage.js`
 
 ```
-├── ABSOLUTE: retorna sem modificação
+├── Foto: this.preMitigationDamage = this.damage (só o primário)
 │
-├── Aplica crítico: damage += critExtra (se didCrit)
+├── if (mode !== ABSOLUTE):   ← ABSOLUTE pula todo o bloco de mitigação
+│   ├── Aplica crítico: damage += critExtra (se didCrit)
+│   ├── Defesa: mitPct = defToMitPct(defenseUsed)  ← curva não-linear
+│   │   (crítico ignora buffs de defesa: usa Math.min(baseDefense, currentDefense))
+│   ├── STANDARD: damage -= damage * mitPct → redução % → redução flat
+│   ├── PIERCING: defenseUsed *= (1 - piercingPercentage/100) → mitPct(effectiveDef) → redução % → flat
+│   ├── Floor: Math.max(damage, 5)       ← exceto se ignoreMinimumFloor
+│   └── Cap:   Math.min(damage, 999)     ← GLOBAL_DMG_CAP
 │
-├── Defesa: mitPct = defToMitPct(defenseUsed)  ← curva não-linear
-│   (crítico ignora buffs de defesa: usa Math.min(baseDefense, currentDefense))
+├── Rider semi-absoluto: if (bonusDamage > 0) damage += bonusDamage; damage = Math.min(damage, 999)
 │
-├── STANDARD: damage -= damage * mitPct → redução % → redução flat
-├── PIERCING: defenseUsed *= (1 - piercingPercentage/100) → mitPct(effectiveDef) → redução % → flat
-│
-├── Floor: Math.max(damage, 5)       ← exceto se ignoreMinimumFloor
-├── Cap:   Math.min(damage, 999)     ← GLOBAL_DMG_CAP
-├── Override: editMode.damageOutput sobrescreve se definido
-│
-└── Foto: this.finalDamage = this.damage
+└── Override: editMode.damageOutput sobrescreve se definido
 ```
 
-#### `04_beforeHooks.js` (saltado se mode === "absolute")
+#### `04_beforeHooks.js`
 
 ```
 ├── emitCombatEvent("onBeforeDmgDealing", ...)
 └── emitCombatEvent("onBeforeDmgTaking", ...)
 
 Retornos podem sobrescrever: damage, crit, logs, effects
+`damage` no payload já é (primário mitigado + bonusDamage); um retorno `damage`/`damageCap`
+escala o total inteiro (o rider não é protegido de hooks reativos, só da defesa/DR do sistema).
+
+Em mode "absolute" o step roda, mas `canRunHook` filtra TODO listener, exceto os
+que declaram `hookPolicies.<event>.allowOnAbsolute: true` (opt-in extremamente
+restrito — hoje só Serene e as gêmeas, para seus checks de sobrevivência). Esse
+opt-in é o único portão para um before-hook em dano absolute: quando presente, o
+hook roda em qualquer dano absolute — direto, DoT ou aninhado — sem passar pelos
+gates de `isDot` / `damageDepth`. Como todo DoT do jogo é absolute, isso cobre
+ticks letais de burning/bleeding/poison sem precisar de `allowOnDot`.
 ```
 
 #### `05_applyDamage.js`
@@ -1079,15 +1102,19 @@ Para cada extra em context.extraDamageQueue:
   → resultados em this.extraResults
 ```
 
-#### `09_resultBuilder.js` — monta e retorna resultado final com `journey: { base, mitigated, actual }`.
+#### `09_resultBuilder.js` — monta e retorna resultado final com `journey: { base, bonus, mitigated, actual }`.
 
 ### Damage Modes
 
 | Mode         | Comportamento                                                                                                                                    |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `"standard"` | Pipeline completa com defesa, crit, hooks                                                                                                        |
-| `"absolute"` | Bypassa prepareDamage, beforeHooks, evasão — dano direto ao HP                                                                                   |
+| `"absolute"` | Bypassa prepareDamage, evasão, block e os before-hooks (salvo `allowOnAbsolute`) — after-hooks e lifesteal continuam rodando                     |
 | `"piercing"` | Ignora `piercingPercentage`% da defesa do alvo antes de calcular mitigação. Default 100% (ignora toda a defesa). Todo o baseDamage é perfurante. |
+
+`bonusDamage` **não é um mode** — é um rider flat que acompanha qualquer hit
+(ver a seção `bonusDamage (dano semi-absoluto)` acima). Um hit inteiramente
+semi-absoluto seria `baseDamage: 0` + `bonusDamage: N`.
 
 ### `damageDepth` e Reações
 
@@ -1097,9 +1124,16 @@ Para cada extra em context.extraDamageQueue:
 `onAfterDmgDealing`, `onBeforeDmgTaking` e `onAfterDmgTaking` quando
 `context.isDot` é verdadeiro ou `damageDepth > 0`. Ou seja, **dano ao longo do
 tempo e dano aninhado (reflect, thorns, contra-ataque, fila de dano extra) nunca
-disparam efeitos reativos** — só o golpe direto dispara. Dano `absolute` **não**
-é bloqueado: ele dispara normalmente, e quem quiser excluí-lo precisa checar
-`mode` no próprio hook (a passiva da Nythera é o único caso hoje).
+disparam efeitos reativos** — só o golpe direto dispara. Um tick de DoT, portanto,
+nunca conta como "struck" para um `onAfterDmg*`.
+
+Para os dois *before*-hooks em dano `absolute`, o gate é diferente: eles só
+rodam com `hookPolicies.<event>.allowOnAbsolute: true`, e quando rodam, rodam em
+**qualquer** dano absolute (direto, DoT ou aninhado), sem passar pelos gates de
+`isDot` / `damageDepth`. Os *after*-hooks em absolute mantêm o gate normal de
+DoT/aninhado. Uma redução via `getTotalDamageReduction` já ignora `absolute`
+sozinha (ver `03_composeDamage.js`); a passiva da Nythera checa `mode` no próprio
+hook.
 
 Consequência para textos de skill: descrições de efeitos reativos usam "is
 struck" / "is hit" em vez de "takes damage", e o glossário dos status de DoT

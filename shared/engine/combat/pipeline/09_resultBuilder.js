@@ -56,6 +56,7 @@ export function buildFinalResult(event) {
     // We include the damage journey for debugging/panels if needed
     journey: {
       base: event.baseDamage,
+      bonus: event.bonusDamage,
       mitigated: event.damage,
       actual: event.actualDmg,
     },

@@ -103,149 +103,149 @@ export function composeDamage(event) {
 
   event.crit ??= { didCrit: false, critExtra: 0 };
 
-  // ---------------- ABSOLUTE ----------------
-  if (event.mode === event.constructor.Modes.ABSOLUTE) {
-    // dano absoluto ignora tudo: defesa, crítico, modificadores, afinidade, etc
-
-    if (event.constructor.debugMode) {
-      console.log("⚡ ABSOLUTE DAMAGE");
-      console.log("➡️ ignora crítico, defesa e reduções");
-      console.log(`📈 Final: ${event.damage.toFixed(2)}`);
-      console.groupEnd();
+  // Absolute damage skips the whole mitigation body; every other mode runs it.
+  if (event.mode !== event.constructor.Modes.ABSOLUTE) {
+    // aplica crítico — recalcula critExtra a partir do bonus atual (pode ter mudado via hook)
+    if (event.crit.didCrit) {
+      event.crit.critExtra = event.damage * (event.crit.bonus / 100);
+      event.damage += event.crit.critExtra;
     }
 
-    return;
+    const baseDefense = event.defender.baseDefense ?? event.defender.Defense;
+    const currentDefense = event.defender.Defense;
+
+    const defenseUsed = event.crit.didCrit
+      ? Math.min(baseDefense, currentDefense)
+      : currentDefense;
+
+    let flat = 0;
+    let percent = 0;
+
+    if (!event.ignoreDamageReduction) {
+      const tr = event.defender.getTotalDamageReduction?.(
+        event.context?.currentTurn,
+      ) || {
+        flat: 0,
+        percent: 0,
+      };
+      flat = tr.flat || 0;
+      percent = tr.percent || 0;
+    } else if (event.constructor.debugMode) {
+      console.log(
+        "[DAMAGE COMPOSITION] ignoreDamageReduction on: skipping the defender's totalDamageReduction",
+      );
+    }
+
+    // ---------------- STANDARD ----------------
+    if (event.mode === event.constructor.Modes.STANDARD) {
+      const debug = event.constructor.debugMode;
+
+      if (debug) {
+        console.log(`[DAMAGE COMPOSITION] 📸 Base damage: ${event.damage}`);
+      }
+
+      // Defesa
+      const defensePercent = defToMitPct(
+        defenseUsed,
+        event.constructor.debugMode,
+      );
+      const defenseMitigation = event.damage * defensePercent;
+      event.damage = event.damage - defenseMitigation;
+
+      if (debug) {
+        console.log(
+          `[DAMAGE COMPOSITION] 🛡️ Após defesa (${(defensePercent * 100).toFixed(
+            1,
+          )}%): ${event.damage.toFixed(2)}`,
+        );
+      }
+
+      // Redução percentual
+      event.damage *= 1 - percent / 100;
+
+      if (debug) {
+        console.log(
+          `[DAMAGE COMPOSITION] 📉 Após redução percentual (${percent}%): ${event.damage.toFixed(2)}`,
+        );
+      }
+
+      // Redução flat
+      event.damage = event.damage - flat;
+
+      if (debug) {
+        console.log(
+          `[DAMAGE COMPOSITION] 🧱 Após redução flat (${flat}): ${event.damage.toFixed(2)}`,
+        );
+      }
+    }
+
+    // ------------ PIERCING ------------
+    else if (event.mode === event.constructor.Modes.PIERCING) {
+      // piercingPercentage: % da defesa do alvo a ignorar (0-100). Default 100.
+      let piercePct = Number(event.piercingPercentage ?? 100);
+      if (isNaN(piercePct) || piercePct < 0) piercePct = 0;
+      if (piercePct > 100) piercePct = 100;
+
+      // Reduz a defesa efetiva ANTES de calcular mitigation
+      const effectiveDefense = defenseUsed * (1 - piercePct / 100);
+      const defensePercent = defToMitPct(
+        effectiveDefense,
+        event.constructor.debugMode,
+      );
+
+      const debug = event.constructor.debugMode;
+      if (debug) {
+        console.log(`[DAMAGE COMPOSITION] 📸 Base damage: ${event.damage}`);
+        console.log(
+          `[DAMAGE COMPOSITION] 🗡️ PIERCING ${piercePct}%: defesa ${defenseUsed} → ${effectiveDefense.toFixed(2)} (mitigation ${(defensePercent * 100).toFixed(2)}%)`,
+        );
+      }
+
+      const defenseMitigation = event.damage * defensePercent;
+      event.damage = event.damage - defenseMitigation;
+
+      if (debug) {
+        console.log(
+          `[DAMAGE COMPOSITION] 🛡️ Após defesa (${(defensePercent * 100).toFixed(1)}%): ${event.damage.toFixed(2)}`,
+        );
+      }
+
+      // Redução percentual
+      event.damage *= 1 - percent / 100;
+
+      if (debug) {
+        console.log(
+          `[DAMAGE COMPOSITION] 📉 Após redução percentual (${percent}%): ${event.damage.toFixed(2)}`,
+        );
+      }
+
+      // Redução flat
+      event.damage = event.damage - flat;
+
+      if (debug) {
+        console.log(
+          `[DAMAGE COMPOSITION] 🧱 Após redução flat (${flat}): ${event.damage.toFixed(2)}`,
+        );
+      }
+    }
+
+    // -------- FLOOR --------
+    if (!event.context?.ignoreMinimumFloor) {
+      event.damage = Math.max(event.damage, MIN_DAMAGE_FLOOR);
+    }
+
+    if (Number.isFinite(event.constructor.GLOBAL_DMG_CAP)) {
+      event.damage = Math.min(event.damage, event.constructor.GLOBAL_DMG_CAP);
+    }
   }
 
-  // aplica crítico — recalcula critExtra a partir do bonus atual (pode ter mudado via hook)
-  if (event.crit.didCrit) {
-    event.crit.critExtra = event.damage * (event.crit.bonus / 100);
-    event.damage += event.crit.critExtra;
-  }
-
-  const baseDefense = event.defender.baseDefense ?? event.defender.Defense;
-  const currentDefense = event.defender.Defense;
-
-  const defenseUsed = event.crit.didCrit
-    ? Math.min(baseDefense, currentDefense)
-    : currentDefense;
-
-  let flat = 0;
-  let percent = 0;
-
-  if (!event.ignoreDamageReduction) {
-    const tr = event.defender.getTotalDamageReduction?.(event.context?.currentTurn) || {
-      flat: 0,
-      percent: 0,
-    };
-    flat = tr.flat || 0;
-    percent = tr.percent || 0;
-  } else if (event.constructor.debugMode) {
-    console.log(
-      "[DAMAGE COMPOSITION] ignoreDamageReduction on: skipping the defender's totalDamageReduction",
-    );
-  }
-
-  // ---------------- STANDARD ----------------
-  if (event.mode === event.constructor.Modes.STANDARD) {
-    const debug = event.constructor.debugMode;
-
-    if (debug) {
-      console.log(`[DAMAGE COMPOSITION] 📸 Base damage: ${event.damage}`);
+  // Semi-absolute bonus rider: joins the hit after mitigation, bounded only by
+  // the global damage cap.
+  if (event.bonusDamage > 0) {
+    event.damage += event.bonusDamage;
+    if (Number.isFinite(event.constructor.GLOBAL_DMG_CAP)) {
+      event.damage = Math.min(event.damage, event.constructor.GLOBAL_DMG_CAP);
     }
-
-    // Defesa
-    const defensePercent = defToMitPct(
-      defenseUsed,
-      event.constructor.debugMode,
-    );
-    const defenseMitigation = event.damage * defensePercent;
-    event.damage = event.damage - defenseMitigation;
-
-    if (debug) {
-      console.log(
-        `[DAMAGE COMPOSITION] 🛡️ Após defesa (${(defensePercent * 100).toFixed(
-          1,
-        )}%): ${event.damage.toFixed(2)}`,
-      );
-    }
-
-    // Redução percentual
-    event.damage *= 1 - percent / 100;
-
-    if (debug) {
-      console.log(
-        `[DAMAGE COMPOSITION] 📉 Após redução percentual (${percent}%): ${event.damage.toFixed(2)}`,
-      );
-    }
-
-    // Redução flat
-    event.damage = event.damage - flat;
-
-    if (debug) {
-      console.log(
-        `[DAMAGE COMPOSITION] 🧱 Após redução flat (${flat}): ${event.damage.toFixed(2)}`,
-      );
-    }
-  }
-
-  // ------------ PIERCING ------------
-  else if (event.mode === event.constructor.Modes.PIERCING) {
-    // piercingPercentage: % da defesa do alvo a ignorar (0-100). Default 100.
-    let piercePct = Number(event.piercingPercentage ?? 100);
-    if (isNaN(piercePct) || piercePct < 0) piercePct = 0;
-    if (piercePct > 100) piercePct = 100;
-
-    // Reduz a defesa efetiva ANTES de calcular mitigation
-    const effectiveDefense = defenseUsed * (1 - piercePct / 100);
-    const defensePercent = defToMitPct(
-      effectiveDefense,
-      event.constructor.debugMode,
-    );
-
-    const debug = event.constructor.debugMode;
-    if (debug) {
-      console.log(`[DAMAGE COMPOSITION] 📸 Base damage: ${event.damage}`);
-      console.log(
-        `[DAMAGE COMPOSITION] 🗡️ PIERCING ${piercePct}%: defesa ${defenseUsed} → ${effectiveDefense.toFixed(2)} (mitigation ${(defensePercent * 100).toFixed(2)}%)`,
-      );
-    }
-
-    const defenseMitigation = event.damage * defensePercent;
-    event.damage = event.damage - defenseMitigation;
-
-    if (debug) {
-      console.log(
-        `[DAMAGE COMPOSITION] 🛡️ Após defesa (${(defensePercent * 100).toFixed(1)}%): ${event.damage.toFixed(2)}`,
-      );
-    }
-
-    // Redução percentual
-    event.damage *= 1 - percent / 100;
-
-    if (debug) {
-      console.log(
-        `[DAMAGE COMPOSITION] 📉 Após redução percentual (${percent}%): ${event.damage.toFixed(2)}`,
-      );
-    }
-
-    // Redução flat
-    event.damage = event.damage - flat;
-
-    if (debug) {
-      console.log(
-        `[DAMAGE COMPOSITION] 🧱 Após redução flat (${flat}): ${event.damage.toFixed(2)}`,
-      );
-    }
-  }
-
-  // -------- FLOOR --------
-  if (!event.context?.ignoreMinimumFloor) {
-    event.damage = Math.max(event.damage, MIN_DAMAGE_FLOOR);
-  }
-
-  if (Number.isFinite(event.constructor.GLOBAL_DMG_CAP)) {
-    event.damage = Math.min(event.damage, event.constructor.GLOBAL_DMG_CAP);
   }
 
   // 2. Tira a foto do dano matemático final, pronto para ser aplicado

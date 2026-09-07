@@ -11,6 +11,7 @@ import { buildFinalResult } from "./pipeline/09_resultBuilder.js";
 const DEFAULT_HOOK_POLICY = Object.freeze({
   allowOnDot: false,
   allowOnNestedDamage: false,
+  allowOnAbsolute: false,
 });
 
 // Stamp `landed` on every result: true when the hit reached and affected the
@@ -72,6 +73,15 @@ export class DamageEvent {
 
     this.baseDamage = Number(baseDamage ?? 0);
     this.damage = this.baseDamage;
+
+    // Semi-absolute flat rider: skips defense, damage reduction, crit and
+    // affinity; rides everything else. Merged at the tail of composeDamage.
+    this.bonusDamage = Number(params.bonusDamage ?? 0);
+    if (!Number.isFinite(this.bonusDamage) || this.bonusDamage < 0) {
+      throw new Error(
+        `[DamageEvent] invalid bonusDamage: ${params.bonusDamage}`,
+      );
+    }
 
     // piercingPercentage: % of the defender's defense to ignore (0-100).
     // Only used when mode === PIERCING. Defaults to 100 (full pierce).
@@ -200,8 +210,13 @@ export class DamageEvent {
 
     const isDot = !!context.isDot;
     const damageDepth = Number(context.damageDepth ?? 0);
+    // The absolute rule is for the *before* hooks only; after hooks keep the
+    // isDot/nested gate below, so a DoT tick is never a "struck" event.
+    const absoluteBeforeHook =
+      this.mode === DamageEvent.Modes.ABSOLUTE &&
+      (eventName === "onBeforeDmgDealing" || eventName === "onBeforeDmgTaking");
 
-    if (!isDot && damageDepth <= 0) return true;
+    if (!isDot && damageDepth <= 0 && !absoluteBeforeHook) return true;
 
     const policy = {
       ...this.hookPolicy,
@@ -209,6 +224,10 @@ export class DamageEvent {
       ...(source?.combatHookPolicy || {}),
       ...(source?.hookPolicies?.[eventName] || {}),
     };
+
+    // A before hook opted into absolute runs on every absolute hit — direct,
+    // DoT or nested alike. Without the opt-in, absolute skips it entirely.
+    if (absoluteBeforeHook) return !!policy.allowOnAbsolute;
 
     if (damageDepth > 0) {
       if (!policy.allowOnNestedDamage) {

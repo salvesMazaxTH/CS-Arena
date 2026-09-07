@@ -24,9 +24,13 @@ export default {
     onValidateAction: "actionSource",
   },
 
-  // Death is death whatever the source, so poison and recoil must reach it too.
+  // Death is death whatever the source, so poison, recoil and absolute hits must reach it too.
   hookPolicies: {
-    onBeforeDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
+    onBeforeDmgTaking: {
+      allowOnDot: true,
+      allowOnNestedDamage: true,
+      allowOnAbsolute: true,
+    },
   },
 
   onValidateAction({ actionSource, skill, context }) {

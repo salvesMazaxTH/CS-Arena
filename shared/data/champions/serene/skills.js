@@ -190,6 +190,10 @@ const sereneSkills = [
             onBeforeDmgTaking: "defender",
           },
 
+          hookPolicies: {
+            onBeforeDmgTaking: { allowOnAbsolute: true },
+          },
+
           onBeforeDmgTaking({ defender, owner, damage, context }) {
             if (!defender || defender.id !== owner.id || defender !== owner)
               return;
