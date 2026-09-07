@@ -2,8 +2,6 @@ export default {
   name: "Ethan",
   portrait: "/assets/portraits/ethan.webp",
 
-  unreleased: true,
-
   HP: 330,
   Attack: 270,
   Defense: 85,

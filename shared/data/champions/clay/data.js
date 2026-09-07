@@ -2,8 +2,6 @@ export default {
   name: "Clay",
   portrait: "/assets/portraits/clay.webp",
 
-  unreleased: true,
-
   HP: 345,
   Attack: 295,
   Defense: 70,
