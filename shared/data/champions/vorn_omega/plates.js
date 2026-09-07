@@ -41,4 +41,4 @@ export function shedPlates(champion, count, context) {
   return shedding;
 }
 
-export const PLATE_TEXT = `Each of the ${MAX_PLATES} plates is worth +${ATTACK_PERCENT_PER_PLATE}% Attack, permanently. The first leaves nothing on him for a Control effect to seize; the second lets his blows past any damage reduction; the third means no single source can take more than ${DAMAGE_CAP_PERCENT}% of his Max HP from him at once.`;
+export const PLATE_TEXT = `Each of the ${MAX_PLATES} plates is worth +${ATTACK_PERCENT_PER_PLATE}% Attack, permanently. The first leaves nothing on him for a Control effect to seize; the second lets his blows past any damage reduction; the third means no single source can take more than ${DAMAGE_CAP_PERCENT}% of his Max HP from him at once (except Absolute Damage).`;
