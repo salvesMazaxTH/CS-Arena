@@ -45,7 +45,7 @@ export default {
     };
   },
 
-  onBeforeDmgDealing({ attacker, owner, skill, damage, context }) {
+  onBeforeDmgDealing({ attacker, owner, skill, damage, baseDamage, context }) {
     if (attacker !== owner) return;
 
     if (
@@ -58,15 +58,14 @@ export default {
     // multi-target ability is empowered; onActionResolved clears it.
     owner.runtime.theopetraEmpowerSpent = true;
 
-    const bonus = Math.floor(damage * (this.bonusPercent / 100));
-    const finalBaseDamage = damage + bonus;
+    const raw = Number(baseDamage ?? damage ?? 0);
+    const finalBaseDamage = raw * (1 + this.bonusPercent / 100);
 
     return {
-      damage: finalBaseDamage,
-      piercingPercentage: this.piercingRatio * 100,
-      mode: "piercing",
       baseDamage: finalBaseDamage,
       preMitigationDamage: finalBaseDamage,
+      piercingPercentage: this.piercingRatio * 100,
+      mode: "piercing",
       log: `[PASSIVE — Eternalized Rock] ${formatChampionName(owner)} consumes all stacks and gains +${this.bonusPercent}% bonus damage on this ability!`,
     };
   },

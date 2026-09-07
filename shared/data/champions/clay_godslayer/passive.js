@@ -13,14 +13,18 @@ export default {
     onBeforeDmgDealing: "attacker",
   },
 
-  onBeforeDmgDealing({ attacker, owner, defender, damage }) {
+  onBeforeDmgDealing({ attacker, owner, defender, damage, baseDamage }) {
     if (attacker !== owner) return;
     if (!Array.isArray(defender?.species)) return;
     if (!defender.species.some((s) => s === "divinity" || s === "demigod"))
       return;
 
+    const boosted =
+      Number(baseDamage ?? damage ?? 0) * (1 + this.bonusDmgPercent / 100);
+
     return {
-      damage: Number(damage) * (1 + this.bonusDmgPercent / 100),
+      baseDamage: boosted,
+      preMitigationDamage: boosted,
       mode: "piercing",
       piercingPercentage: this.piercingPercentage,
     };

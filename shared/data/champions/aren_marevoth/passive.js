@@ -67,7 +67,7 @@ export default {
     }
   },
 
-  onBeforeDmgDealing({ owner, damage }) {
+  onBeforeDmgDealing({ owner, damage, baseDamage }) {
     const state =
       owner.runtime?.deepTransfigurationNextAttackBonus;
 
@@ -76,13 +76,14 @@ export default {
     // Consume the effect: only this attack is transfigured.
     owner.runtime.deepTransfigurationNextAttackBonus = false;
 
+    const raw = Number(baseDamage ?? damage ?? 0);
     const transformedDamage =
-      damage * this.nextAttackBonusPercent +
-      this.nextAttackBonusFlat;
+      raw * this.nextAttackBonusPercent + this.nextAttackBonusFlat;
 
     return {
-      damage: transformedDamage,
       mode: "absolute",
+      baseDamage: transformedDamage,
+      preMitigationDamage: transformedDamage,
     };
   },
 };

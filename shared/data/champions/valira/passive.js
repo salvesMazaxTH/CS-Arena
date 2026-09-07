@@ -33,7 +33,7 @@ export default {
     });
   },
 
-  onBeforeDmgDealing({ attacker, owner, defender, damage }) {
+  onBeforeDmgDealing({ attacker, owner, defender, damage, baseDamage }) {
     if (attacker !== owner) return;
 
     let multiplier = 1;
@@ -51,11 +51,20 @@ export default {
 
     if (multiplier === 1) return;
 
+    // Dragon bonus alone leaves the mitigation untouched, so scaling the already
+    // mitigated hit is correct. Judgment changes the hit to Piercing, so it has
+    // to work from the raw damage and let the pipeline re-mitigate once.
+    if (!piercing) {
+      return { damage: Number(damage) * multiplier };
+    }
+
+    const boosted = Number(baseDamage ?? damage ?? 0) * multiplier;
+
     return {
-      damage: Number(damage) * multiplier,
-      ...(piercing
-        ? { mode: "piercing", piercingPercentage: this.judgmentPiercingPercent }
-        : {}),
+      baseDamage: boosted,
+      preMitigationDamage: boosted,
+      mode: "piercing",
+      piercingPercentage: this.judgmentPiercingPercent,
     };
   },
 

@@ -15,7 +15,7 @@ export default {
     onBeforeDmgDealing: "attacker",
   },
 
-  onBeforeDmgDealing({ crit, defender, damage }) {
+  onBeforeDmgDealing({ crit, defender, damage, baseDamage }) {
     const newCrit = {
       ...(crit ?? {}),
       didCrit: true,
@@ -25,9 +25,14 @@ export default {
     const targetDefense = Number(defender?.Defense) || 0;
 
     if (targetDefense < this.minDefense) {
+      const reduced =
+        Number(baseDamage ?? damage ?? 0) *
+        (this.lowDefenseDamagePercent / 100);
+
       return {
         crit: newCrit,
-        damage: damage * (this.lowDefenseDamagePercent / 100),
+        baseDamage: reduced,
+        preMitigationDamage: reduced,
         mode: "standard",
         piercingPercentage: 0,
       };
