@@ -50,7 +50,7 @@ const akaneSkills = [
     priority: 0,
 
     description() {
-      return `Gains ${this.lifeStealBuff}% Life Steal for ${this.buffDuration} turn(s).`;
+      return `The demon beneath Akane's calm surfaces to feed. For ${this.buffDuration} turn(s) she gains +${this.lifeStealBuff}% Life Steal, every cut she lands flowing back into her as HP.`;
     },
 
     targetSpec: ["self"],

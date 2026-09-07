@@ -8,11 +8,7 @@ export default {
   lowDefenseDamagePercent: 65,
 
   description() {
-    return `Akane's hits are always critical.
-
-    Her critical hits deal only +${this.critBonus}% damage, but ignore ${this.piercingRatio * 100}% of the target's defense.
-    
-    Against targets with less than ${this.minDefense} Defense, her hits do not ignore Defense and deal only ${this.lowDefenseDamagePercent}% of the damage.`;
+    return `Akane cuts for the seam in the guard, never the body behind it. Every hit she lands is a critical, though each for only +${this.critBonus}% damage — the edge spends itself slipping past armor, ignoring ${this.piercingRatio * 100}% of the target's Defense. Against a target with less than ${this.minDefense} Defense there is no seam to find: her hits pierce nothing and land for only ${this.lowDefenseDamagePercent}% of their damage.`;
   },
 
   hookScope: {
