@@ -131,9 +131,6 @@ export function composeDamage(event) {
       flat = tr.flat || 0;
       percent = tr.percent || 0;
     } else if (event.constructor.debugMode) {
-      console.log(
-        "[DAMAGE COMPOSITION] ignoreDamageReduction on: skipping the defender's totalDamageReduction",
-      );
     }
 
     // ---------------- STANDARD ----------------
@@ -141,7 +138,6 @@ export function composeDamage(event) {
       const debug = event.constructor.debugMode;
 
       if (debug) {
-        console.log(`[DAMAGE COMPOSITION] 📸 Base damage: ${event.damage}`);
       }
 
       // Defesa
@@ -153,29 +149,18 @@ export function composeDamage(event) {
       event.damage = event.damage - defenseMitigation;
 
       if (debug) {
-        console.log(
-          `[DAMAGE COMPOSITION] 🛡️ Após defesa (${(defensePercent * 100).toFixed(
-            1,
-          )}%): ${event.damage.toFixed(2)}`,
-        );
       }
 
       // Redução percentual
       event.damage *= 1 - percent / 100;
 
       if (debug) {
-        console.log(
-          `[DAMAGE COMPOSITION] 📉 Após redução percentual (${percent}%): ${event.damage.toFixed(2)}`,
-        );
       }
 
       // Redução flat
       event.damage = event.damage - flat;
 
       if (debug) {
-        console.log(
-          `[DAMAGE COMPOSITION] 🧱 Após redução flat (${flat}): ${event.damage.toFixed(2)}`,
-        );
       }
     }
 
@@ -195,37 +180,24 @@ export function composeDamage(event) {
 
       const debug = event.constructor.debugMode;
       if (debug) {
-        console.log(`[DAMAGE COMPOSITION] 📸 Base damage: ${event.damage}`);
-        console.log(
-          `[DAMAGE COMPOSITION] 🗡️ PIERCING ${piercePct}%: defesa ${defenseUsed} → ${effectiveDefense.toFixed(2)} (mitigation ${(defensePercent * 100).toFixed(2)}%)`,
-        );
       }
 
       const defenseMitigation = event.damage * defensePercent;
       event.damage = event.damage - defenseMitigation;
 
       if (debug) {
-        console.log(
-          `[DAMAGE COMPOSITION] 🛡️ Após defesa (${(defensePercent * 100).toFixed(1)}%): ${event.damage.toFixed(2)}`,
-        );
       }
 
       // Redução percentual
       event.damage *= 1 - percent / 100;
 
       if (debug) {
-        console.log(
-          `[DAMAGE COMPOSITION] 📉 Após redução percentual (${percent}%): ${event.damage.toFixed(2)}`,
-        );
       }
 
       // Redução flat
       event.damage = event.damage - flat;
 
       if (debug) {
-        console.log(
-          `[DAMAGE COMPOSITION] 🧱 Após redução flat (${flat}): ${event.damage.toFixed(2)}`,
-        );
       }
     }
 
@@ -251,15 +223,9 @@ export function composeDamage(event) {
   // 2. Tira a foto do dano matemático final, pronto para ser aplicado
 
   const damageOverride = event.context?.editMode?.damageOutput;
-  console.log(
-    `📸 [DAMAGE COMPOSITION] Dano final calculado (antes de overrides): ${event.damage.toFixed(2)}`,
-  );
 
   if (damageOverride != null) {
     event.damage = damageOverride;
-    console.log(
-      `⚡ [DAMAGE COMPOSITION] Override de dano ativado! Dano forçado para: ${event.damage.toFixed(2)}`,
-    );
     if (event.constructor.debugMode) console.groupEnd();
   }
 

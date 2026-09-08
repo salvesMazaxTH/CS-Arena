@@ -215,9 +215,6 @@ export function applyDamageReduction(champion, config = {}) {
     type: type,
     source: source,
   });
-  console.log(
-    `[Champion] ${champion.name} gained ${amount} damage reduction from ${source}. Will expire at turn ${context.currentTurn + duration}.`,
-  );
 }
 
 /** Sum active damage reduction as { flat, percent }; pass currentTurn to skip expired. */

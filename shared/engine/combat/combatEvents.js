@@ -5,21 +5,7 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
 
   const players = options.players ?? payload?.context?.players ?? [];
 
-  console.log(`[emitCombatEvent] Event: ${eventName}, Players:`, players);
 
-  console.log(`[emitCombatEvent] ${eventName}`, {
-    champions: Array.isArray(champions)
-      ? champions.length
-      : (champions?.size ?? 0),
-
-    players: Array.isArray(players)
-      ? players.map((p) => ({
-          id: p?.id,
-          team: p?.team,
-          emblems: p?.emblems?.map((e) => e?.key) ?? [],
-        }))
-      : players,
-  });
 
   if (debugMode) {
     console.group(`📡 EVENT: ${eventName}`);
@@ -103,9 +89,6 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
       const hook = source[eventName];
       if (typeof hook !== "function") continue;
 
-      console.log(
-        `[EMBLEM HOOK] ${eventName} → ${source.key} → Player ${player.team}`,
-      );
 
       try {
         const res = hook.call(source, {
@@ -114,7 +97,6 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
           emitter: emitCombatEvent,
         });
 
-        console.log(`[EMBLEM HOOK RESULT] ${eventName} → ${source.key}:`, res);
 
         if (res) {
           results.push(res);

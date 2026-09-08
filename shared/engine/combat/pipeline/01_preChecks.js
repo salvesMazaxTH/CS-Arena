@@ -51,19 +51,12 @@ export function preChecks(event) {
     if (r?.evade) hookForcedEvade = r;
 
     if (r?.cancel) {
-      console.log(
-        `[DAMAGE CANCEL] ${event.defender.name} teve o dano cancelado por status-effect`,
-      );
       return r.unreachable
         ? _buildUnreachableResult(event, r.message ?? null)
         : _buildImmuneResult(event, r.message ?? null);
     }
 
     if (r?.modifiedDamage !== undefined) {
-      console.log(
-        `[DAMAGE MODIFIED] ${event.defender.name} teve o dano modificado de ${event.damage} para ${r.modifiedDamage} por status-effect/hook externo. Detalhes:`,
-        r,
-      );
       event.damage = r.modifiedDamage;
     }
   }

@@ -67,7 +67,6 @@ export class DamageEvent {
     }
 
     this.players = params.players ?? context?.players ?? [];
-    console.log("[DamageEvent_constructor] Players in DamageEvent:", this.players);
 
     this.mode = params.mode ?? DamageEvent.Modes.STANDARD;
 
@@ -96,15 +95,7 @@ export class DamageEvent {
     }
 
     this.attacker = attacker;
-    console.log(
-      "[DamageEvent_constructor] Attacker in DamageEvent:",
-      this.attacker,
-    );
     this.defender = defender;
-    console.log(
-      "[DamageEvent_constructor] Defender in DamageEvent:",
-      this.defender,
-    );
     this.skill = skill;
     this.type = type;
     // Element override for this specific hit. Most skills only ever deal
@@ -121,7 +112,6 @@ export class DamageEvent {
     // rather than the skill key, which every hit of a skill shares.
     this.hitId = params.hitId ?? null;
     this.suppressLog = params.suppressLog ?? skill?.suppressLog ?? false;
-    console.log("[DamageEvent_constructor] Damage type:", this.type);
 
     this.context = context ?? {};
 

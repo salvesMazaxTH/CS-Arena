@@ -129,7 +129,6 @@ function _processHook(event, eventName, payload) {
       players: event.players,
       canRun: (name, champ, source) => event.canRunHook(name, champ, source),
     }) || [];
-    console.log(`[HOOKS DEBUG] ${eventName} results:`, results, event.players);
   const summary = {
     logs: [],
     critChanged: false,

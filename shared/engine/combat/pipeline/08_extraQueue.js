@@ -2,9 +2,6 @@ export function processExtraQueue(event) {
   const queue = event.context.extraDamageQueue || [];
   if (queue.length === 0) return [];
 
-  console.log(
-    `🔥 processExtraQueue: Processing ${queue.length} extra events.`,
-  );
 
   // Clean the original queue to avoid re-processing the same events in case of recursion
   const itemsToProcess = [...queue];

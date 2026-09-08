@@ -12,25 +12,6 @@ import { snapshotChampions } from "./snapshotChampions.js";
 import { TargetFilter } from "./targetFilter.js";
 import { getBlindMiss } from "../../data/statusEffects/blind.js";
 
-const RESOURCE_DEBUG_TRUE_VALUES = new Set(["1", "true", "yes", "on"]);
-
-function isResourceDebugEnabled() {
-  if (typeof process === "undefined") return false;
-
-  const raw = process?.env?.DEBUG_RESOURCE_FLOW;
-
-  if (raw == null) {
-    return process?.env?.NODE_ENV !== "production";
-  }
-
-  return RESOURCE_DEBUG_TRUE_VALUES.has(String(raw).toLowerCase());
-}
-
-function logResourceDebug(payload) {
-  if (!isResourceDebugEnabled()) return;
-  console.log("[RESOURCE_DEBUG]", payload);
-}
-
 // Faixas de 25 de dano = +1 Momentum a partir de 55; abaixo disso é a faixa inicial (exceção).
 function getMomentumFromDamageDealt(totalDamage) {
   const d = Math.max(0, Math.floor(Number(totalDamage) || 0));
@@ -417,9 +398,6 @@ export class TurnResolver {
       };
     }
 
-    console.log(
-      `[executeSkillAction] executionIndex set to ${context.executionIndex} for skill ${skill.name}`,
-    );
 
     const skillResults = this.performSkillExecution(
       user,
@@ -597,19 +575,8 @@ export class TurnResolver {
     }
 
     for (const champ of this.combat.activeChampions.values()) {
-      console.log(
-        "[actionExecution - DEBUG]",
-        champ.name,
-        champ.runtime.hookEffects,
-      );
     }
 
-    console.log(
-      "[canExecuteAction] Validating action for",
-      user.name,
-      "hooks effects:",
-      user.runtime?.hookEffects?.map((e) => e.key),
-    );
 
     // Descobrir o alvo principal da ação (primeiro alvo válido)
     let mainTarget = null;
@@ -688,9 +655,6 @@ export class TurnResolver {
     context.currentSkill = skill;
     context.actionSource = user;
     // Verificar executionIndex:
-    console.log(
-      `[performSkillExecution] executionIndex: ${context.executionIndex}`,
-    );
 
     // 🔹 2. Injetar contexto nos campeões
     this.combat.activeChampions.forEach((champion) => {
@@ -900,40 +864,12 @@ export class TurnResolver {
     const afterMomentum = Number(target.momentum) || 0;
 
     if (applied === 0) {
-      logResourceDebug({
-        stage: "applyResourceChange:blocked",
-        sourceId: sourceId || null,
-        sourceName: sourceChampion?.name || null,
-        targetId: target.id,
-        targetName: target.name,
-        requestedAmount,
-        beforeMomentum,
-        afterMomentum,
-        debugLabel,
-      });
       return { applied: 0, hookResults: [] };
     }
 
     const eventType = applied > 0 ? "onResourceGain" : "onResourceSpend";
     const payloadType = applied > 0 ? "resourceGain" : "resourceSpend";
 
-    logResourceDebug({
-      stage: "applyResourceChange:applied",
-      sourceId: sourceId || null,
-      sourceName: sourceChampion?.name || null,
-      targetId: target.id,
-      targetName: target.name,
-      requestedAmount,
-      applied,
-      eventType,
-      payloadType,
-      beforeMomentum,
-      afterMomentum,
-      emitHooks,
-      visualPhase,
-      visualAfterHooks,
-      debugLabel,
-    });
 
     const registerVisual = () =>
       context.registerResourceChange({
@@ -1516,15 +1452,6 @@ export class TurnResolver {
         this.visual.resourceEvents.push(event);
         this._lastEventRef = event;
 
-        logResourceDebug({
-          stage: "registerResourceChange",
-          targetId: target.id,
-          targetName: target.name,
-          sourceId: event.sourceId,
-          eventType,
-          amount: Math.abs(value),
-          phase,
-        });
 
         return value;
       },

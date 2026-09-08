@@ -33,14 +33,9 @@ export function applyDamage(event) {
 
   const damageToApply = Math.floor(event.damage);
 
-  console.log(`[DAMAGE COMPOSITION] damageToApply: ${damageToApply}`);
-  console.log(`[DAMAGE COMPOSITION] hpBefore: ${hpBefore}`);
 
   event.defender.takeDamage(damageToApply, event.context);
 
-  console.log(
-    `➡️ [applyDamage] Dano aplicado, após takeDamage: ${damageToApply}, HP de ${event.defender.name}: ${event.defender.HP}/${event.defender.maxHP}`,
-  );
 
   event.hpAfter = event.defender.HP;
   event.actualDmg = hpBefore - event.hpAfter;
