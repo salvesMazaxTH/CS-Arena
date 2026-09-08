@@ -33,7 +33,11 @@ const naelysSkills = [
     targetSpec: ["enemy", { type: "select:ally", excludesSelf: true }],
 
     resolve({ user, targets, context = {} }) {
-      const [enemy, ally] = targets;
+      // Either role can go missing, so neither may be read by position.
+      const enemy = targets.find((target) => target.team !== user.team);
+      const ally = targets.find(
+        (target) => target.team === user.team && target.id !== user.id,
+      );
 
       const baseDamage = (user.Attack * this.bf) / 100;
 

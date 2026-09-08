@@ -97,33 +97,40 @@ const dlorafyaSkills = [
     targetSpec: ["enemy", "self"],
 
     resolve({ user, targets, context = {} }) {
-      const [enemy] = targets;
+      // The spec pairs an enemy with himself, and the enemy role can go missing.
+      const enemy = targets.find((target) => target.id !== user.id);
 
-      const baseDamage = (user.Attack * this.bf) / 100;
+      const results = [];
 
-      const result = new DamageEvent({
-        baseDamage,
-        attacker: user,
-        defender: enemy,
-        skill: this,
-        type: "magical",
-        context,
-        allChampions: context?.allChampions,
-      }).execute();
-
-      if (
-        effectConnected(result, "burning", { ignoreDamageRequirement: true }) &&
-        enemy.alive
-      ) {
-        if (enemy.hasStatusEffect("burning")) {
-          enemy.removeStatusEffect("burning");
-        }
-        enemy.applyStatusEffect(
-          "burning",
-          this.burnDuration,
+      if (enemy) {
+        const result = new DamageEvent({
+          baseDamage: (user.Attack * this.bf) / 100,
+          attacker: user,
+          defender: enemy,
+          skill: this,
+          type: "magical",
           context,
-          burnMetadata,
-        );
+          allChampions: context?.allChampions,
+        }).execute();
+
+        if (
+          effectConnected(result, "burning", {
+            ignoreDamageRequirement: true,
+          }) &&
+          enemy.alive
+        ) {
+          if (enemy.hasStatusEffect("burning")) {
+            enemy.removeStatusEffect("burning");
+          }
+          enemy.applyStatusEffect(
+            "burning",
+            this.burnDuration,
+            context,
+            burnMetadata,
+          );
+        }
+
+        results.push(...(Array.isArray(result) ? result : [result]));
       }
 
       const burningEnemies = (context.aliveChampions ?? [])
@@ -150,8 +157,6 @@ const dlorafyaSkills = [
         context,
         statModifierSrc: user,
       });
-
-      const results = Array.isArray(result) ? [...result] : [result];
 
       results.push({
         log:
