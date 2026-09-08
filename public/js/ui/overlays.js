@@ -1,8 +1,7 @@
 import { elementEmoji } from "../../../shared/ui/elementEmoji.js";
 import {
   CLAIM_ACTION_KEY,
-  CLAIM_MIN_MOMENTUM,
-  CLAIM_MAX_POINTS,
+  getClaimPoints,
 } from "../../../shared/engine/combat/claim.js";
 import { GAME_GLOSSARY } from "../gameGlossary.js";
 
@@ -99,23 +98,6 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
     return container;
   }
 
-  function getClaimPointsPreview(champion) {
-    if (!champion) return 0;
-
-    const momentum = Math.max(0, Number(champion?.momentum) || 0);
-    if (momentum < CLAIM_MIN_MOMENTUM) return 0;
-
-    const momentumPoints =
-      momentum >= 75 ? 3 : momentum >= 50 ? 2 : momentum >= 25 ? 1 : 0;
-    const currentTurn = getCurrentTurn();
-    const fieldEntryTurn = Number.isFinite(champion?.runtime?.fieldEntryTurn)
-      ? Number(champion.runtime.fieldEntryTurn)
-      : currentTurn;
-    const turnsInField = Math.max(0, currentTurn - fieldEntryTurn);
-
-    return Math.min(CLAIM_MAX_POINTS, momentumPoints + turnsInField);
-  }
-
   function getDamageModeLabel(mode) {
     switch (mode) {
       case "standard":
@@ -149,7 +131,9 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
     const glossaryKeys = extractGlossaryKeys(rawDesc);
 
     const isClaim = skill?.key === CLAIM_ACTION_KEY;
-    const claimPoints = isClaim ? getClaimPointsPreview(champion) : null;
+    const claimPoints = isClaim
+      ? getClaimPoints(champion, getCurrentTurn())
+      : null;
 
     // Route through getSkillCost so a ramping ultimate shows its live per-use cost, not the base.
     const skillCost = champion.getSkillCost(skill);
@@ -245,7 +229,7 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
   }
 
   ${
-    !isClaim
+    parsedDesc
       ? `
         <div class="skill-overlay-desc">
           ${toParagraphs(parsedDesc)}
@@ -391,10 +375,30 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
       });
     }
 
+    const isEnemyChampion =
+      getPlayerTeam() !== null && champion.team !== getPlayerTeam();
+
+    // Enemy CLAIM value: the points they would score by CLAIMing this turn.
+    if (isEnemyChampion) {
+      const claimSection = document.createElement("div");
+      claimSection.classList.add("portrait-overlay-enemy-claim");
+
+      const claimTitle = document.createElement("h3");
+      claimTitle.classList.add("portrait-overlay-details-title");
+      claimTitle.textContent = "CLAIM Value";
+      claimSection.appendChild(claimTitle);
+
+      const claimValue = document.createElement("span");
+      claimValue.classList.add("portrait-overlay-enemy-claim-value");
+      claimValue.textContent = `${getClaimPoints(champion, getCurrentTurn())} point(s)`;
+      claimSection.appendChild(claimValue);
+
+      details.appendChild(claimSection);
+    }
+
     // Enemy champion skills (fake action bar)
     if (
-      getPlayerTeam() !== null &&
-      champion.team !== getPlayerTeam() &&
+      isEnemyChampion &&
       Array.isArray(champion.skills) &&
       champion.skills.length
     ) {

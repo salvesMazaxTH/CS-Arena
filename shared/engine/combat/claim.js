@@ -1,8 +1,14 @@
 export const CLAIM_ACTION_KEY = "claim";
 export const CLAIM_MIN_MOMENTUM = 25;
-export const CLAIM_MAX_POINTS = 5;
+export const CLAIM_MAX_POINTS = 6;
 // Minions are cheaper targets: their CLAIM (and what their death concedes) caps at 3.
 export const CLAIM_MAX_POINTS_MINION = 3;
+
+export const CLAIM_DESCRIPTION =
+  "Earns you match points instead of acting. Points scale with your current " +
+  "Momentum — 1, 2, or 3 at 25, 50, and 75 — plus 1 for every 2 turns this " +
+  `champion has spent on the field, up to ${CLAIM_MAX_POINTS}. ` +
+  `Requires ${CLAIM_MIN_MOMENTUM} Momentum.`;
 
 export function getClaimMaxPoints(champion) {
   return champion?.entityType === "minion"
@@ -31,8 +37,10 @@ export function getClaimPoints(champion, currentTurn) {
     ? Number(champion.runtime.fieldEntryTurn)
     : Number(currentTurn) || 0;
   const turnsInField = Math.max(0, Number(currentTurn) - fieldEntryTurn);
+  // One point for every two turns spent on the field.
+  const fieldPoints = Math.floor(turnsInField / 2);
 
-  return Math.min(getClaimMaxPoints(champion), momentumPoints + turnsInField);
+  return Math.min(getClaimMaxPoints(champion), momentumPoints + fieldPoints);
 }
 
 export function getClaimPointsFromMomentum(momentum) {

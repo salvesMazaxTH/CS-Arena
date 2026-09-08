@@ -1,6 +1,7 @@
 import {
   CLAIM_ACTION_KEY,
   CLAIM_MIN_MOMENTUM,
+  CLAIM_DESCRIPTION,
 } from "../../shared/engine/combat/claim.js";
 
 function escapeHtml(value) {
@@ -1930,6 +1931,7 @@ function showActionBarSlot({ playerAdvanced = true } = {}) {
   const claimSkill = {
     key: CLAIM_ACTION_KEY,
     name: "CLAIM",
+    description: CLAIM_DESCRIPTION,
   };
 
   const claimBtn = document.createElement("button");

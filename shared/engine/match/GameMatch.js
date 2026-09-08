@@ -703,7 +703,7 @@ class CombatState {
   checkGameEnd({
     maxTurns = 20,
     checkTurnLimit = false,
-    scoreThreshold = 60,
+    scoreThreshold = 45,
   } = {}) {
     if (!this.gameEnded && checkTurnLimit && this.currentTurn >= maxTurns) {
       this.gameEnded = true;
@@ -957,7 +957,7 @@ export class GameMatch {
   checkGameEnd({
     maxTurns = 20,
     checkTurnLimit = false,
-    scoreThreshold = 60,
+    scoreThreshold = 45,
   } = {}) {
     return this.combat.checkGameEnd({
       maxTurns,

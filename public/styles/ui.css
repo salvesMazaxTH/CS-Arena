@@ -2764,6 +2764,20 @@ body.perspective-team2 .combat-dialog-bubble .team-2 {
    PORTRAIT OVERLAY — ENEMY SKILLS BAR
    ============================================ */
 
+.portrait-overlay-enemy-claim {
+  border-top: 1px solid rgba(255, 80, 80, 0.3);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.portrait-overlay-enemy-claim-value {
+  color: #ffb8b8;
+  font-weight: bold;
+  font-size: 0.95em;
+}
+
 .portrait-overlay-enemy-skills {
   border-top: 1px solid rgba(255, 80, 80, 0.3);
   padding-top: 10px;
