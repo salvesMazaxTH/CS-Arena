@@ -38,36 +38,16 @@ export default {
 
     if (statName !== "Speed" && statName !== "Evasion") return;
 
-    const stackResult = this._addStack({
-      owner,
-      context,
-      reason: `${statName.toLowerCase()}_gain`,
-    });
-
-    if (stackResult?.log) return stackResult;
-
-    return {
-      log: `${formatChampionName(owner)} gained 1 Impulse stack. Current stacks: ${owner.runtime.impulseStacks}`,
-    };
+    return this._addStack({ owner, context });
   },
 
   onEvade({ owner, defender, context }) {
     if (defender.id !== owner.id) return;
 
-    const stackResult = this._addStack({
-      owner,
-      context,
-      reason: "evade",
-    });
-
-    if (stackResult?.log) return stackResult;
-
-    return {
-      log: `${formatChampionName(owner)} gained 1 Impulse stack. Current stacks: ${owner.runtime.impulseStacks}`,
-    };
+    return this._addStack({ owner, context });
   },
 
-  _addStack({ owner, context, reason }) {
+  _addStack({ owner, context }) {
     owner.runtime ??= {};
     owner.runtime.impulseStacks ??= 0;
 
@@ -75,39 +55,25 @@ export default {
 
     owner.runtime.impulseStacks++;
 
-    console.log("[BLYSKARTRI][PASSIVE] Impulse stack gained", {
-      stacks: owner.runtime.impulseStacks,
-      reason,
-    });
+    const gained = {
+      log: `${formatChampionName(owner)} gained 1 Impulse stack. Current stacks: ${owner.runtime.impulseStacks}`,
+    };
 
-    if (owner.runtime.impulseStacks < this.stackCap) return;
+    if (owner.runtime.impulseStacks < this.stackCap) return gained;
 
     const allies = context.aliveChampions.filter((c) => c.team === owner.team);
 
-    if (!allies.length) return;
-
     const fastestAlly = allies.reduce((a, b) => (a.Speed > b.Speed ? a : b));
-
-    console.log(
-      "[BLYSKARTRI][PASSIVE] STACK CAP REACHED → dealing damage based on fastest ally:",
-      {
-        fastestAlly: formatChampionName(fastestAlly),
-        allies: allies.map((a) => formatChampionName(a)),
-      },
-    );
 
     const damageAmount = Math.floor(
       fastestAlly.Speed * this.speedPercentAsDamage,
     );
 
-    const enemies =
-      context?.allChampions instanceof Map
-        ? [...context.allChampions.values()].filter(
-            (c) => c.team !== owner.team && c.HP > 0,
-          )
-        : [];
+    const enemies = context.aliveChampions.filter(
+      (c) => c.team !== owner.team,
+    );
 
-    if (!enemies.length) return;
+    if (!enemies.length) return gained;
 
     const lowestHealthEnemy = enemies.reduce((a, b) => {
       if (a.HP < b.HP) return a;
@@ -116,11 +82,6 @@ export default {
       // Tie → random
       return Math.random() < 0.5 ? a : b;
     }, enemies[0]);
-
-    console.log("[BLYSKARTRI][PASSIVE] Lowest-HP enemy selected as target:", {
-      lowestHealthEnemy: formatChampionName(lowestHealthEnemy),
-      enemies: enemies.map((e) => formatChampionName(e)),
-    });
 
     context.registerDialog({
       message: `${formatChampionName(owner)} unleashed a burst of speed, consuming all Impulse against ${formatChampionName(lowestHealthEnemy)}!`,
@@ -132,7 +93,7 @@ export default {
       user: owner,
       target: lowestHealthEnemy,
       baseDamage: damageAmount,
-      context,
+      context: { ...context, damageDepth: (context.damageDepth || 0) + 1 },
     });
 
     owner.runtime.impulseStacks = 0;

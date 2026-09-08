@@ -124,7 +124,7 @@ const blyskartriSkills = [
             user,
             target: attacker,
             baseDamage: counterDamage,
-            context,
+            context: { ...context, damageDepth: (context.damageDepth || 0) + 1 },
           });
 
           const counterLog = `${formatChampionName(user)} strikes back at ${formatChampionName(attacker)} for attacking his ally!`;
@@ -155,7 +155,7 @@ const blyskartriSkills = [
     dmgBonus: 3, // Damage bonus per Speed step, as a percentage.
     speedPerStack: 10,
 
-    piercingDamageBonus: 75,
+    overtakeDamage: 60,
 
     effectDuration: 2,
     priority: 4,
@@ -171,15 +171,14 @@ const blyskartriSkills = [
         label: "Infinite Horizon",
         type: "physical",
         contact: false,
-        damageMode: "piercing",
-        piercingPercentage: 100,
+        damageMode: "absolute",
       },
     ],
 
     description() {
       return `Blyskartri pushes the horizon out of reach for the chosen ally. For ${this.effectDuration} turn(s), everything they throw carries +${this.dmgBonus}% raw damage for every ${this.speedPerStack} points of their total Speed.
 
-      And whenever the ally moves before the target they strike, the blow arrives ahead of the defence: +${this.piercingDamageBonus} bonus piercing damage.`;
+      And whenever the ally moves before the target they strike, the blow arrives ahead of the defence: ${this.overtakeDamage} bonus Absolute Damage.`;
     },
 
     targetSpec: ["select:ally"],
@@ -205,7 +204,7 @@ const blyskartriSkills = [
       });
 
       const skill = this;
-      const piercingDamageBonus = this.piercingDamageBonus;
+      const overtakeDamage = this.overtakeDamage;
 
       ally.runtime.hookEffects ??= [];
       ally.runtime.hookEffects = ally.runtime.hookEffects.filter(
@@ -239,7 +238,7 @@ const blyskartriSkills = [
             ...SkillHits.params(skill, "overtake", {
               user: attacker,
               target: defender,
-              baseDamage: piercingDamageBonus,
+              baseDamage: overtakeDamage,
               context,
             }),
             dialog: { message: overtake, duration: 1000 },
