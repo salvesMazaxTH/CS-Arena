@@ -118,7 +118,7 @@ const kaiSkills = [
           });
 
           attacker.applyStatusEffect("burning", burnDuration, context, {
-            source: owner,
+            sourceId: owner.id,
           });
 
           return {
@@ -174,7 +174,7 @@ const kaiSkills = [
     bf: 0,
     damagePerHit: 40,
     damageMode: "standard",
-    hits: 6,
+    punches: 6,
     burningBonus: 10,
     contact: true,
 
@@ -183,7 +183,7 @@ const kaiSkills = [
     isUltimate: true,
     momentumCost: 33,
     description() {
-      return `Kai throws himself forward and lets go of everything at once: ${this.hits} blazing punches scatter at random across all enemies, each one dealing ${this.damagePerHit} physical damage.
+      return `Kai throws himself forward and lets go of everything at once: ${this.punches} blazing punches scatter at random across all enemies, each one dealing ${this.damagePerHit} physical damage.
 
       Targets already Burning take ${this.burningBonus} bonus damage per punch as the fire finds its way in.`;
     },
@@ -193,7 +193,7 @@ const kaiSkills = [
       const results = [];
       if (!enemies.length) return results;
 
-      for (let i = 0; i < this.hits; i++) {
+      for (let i = 0; i < this.punches; i++) {
         const target = enemies[Math.floor(Math.random() * enemies.length)];
 
         const result = new DamageEvent({

@@ -14,9 +14,14 @@ export default {
     onActionResolved: "actionSource",
   },
 
-  // Marks the turn in which damage was taken.
-  onAfterDmgTaking({ owner, context }) {
-    owner.runtime = owner.runtime || {};
+  // The Quietude only withholds itself for HP she actually lost, however it left her.
+  hookPolicies: {
+    onAfterDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
+  },
+
+  onAfterDmgTaking({ owner, actualDmg, context }) {
+    if (!(actualDmg > 0)) return;
+
     owner.runtime.sereneDamagedTurn = context.currentTurn;
   },
 

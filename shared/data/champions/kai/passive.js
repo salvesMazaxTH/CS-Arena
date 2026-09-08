@@ -58,7 +58,7 @@ export default {
       : this.burnDuration;
 
     defender.applyStatusEffect("burning", burnDuration, context, {
-      source: owner.name,
+      sourceId: owner.id,
     });
 
     return {

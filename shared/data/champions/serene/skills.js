@@ -263,7 +263,7 @@ const sereneSkills = [
             });
 
             return {
-              damage: adjustedDamage,
+              damageCap: adjustedDamage,
               log: `${formatChampionName(owner)} is drawn back from the Threshold, Immune and holding on with ${lockedHP} HP!`,
             };
           },
