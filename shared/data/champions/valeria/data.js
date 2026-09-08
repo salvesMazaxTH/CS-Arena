@@ -1,6 +1,6 @@
 export default {
-  name: "Valira",
-  portrait: "/assets/portraits/valira.webp",
+  name: "Valeria",
+  portrait: "/assets/portraits/valeria.webp",
 
   HP: 380,
   Attack: 230,

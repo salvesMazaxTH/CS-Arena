@@ -2,7 +2,7 @@ import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import totalBlock from "../generic/totalBlock.js";
 
-const valiraSkills = [
+const valeriaSkills = [
   // ========================
   // Total Block (global)
   // ========================
@@ -24,7 +24,7 @@ const valiraSkills = [
     priority: 0,
 
     description() {
-      return `The impact alone knocks the fight out of most people — Valira never even needs to swing twice. Deals physical contact damage and always Stuns the chosen target for ${this.stunDuration} turn(s).`;
+      return `The impact alone knocks the fight out of most people — Valeria never even needs to swing twice. Deals physical contact damage and always Stuns the chosen target for ${this.stunDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -125,4 +125,4 @@ const valiraSkills = [
   },
 ];
 
-export default valiraSkills;
+export default valeriaSkills;

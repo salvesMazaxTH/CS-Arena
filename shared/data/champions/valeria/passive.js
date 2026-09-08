@@ -10,7 +10,7 @@ export default {
   dragonBonusDmgPercent: 20,
 
   description() {
-    return `Valira answers every unearned gain. The first hit she lands after an enemy scores with CLAIM comes down as Judgment: guaranteed ${this.judgmentPiercingPercent}% piercing damage, plus ${this.judgmentBonusDmgPercent}% bonus damage. Dragonkind she has already taken the measure of once, and against it she deals a further ${this.dragonBonusDmgPercent}% bonus damage. Her wings never let the ground decide where she stands, so Root and Snare effects never take hold.`;
+    return `Valeria answers every unearned gain. The first hit she lands after an enemy scores with CLAIM comes down as Judgment: guaranteed ${this.judgmentPiercingPercent}% piercing damage, plus ${this.judgmentBonusDmgPercent}% bonus damage. Dragonkind she has already taken the measure of once, and against it she deals a further ${this.dragonBonusDmgPercent}% bonus damage. Her wings never let the ground decide where she stands, so Root and Snare effects never take hold.`;
   },
 
   hookScope: {
