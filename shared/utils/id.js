@@ -1,12 +1,10 @@
 export function generateId(prefix = "id") {
-  // Se o navegador suportar
-  if (crypto && typeof crypto.randomUUID === "function") {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return `${prefix}-${crypto.randomUUID()}`;
   }
 
-  // Fallback universal (mobile safe)
-  const rand = Math.floor(Math.random() * 1000);
-  const time = Date.now();
+  // randomUUID only exists in secure contexts, so LAN-served pages fall back here.
+  const rand = Math.random().toString(36).slice(2, 10);
 
-  return `${prefix}-${time}-${rand}`;
+  return `${prefix}-${Date.now().toString(36)}-${rand}`;
 }

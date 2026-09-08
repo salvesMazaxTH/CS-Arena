@@ -1,4 +1,5 @@
 import { PREBUILT_TEAMS, TEAM_SIZE, MAX_TEAM_EMBLEMS } from "/shared/data/teams/index.js";
+import { generateId } from "/shared/utils/id.js";
 
 const CUSTOM_KEY = "csa.teams.custom";
 const SELECTED_KEY = "csa.teams.selectedId";
@@ -73,7 +74,7 @@ export class TeamStore {
   /** Inserts or replaces a custom team by id; stamps origin and updatedAt. */
   saveCustom(team) {
     const stamped = {
-      id: team.id || crypto.randomUUID(),
+      id: team.id || generateId("team"),
       name: team.name,
       tagline: team.tagline ?? "",
       champions: [...team.champions],
@@ -103,7 +104,7 @@ export class TeamStore {
     if (!source) return null;
 
     return this.saveCustom({
-      id: crypto.randomUUID(),
+      id: generateId("team"),
       name: name || `${source.name} (copy)`,
       tagline: source.tagline ?? "",
       champions: [...source.champions],
