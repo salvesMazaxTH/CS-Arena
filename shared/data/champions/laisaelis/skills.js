@@ -17,15 +17,15 @@ const laisaelisSkills = [
     key: "manifest",
     name: "Manifest",
 
-    echoScale: 0.375,
-    echoSpeedScale: 0.75,
+    echoScale: 0.7,
+    echoHpScale: 0.25,
     echoDuration: 3,
 
     contact: false,
     priority: 2,
 
     description() {
-      return `Laisaelis looks at something on the field and answers that there could be more of it. At the start of the next turn an Echo of the chosen entity takes the field at her side with its skills, its passive and everything currently upon it, at ${this.echoScale * 100}% of its base stats — ${this.echoSpeedScale * 100}% for Speed. Only one Echo can hold the field at a time: casting again unravels the old one. The Echo fades after ${this.echoDuration} turns, and its ending is not a death: it concedes no points, and nothing that answers to dying answers to it. Neither sister can be echoed, and neither can an Echo.`;
+      return `Laisaelis looks at something on the field and answers that there could be more of it. At the start of the next turn an Echo of the chosen entity takes the field at her side with its skills, its passive and everything currently upon it, at ${this.echoScale * 100}% of its base stats — only ${this.echoHpScale * 100}% for HP. Only one Echo can hold the field at a time: casting again unravels the old one. The Echo fades after ${this.echoDuration} turns, and its ending is not a death: it concedes no points, and nothing that answers to dying answers to it. Neither sister can be echoed, and neither can an Echo.`;
     },
 
     targetSpec: [
@@ -39,7 +39,7 @@ const laisaelisSkills = [
     resolve({ user, targets, context }) {
       const [source] = targets;
       const echoScale = this.echoScale;
-      const echoSpeedScale = this.echoSpeedScale;
+      const echoHpScale = this.echoHpScale;
       const skillName = this.name;
       const fadesAtTurn = context.currentTurn + 1 + this.echoDuration;
 
@@ -67,7 +67,7 @@ const laisaelisSkills = [
           team: user.team,
           asEntityType: "minion",
           statScale: echoScale,
-          statScaleByStat: { Speed: echoSpeedScale },
+          statScaleByStat: { HP: echoHpScale },
 
           onSpawn: (echo, spawnContext) => {
             echo.runtime.leavesNoDeath = true;
