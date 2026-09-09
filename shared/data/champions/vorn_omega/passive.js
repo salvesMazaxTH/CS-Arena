@@ -14,12 +14,10 @@ export default {
   key: "nothing_follows",
   name: "Nothing Follows",
 
-  selfHealBlockDuration: 999,
-
   description(champion) {
     const shed = platesShed(champion);
 
-    return `The foundry that made VØRN Ω went quiet a long time ago and every model before him is scrap, so there is nobody left who knows how to put him back together: he can never restore HP by any means. What he can do is come apart usefully. Crossing 75%, 50% and 25% of his Max HP throws off a governor plate for good, and he is worse to stand in front of for it. ${PLATE_TEXT}
+    return `The foundry that made VØRN Ω went quiet a long time ago and every model before him is scrap, so there is nobody left who knows how to put him back together: he can never restore HP by any means, and his Speed cannot be reduced — whatever drives him turns at one fixed rate. What he can do is come apart usefully. Crossing 75%, 50% and 25% of his Max HP throws off a governor plate for good, and he is worse to stand in front of for it. ${PLATE_TEXT}
 
     <b>Plates shed:</b> ${shed}/${MAX_PLATES}`;
   },
@@ -28,17 +26,34 @@ export default {
     onAfterDmgTaking: "defender",
     onBeforeDmgTaking: "defender",
     onStatusEffectIncoming: "target",
+    onStatModifierIncoming: "target",
+    onBeforeHealing: "healTarget",
+  },
+
+  onStatModifierIncoming({ owner, statName, amount }) {
+    if (statName !== "Speed" || amount >= 0) return;
+
+    return {
+      cancel: true,
+      message: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} runs at the rate he was built to — his Speed holds.`,
+    };
+  },
+
+  onBeforeHealing({ owner, amount, context }) {
+    if (amount <= 0) return;
+
+    context?.registerDialog?.({
+      message: `<b>[Passive — ${this.name}]</b> there is no one left who knows how to mend ${formatChampionName(owner)} — nothing closes.`,
+      sourceId: owner.id,
+      targetId: owner.id,
+    });
+
+    return { amount: 0 };
   },
 
   hookPolicies: {
     onAfterDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
     onBeforeDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
-  },
-
-  onChampionAdded({ champion, context }) {
-    champion.applyStatusEffect("healBlock", this.selfHealBlockDuration, context, {
-      source: this.key,
-    });
   },
 
   onStatusEffectIncoming({ target, owner, statusEffect }) {

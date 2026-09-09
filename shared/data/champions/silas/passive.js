@@ -9,12 +9,22 @@ export default {
   // No live counter here on purpose: the champion card is one of the few places
   // the double could read differently from the man.
   description() {
-    return `Silas has spent most of his life in rooms where nobody knew he was standing, and he stopped minding a long time ago. Whenever a full turn passes without a single wound reaching him, he opens the next one ${this.momentumGain} Momentum richer.`;
+    return `Silas has spent most of his life in rooms where nobody knew he was standing, and he stopped minding a long time ago. Whenever a full turn passes without a single wound reaching him, he opens the next one ${this.momentumGain} Momentum richer. Nothing has ever made Silas hurry: his Speed cannot be reduced.`;
   },
 
   hookScope: {
     onAfterDmgTaking: "defender",
     onActionResolved: "actionSource",
+    onStatModifierIncoming: "target",
+  },
+
+  onStatModifierIncoming({ owner, statName, amount }) {
+    if (statName !== "Speed" || amount >= 0) return;
+
+    return {
+      cancel: true,
+      message: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} keeps his own time — his Speed holds.`,
+    };
   },
 
   onAfterDmgTaking({ owner, defender, actualDmg, context }) {

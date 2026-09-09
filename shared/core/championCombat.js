@@ -312,6 +312,23 @@ export function applyStatModifier(
     amount = roundToFive(amount);
   }
 
+  const vetoed = emitCombatEvent(
+    "onStatModifierIncoming",
+    { target: champion, statName, amount, context },
+    context?.allChampions,
+  ).find((result) => result?.cancel);
+
+  if (vetoed) {
+    if (vetoed.message && context?.registerDialog) {
+      context.registerDialog({
+        message: vetoed.message,
+        sourceId: champion.id,
+        targetId: champion.id,
+      });
+    }
+    return { appliedAmount: 0, isCappedMax: false, log: null };
+  }
+
   const previous = champion[statName];
   const clamped = statIsLocked(champion, statName)
     ? previous

@@ -7,11 +7,21 @@ export default {
   slowEnough: 75,
 
   description() {
-    return `To Thorwells a mortal's swing is a letter posted a week too early — he reads its whole arc and is simply elsewhere when it lands. The first instance of damage each turn from an attacker whose Speed is ${this.slowEnough} or lower is evaded outright; Absolute Damage, and blows that cannot be evaded, still find him.`;
+    return `To Thorwells a mortal's swing is a letter posted a week too early — he reads its whole arc and is simply elsewhere when it lands. The first instance of damage each turn from an attacker whose Speed is ${this.slowEnough} or lower is evaded outright; Absolute Damage, and blows that cannot be evaded, still find him. Nothing drags at his own tempo: his Speed cannot be reduced.`;
   },
 
   hookScope: {
     onDamageIncoming: "defender",
+    onStatModifierIncoming: "target",
+  },
+
+  onStatModifierIncoming({ owner, statName, amount }) {
+    if (statName !== "Speed" || amount >= 0) return;
+
+    return {
+      cancel: true,
+      message: `<b>[Passive — ${this.name}]</b> the storm sets no pace for ${formatChampionName(owner)} — his Speed holds.`,
+    };
   },
 
   onDamageIncoming({ attacker, defender, owner, skill, damage, mode, context }) {
