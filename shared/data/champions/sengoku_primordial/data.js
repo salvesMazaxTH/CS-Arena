@@ -9,5 +9,5 @@ export default {
   Speed: 85,
 
   classKey: "brawler",
-  species: ["Primordial Dragon", "dragon"],
+  species: ["primordial dragon", "dragon"],
 };
