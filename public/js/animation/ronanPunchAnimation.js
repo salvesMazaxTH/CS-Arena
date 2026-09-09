@@ -1,0 +1,347 @@
+// Ronan's regular specials (knuckle_flare, say_that_again): Kai's fiery melee
+// motif re-lit in deeper dragon-ember tones and re-timed so the fist reads as
+// heavy rather than fast. Three.js + bloom in the shared #webgl-container. His
+// ultimate is a separate claw rake (ronanDragonClawAnimation.js).
+
+import { getElementCenter } from "./animationUtils.js";
+
+const snoiseGLSL = `
+  vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+  float snoise(vec2 v) {
+    const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+                        -0.577350269189626, 0.024390243902439);
+    vec2 i  = floor(v + dot(v, C.yy));
+    vec2 x0 = v -   i + dot(i, C.xx);
+    vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+    vec4 x12 = x0.xyxy + C.xxzz;
+    x12.xy -= i1;
+    i = mod(i, 289.0);
+    vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0))
+                             + i.x + vec3(0.0, i1.x, 1.0));
+    vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
+                             dot(x12.zw,x12.zw)), 0.0);
+    m = m*m; m = m*m;
+    vec3 x_ = 2.0 * fract(p * C.www) - 1.0;
+    vec3 h  = abs(x_) - 0.5;
+    vec3 ox = floor(x_ + 0.5);
+    vec3 a0 = x_ - ox;
+    m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+    vec3 g;
+    g.x  = a0.x  * x0.x  + h.x  * x0.y;
+    g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+    return 130.0 * dot(m, g);
+  }
+`;
+
+const basicVertexShader = `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const swipeFragmentShader = `
+  ${snoiseGLSL}
+  varying vec2 vUv;
+  uniform float uProgress;
+
+  void main() {
+    float noise = snoise(vec2(vUv.x * 10.0, vUv.y * 3.0 - uProgress * 11.0));
+    float mask = smoothstep(0.0, 0.2, vUv.x) * smoothstep(1.0, 0.3, vUv.x);
+    float width = smoothstep(0.5, 0.0, abs(vUv.y - 0.5) * (1.0 + uProgress * 0.8));
+
+    float fire = mask * width * (noise * 0.5 + 0.5);
+    float alpha = fire * (1.0 - uProgress);
+
+    vec3 color = vec3(1.0, 0.22, 0.04) * 4.6;
+    gl_FragColor = vec4(color, alpha);
+  }
+`;
+
+const fistPrintFragmentShader = `
+  ${snoiseGLSL}
+  varying vec2 vUv;
+  uniform float uAge;
+  uniform sampler2D uTexture;
+
+  void main() {
+    vec2 uv = vUv;
+
+    float burnNoise = snoise(uv * 15.0 - uAge) * 0.02;
+    uv += burnNoise;
+
+    vec4 texColor = texture2D(uTexture, uv);
+    float shape = texColor.a;
+    float heatFade = max(0.0, 1.0 - (uAge / 0.95));
+    float glow = shape * 0.6;
+
+    vec3 coreColor = vec3(1.0, 0.6, 0.18) * 3.0;
+    vec3 edgeColor = vec3(0.7, 0.05, 0.0) * 1.5;
+    vec3 finalColor = mix(edgeColor, coreColor, shape);
+
+    float alpha = (shape + glow) * heatFade;
+    gl_FragColor = vec4(finalColor, alpha);
+  }
+`;
+
+const smokeVertexShader = `
+  uniform float uTime;
+  attribute float aSize;
+  attribute vec3 aVelocity;
+
+  void main() {
+    vec3 pos = position + aVelocity * uTime;
+    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+    gl_PointSize = aSize * (1.0 - uTime / 1.1) * (50.0 / -mvPosition.z);
+    gl_Position = projectionMatrix * mvPosition;
+  }
+`;
+
+const smokeFragmentShader = `
+  uniform float uTime;
+
+  void main() {
+    float dist = distance(gl_PointCoord, vec2(0.5));
+    if (dist > 0.5) discard;
+
+    float alpha = smoothstep(0.5, 0.2, dist);
+    vec3 smokeColor = vec3(0.055, 0.04, 0.04);
+    vec3 fireColor = vec3(0.9, 0.16, 0.02);
+
+    float mixFactor = smoothstep(0.0, 0.25, uTime);
+    vec3 finalColor = mix(fireColor, smokeColor, mixFactor);
+
+    float globalAlpha = alpha * (1.0 - (uTime / 0.95));
+    gl_FragColor = vec4(finalColor, globalAlpha * 0.8);
+  }
+`;
+
+const textureLoader = new THREE.TextureLoader();
+const punchTexture = textureLoader.load("/assets/punch_silouete.png");
+
+function screenToWorld(screenX, screenY, camera) {
+  const ndcX = (screenX / window.innerWidth) * 2 - 1;
+  const ndcY = -(screenY / window.innerHeight) * 2 + 1;
+
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
+
+  const worldPos = new THREE.Vector3();
+  raycaster.ray.intersectPlane(
+    new THREE.Plane(new THREE.Vector3(0, 0, 1), 0),
+    worldPos,
+  );
+  return worldPos;
+}
+
+class RonanPunchEffect {
+  constructor(scene, userPos, targetPos) {
+    this.scene = scene;
+    this.age = 0;
+
+    this.userPos = userPos.clone();
+    this.targetPos = targetPos.clone();
+    const dx = targetPos.x - userPos.x;
+    const dy = targetPos.y - userPos.y;
+    this.direction = new THREE.Vector3(dx, dy, 0).normalize();
+    const angle = Math.atan2(dy, dx);
+
+    // Slow travel: a heavy swing lands late, it does not zip across like a shot.
+    this.travelDur = 0.28;
+    this.postDur = 0.66;
+    this.lifetime = this.travelDur + this.postDur;
+    this.fadeScale = 0.95 / this.postDur;
+
+    // --- Phase 1: Swipe trail (travels from user → target) ---
+    const swipeGeo = new THREE.PlaneGeometry(3.4, 2.05);
+    this.swipeMat = new THREE.ShaderMaterial({
+      vertexShader: basicVertexShader,
+      fragmentShader: swipeFragmentShader,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      uniforms: { uProgress: { value: 0 } },
+    });
+    this.swipe = new THREE.Mesh(swipeGeo, this.swipeMat);
+    this.swipe.rotation.z = angle;
+    // Starts at user position
+    this.swipe.position.set(userPos.x, userPos.y, 0);
+    scene.add(this.swipe);
+
+    // --- Phase 2: Fist print (impact mark at target) ---
+    const printGeo = new THREE.PlaneGeometry(3.5, 3.5);
+    this.printMat = new THREE.ShaderMaterial({
+      vertexShader: basicVertexShader,
+      fragmentShader: fistPrintFragmentShader,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      uniforms: {
+        uAge: { value: 0 },
+        uTexture: { value: punchTexture },
+      },
+    });
+    this.fistPrint = new THREE.Mesh(printGeo, this.printMat);
+    // Keep the punch silhouette upright as authored in the PNG.
+    this.fistPrint.rotation.z = 0;
+    this.fistPrint.position.set(targetPos.x, targetPos.y, 0);
+    this.fistPrint.visible = false;
+    scene.add(this.fistPrint);
+
+    // --- Phase 3: Smoke particles (at target) ---
+    const particleCount = 18;
+    const pGeo = new THREE.BufferGeometry();
+    const pPos = new Float32Array(particleCount * 3);
+    const pVel = new Float32Array(particleCount * 3);
+    const pSize = new Float32Array(particleCount);
+
+    for (let i = 0; i < particleCount; i++) {
+      // All particles originate at target position
+      pPos[i * 3] = targetPos.x;
+      pPos[i * 3 + 1] = targetPos.y;
+      pPos[i * 3 + 2] = 0;
+
+      // Smoke pushed in direction of punch + radial expansion
+      const theta = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 1.5 + 0.8;
+      pVel[i * 3] = (Math.cos(theta) * 0.5 + this.direction.x) * speed;
+      pVel[i * 3 + 1] = (Math.sin(theta) * 0.5 + this.direction.y) * speed;
+      pVel[i * 3 + 2] = (Math.random() - 0.5) * speed;
+
+      pSize[i] = Math.random() * 13 + 11;
+    }
+    pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
+    pGeo.setAttribute("aVelocity", new THREE.BufferAttribute(pVel, 3));
+    pGeo.setAttribute("aSize", new THREE.BufferAttribute(pSize, 1));
+
+    this.smokeMat = new THREE.ShaderMaterial({
+      vertexShader: smokeVertexShader,
+      fragmentShader: smokeFragmentShader,
+      transparent: true,
+      blending: THREE.NormalBlending,
+      depthWrite: false,
+      uniforms: { uTime: { value: 0 } },
+    });
+    this.particles = new THREE.Points(pGeo, this.smokeMat);
+    this.particles.visible = false;
+    scene.add(this.particles);
+  }
+
+  update(dt) {
+    this.age += dt;
+
+    if (this.age <= this.travelDur) {
+      const t = this.age / this.travelDur;
+      this.swipeMat.uniforms.uProgress.value = t;
+      this.swipe.position.x =
+        this.userPos.x + (this.targetPos.x - this.userPos.x) * t;
+      this.swipe.position.y =
+        this.userPos.y + (this.targetPos.y - this.userPos.y) * t;
+      // Barely stretches: the mass stays compact instead of drawing a tracer.
+      this.swipe.scale.x = 1.0 + t * 0.85;
+    } else {
+      this.swipe.visible = false;
+
+      // Shader fades run on a ~0.95s clock; rescale so they finish in postDur.
+      const shaderAge = (this.age - this.travelDur) * this.fadeScale;
+      this.fistPrint.visible = true;
+      this.printMat.uniforms.uAge.value = shaderAge;
+      this.particles.visible = true;
+      this.smokeMat.uniforms.uTime.value = shaderAge;
+    }
+
+    return this.age < this.lifetime;
+  }
+
+  dispose(scene) {
+    scene.remove(this.swipe);
+    scene.remove(this.fistPrint);
+    scene.remove(this.particles);
+    this.swipeMat.dispose();
+    this.printMat.dispose();
+    this.smokeMat.dispose();
+    this.swipe.geometry.dispose();
+    this.fistPrint.geometry.dispose();
+    this.particles.geometry.dispose();
+  }
+}
+
+export async function playRonanPunch({ targetEl, userEl }) {
+  const container = document.getElementById("webgl-container");
+  if (!container || !targetEl) return;
+
+  const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }] =
+    await Promise.all([
+      import("three/addons/postprocessing/EffectComposer.js"),
+      import("three/addons/postprocessing/RenderPass.js"),
+      import("three/addons/postprocessing/UnrealBloomPass.js"),
+    ]);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(
+    45,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000,
+  );
+
+  camera.position.z = 15;
+  camera.updateMatrixWorld();
+
+  const targetCenter = getElementCenter(targetEl);
+  const worldTarget = screenToWorld(targetCenter.x, targetCenter.y, camera);
+
+  let worldUser;
+  if (userEl) {
+    const userCenter = getElementCenter(userEl);
+    worldUser = screenToWorld(userCenter.x, userCenter.y, camera);
+  } else {
+    worldUser = new THREE.Vector3(worldTarget.x - 5, worldTarget.y, 0);
+  }
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setClearColor(0x000000, 1);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.domElement.style.position = "absolute";
+  renderer.domElement.style.top = "0";
+  renderer.domElement.style.left = "0";
+  container.appendChild(renderer.domElement);
+
+  const renderScene = new RenderPass(scene, camera);
+  const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    2.4,
+    0.5,
+    0.1,
+  );
+
+  const composer = new EffectComposer(renderer);
+  composer.addPass(renderScene);
+  composer.addPass(bloomPass);
+
+  const effect = new RonanPunchEffect(scene, worldUser, worldTarget);
+
+  const clock = new THREE.Clock();
+
+  await new Promise((resolve) => {
+    function animate() {
+      const dt = clock.getDelta();
+
+      if (!effect.update(dt)) {
+        effect.dispose(scene);
+        composer.dispose();
+        renderer.dispose();
+        renderer.domElement.remove();
+        resolve();
+        return;
+      }
+
+      composer.render();
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  });
+}

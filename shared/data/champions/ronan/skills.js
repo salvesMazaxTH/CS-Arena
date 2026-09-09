@@ -1,5 +1,4 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
-import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
 import { fixateOn } from "./passive.js";
 
@@ -45,13 +44,14 @@ const ronanSkills = [
     bf: 60,
     tauntDuration: 2,
 
+    ignoresTaunt: true,
     contact: true,
     damageMode: "standard",
     element: "fire",
     priority: 0,
 
     description() {
-      return `Ronan picks the fight he wants instead of the one he was handed, and makes very sure the other one wants it too. Deals Fire physical damage and locks the two of them onto each other for ${this.tauntDuration} turn(s): any grudge he was already carrying is dropped, he Taunts himself onto this target instead, and they are left Taunted onto him.`;
+      return `Ronan picks the fight he wants instead of the one he was handed, and makes very sure the other one wants it too. Deals Fire physical damage and locks the two of them onto each other for ${this.tauntDuration} turn(s): he can aim this even while another grudge holds him, any grudge he was already carrying is dropped, he Taunts himself onto this target instead, and they are left Taunted onto him. Nothing he suffers in the meantime moves his attention off them.`;
     },
 
     targetSpec: ["enemy"],
@@ -59,7 +59,7 @@ const ronanSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
 
-      fixateOn(user, enemy, this.tauntDuration, context);
+      fixateOn(user, enemy, this.tauntDuration, context, { chosen: true });
 
       const result = new DamageEvent({
         baseDamage: (user.Attack * this.bf) / 100,
@@ -112,12 +112,6 @@ const ronanSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
-
-      context.registerDialog({
-        message: `${formatChampionName(user)} stops holding any of it back.`,
-        sourceId: user.id,
-        targetId: enemy.id,
-      });
 
       return result;
     },

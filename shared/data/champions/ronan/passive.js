@@ -5,7 +5,23 @@ export const FIXATION_DURATION = 2;
 // Ronan only ever answers one person at a time, so an older grudge is dropped
 // rather than stacked. Re-fixating on the same target only refreshes the timer,
 // with no fresh announcement.
-export function fixateOn(owner, enemy, duration, context) {
+export function fixateOn(owner, enemy, duration, context, { chosen = false } = {}) {
+  const chosenUntil = owner.runtime.ronanChosenUntilTurn ?? 0;
+
+  // A fight he picked himself outranks the one the last hit handed him, and
+  // only lets go early if that target leaves the field.
+  if (!chosen && chosenUntil > context.currentTurn) {
+    const stillStanding = context.aliveChampions.some(
+      (champ) => champ.id === owner.runtime.ronanChosenTargetId,
+    );
+    if (stillStanding) return null;
+  }
+
+  if (chosen) {
+    owner.runtime.ronanChosenUntilTurn = context.currentTurn + duration;
+    owner.runtime.ronanChosenTargetId = enemy.id;
+  }
+
   if (owner.isTauntedBy(enemy.id)) {
     for (const effect of owner.tauntEffects) {
       effect.expiresAtTurn = context.currentTurn + duration;
@@ -32,7 +48,7 @@ export default {
   description() {
     return `Ronan carries Ignisar's blood and none of Ignisar's patience. Every time he is wounded he gains +${this.attackPerHitTaken} Attack, and every ${this.hitsDealtPerGain} blows he lands give him +${this.attackPerHitsDealt} more, up to +${this.maxAttackBonus} in total — but being healed cools him down, costing him ${this.attackLostOnHeal} of it.
 
-    He also cannot let a hit go. Whoever wounds him last has his whole attention for ${FIXATION_DURATION} turn(s): he Taunts himself onto them and can answer nobody else, and he deals +${this.fixationBonusPercent}% damage to them for as long as it lasts.`;
+    He also cannot let a hit go. Whoever wounds him last has his whole attention for ${FIXATION_DURATION} turn(s): he Taunts himself onto them and can answer nobody else, and he deals +${this.fixationBonusPercent}% damage to them for as long as it lasts — unless he has picked a fight of his own, which nothing rewrites until it runs out.`;
   },
 
   hookScope: {
