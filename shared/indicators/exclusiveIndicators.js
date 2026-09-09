@@ -114,3 +114,12 @@ registerRuntimeCounterIndicator("harlan_wanted", "harlanWanted", {
   background: "rgba(139, 101, 54, 0.85)",
   label: "Wanted",
 });
+
+// Tony Raiturus' The Flash Arrives First (runtime.raiturusThunder): damage
+// already dealt whose sound has not reached the target yet.
+registerRuntimeCounterIndicator("raiturus_thunder", "raiturusThunder", {
+  type: "emoji",
+  value: "🔊",
+  background: "rgba(214, 163, 32, 0.85)",
+  label: "Thunder Incoming",
+});
