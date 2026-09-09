@@ -60,7 +60,7 @@ export function preChecks(event) {
   // 2️⃣ ESQUIVA
   if (
     event.mode !== event.constructor.Modes.ABSOLUTE &&
-    !event.skill?.cannotBeEvaded
+    !event.cannotBeEvaded
   ) {
     const evasion = hookForcedEvade
       ? { attempted: true, evaded: true }
