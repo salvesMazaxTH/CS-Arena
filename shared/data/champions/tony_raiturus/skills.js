@@ -39,8 +39,8 @@ const tonyRaiturusSkills = [
   },
 
   {
-    key: "the_eye_that_is_still_the_dragons",
-    name: "The Eye That Is Still the Dragon's",
+    key: "the_dragons_eye",
+    name: "The Dragon's Eye",
 
     bf: 70,
     recoilPercentOfMaxHp: 12,
