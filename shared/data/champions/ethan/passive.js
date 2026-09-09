@@ -41,6 +41,8 @@ export default {
       );
     if (shadowflameClaimed) return;
 
+    owner.runtime.shadowflameArrivedTurn = context.currentTurn;
+
     context.requestChampionMutation({
       mode: "transform",
       targetId: owner.id,
