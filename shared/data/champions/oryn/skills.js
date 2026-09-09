@@ -29,7 +29,7 @@ const orynSkills = [
     element: "lightning",
 
     description() {
-      return `Oryn lifts the pins in his forearms and the air leans toward him. He Taunts two chosen enemies for ${this.tauntDuration} turn(s) and braces for the answer, gaining ${this.damageReductionPercent}% Damage Reduction for ${this.damageReductionDuration} turn(s).`;
+      return `Oryn lifts the pins in his forearms and the air leans toward him. He Taunts two chosen enemies for ${this.tauntDuration} turn(s), releasing any enemy he was already Taunting, and braces for the answer, gaining ${this.damageReductionPercent}% Damage Reduction for ${this.damageReductionDuration} turn(s).`;
     },
 
     targetSpec: [
@@ -38,6 +38,10 @@ const orynSkills = [
     ],
 
     resolve({ user, targets, context = {} }) {
+      user.damageReductionModifiers = user.damageReductionModifiers.filter(
+        (mod) => mod.source !== this.key,
+      );
+
       user.applyDamageReduction({
         amount: this.damageReductionPercent,
         duration: this.damageReductionDuration,
@@ -45,6 +49,13 @@ const orynSkills = [
         source: this.key,
         context,
       });
+
+      // The sky only leans toward two at a time.
+      for (const champ of context.aliveChampions) {
+        champ.tauntEffects = champ.tauntEffects.filter(
+          (taunt) => taunt.taunterId !== user.id,
+        );
+      }
 
       const logs = [];
       for (const enemy of targets) {
@@ -113,8 +124,8 @@ const orynSkills = [
     dischargePiercing: 40,
     paralyzeDuration: 2,
     maxDischarges: 2,
-    shieldAmount: 90,
-    shieldDecayPerTurn: 45,
+    shieldAmount: 80,
+    shieldDecayPerTurn: 40,
 
     contact: false,
     isUltimate: true,
