@@ -92,3 +92,25 @@ registerRuntimeCounterIndicator("lorena_mark", "lorenaMarkUntilTurn", {
   background: "rgba(219, 39, 91, 0.85)",
   label: "Marked",
 });
+
+// Harlan Graves' Quickdraw (runtime.harlanHalfStepUntilTurn): the enemy's next
+// hit on Harlan lands for half, having just been outdrawn.
+registerRuntimeCounterIndicator(
+  "harlan_half_step",
+  "harlanHalfStepUntilTurn",
+  {
+    type: "emoji",
+    value: "🥴",
+    background: "rgba(170, 120, 40, 0.85)",
+    label: "Off-Balance",
+  },
+);
+
+// Harlan Graves' ultimate, Wanted Dead or Alive (runtime.harlanWanted): while
+// this holds and the target lives, Harlan's CLAIM cashes in bonus points.
+registerRuntimeCounterIndicator("harlan_wanted", "harlanWanted", {
+  type: "emoji",
+  value: "🎯",
+  background: "rgba(139, 101, 54, 0.85)",
+  label: "Wanted",
+});
