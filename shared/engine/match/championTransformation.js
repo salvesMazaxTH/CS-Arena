@@ -145,6 +145,15 @@ function transferCombatState({ sourceChampion, nextChampion }) {
   );
 }
 
+// A transformation replaces championKey, but the roster, the lineup banner and
+// anything else drafted-by-key must still find the champion under what was drafted.
+export function rosterChampionKey(champion) {
+  return (
+    champion?.runtime?.transformation?.originalChampionKey ??
+    champion?.championKey
+  );
+}
+
 export function applyChampionTransformation({
   combat,
   targetId,
