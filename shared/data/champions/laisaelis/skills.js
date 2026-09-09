@@ -1,6 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicShot from "../generic/basicShot.js";
-import { findTwin, survivalDamage, wouldBeLethal } from "../pairs/twinBond.js";
+import { findTwin, survivalDamage } from "../pairs/twinBond.js";
 
 const SISTER_KEYS = ["laisaelis", "laiserisa"];
 
@@ -234,7 +234,7 @@ const laisaelisSkills = [
             // Laiserisa's own binding answers the same hit and outranks this.
             if (owner.runtime.hookEffects?.some((e) => e.key === "twin_departure"))
               return;
-            if (!wouldBeLethal(owner, damage)) return;
+            if (!owner.wouldBeLethal(damage)) return;
 
             owner.runtime.preventFinishingUntilTurn = context.currentTurn + 1;
 

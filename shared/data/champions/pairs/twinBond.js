@@ -1,3 +1,4 @@
+import { regularShieldTotal } from "../../../core/championCombat.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import { getDuoForCore } from "../../duos.js";
 
@@ -17,23 +18,6 @@ export function findTwin(champion, context) {
     (other) =>
       other.team === champion.team && other.championKey === twinKey,
   );
-}
-
-function regularShieldTotal(champion) {
-  const shields = Array.isArray(champion.runtime?.shields)
-    ? champion.runtime.shields
-    : [];
-
-  return shields.reduce(
-    (total, s) =>
-      !s.type || s.type === "regular" ? total + (Number(s.amount) || 0) : total,
-    0,
-  );
-}
-
-/** A hit is lethal only once the champion's regular shields cannot cover it. */
-export function wouldBeLethal(champion, damage) {
-  return champion.HP + regularShieldTotal(champion) - damage <= 0;
 }
 
 /**

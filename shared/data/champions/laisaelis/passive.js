@@ -4,7 +4,6 @@ import {
   findTwin,
   survivalDamage,
   TWIN_BOND_TEXT,
-  wouldBeLethal,
 } from "../pairs/twinBond.js";
 
 export default {
@@ -46,7 +45,7 @@ export default {
   onBeforeDmgTaking({ defender, owner, damage, context }) {
     if (defender !== owner) return;
     if (owner.runtime.remainSpent) return;
-    if (!wouldBeLethal(owner, damage)) return;
+    if (!owner.wouldBeLethal(damage)) return;
 
     // Her sister's binding answers the same lethal hit, and takes precedence.
     if (owner.runtime.hookEffects?.some((e) => e.key === "twin_departure"))

@@ -28,6 +28,7 @@ import {
   modifyStat,
   modifyHP,
   takeDamage,
+  wouldBeLethal,
   heal,
   removeStatModifiers,
   purgeExpiredStatModifiers,
@@ -560,6 +561,10 @@ export class Champion {
 
   breakShields(amount, options) {
     return breakShields(this, amount, options);
+  }
+
+  wouldBeLethal(damage) {
+    return wouldBeLethal(this, damage);
   }
 
   applyTaunt(taunterId, duration, context) {

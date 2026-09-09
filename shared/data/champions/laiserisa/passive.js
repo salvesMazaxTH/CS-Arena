@@ -4,7 +4,6 @@ import {
   findTwin,
   survivalDamage,
   TWIN_BOND_TEXT,
-  wouldBeLethal,
 } from "../pairs/twinBond.js";
 
 export default {
@@ -47,7 +46,7 @@ export default {
   onBeforeDmgTaking({ defender, owner, damage, context }) {
     if (defender !== owner) return;
     if (owner.runtime.leaveSpent) return;
-    if (!wouldBeLethal(owner, damage)) return;
+    if (!owner.wouldBeLethal(damage)) return;
 
     // Either binding answers the same lethal hit, and outranks the passive:
     // twin_departure takes both sisters, keep_you_here shields this one for free.

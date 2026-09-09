@@ -1,21 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
-// Spell and supreme shields block the whole action earlier in the pipeline, so
-// only a regular shield can still be standing between Lana and a lethal blow.
-function regularShieldTotal(owner) {
-  const shields = Array.isArray(owner.runtime?.shields)
-    ? owner.runtime.shields
-    : [];
-
-  return shields.reduce(
-    (total, shield) =>
-      !shield.type || shield.type === "regular"
-        ? total + (Number(shield.amount) || 0)
-        : total,
-    0,
-  );
-}
-
 function clearLanaSpellShield(owner) {
   if (!Array.isArray(owner.runtime?.shields)) return;
 
@@ -68,7 +52,7 @@ export default {
     if (owner.runtime.lana.triggered) return;
     // Tutu blocks a blow, not a poison or burn tick.
     if (context.isDot) return;
-    if (owner.HP + regularShieldTotal(owner) - damage > 0) return;
+    if (!owner.wouldBeLethal(damage)) return;
 
     owner.runtime.lana.triggered = true;
 

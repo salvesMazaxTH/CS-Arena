@@ -599,6 +599,27 @@ export function modifyHP(
   };
 }
 
+// Spell and supreme shields block the whole action earlier in the pipeline, so
+// only a regular shield can still be standing between a champion and the blow.
+export function regularShieldTotal(champion) {
+  const shields = Array.isArray(champion.runtime?.shields)
+    ? champion.runtime.shields
+    : [];
+
+  return shields.reduce(
+    (total, shield) =>
+      !shield.type || shield.type === "regular"
+        ? total + (Number(shield.amount) || 0)
+        : total,
+    0,
+  );
+}
+
+/** A hit is lethal only once the champion's regular shields cannot cover it. */
+export function wouldBeLethal(champion, damage) {
+  return champion.HP + regularShieldTotal(champion) - damage <= 0;
+}
+
 /** Apply raw damage, letting regular shields absorb first, then reducing HP. */
 export function takeDamage(champion, amount, context) {
   if (!champion.alive) return;
