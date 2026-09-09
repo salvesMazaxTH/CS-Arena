@@ -183,7 +183,7 @@ const raliaSkills = [
   {
     key: "decree_of_the_bastion",
     name: "Decree of the Bastion",
-    bf: 50,
+    bf: 65,
     damageMode: "piercing",
     hitVfx: "multislash",
     piercingPercentage: 75,
@@ -194,7 +194,7 @@ const raliaSkills = [
 
     contact: false,
     isUltimate: true,
-    momentumCost: 55,
+    momentumCost: 50,
 
     priority: 0,
     description() {

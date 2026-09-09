@@ -1,11 +1,11 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
 const BUFFS_PER_DEATH = [
-  { stat: "Attack", amount: 30, isPercent: true },
-  { stat: "Defense", amount: 30, isPercent: true },
+  { stat: "Attack", amount: 15, isPercent: true },
+  { stat: "Defense", amount: 15, isPercent: true },
 ];
 
-const REVIVE_HP_PERCENT = 75;
+const REVIVE_HP_PERCENT = 70;
 
 // Called from both death hooks; revivalScheduledForTurn makes the second
 // call a no-op.
