@@ -16,7 +16,7 @@ export const permafrost = {
   },
 
   description() {
-    return `The cold your team carries is the settled kind — old ice that has forgotten how to melt and does not feel a fresh chill land on it. Every allied champion is immune to Chilled and takes ${this.baseDamageReductionPercent}% less damage, rising to ${this.iceDamageReductionPercent}% against Ice damage; when Ice damage does land, ${this.iceHitShieldPercent}% of it freezes onto the champion as a Shield.`;
+    return `The cold your team carries is the settled kind — old ice that has forgotten how to melt and does not feel a fresh chill land on it. Every allied champion is immune to Chilled and takes ${this.baseDamageReductionPercent}% less damage (except Absolute Damage), rising to ${this.iceDamageReductionPercent}% against Ice damage; when Ice damage does land, ${this.iceHitShieldPercent}% of it freezes onto the champion as a Shield.`;
   },
 
   hookScope: {

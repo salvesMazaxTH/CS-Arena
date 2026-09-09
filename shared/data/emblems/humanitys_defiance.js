@@ -21,7 +21,7 @@ export const humanitysDefiance = {
   },
 
   description() {
-    return `Your human champions deal ${this.bonusDmgPercent}% bonus damage to non-human enemies and take ${this.damageReductionPercent}% less damage from enemies with higher Attack than them.`;
+    return `Your human champions deal ${this.bonusDmgPercent}% bonus damage to non-human enemies and take ${this.damageReductionPercent}% less damage (except Absolute Damage) from enemies with higher Attack than them.`;
   },
 
   hookScope: {
