@@ -16,11 +16,37 @@ export default {
     onAfterDmgDealing: "attacker",
   },
 
+  clearMarks(owner, champions, { onlyStale = true, currentTurn = 0 } = {}) {
+    for (const champion of champions) {
+      if (champion.team === owner.team) continue;
+
+      const until = champion.runtime.lorenaMarkUntilTurn;
+      if (until === undefined) continue;
+      if (onlyStale && until > currentTurn) continue;
+
+      delete champion.runtime.lorenaMarkUntilTurn;
+    }
+  },
+
+  // Nothing else clears the mark, and a stale one would sit on the enemy's
+  // portrait long after Lorena could still cash it.
+  onTurnStart({ owner, context }) {
+    this.clearMarks(owner, context.aliveChampions, {
+      currentTurn: context.currentTurn,
+    });
+  },
+
+  // Only Lorena can cash a mark, so hers leave the board with her.
+  onChampionDeath({ owner, deadChampion, context }) {
+    if (deadChampion !== owner) return;
+    this.clearMarks(owner, context.aliveChampions, { onlyStale: false });
+  },
+
   onBeforeDmgDealing({ owner, defender, crit, context }) {
-    if (!defender?.runtime?.lorenaMarked) return;
+    if (defender?.runtime?.lorenaMarkUntilTurn === undefined) return;
 
     // The mark is a one-shot promise: it pays out once, then it's gone.
-    delete defender.runtime.lorenaMarked;
+    delete defender.runtime.lorenaMarkUntilTurn;
 
     // onAfterDmgDealing reads this to know the killing blow cashed the mark.
     owner.runtime.lorenaLastLaugh = {

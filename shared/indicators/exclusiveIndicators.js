@@ -84,9 +84,9 @@ registerRuntimeCounterIndicator("zyrelle_ammo", "zyrelleAmmo", {
   showStackCount: true,
 });
 
-// Lorena's mark (runtime.lorenaMarked): a one-shot guaranteed crit on her next
-// hit against the target. Boolean flag, so no count badge.
-registerRuntimeCounterIndicator("lorena_mark", "lorenaMarked", {
+// Lorena's mark (runtime.lorenaMarkUntilTurn): a one-shot guaranteed crit on
+// her next hit against the target.
+registerRuntimeCounterIndicator("lorena_mark", "lorenaMarkUntilTurn", {
   type: "emoji",
   value: "💋",
   background: "rgba(219, 39, 91, 0.85)",

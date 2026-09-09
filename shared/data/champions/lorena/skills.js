@@ -19,6 +19,7 @@ const lorenaSkills = [
     name: "Tag, You're It",
 
     bf: 25,
+    markWindow: 2,
 
     contact: false,
     damageMode: "standard",
@@ -26,7 +27,7 @@ const lorenaSkills = [
     priority: 0,
 
     description() {
-      return `Lorena blows the chosen target a mocking little kiss down the barrel before she even fires: deals physical damage and marks them, so her next hit against them is guaranteed to be a critical hit.`;
+      return `Lorena blows the chosen target a mocking little kiss down the barrel before she even fires: deals physical damage and marks them for ${this.markWindow} turn(s), so her next hit against them is always a critical hit.`;
     },
 
     targetSpec: ["enemy"],
@@ -49,7 +50,8 @@ const lorenaSkills = [
 
       // The mark only sticks if the shot actually connects.
       if (hitResult?.landed) {
-        enemy.runtime.lorenaMarked = true;
+        enemy.runtime.lorenaMarkUntilTurn =
+          context.currentTurn + this.markWindow;
       }
 
       return result;
@@ -126,7 +128,7 @@ const lorenaSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
-      const marked = !!enemy.runtime.lorenaMarked;
+      const marked = enemy.runtime.lorenaMarkUntilTurn !== undefined;
 
       return new DamageEvent({
         baseDamage,
