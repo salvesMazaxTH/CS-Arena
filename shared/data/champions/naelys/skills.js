@@ -103,6 +103,7 @@ const naelysSkills = [
     element: "water",
     damageReduction: 20,
     stanceDuration: 2,
+    counterDamage: 50,
 
     hits: [
       {
@@ -116,7 +117,7 @@ const naelysSkills = [
     ],
 
     description() {
-      return `Naelys assumes a maritime stance until the end of the next turn, gaining ${this.damageReduction}% damage reduction. The first time she is hit each turn, she counterattacks the attacker for Basic Strike damage, dealt as absolute damage.`;
+      return `Naelys assumes a maritime stance until the end of the next turn, gaining ${this.damageReduction}% damage reduction. The first time she is hit each turn, she counterattacks the attacker for ${this.counterDamage} Absolute Damage.`;
     },
 
     targetSpec: ["self"],
@@ -125,6 +126,7 @@ const naelysSkills = [
       user.runtime.hookEffects ??= [];
 
       const skill = this;
+      const counterDamage = this.counterDamage;
 
       const effect = {
         type: "buff",
@@ -145,15 +147,11 @@ const naelysSkills = [
 
           context.extraDamageQueue ??= [];
 
-          const basic = owner.skills.find((s) => s.key === "basic_strike");
-
-          if (!basic) return;
-
           context.extraDamageQueue.push({
             ...SkillHits.params(skill, "counter", {
               user: owner,
               target: attacker,
-              baseDamage: (owner.Attack * basic.bf) / 100,
+              baseDamage: counterDamage,
               context,
             }),
 
