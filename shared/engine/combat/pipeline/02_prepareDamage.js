@@ -111,7 +111,7 @@ function applyAffinity(event, debugMode) {
 // CRIT SYSTEM
 // ============================================================================
 
-const DEFAULT_CRIT_BONUS = 55;
+const DEFAULT_CRIT_BONUS = 60;
 const MAX_CRIT_CHANCE = 95;
 
 function processCrit(event, debugMode) {
