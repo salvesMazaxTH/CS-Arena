@@ -97,7 +97,7 @@ const morakhanSkills = [
         ally.applyDamageReduction({
           amount: this.dmgReduct,
           duration: this.duration,
-          source: this.name,
+          source: this.key,
           type: "percent",
           context,
         });
@@ -166,6 +166,9 @@ const morakhanSkills = [
     isUltimate: true,
     momentumCost: 48,
 
+    reflectPercent: 50,
+    dmgReduct: 60,
+
     hits: [
       {
         id: "reflection",
@@ -181,14 +184,15 @@ const morakhanSkills = [
     description() {
       return `Unleashes Mountain Stance. During this turn:
       Becomes immune to crowd control.
-      Reflects 50% of all damage taken from abilities.
-      Gains an additional 60% damage reduction.`;
+      Reflects ${this.reflectPercent}% of all damage taken from abilities.
+      Gains an additional ${this.dmgReduct}% damage reduction.`;
     },
 
     targetSpec: ["self"],
 
     resolve({ user, context }) {
       const skill = this;
+      const { name, reflectPercent, dmgReduct } = this;
 
       const effect = {
         type: "buff",
@@ -203,10 +207,10 @@ const morakhanSkills = [
         onBeforeDmgTaking({ defender, attacker, damage, context }) {
           if (context.damageDepth > 0) return;
 
-          const reflectedDamage = damage * 0.5;
+          const reflectedDamage = damage * (reflectPercent / 100);
 
           context.registerDialog?.({
-            message: `<b>[ULTIMATE — ${this.name}]</b> ${formatChampionName(
+            message: `<b>[ULTIMATE — ${name}]</b> ${formatChampionName(
               defender,
             )} reflects ${Math.floor(
               reflectedDamage,
@@ -226,18 +230,18 @@ const morakhanSkills = [
             dialog: {
               message: `${formatChampionName(
                 defender,
-              )} reflects the damage with ${this.name}!`,
+              )} reflects the damage with ${name}!`,
               duration: 1000,
             },
           });
 
           return {
-            damage: damage * 0.4,
-            log: `[ULTIMATE — ${this.name}] ${formatChampionName(
+            damage: damage * (1 - dmgReduct / 100),
+            log: `[ULTIMATE — ${name}] ${formatChampionName(
               defender,
             )} reflects ${Math.floor(
               reflectedDamage,
-            )} damage back to the attacker and takes only 40% of the blow!`,
+            )} damage back to the attacker and takes only ${100 - dmgReduct}% of the blow!`,
           };
         },
 

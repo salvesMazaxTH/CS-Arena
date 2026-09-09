@@ -8,6 +8,10 @@ export default {
   name: "First Sutra: Adamantine Heart",
 
   flatReductionVSPhysical: 25,
+  standingReductionPercent: 10,
+  reductionPerStack: 10,
+  burstDmgMultiplier: 2,
+  minDamageAfterFlatReduction: 5,
   stabilityStacksCap: 4,
   dmgBuffAuraDuration: 2,
   significantHitRatio: 0.35,
@@ -15,11 +19,11 @@ export default {
   description(champion) {
     const stacks = champion.runtime?.stabilityStacks || 0;
 
-    return `Morakhan takes 10% less damage (except Absolute Damage) and reduces damage taken from physical attacks by an additional ${this.flatReductionVSPhysical}.
+    return `Morakhan takes ${this.standingReductionPercent}% less damage (except Absolute Damage) and reduces damage taken from physical attacks by an additional ${this.flatReductionVSPhysical}.
 
     Whenever he takes Physical Damage, he gains 1 <b>Stability</b> stack (Max: ${this.stabilityStacksCap}). A CLAIM, taken in stillness, grants 1 stack as well.
 
-    When a hit would deal more than ${this.significantHitRatio * 100}% of his Max HP, he consumes all Stability stacks to reduce that damage by an additional 10% per stack, then doubles his damage dealt for the next ${this.dmgBuffAuraDuration} turns.
+    When a hit would deal more than ${this.significantHitRatio * 100}% of his Max HP, he consumes all Stability stacks to reduce that damage by an additional ${this.reductionPerStack}% per stack, then doubles his damage dealt for the next ${this.dmgBuffAuraDuration} turns.
 
     While already at maximum Stability, the next stack he would gain — whether from a Physical hit or a CLAIM — is spent immediately instead: no damage is reduced, but the doubling still triggers.
 
@@ -34,6 +38,9 @@ export default {
 
   // Empties Stability and arms the damage-doubling aura. Returns the summary line.
   consumeStability(owner, context, consumedStacks) {
+    const passiveName = this.name;
+    const dmgMultiplier = this.burstDmgMultiplier;
+
     owner.runtime.stabilityStacks = 0;
 
     owner.runtime.hookEffects ??= [];
@@ -66,8 +73,8 @@ export default {
             hitId === "reflection";
 
           return {
-            damage: damage * 2,
-            log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
+            damage: damage * dmgMultiplier,
+            log: `<b>[Passive — ${passiveName}]</b> ${formatChampionName(
               attacker,
             )} doubles the damage dealt${
               isOwnCounter ? " by the counterattack" : ""
@@ -109,16 +116,23 @@ export default {
   },
 
   onBeforeDmgTaking({ damage, context, owner, type }) {
-    const isPhysical = type === "physical";
     const stacks = owner.runtime?.stabilityStacks || 0;
 
     let finalDamage = damage;
 
-    if (isPhysical) {
-      finalDamage = Math.max(5, finalDamage - this.flatReductionVSPhysical);
+    if (type === "physical") {
+      // The floor is a minimum for what gets through, never a raise on a hit
+      // that was already smaller than it.
+      finalDamage = Math.min(
+        finalDamage,
+        Math.max(
+          this.minDamageAfterFlatReduction,
+          finalDamage - this.flatReductionVSPhysical,
+        ),
+      );
     }
 
-    finalDamage *= 0.9;
+    finalDamage *= 1 - this.standingReductionPercent / 100;
 
     // Measured against the post-mitigation figure, not the raw incoming hit.
     const isSignificantHit =
@@ -128,7 +142,7 @@ export default {
       return { damage: finalDamage };
     }
 
-    finalDamage *= 1 - 0.1 * stacks;
+    finalDamage *= 1 - (this.reductionPerStack / 100) * stacks;
 
     return {
       damage: finalDamage,
