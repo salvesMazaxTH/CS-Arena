@@ -27,7 +27,7 @@ const sebastianIgnisSkills = [
     priority: 1,
 
     description() {
-      return `Sebastian barely raises the blade, a flick of flame that costs him nothing he wasn't already carrying. Deals physical contact damage, plus ${this.apathyBonusFlat} bonus damage per Apathy stack spent, and always sets the chosen enemy Burning for ${this.burnDuration} turn(s).`;
+      return `Sebastian barely raises the blade, a flick of flame that costs him nothing he wasn't already carrying. Deals physical damage, plus ${this.apathyBonusFlat} bonus damage per Apathy stack spent, and always sets the chosen enemy Burning for ${this.burnDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -143,7 +143,7 @@ const sebastianIgnisSkills = [
     priority: 0,
 
     description() {
-      return `Every stack of neglect Sebastian's been banking comes due at once, and for a moment he commits completely — the ground around the chosen enemy goes up with them. Deals physical contact damage, plus ${this.apathyBonusPercent}% more per Apathy stack spent, to them and whoever stands beside them, always setting each one Burning for ${this.burnDuration} turn(s).`;
+      return `Every stack of neglect Sebastian's been banking comes due at once, and for a moment he commits completely — the ground around the chosen enemy goes up with them. Deals physical damage, plus ${this.apathyBonusPercent}% more per Apathy stack spent, to them and whoever stands beside them, always setting each one Burning for ${this.burnDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],

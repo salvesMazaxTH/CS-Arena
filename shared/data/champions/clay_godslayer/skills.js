@@ -24,7 +24,7 @@ const clayGodslayerSkills = [
     priority: 0,
 
     description() {
-      return `Clay never came back from the brink — he just learned to fight from there. Deals physical contact damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost.`;
+      return `Clay never came back from the brink — he just learned to fight from there. Deals physical damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost.`;
     },
 
     targetSpec: ["enemy"],
@@ -61,7 +61,7 @@ const clayGodslayerSkills = [
     priority: 0,
 
     description() {
-      return `Clay puts everything he has left into one last swing at the throne. Deals massive physical contact damage to the chosen target; if it kills them, he scores points equal to his current CLAIM value.`;
+      return `Clay puts everything he has left into one last swing at the throne. Deals massive physical damage to the chosen target; if it kills them, he scores points equal to his current CLAIM value.`;
     },
 
     targetSpec: ["enemy"],

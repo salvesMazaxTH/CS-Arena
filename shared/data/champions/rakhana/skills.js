@@ -27,7 +27,7 @@ const rakhanaSkills = [
     priority: 0,
 
     description() {
-      return `Strikes the chosen target with a powerful iron-infused palm, dealing physical contact damage.
+      return `Strikes the chosen target with a powerful iron-infused palm, dealing physical damage.
 
       If any Shield is on her when this ability hits, she consumes it to stun the target for ${this.stunDuration} turn and restores HP equal to ${this.shieldPercent}% of her Max HP.
 
@@ -133,7 +133,7 @@ const rakhanaSkills = [
     description() {
       return `Rakhana enters a defensive stance and gains a Shield equal to ${this.shieldPercent}% of her Max HP, half of it fading with each turn that passes.
 
-      The first time she is struck while the Shield is active, she reduces that damage by ${this.reflectPercent}% and reflects the prevented damage back to the attacker as physical non-contact damage.
+      The first time she is struck while the Shield is active, she reduces that damage by ${this.reflectPercent}% and reflects the prevented damage back to the attacker as physical damage.
 
       If the incoming attack is Contact, she also stuns the attacker for 1 turn.`;
     },
@@ -274,7 +274,7 @@ const rakhanaSkills = [
     threshold: 0.35,
 
     description() {
-      return `Rakhana descends upon the chosen target with overwhelming force, dealing physical contact damage and ignoring ${this.piercingPercentage}% of their Defense.
+      return `Rakhana descends upon the chosen target with overwhelming force, dealing physical damage and ignoring ${this.piercingPercentage}% of their Defense.
 
       If the target is below ${this.threshold * 100}% HP, deals bonus damage equal to ${this.missingHpPercent * 100}% of their missing HP.`;
     },

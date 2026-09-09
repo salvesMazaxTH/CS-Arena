@@ -24,7 +24,7 @@ const valeriaSkills = [
     priority: 0,
 
     description() {
-      return `The impact alone knocks the fight out of most people — Valeria never even needs to swing twice. Deals physical contact damage and always Stuns the chosen target for ${this.stunDuration} turn(s).`;
+      return `The impact alone knocks the fight out of most people — Valeria never even needs to swing twice. Deals physical damage and always Stuns the chosen target for ${this.stunDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -66,7 +66,7 @@ const valeriaSkills = [
     priority: 0,
 
     description() {
-      return `No half-measures, no mitigating circumstances — just the full weight of the hammer arriving at once. Deals physical contact damage.`;
+      return `No half-measures, no mitigating circumstances — just the full weight of the hammer arriving at once. Deals physical damage.`;
     },
 
     targetSpec: ["enemy"],
@@ -101,7 +101,7 @@ const valeriaSkills = [
     priority: 0,
 
     description() {
-      return `The same blow that put a dragon in the dirt, brought down now on someone far less legendary. Deals physical contact damage, with ${this.piercingPercentage}% of it guaranteed to go through as piercing damage, Defense be damned.`;
+      return `The same blow that put a dragon in the dirt, brought down now on someone far less legendary. Deals physical damage, with ${this.piercingPercentage}% of it guaranteed to go through as piercing damage, Defense be damned.`;
     },
 
     targetSpec: ["enemy"],

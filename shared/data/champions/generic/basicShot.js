@@ -10,7 +10,7 @@ const basicShot = {
   damageMode: "standard",
   priority: 0,
   description() {
-    return `\n A plain ranged shot (BF ${this.bf} + ${this.bonusFlat} flat bonus). Physical or magical, depending on the champion.`;
+    return `\n A plain ranged shot, carrying ${this.bonusFlat} flat bonus damage on top. Physical or magical, depending on the champion.`;
   },
   targetSpec: ["enemy"],
   resolve({ user, targets, context = {} }) {

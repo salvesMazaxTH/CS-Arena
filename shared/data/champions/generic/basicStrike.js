@@ -10,7 +10,7 @@ const basicStrike = {
   damageMode: "standard",
   priority: 0,
   description() {
-    return `\n A plain physical blow that makes contact (BF ${this.bf} + ${this.bonusFlat} flat bonus).`;
+    return `\n A plain physical blow, carrying ${this.bonusFlat} flat bonus damage on top.`;
   },
   targetSpec: ["enemy"],
   resolve({ user, targets, context = {} }) {

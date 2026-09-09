@@ -26,7 +26,7 @@ const ethanSkills = [
     priority: 0,
 
     description() {
-      return `Ethan doesn't waste a cut he hasn't already placed in his head. Deals physical contact damage, reducing the target's Evasion by ${this.evasionDebuff} for ${this.debuffDuration} turn(s) and leaving them Bleeding for ${this.bleedingStacks} stack(s).`;
+      return `Ethan doesn't waste a cut he hasn't already placed in his head. Deals physical damage, reducing the target's Evasion by ${this.evasionDebuff} for ${this.debuffDuration} turn(s) and leaving them Bleeding for ${this.bleedingStacks} stack(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -79,7 +79,7 @@ const ethanSkills = [
     priority: 1,
 
     description() {
-      return `He doesn't need the blade for this part — just leverage and patience. Deals physical contact damage, Snaring the target for ${this.snareDuration} turn(s).`;
+      return `He doesn't need the blade for this part — just leverage and patience. Deals physical damage, Snaring the target for ${this.snareDuration} turn(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -124,7 +124,7 @@ const ethanSkills = [
     priority: 0,
 
     description() {
-      return `Every debt gets collected eventually — Ethan just keeps the books. Deals physical contact damage, striking with an extra ${this.clayBonusPercent}% force if Clay is fighting at his side.`;
+      return `Every debt gets collected eventually — Ethan just keeps the books. Deals physical damage, striking with an extra ${this.clayBonusPercent}% force if Clay is fighting at his side.`;
     },
 
     targetSpec: ["enemy"],

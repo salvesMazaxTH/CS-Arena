@@ -23,7 +23,7 @@ const isarelisSkills = [
     priority: 0,
 
     description() {
-      return "Isarelis closes on the chosen target with both daggers reversed and opens them up in a handful of strokes, short blades finding the gaps a longer edge would never reach, dealing physical contact damage.";
+      return "Isarelis closes on the chosen target with both daggers reversed and opens them up in a handful of strokes, short blades finding the gaps a longer edge would never reach, dealing physical damage.";
     },
 
     targetSpec: ["enemy"],

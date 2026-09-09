@@ -25,7 +25,7 @@ const claySkills = [
     priority: 0,
 
     description() {
-      return `Clay swings his whole weight into a single blow, no finesse, just force. Deals physical contact damage.`;
+      return `Clay swings his whole weight into a single blow, no finesse, just force. Deals physical damage.`;
     },
 
     targetSpec: ["enemy"],
@@ -59,7 +59,7 @@ const claySkills = [
     priority: 0,
 
     description() {
-      return `The worse off Clay already is, the less he holds back — the wound itself becomes a weapon. Deals physical contact damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost, and leaves the target Bleeding for ${this.bleedingStacks} stack(s).`;
+      return `The worse off Clay already is, the less he holds back — the wound itself becomes a weapon. Deals physical damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost, and leaves the target Bleeding for ${this.bleedingStacks} stack(s).`;
     },
 
     targetSpec: ["enemy"],
@@ -118,7 +118,7 @@ const claySkills = [
     ],
 
     description() {
-      return `Clay throws everything he has at the chosen target and pays for it out of his own body. Deals physical contact damage, plus Absolute recoil damage equal to ${this.recoilPercentOfMaxHP}% of his Max HP whether the blow lands or not — which may be exactly what drives him over the edge.`;
+      return `Clay throws everything he has at the chosen target and pays for it out of his own body. Deals physical damage, plus Absolute recoil damage equal to ${this.recoilPercentOfMaxHP}% of his Max HP whether the blow lands or not — which may be exactly what drives him over the edge.`;
     },
 
     targetSpec: ["enemy"],
