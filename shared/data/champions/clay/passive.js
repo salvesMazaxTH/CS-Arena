@@ -1,3 +1,4 @@
+import { regularShieldTotal } from "../../../core/championCombat.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
@@ -36,7 +37,7 @@ export default {
   onBeforeDmgTaking({ owner, defender, attacker, damage, mode, context }) {
     if (defender !== owner || !(damage > 0)) return;
     if (owner.runtime.clayAscended || owner.runtime.clayGrudgeSpent) return;
-    if (owner.HP - damage > 0) return;
+    if (!owner.wouldBeLethal(damage)) return;
 
     owner.runtime.clayGrudgeSpent = true;
 
@@ -63,7 +64,10 @@ export default {
     });
 
     return {
-      damage: Math.max(owner.HP - survivalHP, 0),
+      damage: Math.max(
+        owner.HP + regularShieldTotal(owner) - survivalHP,
+        0,
+      ),
       log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} refuses to go down with the debt unpaid.`,
     };
   },

@@ -1,3 +1,4 @@
+import { regularShieldTotal } from "../../../core/championCombat.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
@@ -35,7 +36,7 @@ export default {
   onBeforeDmgTaking({ owner, defender, damage, context }) {
     if (defender !== owner || !(damage > 0)) return;
     if (owner.runtime.shadowflameArrivedTurn === context.currentTurn) return;
-    if (owner.HP - damage > 0) return;
+    if (!owner.wouldBeLethal(damage)) return;
 
     const stacks = owner.runtime.emberStacks || 0;
     if (stacks < this.minEmbersToSurvive) return;
@@ -53,7 +54,10 @@ export default {
     });
 
     return {
-      damage: Math.max(owner.HP - survivalHP, 0),
+      damage: Math.max(
+        owner.HP + regularShieldTotal(owner) - survivalHP,
+        0,
+      ),
       log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} burns ${stacks} Ember(s) to stay standing at ${survivalHP} HP.`,
     };
   },

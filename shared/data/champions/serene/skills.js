@@ -1,3 +1,4 @@
+import { regularShieldTotal } from "../../../core/championCombat.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
@@ -199,7 +200,7 @@ const sereneSkills = [
               return;
 
             // Not lethal: the Threshold stays shut.
-            if (owner.HP - damage > 0) return;
+            if (!owner.wouldBeLethal(damage)) return;
 
             // Must outlive this hook: the finishing step reads it after the
             // damage lands.
@@ -207,7 +208,10 @@ const sereneSkills = [
 
             const lockedHP = surviveHP;
 
-            const adjustedDamage = Math.max(owner.HP - lockedHP, 0);
+            const adjustedDamage = Math.max(
+              owner.HP + regularShieldTotal(owner) - lockedHP,
+              0,
+            );
 
             // The Immunity has to cover the next turn's onTurnStart, where a
             // DoT tick would otherwise finish off a champion sitting at 1 HP
