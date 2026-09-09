@@ -13,6 +13,8 @@ import {
   renderChampionIdentityBadgesMarkup,
   normalizeChampionClassKey,
   sortChampionKeysAlphabetically,
+  getChampionSpecies,
+  toReadableLabel,
 } from "./championCardMarkup.js";
 import {
   renderChampionInspector,
@@ -44,7 +46,7 @@ export class TeamBuilder {
     this.editMode = editMode;
     this.draft = null;
     this.focusKey = null;
-    this.filters = { element: null, klass: null, text: "" };
+    this.filters = { element: null, klass: null, species: null, text: "" };
     this._draggedKey = null;
     this._draggedFromSlot = -1;
   }
@@ -62,7 +64,7 @@ export class TeamBuilder {
       emblems: Array.isArray(team?.emblems) ? [...team.emblems] : [],
       derivedFrom: team?.derivedFrom ?? null,
     };
-    this.filters = { element: null, klass: null, text: "" };
+    this.filters = { element: null, klass: null, species: null, text: "" };
     this.focusKey =
       champions.find(Boolean) ?? this._rosterKeys()[0] ?? null;
 
@@ -97,6 +99,8 @@ export class TeamBuilder {
             <div class="tm-roster-filters">
               <input class="tm-roster-search" type="search" placeholder="Search by name"
                 aria-label="Search champions by name">
+              <select class="tm-roster-species" data-facet="species"
+                aria-label="Filter by species"></select>
               <div class="tm-filter-row" data-facet="element"></div>
               <div class="tm-filter-row" data-facet="klass"></div>
             </div>
@@ -201,6 +205,30 @@ export class TeamBuilder {
       }
     }
     this._syncFilterChips();
+
+    // Species is a plain dropdown, not chips: the roster carries far more
+    // species than elements or classes, and the list only grows.
+    const speciesKeys = new Set();
+    for (const key of this._rosterKeys()) {
+      for (const raw of getChampionSpecies(championDB[key])) {
+        speciesKeys.add(raw.toLowerCase());
+      }
+    }
+    const speciesSelect = this.root.querySelector('[data-facet="species"]');
+    speciesSelect.innerHTML =
+      `<option value="">All species</option>` +
+      [...speciesKeys]
+        .sort()
+        .map(
+          (value) =>
+            `<option value="${escapeHtml(value)}">${escapeHtml(toReadableLabel(value))}</option>`,
+        )
+        .join("");
+    speciesSelect.value = this.filters.species ?? "";
+    speciesSelect.addEventListener("change", () => {
+      this.filters.species = speciesSelect.value || null;
+      this._renderRoster();
+    });
   }
 
   _syncFilterChips() {
@@ -279,12 +307,18 @@ export class TeamBuilder {
   }
 
   _passesFilters(champion) {
-    const { element, klass, text } = this.filters;
+    const { element, klass, species, text } = this.filters;
     if (text && !champion.name.toLowerCase().includes(text.toLowerCase())) {
       return false;
     }
     if (element && !championAffinityKeys(champion).includes(element)) return false;
     if (klass && normalizeChampionClassKey(champion) !== klass) return false;
+    if (
+      species &&
+      !getChampionSpecies(champion).some((s) => s.toLowerCase() === species)
+    ) {
+      return false;
+    }
     return true;
   }
 
@@ -296,7 +330,12 @@ export class TeamBuilder {
 
     const tiles = visible.map((key) => this._rosterTileMarkup(key));
 
-    if (!this.filters.text && !this.filters.element && !this.filters.klass) {
+    if (
+      !this.filters.text &&
+      !this.filters.element &&
+      !this.filters.klass &&
+      !this.filters.species
+    ) {
       Object.values(duoDB)
         .filter((duo) => this._isDuoOffered(duo))
         .forEach((duo) => tiles.push(this._duoTileMarkup(duo)));
