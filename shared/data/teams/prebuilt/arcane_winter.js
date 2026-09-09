@@ -11,7 +11,7 @@ export const arcaneWinter = {
     "bruno",
     "elias_cross",
     "avarion",
-    "tyren",
+    "seymour",
     "nythera",
     "ysvane",
   ],

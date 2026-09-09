@@ -3,6 +3,7 @@ import { tideAndWard } from "./prebuilt/tide_and_ward.js";
 import { freeCompany } from "./prebuilt/free_company.js";
 import { ironlads } from "./prebuilt/ironlads.js";
 import { justHealDrex } from "./prebuilt/just_heal_drex.js";
+import { arcaneWinter } from "./prebuilt/arcane_winter.js";
 
 export {
   TEAM_SIZE,
@@ -16,4 +17,5 @@ export const PREBUILT_TEAMS = [
   freeCompany,
   ironlads,
   justHealDrex,
+  arcaneWinter,
 ];
