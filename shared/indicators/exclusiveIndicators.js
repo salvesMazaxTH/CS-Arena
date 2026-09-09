@@ -123,3 +123,13 @@ registerRuntimeCounterIndicator("raiturus_thunder", "raiturusThunder", {
   background: "rgba(214, 163, 32, 0.85)",
   label: "Thunder Incoming",
 });
+
+// Jack's Show Your Work (runtime.jackSolved): the best damage figure he has got
+// out of this enemy, which his damage against them can no longer fall below.
+registerRuntimeCounterIndicator("jack_solved", "jackSolved", {
+  type: "emoji",
+  value: "🧮",
+  background: "rgba(72, 132, 196, 0.85)",
+  label: "Solved",
+  showStackCount: true,
+});

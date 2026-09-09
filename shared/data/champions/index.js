@@ -67,6 +67,7 @@ import harlan_greeves from "./harlan_greeves/index.js";
 import tony_raiturus from "./tony_raiturus/index.js";
 import tony_raiturus_primordial from "./tony_raiturus_primordial/index.js";
 import ronan from "./ronan/index.js";
+import jack from "./jack/index.js";
 
 const championDB = {
   atlas,
@@ -138,6 +139,7 @@ const championDB = {
   tony_raiturus,
   tony_raiturus_primordial,
   ronan,
+  jack,
 };
 
 export default championDB;

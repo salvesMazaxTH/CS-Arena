@@ -958,6 +958,8 @@ export class TurnResolver {
   }
 
   _resolveTauntTargets(user, skill, action, context, isUnavailable) {
+    if (skill.ignoresTaunt) return null;
+
     const activeTaunt = user.tauntEffects?.find(
       (e) => e.expiresAtTurn > this.combat.currentTurn,
     );
@@ -1096,6 +1098,8 @@ export class TurnResolver {
       editMode,
       allChampions: combat.activeChampions,
       aliveChampions: aliveChampionsArray,
+      // Actions of this turn still waiting to resolve; the running one is already off.
+      pendingActions: combat.pendingActions,
       // Every champion this match has produced, on the field, benched or dead.
       get matchChampions() {
         return [
