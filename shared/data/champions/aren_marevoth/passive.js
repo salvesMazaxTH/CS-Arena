@@ -11,9 +11,9 @@ export default {
   nextAttackBonusFlat: 20,
 
   description(champion) {
-    return `When Marevóth falls below ${this.hpThreshold * 100}% HP, he removes 1 negative debuff from himself and restores ${this.healPercent * 100}% of his Max HP. This can only occur once per turn.
+    return `When Marevóth falls below ${this.hpThreshold * 100}% HP, he removes 1 negative status effect from himself and restores ${this.healPercent * 100}% of his Max HP. This can only occur once per turn.
 
-    When a debuff is removed this way, Marevóth's next attack converts ${this.nextAttackBonusPercent * 100}% of its base damage into Absolute Damage and gains +${this.nextAttackBonusFlat} Absolute Damage.`;
+    When a negative status effect is removed this way, Marevóth's next attack converts ${this.nextAttackBonusPercent * 100}% of its base damage into Absolute Damage and gains +${this.nextAttackBonusFlat} Absolute Damage.`;
   },
 
   hookScope: {
@@ -21,10 +21,10 @@ export default {
     onBeforeDmgDealing: "attacker",
   },
 
-  onAfterDmgTaking({ owner, damage, context }) {
-    if (damage <= 0) return;
+  onAfterDmgTaking({ owner, actualDmg, context }) {
+    if (!(actualDmg > 0)) return;
 
-    const previousHP = owner.HP + damage;
+    const previousHP = owner.HP + actualDmg;
     const threshold = owner.maxHP * this.hpThreshold;
 
     // Only triggers when crossing the threshold, not from any damage while below 50%.

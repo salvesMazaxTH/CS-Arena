@@ -2,7 +2,10 @@ import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 import { applyTide, consumeTide, getTideStacks } from "./tide.js";
-import { getClaimPoints } from "../../../engine/combat/claim.js";
+import {
+  CLAIM_ACTION_KEY,
+  getClaimPoints,
+} from "../../../engine/combat/claim.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
 // Strip up to `max` positive effects — positive status effects first, then
@@ -45,7 +48,7 @@ const arenMarevothSkills = [
     positiveEffectsStripped: 2,
 
     description() {
-      return `When this ability hits a target, it applies Tide to them. When it hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} bonus damage and strip up to ${this.positiveEffectsStripped} positive status effects or stat buffs from them.`;
+      return `Deals magical damage to the chosen target and applies Tide to them. When it hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} bonus damage and strip up to ${this.positiveEffectsStripped} positive status effects or stat buffs from them.`;
     },
 
     targetSpec: ["enemy"],
@@ -68,9 +71,11 @@ const arenMarevothSkills = [
       }).execute();
 
       const results = Array.isArray(result) ? result : [result];
-      const hitSuccess = results.some((r) => r?.landed);
 
-      if (hitSuccess) {
+      // Reflects and counter-attacks ride along in `results` aimed back at him.
+      const mainResult = results.find((entry) => entry.targetId === enemy.id);
+
+      if (mainResult.landed) {
         if (willConsumeTide) {
           consumeTide(enemy);
 
@@ -133,7 +138,7 @@ const arenMarevothSkills = [
 
           onActionResolved({ owner, actionSource, skill, context }) {
             if (actionSource !== owner) return;
-            if (skill?.key !== "claim") return;
+            if (skill?.key !== CLAIM_ACTION_KEY) return;
 
             owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
               (he) => he.key !== "blessing_of_the_ocean_depths_hook",
@@ -183,7 +188,7 @@ const arenMarevothSkills = [
     element: "water",
 
     description() {
-      return `When this ability hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} bonus damage and strip up to ${this.positiveEffectsStripped} positive status effects or stat buffs from them.\n\nThe next time this champion uses CLAIM while possessing ${this.claimPointsRequired} or more Value Points, increase his Max HP by ${this.maxHPBonusPercent}% permanently. Max: +${this.maxHPBonusPercent * this.maxHPBonusStacks}%.`;
+      return `Deals physical damage to the chosen target. When this ability hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} bonus damage and strip up to ${this.positiveEffectsStripped} positive status effects or stat buffs from them.\n\nThe next time this champion uses CLAIM while possessing ${this.claimPointsRequired} or more Value Points, increase his Max HP by ${this.maxHPBonusPercent}% permanently. Max: +${this.maxHPBonusPercent * this.maxHPBonusStacks}%.`;
     },
 
     targetSpec: ["enemy"],
@@ -209,9 +214,9 @@ const arenMarevothSkills = [
       }).execute();
 
       const results = Array.isArray(result) ? result : [result];
-      const hitSuccess = results.some((r) => r?.landed);
+      const mainResult = results.find((entry) => entry.targetId === enemy.id);
 
-      if (hitSuccess && willConsumeTide) {
+      if (mainResult.landed && willConsumeTide) {
         consumeTide(enemy);
 
         const stripped = stripPositiveEffects(enemy, this.positiveEffectsStripped);
@@ -239,7 +244,7 @@ const arenMarevothSkills = [
 
           onActionResolved({ owner, actionSource, skill, context }) {
             if (actionSource !== owner) return;
-            if (skill?.key !== "claim") return;
+            if (skill?.key !== CLAIM_ACTION_KEY) return;
 
             const claimPoints =
               context?.preActionClaimPoints ??
@@ -247,13 +252,13 @@ const arenMarevothSkills = [
 
             if (claimPoints < claimPointsRequired) return;
 
-            owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
-              (he) => he.key !== "abyssal_depths_hook",
-            );
-
             owner.runtime.abyssalDepthsHpStacks ??= 0;
 
             if (owner.runtime.abyssalDepthsHpStacks >= maxHPBonusStacks) return;
+
+            owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
+              (he) => he.key !== "abyssal_depths_hook",
+            );
 
             owner.runtime.abyssalDepthsHpStacks += 1;
 
