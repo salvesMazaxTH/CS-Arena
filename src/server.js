@@ -28,8 +28,7 @@ import { GameMatch } from "../shared/engine/match/GameMatch.js";
 import { Player } from "../shared/engine/match/Player.js";
 
 import { championDB } from "../shared/data/championDB.js";
-import { findBrokenDuo, getDuoForCore } from "../shared/data/duos.js";
-import { isChampionDraftable } from "../shared/data/draftEligibility.js";
+import { getDuoForCore } from "../shared/data/duos.js";
 import { SpawnProtection } from "../shared/engine/combat/spawnProtection.js";
 import { Nothingness } from "../shared/engine/combat/nothingness.js";
 import { rosterChampionKey } from "../shared/engine/match/championTransformation.js";
@@ -50,10 +49,11 @@ import { DamageEvent } from "../shared/engine/combat/DamageEvent.js";
 import { getHardCCActionDenial } from "../shared/core/championStatus.js";
 import { decayShields } from "../shared/core/championCombat.js";
 
+import { EMBLEMS } from "../shared/data/emblems/index.js";
 import {
-  EMBLEMS,
-  evaluateEmblemEligibilityForRoster,
-} from "../shared/data/emblems/index.js";
+  PREBUILT_TEAMS,
+  validateTeamComposition,
+} from "../shared/data/teams/index.js";
 
 // ============================================================
 //  CONFIGURATION
@@ -77,7 +77,6 @@ const editMode = {
 const TEAM_SIZE = 8;
 const ACTIVE_PER_TEAM = 3; // max champions on the field per team (roster=8, active=3)
 const MAX_MATCH_TURNS = 20; // game ends at the end of turn 20
-const CHAMPION_SELECTION_TIME = 120; // seconds for champion selection
 const FIRST_CHOICE_TIMEOUT = 45 * 1000; // 45s for the 1v1 pick before auto-selecting at random
 const DISCONNECT_TIMEOUT = 30 * 1000; // 30s to reconnect
 
@@ -120,6 +119,7 @@ app.get("/", (_req, res) => {
 const match = new GameMatch();
 const envelopeBuilder = new CombatEnvelopeBuilder(match.combat);
 let waitingForAnimations = false;
+let gameOverEmitted = false;
 
 // ============================================================
 //  STATE SERIALIZATION
@@ -393,34 +393,11 @@ function broadcastGameState(extraChampions = []) {
 //  CHAMPION MANAGEMENT
 // ============================================================
 
-function getRandomChampionKey(excludeKeys = []) {
-  const availableKeys = Object.keys(championDB).filter((key) => {
-    if (excludeKeys.includes(key)) return false;
-    if (championDB[key].hiddenFromDraftGrid === true) return false;
-    return isChampionDraftable(championDB[key], editMode);
-  });
-  if (availableKeys.length === 0) return null;
-  return availableKeys[Math.floor(Math.random() * availableKeys.length)];
-}
-
-function fillRandomChampionSelection(currentSelection = [], fillAll = false) {
-  const nextSelection = Array.isArray(currentSelection)
-    ? currentSelection.slice()
-    : [];
-
-  while (nextSelection.length < TEAM_SIZE) {
-    nextSelection.push(null);
-  }
-
-  for (let index = 0; index < nextSelection.length; index += 1) {
-    if (!fillAll && nextSelection[index] !== null) continue;
-
-    const champ = getRandomChampionKey(nextSelection.filter(Boolean));
-    if (!champ) break;
-    nextSelection[index] = champ;
-  }
-
-  return nextSelection.slice(0, TEAM_SIZE);
+/** Emblem keys → the emblem objects the combat engine runs hooks off. */
+function resolveEmblems(keys = []) {
+  return keys
+    .map((key) => EMBLEMS.find((emblem) => emblem.key === key))
+    .filter(Boolean);
 }
 
 const PORTRAITS_DIR = path.join(process.cwd(), "public", "assets", "portraits");
@@ -607,6 +584,11 @@ function emitGameOverIfNeeded({ checkTurnLimit = false } = {}) {
   });
 
   if (!gameEnd.ended) return;
+
+  // The end-turn resolution and the start-of-turn hooks both run this; the
+  // client hears about the win once.
+  if (gameOverEmitted) return;
+  gameOverEmitted = true;
 
   const winnerSlot = gameEnd.winnerSlot;
   const winnerTeam = winnerSlot != null ? winnerSlot + 1 : null;
@@ -1001,6 +983,7 @@ function handleStartTurn() {
 function resetGameState() {
   revealConcealedSummons();
   match.clearPlayers();
+  gameOverEmitted = false;
 }
 
 /** Resets combat state (HP, buffs, ult, etc.) while keeping champions and players (debug/test only). */
@@ -1022,6 +1005,7 @@ function resetCombatState() {
 
   match.combat.combatSnapshot = snapshot;
   match.combat.start();
+  gameOverEmitted = false;
 }
 
 // ============================================================
@@ -1120,48 +1104,18 @@ io.on("connection", (socket) => {
     return { playerSlot: slot, finalUsername };
   }
 
-  /** Starts champion selection for pending players. */
-  function handleChampionSelection() {
-    for (let i = 0; i < match.players.length; i++) {
-      const player = match.players[i];
+  /** editMode shortcut: ready every pending player with the first prebuilt team. */
+  function autoReadyEditMode() {
+    const team = PREBUILT_TEAMS[0];
+    if (!team) return;
+
+    for (const player of match.players) {
       if (!player || player.isTeamSelected()) continue;
-
-      io.to(player.socketId).emit("startChampionSelection", {
-        timeLeft: CHAMPION_SELECTION_TIME,
-      });
-
-      match.setSelectionTimer(
-        i,
-        setTimeout(() => {
-          if (match.isTeamSelected(i)) return;
-
-          const currentSelection = fillRandomChampionSelection(
-            player.selectedChampionKeys,
-            false,
-          );
-
-          player.setSelectedChampionKeys(currentSelection);
-          if (checkAllTeamsSelected()) {
-            startGameIfReady();
-          }
-        }, CHAMPION_SELECTION_TIME * 1000),
-      );
-    }
-  }
-
-  /** Auto-selection (editMode); otherwise defers to manual selection. */
-  function handleEditModeSelection() {
-    for (let i = 0; i < match.players.length; i++) {
-      const player = match.players[i];
-      if (!player || player.isTeamSelected()) continue;
-
-      const currentSelection = fillRandomChampionSelection([], true);
-      player.setSelectedChampionKeys(currentSelection);
+      player.setSelectedChampionKeys([...team.champions]);
+      player.emblems = resolveEmblems(team.emblems);
     }
 
-    if (checkAllTeamsSelected()) {
-      startGameIfReady();
-    }
+    if (checkAllTeamsSelected()) startGameIfReady();
   }
 
   // =============================
@@ -1185,11 +1139,9 @@ io.on("connection", (socket) => {
 
     io.emit("allPlayersConnected");
 
-    // Champion selection.
+    // Each player picks a saved team on the hub and emits "readyWithTeam".
     if (editMode.enabled && editMode.autoSelection) {
-      handleEditModeSelection();
-    } else {
-      handleChampionSelection();
+      autoReadyEditMode();
     }
 
     // Reconnection — cancel the timer and notify the opponent.
@@ -1318,7 +1270,6 @@ io.on("connection", (socket) => {
 
     // Clear pending timers.
     match.clearDisconnectionTimer(disconnectedSlot);
-    match.clearSelectionTimer(disconnectedSlot);
 
     // Release the slot.
     const disconnectedPlayer = match.getPlayer(disconnectedSlot);
@@ -1368,131 +1319,56 @@ io.on("connection", (socket) => {
   });
 
   // =============================
-  //  sync emblem selection
+  //  readyWithTeam (hub → matchmaking)
   // =============================
 
-  socket.on("updatePlayerEmblems", ({ emblems, draftRoster } = {}) => {
+  socket.on("readyWithTeam", ({ champions, emblems } = {}) => {
     const playerSlot = match.getSlotBySocket(socket.id);
     const player = match.players[playerSlot];
 
     if (!player) {
-      return socket.emit("actionFailed", "You are not in an active match.");
-    }
-
-    const selectedKeys = Array.isArray(emblems) ? emblems : [];
-    const validKeys = selectedKeys.filter((key) =>
-      EMBLEMS.some((emblem) => emblem.key === key),
-    );
-
-    if (validKeys.length > 2) {
       return socket.emit(
-        "actionFailed",
-        "You can select at most 2 active Emblems.",
+        "readyWithTeamRejected",
+        "You are not in an active match.",
+      );
+    }
+    if (player.isTeamSelected()) {
+      return socket.emit(
+        "readyWithTeamRejected",
+        "You have already locked in a team.",
       );
     }
 
-    // Before the team is confirmed, selectedChampionKeys is still empty on the
-    // server. We use the provisional roster sent by the client (draft in
-    // progress) for this check; the final, authoritative validation happens
-    // again in the "selectTeam" handler against the truly confirmed line-up.
-    const rosterKeys = player.isTeamSelected()
-      ? player.selectedChampionKeys
-      : Array.isArray(draftRoster)
-        ? draftRoster.filter(
-            (key) => typeof key === "string" && championDB[key],
-          )
-        : [];
-
-    const nextEmblems = validKeys
-      .slice(0, 2)
-      .map((key) => EMBLEMS.find((item) => item.key === key))
-      .filter(Boolean);
-
-    const invalidForRoster = nextEmblems.find(
-      (emblem) =>
-        !evaluateEmblemEligibilityForRoster(emblem, rosterKeys, championDB),
-    );
-
-    if (invalidForRoster) {
-      return socket.emit(
-        "actionFailed",
-        `This Emblem is not eligible for your current line-up: ${invalidForRoster.name}.`,
-      );
-    }
-
-    player.emblems = nextEmblems;
-
-    socket.emit("playerEmblemsUpdated", {
-      emblems: player.emblems.map((emblem) => emblem.key),
+    const team = {
+      champions: Array.isArray(champions) ? champions : [],
+      emblems: Array.isArray(emblems) ? emblems : [],
+    };
+    const check = validateTeamComposition(team, {
+      championDB,
+      emblems: EMBLEMS,
+      editMode,
     });
+
+    if (!check.ok) {
+      return socket.emit("readyWithTeamRejected", check.errors[0]);
+    }
+
+    player.setSelectedChampionKeys([...team.champions]);
+    player.emblems = resolveEmblems(team.emblems);
+
     broadcastGameState();
+    startGameIfReady();
   });
 
-  // =============================
-  //  selectTeam
-  // =============================
+  socket.on("cancelReadyWithTeam", () => {
+    const playerSlot = match.getSlotBySocket(socket.id);
+    const player = match.players[playerSlot];
+    if (!player || match.isCombatStarted()) return;
 
-  socket.on(
-    "selectTeam",
-    ({ team: clientTeam, champions: selectedChampionKeys }) => {
-      const playerSlot = match.getSlotBySocket(socket.id);
-      const player = match.players[playerSlot];
-
-      if (!player || player.team !== clientTeam) {
-        socket.emit(
-          "actionFailed",
-          "You are not allowed to select champions for this team.",
-        );
-        return;
-      }
-
-      if (player.isTeamSelected()) {
-        socket.emit("actionFailed", "You have already confirmed your team.");
-        return;
-      }
-
-      // Server-authoritative validation: reject invalid keys.
-      const invalidKey = selectedChampionKeys.find(
-        (key) => !isChampionDraftable(championDB[key], editMode),
-      );
-
-      if (invalidKey) {
-        socket.emit("actionFailed", `Invalid champion in selection: ${invalidKey}`);
-        return;
-      }
-
-      const brokenDuo = findBrokenDuo(selectedChampionKeys);
-
-      if (brokenDuo) {
-        socket.emit(
-          "actionFailed",
-          `${brokenDuo.name} can only be taken together, never one without the other.`,
-        );
-        return;
-      }
-
-      player.setSelectedChampionKeys(selectedChampionKeys);
-
-      const invalidEmblem = player.emblems.find(
-        (emblem) =>
-          !evaluateEmblemEligibilityForRoster(
-            emblem,
-            selectedChampionKeys,
-            championDB,
-          ),
-      );
-
-      if (invalidEmblem) {
-        socket.emit(
-          "actionFailed",
-          `Your Emblem selection is not valid for the final line-up: ${invalidEmblem.name}.`,
-        );
-        return;
-      }
-
-      startGameIfReady();
-    },
-  );
+    player.clearChampionSelection();
+    player.emblems = [];
+    broadcastGameState();
+  });
 
   // =============================
   //  chooseFirstChampion (1v1 initial)
@@ -1774,6 +1650,7 @@ io.on("connection", (socket) => {
       match.combat.playerScores[winnerSlot] || 0,
     );
     match.combat.gameEnded = true; // mark game as ended on surrender
+    gameOverEmitted = true;
 
     io.emit("gameOver", {
       winnerTeam,
