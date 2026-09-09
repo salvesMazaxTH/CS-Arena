@@ -45,10 +45,15 @@ const theopetraSkills = [
   {
     key: "ancestral_wall",
     name: "Ancestral Wall",
+
+    defenseBonusPercent: 30,
+    buffDuration: 2,
+
+    contact: false,
     priority: 1,
 
     description() {
-      return `Theópetra raises a barrier, increasing her Defense by 30% for 2 turns.`;
+      return `Theópetra plants her feet and lets the old stone answer in her place, raising her Defense by ${this.defenseBonusPercent}% for ${this.buffDuration} turn(s).`;
     },
 
     targetSpec: ["self"],
@@ -56,8 +61,8 @@ const theopetraSkills = [
     resolve({ user, context }) {
       return user.modifyStat({
         statName: "Defense",
-        amount: 30,
-        duration: 2,
+        amount: this.defenseBonusPercent,
+        duration: this.buffDuration,
         isPercent: true,
         context,
         statModifierSrc: "ancestral_wall",
@@ -82,7 +87,7 @@ const theopetraSkills = [
     priority: 0,
 
     description() {
-      return `Theópetra commands the earth itself to pass judgment upon all enemies, dealing massive damage to them. This attack cannot be evaded.`;
+      return `Theópetra commands the earth itself to pass judgment upon all enemies, dealing massive magical damage to them. This attack cannot be evaded.`;
     },
 
     targetSpec: ["all:enemy"],
