@@ -590,11 +590,14 @@ export class TurnResolver {
       }
     }
 
+    const skill =
+      user.skills?.find((s) => s.key === action?.skillKey) ?? null;
+
     const results = emitCombatEvent(
       "onValidateAction",
       {
         actionSource: user,
-        skill: action?.skill,
+        skill,
         target: mainTarget,
         context,
       },
