@@ -32,6 +32,7 @@ import { findBrokenDuo, getDuoForCore } from "../shared/data/duos.js";
 import { isChampionDraftable } from "../shared/data/draftEligibility.js";
 import { SpawnProtection } from "../shared/engine/combat/spawnProtection.js";
 import { Nothingness } from "../shared/engine/combat/nothingness.js";
+import { rosterChampionKey } from "../shared/engine/match/championTransformation.js";
 import { Champion } from "../shared/core/Champion.js";
 import { formatChampionName } from "../shared/ui/formatters.js";
 
@@ -272,13 +273,13 @@ function getLineupStatuses(team, viewerTeam) {
   }
 
   for (const champion of match.combat.deadChampions.values()) {
-    if (champion.team === team) statuses[champion.championKey] = "dead";
+    if (champion.team === team) statuses[rosterChampionKey(champion)] = "dead";
   }
 
   for (const champion of match.combat.inactiveChampions.values()) {
     if (champion.team !== team) continue;
 
-    statuses[champion.championKey] = Nothingness.isVanished(champion)
+    statuses[rosterChampionKey(champion)] = Nothingness.isVanished(champion)
       ? "nothingness"
       : "field";
   }
@@ -287,7 +288,7 @@ function getLineupStatuses(team, viewerTeam) {
     if (champion.team !== team) continue;
 
     // A concealed summon must still read as untouched reserve to the opponent.
-    statuses[champion.championKey] = isConcealedFromViewer(champion, viewerTeam)
+    statuses[rosterChampionKey(champion)] = isConcealedFromViewer(champion, viewerTeam)
       ? "reserve"
       : "field";
   }

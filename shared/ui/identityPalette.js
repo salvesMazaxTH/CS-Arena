@@ -88,17 +88,8 @@ const CLASS_IDENTITIES = Object.freeze({
   },
 });
 
-// Species have no color of their own (only elements and classes are painted)
-// and there are far too many of them to ever cover with emoji, so only the
-// handful with an unambiguous symbol get one — every other species falls back
-// to a neutral tile with its name spelled out.
-const SPECIES_ICONS = Object.freeze({
-  human: "🧍",
-  divinity: "✨",
-  spirit: "👻",
-  hollowed: "🕯️",
-});
-
+// Species have no icon or color of their own: they always render as a neutral
+// tile with the name spelled out, matching how the champion cards show them.
 const NEUTRAL_IDENTITY = Object.freeze({
   label: "Unknown",
   icon: null,
@@ -129,11 +120,6 @@ function getClassIdentity(classKey) {
   return CLASS_IDENTITIES[normalizeKey(classKey)] ?? null;
 }
 
-/** @returns {string|null} the species emoji, or null when it has none. */
-function getSpeciesIcon(species) {
-  return SPECIES_ICONS[normalizeKey(species)] ?? null;
-}
-
 /**
  * Resolves the identity of a requirement kind + key pair, always returning a
  * usable visual so callers never have to branch on missing entries.
@@ -151,7 +137,6 @@ function getRequirementIdentity(kind, key) {
       return {
         ...NEUTRAL_IDENTITY,
         label: toIdentityLabel(key),
-        icon: getSpeciesIcon(key),
       };
     case "baseStat":
       return {
@@ -233,7 +218,6 @@ export {
   NEUTRAL_IDENTITY,
   getElementIdentity,
   getClassIdentity,
-  getSpeciesIcon,
   getRequirementIdentity,
   renderIdentityIconMarkup,
   toIdentityLabel,
