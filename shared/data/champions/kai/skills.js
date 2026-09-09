@@ -69,6 +69,14 @@ const kaiSkills = [
     resolve({ user, context }) {
       user.runtime.hookEffects ??= [];
 
+      // Retaking the stance renews it rather than adding a second one.
+      user.runtime.hookEffects = user.runtime.hookEffects.filter(
+        (effect) => effect.key !== this.key,
+      );
+      user.damageReductionModifiers = user.damageReductionModifiers.filter(
+        (mod) => mod.source !== this.key,
+      );
+
       const skill = this;
       const counterAtkDmg = this.counterAtkDmg;
       const stanceDuration = this.stanceDuration;
@@ -82,6 +90,12 @@ const kaiSkills = [
         key: "living_ember_stance",
         state: "emberStance", // "emberStance" → "livingEmber"
         expiresAtTurn: context.currentTurn + stanceDuration,
+
+        // His own counter answers from inside a hook, so the stance only
+        // catches on it if it can see nested damage.
+        hookPolicies: {
+          onAfterDmgDealing: { allowOnNestedDamage: true },
+        },
 
         // 🔥 COUNTERATTACK
         onAfterDmgTaking({
@@ -156,10 +170,11 @@ const kaiSkills = [
 
       user.addHookEffect(effect, context);
 
-      // Damage reduction granted by the stance.
       user.applyDamageReduction({
         amount: this.damageReduction,
         duration: this.stanceDuration,
+        type: "percent",
+        source: this.key,
         context,
       });
 
