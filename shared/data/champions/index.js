@@ -64,6 +64,8 @@ import silas from "./silas/index.js";
 import vorn_omega from "./vorn_omega/index.js";
 import seymour from "./seymour/index.js";
 import harlan_graves from "./harlan_graves/index.js";
+import tony_raiturus from "./tony_raiturus/index.js";
+import tony_raiturus_primordial from "./tony_raiturus_primordial/index.js";
 
 const championDB = {
   atlas,
@@ -132,6 +134,8 @@ const championDB = {
   seymour,
   vorn_omega,
   harlan_graves,
+  tony_raiturus,
+  tony_raiturus_primordial,
 };
 
 export default championDB;
