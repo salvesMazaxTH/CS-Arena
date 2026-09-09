@@ -12,6 +12,7 @@ import { enchanterWard } from "./enchanter_ward.js";
 import { marksmanPrecision } from "./marksman_precision.js";
 import { humanitysDefiance } from "./humanitys_defiance.js";
 import { divineMandate } from "./divine_mandate.js";
+import { demigodsTrial } from "./demigods_trial.js";
 import { stormFist } from "./storm_fist.js";
 import { assassinsAmbush } from "./assassins_ambush.js";
 import { permafrost } from "./permafrost.js";
@@ -33,6 +34,7 @@ export const EMBLEMS = [
   marksmanPrecision,
   humanitysDefiance,
   divineMandate,
+  demigodsTrial,
   stormFist,
   assassinsAmbush,
   permafrost,
