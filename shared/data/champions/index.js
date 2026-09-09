@@ -63,7 +63,7 @@ import julian from "./julian/index.js";
 import silas from "./silas/index.js";
 import vorn_omega from "./vorn_omega/index.js";
 import seymour from "./seymour/index.js";
-import harlan_graves from "./harlan_graves/index.js";
+import harlan_greeves from "./harlan_greeves/index.js";
 import tony_raiturus from "./tony_raiturus/index.js";
 import tony_raiturus_primordial from "./tony_raiturus_primordial/index.js";
 import ronan from "./ronan/index.js";
@@ -134,7 +134,7 @@ const championDB = {
   silas,
   seymour,
   vorn_omega,
-  harlan_graves,
+  harlan_greeves,
   tony_raiturus,
   tony_raiturus_primordial,
   ronan,

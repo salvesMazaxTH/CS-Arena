@@ -3,7 +3,7 @@ import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 import { WANTED_RUNTIME_FLAG } from "./passive.js";
 
-const harlanGravesSkills = [
+const harlanGreevesSkills = [
   totalBlock,
 
   {
@@ -150,4 +150,4 @@ const harlanGravesSkills = [
   },
 ];
 
-export default harlanGravesSkills;
+export default harlanGreevesSkills;

@@ -1,6 +1,6 @@
 export default {
-  name: "Harlan Graves",
-  portrait: "/assets/portraits/harlan_graves.webp",
+  name: "Harlan Greeves",
+  portrait: "/assets/portraits/harlan_greeves.webp",
 
   unreleased: true,
 

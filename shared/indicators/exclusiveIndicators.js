@@ -93,7 +93,7 @@ registerRuntimeCounterIndicator("lorena_mark", "lorenaMarkUntilTurn", {
   label: "Marked",
 });
 
-// Harlan Graves' Quickdraw (runtime.harlanHalfStepUntilTurn): the enemy's next
+// Harlan Greeves' Quickdraw (runtime.harlanHalfStepUntilTurn): the enemy's next
 // hit on Harlan lands for half, having just been outdrawn.
 registerRuntimeCounterIndicator(
   "harlan_half_step",
@@ -106,7 +106,7 @@ registerRuntimeCounterIndicator(
   },
 );
 
-// Harlan Graves' ultimate, Wanted Dead or Alive (runtime.harlanWanted): while
+// Harlan Greeves' ultimate, Wanted Dead or Alive (runtime.harlanWanted): while
 // this holds and the target lives, Harlan's CLAIM cashes in bonus points.
 registerRuntimeCounterIndicator("harlan_wanted", "harlanWanted", {
   type: "emoji",
