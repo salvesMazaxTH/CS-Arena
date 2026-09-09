@@ -7,10 +7,10 @@ export default {
   lsPerProc: 2,
   awakenThreshold: 43,
   lsTierSize: 6,
-  dmgAmpPerTier: 8,
+  dmgAmpPerTier: 7,
   piercingRatioPerTier: 2,
   dmgReductPerTier: 2,
-  lsHealAmpPerTier: 8,
+  lsHealAmpPerTier: 6,
 
   permDmgModId: "drex_bloodthirst_scaling",
   dmgReductionSrc: "drex_bloodthirst_scaling",

@@ -177,8 +177,8 @@ const drexSkills = [
     key: "hemorrhagic_eclipse",
     name: "Hemorrhagic Eclipse",
 
-    bf: 75,
-    damagePerBleedStack: 18,
+    bf: 70,
+    damagePerBleedStack: 15,
 
     minimumBleedStacks: 5,
     stacksApplied: 2,
