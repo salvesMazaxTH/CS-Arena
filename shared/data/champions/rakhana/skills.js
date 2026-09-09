@@ -1,5 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
@@ -26,7 +27,7 @@ const rakhanaSkills = [
     priority: 0,
 
     description() {
-      return `Strikes an enemy with a powerful iron-infused palm.
+      return `Strikes the chosen target with a powerful iron-infused palm, dealing physical contact damage.
 
       If any Shield is on her when this ability hits, she consumes it to stun the target for ${this.stunDuration} turn and restores HP equal to ${this.shieldPercent}% of her Max HP.
 
@@ -76,11 +77,11 @@ const rakhanaSkills = [
           source: user,
         }).execute();
 
-        enemy.applyStatusEffect(
-          "stunned",
-          this.stunDuration,
-          context,
-        );
+        if (effectConnected(mainResult, "stunned")) {
+          enemy.applyStatusEffect("stunned", this.stunDuration, context, {
+            sourceId: user.id,
+          });
+        }
 
         context.registerDialog?.({
           message: `${formatChampionName(
@@ -130,9 +131,9 @@ const rakhanaSkills = [
     ],
 
     description() {
-      return `Rakhana enters a defensive stance and gains a Shield equal to ${this.shieldPercent}% of her Max HP for this turn.
+      return `Rakhana enters a defensive stance and gains a Shield equal to ${this.shieldPercent}% of her Max HP, half of it fading with each turn that passes.
 
-      The first time she is struck while the Shield is active, she reduces that damage by 50% and reflects the prevented damage back to the attacker.
+      The first time she is struck while the Shield is active, she reduces that damage by ${this.reflectPercent}% and reflects the prevented damage back to the attacker as physical non-contact damage.
 
       If the incoming attack is Contact, she also stuns the attacker for 1 turn.`;
     },
@@ -144,7 +145,7 @@ const rakhanaSkills = [
         user.maxHP * (this.shieldPercent / 100),
       );
 
-      user.addShield(shieldValue, 0, context);
+      user.addShield(shieldValue, Math.ceil(shieldValue / 2), context);
 
       user.runtime ??= {};
       user.runtime.hookEffects ??= [];
@@ -233,7 +234,7 @@ const rakhanaSkills = [
             damage: reducedDamage,
             log: `<b>[${this.name}]</b> ${formatChampionName(
               defender,
-            )} reduces incoming damage by 50% and reflects ${reflectedDamage} damage!`,
+            )} reduces incoming damage by ${reflectPercent}% and reflects ${reflectedDamage} damage!`,
           };
         },
       }, context);
@@ -273,7 +274,7 @@ const rakhanaSkills = [
     threshold: 0.35,
 
     description() {
-      return `Rakhana descends upon the target with overwhelming force, dealing high damage and ignoring ${this.piercingPercentage}% of the target's Defense.
+      return `Rakhana descends upon the chosen target with overwhelming force, dealing physical contact damage and ignoring ${this.piercingPercentage}% of their Defense.
 
       If the target is below ${this.threshold * 100}% HP, deals bonus damage equal to ${this.missingHpPercent * 100}% of their missing HP.`;
     },
