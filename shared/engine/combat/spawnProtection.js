@@ -13,6 +13,29 @@ export class SpawnProtection {
     return champion?.runtime?.takingTheField === true;
   }
 
+  // Combat flow a still-arriving champion sits out: damage, healing, status.
+  // Non-combat hooks (turn start, roster changes) still reach it.
+  static SUPPRESSED_HOOKS = new Set([
+    "onDamageIncoming",
+    "onBeforeDmgDealing",
+    "onBeforeDmgTaking",
+    "onAfterDmgDealing",
+    "onAfterDmgTaking",
+    "onEvade",
+    "onCriticalHit",
+    "onBeforeHealing",
+    "onAfterHealing",
+    "onStatusEffectIncoming",
+    "onStatusEffectApplied",
+    "onHookEffectIncoming",
+    "onChampionDeath",
+    "onBuffingStat",
+  ]);
+
+  static blocksReaction(eventName, champion) {
+    return this.isActive(champion) && this.SUPPRESSED_HOOKS.has(eventName);
+  }
+
   static clear(champion) {
     delete champion.runtime.takingTheField;
   }

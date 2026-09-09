@@ -930,7 +930,7 @@ export class TurnResolver {
   resolveSkillTargets(user, skill, action, context) {
     context ??= this.createBaseContext({ sourceId: action?.userId });
 
-    const isUnavailable = (c) => !c || !c.alive;
+    const isUnavailable = (c) => !c || !c.alive || SpawnProtection.isActive(c);
 
     const taunted = this._resolveTauntTargets(
       user,

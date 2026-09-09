@@ -1,3 +1,5 @@
+import { SpawnProtection } from "./spawnProtection.js";
+
 const debugMode = false; // Set to true to enable detailed logging of combat events
 
 export function emitCombatEvent(eventName, payload, champions, options = {}) {
@@ -27,6 +29,8 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
     : Array.from(champions.values());
 
   for (const champ of champArray) {
+    if (SpawnProtection.blocksReaction(eventName, champ)) continue;
+
     const hookSources = [];
 
     // 🔹 Passiva real

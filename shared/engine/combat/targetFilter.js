@@ -1,4 +1,5 @@
 import { StatusEffectsRegistry } from "../../data/statusEffects/effectsRegistry.js";
+import { SpawnProtection } from "./spawnProtection.js";
 
 /** Who may fill a targetSpec role. The picker offers and the server accepts by
  *  this same rule, so a target the UI shows can never be refused on resolution. */
@@ -60,6 +61,7 @@ export class TargetFilter {
   static accepts(spec, user, candidate) {
     return (
       !!candidate?.alive &&
+      !SpawnProtection.isActive(candidate) &&
       this.matchesSide(spec, user, candidate) &&
       this.matchesFilters(spec, user, candidate)
     );

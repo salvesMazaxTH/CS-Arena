@@ -17,11 +17,7 @@ export function preChecks(event) {
   }
 
   if (SpawnProtection.isActive(event.defender)) {
-    return _buildImmuneResult(
-      event,
-      SpawnProtection.unreachableMessage(event.defender),
-      { quiet: true },
-    );
+    return _buildUnreachableResult(event, null, { silent: true });
   }
 
   // 1️⃣ IMUNIDADE
@@ -196,27 +192,32 @@ function _buildUnreachableResult(event, customMessage = null, opts = {}) {
 function _buildBlockedResult(
   event,
   customMessage = null,
-  { quiet = false, kind = "immune" } = {},
+  { quiet = false, kind = "immune", silent = false } = {},
 ) {
   const targetName = formatChampionName(event.defender);
   const username = event.attacker ? formatChampionName(event.attacker) : null;
   const skillName = event.skill?.name || "habilidade";
 
-  event.context.registerDamage({
-    target: event.defender,
-    amount: 0,
-    sourceId: event.attacker?.id ?? null,
-    element: event.element,
-    contact: event.contact,
-    hitVfx: event.hitVfx,
-    flags: { [kind]: true, immuneMessage: customMessage, immuneQuiet: quiet },
-  });
+  // A silent block leaves no visual and no log: the target is simply not there.
+  if (!silent) {
+    event.context.registerDamage({
+      target: event.defender,
+      amount: 0,
+      sourceId: event.attacker?.id ?? null,
+      element: event.element,
+      contact: event.contact,
+      hitVfx: event.hitVfx,
+      flags: { [kind]: true, immuneMessage: customMessage, immuneQuiet: quiet },
+    });
+  }
 
-  const log = customMessage
-    ? customMessage
-    : username
-      ? `${username} tentou usar ${skillName} em ${targetName}, mas o alvo possui Imunidade Absoluta!`
-      : `${targetName} é imune ao dano!`;
+  const log = silent
+    ? undefined
+    : customMessage
+      ? customMessage
+      : username
+        ? `${username} tentou usar ${skillName} em ${targetName}, mas o alvo possui Imunidade Absoluta!`
+        : `${targetName} é imune ao dano!`;
 
   return {
     baseDamage: event.baseDamage,
