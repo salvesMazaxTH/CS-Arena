@@ -13,7 +13,7 @@ export default {
   survivalHP: 1,
 
   description(champion) {
-    return `Laisaelis is the sister who looks at something about to stop being and simply answers that it is here. The first lethal effect that would end her does not: she stays on the field with ${this.survivalHP} HP, once per match. ${TWIN_BOND_TEXT}
+    return `Laisaelis is the sister who looks at something about to stop being and simply answers that it is here. The first lethal effect that would end her does not: she stays on the field with ${this.survivalHP} HP, and every negative effect afflicting her slips away with the death she refused. Once per match. ${TWIN_BOND_TEXT}
 
     <b>Still unspent:</b> ${champion.runtime?.remainSpent ? "no" : "yes"}`;
   },
@@ -55,15 +55,28 @@ export default {
     // Must outlive this hook: the finishing step reads it after the damage lands.
     owner.runtime.preventFinishingUntilTurn = context.currentTurn + 1;
 
+    const shedStatuses = owner.getStatusEffects({ type: "debuff" });
+    shedStatuses.forEach((effect) => owner.removeStatusEffect(effect.key));
+
+    const shedHooks =
+      owner.runtime.hookEffects?.filter((e) => e.type === "debuff") ?? [];
+    if (shedHooks.length) {
+      owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
+        (e) => e.type !== "debuff",
+      );
+    }
+
+    const cleansed = shedStatuses.length + shedHooks.length > 0;
+
     context.registerDialog({
-      message: `[Passive - <b>${this.name}</b>] ${formatChampionName(owner)} should be gone, and remains anyway.`,
+      message: `[Passive - <b>${this.name}</b>] ${formatChampionName(owner)} should be gone, and remains anyway${cleansed ? ", every affliction sliding off her as she does" : ""}.`,
       sourceId: owner.id,
       targetId: owner.id,
     });
 
     return {
       damage: survivalDamage(owner, this.survivalHP),
-      log: `${formatChampionName(owner)} holds on with ${this.survivalHP} HP.`,
+      log: `${formatChampionName(owner)} holds on with ${this.survivalHP} HP${cleansed ? ", cleansed of all that afflicted her" : ""}.`,
     };
   },
 
