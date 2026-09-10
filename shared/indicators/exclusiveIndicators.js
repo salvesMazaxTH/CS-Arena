@@ -134,6 +134,16 @@ registerRuntimeCounterIndicator("jack_solved", "jackSolved", {
   showStackCount: true,
 });
 
+// Layla's Buried Static (runtime.laylaStatic): charges banked from being hit,
+// spent on her next damaging ability for bonus damage.
+registerRuntimeCounterIndicator("layla_static", "laylaStatic", {
+  type: "emoji",
+  value: "🔋",
+  background: "rgba(96, 122, 210, 0.85)",
+  label: "Static",
+  showStackCount: true,
+});
+
 // Mali Magarc's Older Than Refinement (runtime.maliUnrefined): magical damage
 // stripped to raw arcane, paid back to him as Momentum over the next turns.
 registerRuntimeCounterIndicator("mali_unrefined", "maliUnrefined", {

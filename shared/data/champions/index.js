@@ -68,6 +68,7 @@ import tony_raiturus from "./tony_raiturus/index.js";
 import tony_raiturus_primordial from "./tony_raiturus_primordial/index.js";
 import ronan from "./ronan/index.js";
 import jack from "./jack/index.js";
+import layla from "./layla/index.js";
 import mali_magarc from "./mali_magarc/index.js";
 import mali_magarc_primordial from "./mali_magarc_primordial/index.js";
 
@@ -142,6 +143,7 @@ const championDB = {
   tony_raiturus_primordial,
   ronan,
   jack,
+  layla,
   mali_magarc,
   mali_magarc_primordial,
 };
