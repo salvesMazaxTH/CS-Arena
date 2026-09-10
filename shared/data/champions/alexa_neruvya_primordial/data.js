@@ -1,6 +1,6 @@
 export default {
   name: "Alexa Neruvya Primordial",
-  portrait: "/assets/portraits/alexa_transformada.webp",
+  portrait: "/assets/portraits/alexa_transformed.webp",
   selectable: false,
 
   HP: 395,

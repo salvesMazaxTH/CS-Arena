@@ -133,3 +133,13 @@ registerRuntimeCounterIndicator("jack_solved", "jackSolved", {
   label: "Solved",
   showStackCount: true,
 });
+
+// Mali Magarc's Older Than Refinement (runtime.maliUnrefined): magical damage
+// stripped to raw arcane, paid back to him as Momentum over the next turns.
+registerRuntimeCounterIndicator("mali_unrefined", "maliUnrefined", {
+  type: "emoji",
+  value: "✴️",
+  background: "rgba(72, 96, 190, 0.85)",
+  label: "Essence",
+  showStackCount: true,
+});
