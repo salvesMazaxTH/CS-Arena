@@ -2,8 +2,6 @@ export default {
   name: "Tony Raiturus",
   portrait: "/assets/portraits/tony_raiturus.webp",
 
-  unreleased: true,
-
   HP: 330,
   Attack: 300,
   Defense: 100,

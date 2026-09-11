@@ -2,8 +2,6 @@ export default {
   name: "Ronan",
   portrait: "/assets/portraits/ronan.webp",
 
-  unreleased: true,
-
   HP: 360,
   Attack: 210,
   Defense: 120,
