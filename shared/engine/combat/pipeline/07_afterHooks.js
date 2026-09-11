@@ -123,6 +123,7 @@ function _processHook(event, eventName, payload) {
   }
   const results =
     emitCombatEvent(eventName, payload, event.allChampions, {
+      players: event.players,
       canRun: (name, champ, source) => event.canRunHook(name, champ, source),
     }) || [];
   const summary = { logs: [] };
