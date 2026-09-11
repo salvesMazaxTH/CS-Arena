@@ -577,6 +577,20 @@ function emitCombatLogsFromResults(results = []) {
 //  TURN RESOLUTION
 // ============================================================
 
+/** Every champion ever summoned by either team this match, dead or swapped out included, serialized for the end-of-match stats panel. */
+function getMatchRosterStats() {
+  const roster = [
+    ...match.combat.getTeamChampions(1, { includeInactive: true, includeDead: true }),
+    ...match.combat.getTeamChampions(2, { includeInactive: true, includeDead: true }),
+  ];
+
+  for (const champion of roster) {
+    if (champion.runtime) delete champion.runtime.currentContext;
+  }
+
+  return roster.map((champion) => champion.serialize());
+}
+
 function emitGameOverIfNeeded({ checkTurnLimit = false } = {}) {
   const gameEnd = match.checkGameEnd({
     maxTurns: MAX_MATCH_TURNS,
@@ -595,7 +609,7 @@ function emitGameOverIfNeeded({ checkTurnLimit = false } = {}) {
   const winnerName =
     winnerSlot != null ? match.players[winnerSlot]?.username : null;
 
-  io.emit("gameOver", { winnerTeam, winnerName });
+  io.emit("gameOver", { winnerTeam, winnerName, champions: getMatchRosterStats() });
 }
 
 function handleEndTurn() {
@@ -1655,6 +1669,7 @@ io.on("connection", (socket) => {
     io.emit("gameOver", {
       winnerTeam,
       winnerName,
+      champions: getMatchRosterStats(),
     });
   });
 

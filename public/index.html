@@ -334,6 +334,14 @@
           >
             Damage Mitigated
           </button>
+          <button
+            class="match-stats-tab"
+            data-tab="points"
+            role="tab"
+            type="button"
+          >
+            Points Earned
+          </button>
         </div>
 
         <div class="match-stats-panels">
@@ -419,6 +427,23 @@
                 </tr>
               </thead>
               <tbody id="matchStatsDamageMitigatedBody"></tbody>
+            </table>
+          </section>
+
+          <section
+            class="match-stats-tab-panel"
+            data-tab-panel="points"
+            role="tabpanel"
+          >
+            <table class="match-stats-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Character</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="matchStatsPointsBody"></tbody>
             </table>
           </section>
         </div>

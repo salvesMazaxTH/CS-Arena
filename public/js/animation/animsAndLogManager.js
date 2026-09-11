@@ -235,9 +235,7 @@ export function createCombatAnimationManager(deps) {
   let currentPhase = null;
   let activeDialogController = null;
   const editMode = deps.editMode || { freeCostSkills: false };
-  const matchStats = createMatchStatsPanel({
-    activeChampions: deps.activeChampions,
-  });
+  const matchStats = createMatchStatsPanel();
   const scoreboard = createScoreboard();
 
   // Double-click in any area of the screen accelerates only the current dialog.
@@ -1064,7 +1062,7 @@ export function createCombatAnimationManager(deps) {
       timerOverlay.classList.remove("hidden");
       timerOverlay.classList.add("active");
 
-      matchStats.show();
+      matchStats.show(effect?.champions);
 
       let timeLeft = 120;
       countdownEl.textContent = `Returning to login in ${timeLeft}s...`;

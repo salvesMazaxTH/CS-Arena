@@ -12,25 +12,20 @@ import { snapshotChampions } from "./snapshotChampions.js";
 import { TargetFilter } from "./targetFilter.js";
 import { getBlindMiss } from "../../data/statusEffects/blind.js";
 
-// Faixas de 25 de dano = +1 Momentum a partir de 55; abaixo disso é a faixa inicial (exceção).
+// Zero damage (pure heal/buff) keeps a floor of 1 Momentum, below the Light tier.
 function getMomentumFromDamageDealt(totalDamage) {
   const d = Math.max(0, Math.floor(Number(totalDamage) || 0));
-  if (d <= 19) return 1;
-  if (d <= 54) return 2;
-  if (d >= 350) return 15;
-  return 3 + Math.floor((d - 55) / 25);
+  if (d === 0) return 1;
+  if (d <= 44) return 2; // Light
+  if (d <= 184) return 4; // Medium
+  return 6; // Very high
 }
 
-// Faixas de 30 (até 204) e depois 25 de dano = +1 Momentum; 255-279 é um salto proposital
-// (recompensa menor nas faixas baixas de dano sofrido, que vai se equilibrando nas altas).
 function getMomentumFromDamageTaken(totalDamage) {
   const d = Math.max(0, Math.floor(Number(totalDamage) || 0));
-  if (d <= 54) return 1;
-  if (d <= 204) return 2 + Math.floor((d - 55) / 30);
-  if (d <= 254) return 7 + Math.floor((d - 205) / 25);
-  if (d <= 279) return 11;
-  if (d >= 350) return 15;
-  return 12 + Math.floor((d - 280) / 25);
+  if (d <= 44) return 1; // Light
+  if (d <= 184) return 3; // Medium
+  return 7; // Very high — rewards surviving a big hit more than dealing one.
 }
 
 export class TurnResolver {
@@ -45,13 +40,12 @@ export class TurnResolver {
   }
 
   // ============================================================
-  //  RESOLUÇÃO DO TURNO (entry point)
+  //  TURN RESOLUTION (entry point)
   // ============================================================
 
   resolveTurn() {
     const actionResults = [];
-    // Lógica de trocas/switches desativada: mantido apenas para compatibilidade
-    // de shape com o servidor.
+    // Switch logic is disabled: kept only for shape compatibility with the server.
     const switchResults = [];
     let actionOrder = 0;
 
@@ -69,19 +63,19 @@ export class TurnResolver {
         const sB = b.getSpeed(this.match);
         if (sA !== sB) return sB - sA;
 
-        return Math.random() - 0.5; // desempate aleatório para ações com mesma prioridade e velocidade
+        return Math.random() - 0.5; // random tiebreak for actions with equal priority and speed
       });
 
-      const action = actions.shift(); // remove a próxima ação
+      const action = actions.shift(); // remove the next action
 
-      // Lógica de trocas/switches desativada.
+      // Switch logic is disabled.
       // if (action.type === "switch") {
       //   const switchResult = this.executeSwitch(action);
       //   if (switchResult) switchResults.push(switchResult);
       //   continue;
       // }
 
-      // 🔹 registra a posição da execução
+      // registers the execution position
       action.executionIndex = actionOrder++;
 
       const user = this.combat.activeChampions.get(action.userId);
@@ -93,7 +87,7 @@ export class TurnResolver {
           reason: "inactive",
           user,
           action,
-          logMessage: `Ação de campeão desconhecido ignorada (não ativo).`,
+          logMessage: `Unknown champion's action ignored (not active).`,
         });
         continue;
       }
@@ -116,6 +110,13 @@ export class TurnResolver {
             scoreResult.scoringSlot,
             scoreResult.amount,
           );
+
+          const scoringChamp = this.combat.activeChampions.get(
+            scoreResult.sourceId,
+          );
+          if (scoringChamp?.team - 1 === scoreResult.scoringSlot) {
+            scoringChamp.addPointsScored(scoreResult.amount);
+          }
         }
 
         result.scorePayload = this.match.getScorePayload();
@@ -148,7 +149,7 @@ export class TurnResolver {
   }
 
   // ============================================================
-  //  EXECUÇÃO DE SWITCH (DESATIVADA)
+  //  SWITCH EXECUTION (DISABLED)
   // ============================================================
 
   // executeSwitch(action) {
@@ -156,7 +157,7 @@ export class TurnResolver {
   //   if (outId) {
   //     const champion = this.combat.activeChampions.get(outId);
   //     if (champion) {
-  //       action.switchedOutChampion = champion; // passado ao servidor para bookkeeping (bench, slot, efeitos)
+  //       action.switchedOutChampion = champion; // passed to the server for bookkeeping (bench, slot, effects)
   //       this.combat.activeChampions.delete(outId);
   //     }
   //   }
@@ -164,7 +165,7 @@ export class TurnResolver {
   // }
 
   // ============================================================
-  //  MANIPULAÇÃO DE REPEAT ACTION (Passivas)
+  //  REPEAT ACTION HANDLING (Passives)
   // ============================================================
 
   handleRepeatAction(
@@ -252,7 +253,7 @@ export class TurnResolver {
   }
 
   // ============================================================
-  //  EXECUÇÃO DE AÇÃO INDIVIDUAL
+  //  SINGLE ACTION EXECUTION
   // ============================================================
 
   executeSkillAction(action, turnExecutionMap, context) {
@@ -260,24 +261,24 @@ export class TurnResolver {
 
     const user = this.combat.activeChampions.get(action.userId);
 
-    // 1. valida existência / alive
+    // 1. validate existence / alive
     const isInactive = !user || !user.alive;
     if (isInactive) {
-      const userName = user ? formatChampionName(user) : "campeão desconhecido";
+      const userName = user ? formatChampionName(user) : "unknown champion";
       return {
         executed: false,
         reason: "inactive",
         user,
         action,
-        logMessage: `Ação de ${userName} ignorada (não ativo).`,
+        logMessage: `${userName}'s action ignored (not active).`,
       };
     }
 
-    // 2. valida ação (hooks)
+    // 2. validate action (hooks)
     const denial = this.canExecuteAction(user, action, context);
     if (denial?.denied) {
       context.registerDialog({
-        message: denial.message || `${formatChampionName(user)} não pode agir.`,
+        message: denial.message || `${formatChampionName(user)} cannot act.`,
         sourceId: user.id,
         damageDepth: context.damageDepth ?? 0,
       });
@@ -295,7 +296,7 @@ export class TurnResolver {
       return this.executeClaimAction(user, action, turnExecutionMap, context);
     }
 
-    // 3. valida skill
+    // 3. validate skill
     const skill = user.skills.find((s) => s.key === action.skillKey);
     if (!skill) {
       return {
@@ -303,22 +304,22 @@ export class TurnResolver {
         reason: "skill_not_found",
         user,
         action,
-        logMessage: `Erro: Habilidade ${action.skillKey} não encontrada para ${formatChampionName(user)}.`,
+        logMessage: `Error: Skill ${action.skillKey} not found for ${formatChampionName(user)}.`,
       };
     }
 
     // 4. resolve targets
     const roleTargets = this.resolveSkillTargets(user, skill, action, context);
 
-    // (game design) Se quiser que habilidades sem alvo NÃO consumam recurso,
-    // mover o consumo de recurso para depois da verificação de !roleTargets.
-    // Caso contrário, manter aqui para consumir mesmo sem alvo.
+    // (game design) If targetless skills should NOT consume the resource,
+    // move the resource consumption to after the !roleTargets check.
+    // Otherwise, keep it here so it consumes even without a target.
 
     // 5. Capture the CLAIM value BEFORE the Momentum is spent.
-    // Algumas habilidades podem utilizar esse valor como referência.
+    // Some skills may use this value as a reference.
     context.preActionClaimPoints = getClaimPoints(user, context.currentTurn);
 
-    // 6. AGORA SIM: consumir recurso
+    // 6. Now, consume the resource
     if (action.momentumCost > 0 && !this.editMode.freeCostSkills) {
       this.applyResourceChange({
         target: user,
@@ -409,7 +410,7 @@ export class TurnResolver {
 
     this.processImmediateChampionMutations(context);
 
-    // Captura snapshot intermediário AGORA, antes da próxima ação mutar os champions
+    // Capture the intermediate snapshot NOW, before the next action mutates the champions
 
     context._intermediateSnapshot = snapshotChampions(
       this.combat.activeChampions,
@@ -436,7 +437,7 @@ export class TurnResolver {
         reason: "denied",
         denial: {
           denied: true,
-          message: `${formatChampionName(user)} não tem Momentum suficiente para CLAIM.`,
+          message: `${formatChampionName(user)} does not have enough Momentum for CLAIM.`,
         },
         user,
         action,
@@ -471,6 +472,7 @@ export class TurnResolver {
       const scoringSlot = user.team - 1;
 
       this.match.addPointForSlot(scoringSlot, claimPoints);
+      user.addPointsScored(claimPoints);
 
       const actionResolvedResults = emitCombatEvent(
         "onActionResolved",
@@ -508,7 +510,7 @@ export class TurnResolver {
         action,
         results: [
           {
-            log: `${formatChampionName(user)} usou <b>CLAIM</b> e marcou ${claimPoints} ponto(s).`,
+            log: `${formatChampionName(user)} used <b>CLAIM</b> and scored ${claimPoints} point(s).`,
           },
           ...normalizedActionResolvedResults,
           ...registeredResults,
@@ -527,7 +529,7 @@ export class TurnResolver {
   }
 
   // ============================================================
-  //  MUTAÇÕES IMEDIATAS DE CAMPEÃO
+  //  IMMEDIATE CHAMPION MUTATIONS
   // ============================================================
 
   processImmediateChampionMutations(context) {
@@ -560,7 +562,7 @@ export class TurnResolver {
   }
 
   // ============================================================
-  //  VALIDAÇÃO DE AÇÃO (hooks podem negar)
+  //  ACTION VALIDATION (hooks can deny)
   // ============================================================
 
   canExecuteAction(user, action, context = null) {
@@ -578,7 +580,7 @@ export class TurnResolver {
     }
 
 
-    // Descobrir o alvo principal da ação (primeiro alvo válido)
+    // Find the action's main target (first valid target)
     let mainTarget = null;
     if (action?.targetIds) {
       for (const targetId of Object.values(action.targetIds)) {
@@ -614,7 +616,7 @@ export class TurnResolver {
           message:
             res.message ||
             res.log ||
-            `${formatChampionName(user)} não pode agir.`,
+            `${formatChampionName(user)} cannot act.`,
         };
       }
     }
@@ -629,7 +631,7 @@ export class TurnResolver {
         if (taunter?.alive) {
           return {
             denied: true,
-            message: `${formatChampionName(user)} está provocado e deve atacar seu provocador.`,
+            message: `${formatChampionName(user)} is taunted and must attack their taunter.`,
           };
         }
       }
@@ -639,7 +641,7 @@ export class TurnResolver {
   }
 
   // ============================================================
-  //  REEMBOLSO DE RECURSO
+  //  RESOURCE REFUND
   // ============================================================
 
   refundActionResource(user, action) {
@@ -651,15 +653,15 @@ export class TurnResolver {
   }
 
   // ============================================================
-  //  EXECUÇÃO DE HABILIDADE
+  //  SKILL EXECUTION
   // ============================================================
 
   performSkillExecution(user, skill, targets, context, action = null) {
     context.currentSkill = skill;
     context.actionSource = user;
-    // Verificar executionIndex:
+    // Check executionIndex:
 
-    // 🔹 2. Injetar contexto nos campeões
+    // 2. Inject context into champions
     this.combat.activeChampions.forEach((champion) => {
       champion.runtime = champion.runtime || {};
       champion.runtime.currentContext = context;
@@ -667,24 +669,24 @@ export class TurnResolver {
 
     if (!Array.isArray(targets)) {
       throw new Error(
-        `[SKILL ERROR] ${skill.name} recebeu targets que não são array`,
+        `[SKILL ERROR] ${skill.name} received targets that are not an array`,
       );
     }
 
     if (targets.length === 0) {
-      throw new Error(`[SKILL ERROR] ${skill.name} recebeu targets vazio`);
+      throw new Error(`[SKILL ERROR] ${skill.name} received empty targets`);
     }
 
     for (const t of targets) {
       if (!t || typeof t !== "object" || !t.id) {
-        throw new Error(`[SKILL ERROR] ${skill.name} recebeu target inválido`);
+        throw new Error(`[SKILL ERROR] ${skill.name} received an invalid target`);
       }
     }
 
     let result;
 
     try {
-      // 🔹 3. Executar skill - Passa o resolver (this) desacoplado do contexto
+      // 3. Execute skill - passes the resolver (this) decoupled from the context
       result = skill.resolve({
         user,
         targets,
@@ -692,22 +694,22 @@ export class TurnResolver {
         resolver: this,
       });
     } finally {
-      // 🔹 4. Limpar contexto
+      // 4. Clean up context
       this.combat.activeChampions.forEach((champion) => {
         if (champion.runtime) delete champion.runtime.currentContext;
       });
       delete context.actionSource;
     }
 
-    // 🔹 5. Registrar no histórico do turno
+    // 5. Register in the turn history
     this.registerSkillUsageInTurn(user, skill, targets);
 
-    // 🔹 6. Normalizar resultado
+    // 6. Normalize result
     const results = Array.isArray(result) ? result : result ? [result] : [];
 
     this.applyMomentumFromContext({ user, context });
 
-    // 🔹 7. Hook onActionResolved
+    // 7. onActionResolved hook
     const actionResolvedResults = emitCombatEvent(
       "onActionResolved",
       {
@@ -736,7 +738,7 @@ export class TurnResolver {
   }
 
   // ============================================================
-  //  REGISTRO DE USO DE HABILIDADE NO TURNO
+  //  SKILL USAGE REGISTRATION FOR THE TURN
   // ============================================================
 
   registerSkillUsageInTurn(user, skill, targets) {
@@ -763,7 +765,7 @@ export class TurnResolver {
   }
 
   // ============================================================
-  //  APLICAÇÃO DE MOMENTUM PÓS-AÇÃO
+  //  POST-ACTION MOMENTUM APPLICATION
   // ============================================================
 
   applyMomentumFromContext({ user, context }) {
@@ -824,8 +826,8 @@ export class TurnResolver {
   }
 
   /**
-   * Ponto único de entrada (Backend) para mudança de recursos com emissão de hooks.
-   * Orquestra: Mudança de Estado (Champion) -> Visual (Context) -> Gameplay Hooks (Emitter).
+   * Single (backend) entry point for resource changes with hook emission.
+   * Orchestrates: State Change (Champion) -> Visual (Context) -> Gameplay Hooks (Emitter).
    */
   applyResourceChange({
     target,
@@ -902,7 +904,7 @@ export class TurnResolver {
         type: payloadType,
         resourceType: "momentum",
         source: this.combat.activeChampions.get(sourceId) || null,
-        resolver: this, // Desacoplado do contexto, passado como bridge
+        resolver: this, // Decoupled from the context, passed as a bridge
       },
       this.combat.activeChampions,
     );
@@ -927,7 +929,7 @@ export class TurnResolver {
 
   // ============================================================
   // ============================================================
-  //  RESOLUÇÃO DE ALVOS
+  //  TARGET RESOLUTION
   // ============================================================
 
   resolveSkillTargets(user, skill, action, context) {
@@ -1082,7 +1084,7 @@ export class TurnResolver {
   }
 
   // ============================================================
-  //  CRIAÇÃO DE CONTEXTO BASE
+  //  BASE CONTEXT CREATION
   // ============================================================
 
   createBaseContext({ sourceId = null } = {}) {
@@ -1108,7 +1110,7 @@ export class TurnResolver {
           ...combat.deadChampions.values(),
         ];
       },
-      // eventIndex: 0, // para controle interno de ordem de eventos dentro da resolução de uma ação
+      // eventIndex: 0, // internal control for event ordering within a single action's resolution
       players: this.match.players,
 
       // ========================
@@ -1130,7 +1132,7 @@ export class TurnResolver {
         seq: 0,
       },
 
-      _lastEventRef: null, // referência para o último evento registrado, útil para diálogos que precisam se referir a ele
+      _lastEventRef: null, // reference to the last registered event, useful for dialogs that need to refer to it
 
       registeredResults: [],
 
@@ -1173,7 +1175,7 @@ export class TurnResolver {
         if (value === 0) return null;
 
         if (scoringSlot !== 0 && scoringSlot !== 1) {
-          throw new Error(`[SCORE ERROR] scoringSlot inválido: ${scoringSlot}`);
+          throw new Error(`[SCORE ERROR] invalid scoringSlot: ${scoringSlot}`);
         }
 
         return this.registerResult({
@@ -1483,10 +1485,10 @@ export class TurnResolver {
         if (this._lastEventRef) {
           const key = timing === "post" ? "postDialogs" : "preDialogs";
 
-          this._lastEventRef[key] ??= []; // 🔥 garante array
+          this._lastEventRef[key] ??= []; // ensures the array exists
           this._lastEventRef[key].push(dialogObj);
         } else {
-          // fallback global
+          // global fallback
           this.visual.globalDialogs ??= [];
           this.visual.globalDialogs.push(dialogObj);
         }

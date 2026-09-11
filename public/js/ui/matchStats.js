@@ -1,16 +1,20 @@
 /**
- * End-of-match statistics panel: ranks the champions on the field by combat
- * metrics (damage, healing, raw taken, mitigated) across tabbed tables. Reads
- * the live champion list and the local player's team; writes only to the DOM.
+ * End-of-match statistics panel: ranks every champion ever summoned this
+ * match by combat metrics (damage, healing, raw taken, mitigated, points)
+ * across tabbed tables. Reads the final roster snapshot the server sends
+ * with `gameOver` and the local player's team; writes only to the DOM.
  */
-export function createMatchStatsPanel({ activeChampions }) {
+export function createMatchStatsPanel() {
   const statsTabKeys = [
     "damage",
     "healingReceived",
     "healingDone",
     "rawTaken",
     "damageMitigated",
+    "points",
   ];
+
+  let roster = [];
 
   const toNumber = (value) => {
     const num = Number(value);
@@ -39,13 +43,12 @@ export function createMatchStatsPanel({ activeChampions }) {
       healingDone: Math.max(0, toNumber(backendStats.healingDone)),
       rawTaken: Math.max(0, toNumber(backendStats.rawTaken)),
       damageMitigated: Math.max(0, toNumber(backendStats.damageMitigated)),
+      points: Math.max(0, toNumber(backendStats.points)),
     };
   }
 
   function sortEntriesBy(metricKey) {
-    const entries = Array.from(activeChampions.values())
-      .map(getSnapshotStatsEntry)
-      .filter(Boolean);
+    const entries = roster.map(getSnapshotStatsEntry).filter(Boolean);
 
     return entries.sort((a, b) => {
       const valueDiff = (b[metricKey] || 0) - (a[metricKey] || 0);
@@ -137,12 +140,14 @@ export function createMatchStatsPanel({ activeChampions }) {
     renderStatsRows("matchStatsHealingDoneBody", "healingDone");
     renderStatsRows("matchStatsRawTakenBody", "rawTaken");
     renderStatsRows("matchStatsDamageMitigatedBody", "damageMitigated");
+    renderStatsRows("matchStatsPointsBody", "points");
     setStatsTab("damage");
   }
 
-  function show() {
+  function show(champions) {
     const panel = document.getElementById("matchStatsPanel");
     if (!panel) return;
+    roster = Array.isArray(champions) ? champions : [];
     render();
     panel.classList.remove("hidden");
     panel.classList.add("active");
@@ -153,6 +158,7 @@ export function createMatchStatsPanel({ activeChampions }) {
     if (!panel) return;
     panel.classList.remove("active");
     panel.classList.add("hidden");
+    roster = [];
   }
 
   return { show, reset: hide };

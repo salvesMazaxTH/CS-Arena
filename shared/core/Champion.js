@@ -412,6 +412,7 @@ export class Champion {
       healingDone: Number(matchStats.healingDone) || 0,
       rawTaken: Number(matchStats.rawTaken) || 0,
       damageMitigated: Number(matchStats.damageMitigated) || 0,
+      points: Number(matchStats.points) || 0,
     };
   }
 
@@ -422,6 +423,7 @@ export class Champion {
       healingDone: Number(this.matchStats?.healingDone) || 0,
       rawTaken: Number(this.matchStats?.rawTaken) || 0,
       damageMitigated: Number(this.matchStats?.damageMitigated) || 0,
+      points: Number(this.matchStats?.points) || 0,
     };
   }
 
@@ -447,6 +449,10 @@ export class Champion {
 
   addDamageMitigated(value) {
     this.matchStats.damageMitigated += Math.max(0, Number(value) || 0);
+  }
+
+  addPointsScored(value) {
+    this.matchStats.points += Math.max(0, Number(value) || 0);
   }
 
   // ===============================
