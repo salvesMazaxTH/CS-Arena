@@ -534,11 +534,11 @@ function validateActionIntent(user, skill, socket) {
 //  MOMENTUM HELPERS
 // ============================================================
 
-/** Applies the global start-of-turn momentum regen (+12 per turn). */
+/** Applies the global start-of-turn momentum regen (+8 per turn). */
 function applyGlobalMomentumRegen(champion, context, resolver) {
   if (!champion || !champion.alive) return;
 
-  const GLOBAL_MOMENTUM_REGEN = 12;
+  const GLOBAL_MOMENTUM_REGEN = 8;
 
   if (resolver) {
     resolver.applyResourceChange({
