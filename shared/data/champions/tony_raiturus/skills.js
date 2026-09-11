@@ -14,6 +14,7 @@ const tonyRaiturusSkills = [
     contact: false,
     damageMode: "standard",
     element: "lightning",
+    hitVfxPalette: "lightning",
     splitsIntoThunder: false,
     priority: 0,
 
@@ -48,6 +49,7 @@ const tonyRaiturusSkills = [
     contact: false,
     damageMode: "standard",
     element: "lightning",
+    hitVfxPalette: "lightning",
     doublesThunder: true,
     priority: 0,
 
@@ -91,6 +93,7 @@ const tonyRaiturusSkills = [
     contact: false,
     damageMode: "standard",
     element: "lightning",
+    hitVfxPalette: "lightning",
     isUltimate: true,
     momentumCost: 55,
     priority: 0,
