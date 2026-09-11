@@ -3,7 +3,7 @@ export default {
   portrait: "/assets/portraits/drex.webp",
 
 
-  HP: 320,
+  HP: 315,
   Attack: 120,
   Defense: 130,
   Speed: 65,

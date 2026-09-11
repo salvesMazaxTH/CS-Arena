@@ -2,7 +2,7 @@ export default {
   name: "Kai",
   portrait: "/assets/portraits/kai.webp",
 
-  HP: 330,
+  HP: 325,
   Attack: 185,
   Defense: 110,
   Speed: 55,

@@ -2,7 +2,7 @@ export default {
   name: "Valeria",
   portrait: "/assets/portraits/valeria.webp",
 
-  HP: 380,
+  HP: 370,
   Attack: 230,
   Defense: 130,
   Speed: 75,

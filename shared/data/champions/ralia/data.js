@@ -2,7 +2,7 @@ export default {
   name: "Rália",
   portrait: "/assets/portraits/ralia.webp",
 
-  HP: 365,
+  HP: 345,
   Attack: 150,
   Defense: 170,
   Speed: 40,

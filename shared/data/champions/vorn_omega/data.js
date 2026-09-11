@@ -4,7 +4,7 @@ export default {
 
   unreleased: true,
 
-  HP: 390,
+  HP: 380,
   Attack: 215,
   Defense: 145,
   Speed: 40,

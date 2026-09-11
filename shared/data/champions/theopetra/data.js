@@ -2,7 +2,7 @@ export default {
   name: "Theópetra",
   portrait: "/assets/portraits/theopetra.webp",
 
-  HP: 370,
+  HP: 350,
   Attack: 160,
   Defense: 175,
   Speed: 30,

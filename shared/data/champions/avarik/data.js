@@ -1,7 +1,7 @@
 export default {
   name: "Avarik",
   portrait: "/assets/portraits/avarik.webp",
-  HP: 360,
+  HP: 355,
   Attack: 210,
   Defense: 135,
   Speed: 55,

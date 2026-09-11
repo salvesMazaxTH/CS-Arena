@@ -2,7 +2,7 @@ export default {
   name: "Oryn",
   portrait: "/assets/portraits/oryn.webp",
 
-  HP: 380,
+  HP: 360,
   Attack: 110,
   Defense: 165,
   Speed: 45,

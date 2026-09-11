@@ -3,7 +3,7 @@ export default {
   portrait: "/assets/portraits/noyre.webp",
 
 
-  HP: 330,
+  HP: 325,
   Attack: 130,
   Defense: 95,
   Speed: 75,

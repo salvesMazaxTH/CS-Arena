@@ -3,7 +3,7 @@ export default {
   portrait: "/assets/portraits/clay_godslayer.webp",
   selectable: false,
 
-  HP: 390,
+  HP: 370,
   Attack: 350,
   Defense: 85,
   Speed: 85,

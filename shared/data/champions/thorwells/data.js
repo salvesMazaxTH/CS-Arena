@@ -2,7 +2,7 @@ export default {
   name: "Thorwells",
   portrait: "/assets/portraits/thorwells.webp",
 
-  HP: 355,
+  HP: 350,
   Attack: 205,
   Defense: 110,
   Speed: 95,

@@ -1,7 +1,7 @@
 export default {
   name: "Rakhana",
   portrait: "/assets/portraits/rakhana.webp",
-  HP: 330,
+  HP: 325,
   Attack: 225,
   Defense: 120,
   Speed: 90,

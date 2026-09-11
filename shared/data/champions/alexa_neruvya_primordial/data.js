@@ -3,7 +3,7 @@ export default {
   portrait: "/assets/portraits/alexa_transformed.webp",
   selectable: false,
 
-  HP: 395,
+  HP: 385,
   Attack: 330,
   Defense: 130,
   Speed: 65,

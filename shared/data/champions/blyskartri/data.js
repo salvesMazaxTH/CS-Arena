@@ -2,7 +2,7 @@ export default {
   name: "Blyskartri",
   portrait: "/assets/portraits/blyskartri.webp",
 
-  HP: 350,
+  HP: 345,
   Attack: 110,
   Defense: 135,
   Speed: 65,

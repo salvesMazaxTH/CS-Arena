@@ -2,7 +2,7 @@ export default {
   name: "Alexa Neruvya",
   portrait: "/assets/portraits/alexa_neruvya.webp",
 
-  HP: 340,
+  HP: 335,
   Attack: 130,
   Defense: 105,
   Speed: 60,

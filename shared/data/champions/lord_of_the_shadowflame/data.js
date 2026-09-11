@@ -7,7 +7,7 @@ export default {
   },
   selectable: false,
 
-  HP: 400,
+  HP: 380,
   Attack: 380,
   Defense: 65,
   Speed: 90,
