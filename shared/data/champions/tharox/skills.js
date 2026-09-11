@@ -16,12 +16,12 @@ const tharoxSkills = [
     key: "primeval_taunt",
     name: "Primeval Taunt",
     tauntDuration: 1,
-    damageReductionAmount: 10,
+    damageReductionAmount: 12,
     damageReductionDuration: 2,
     contact: false,
     priority: 3,
     description() {
-      return `Tharox draws the attention of all enemies to himself for ${this.tauntDuration} turn(s), daring them to strike against his immovable bulk. He gains ${this.damageReductionAmount} Damage Reduction for ${this.damageReductionDuration} turn(s). Consecutive uses have an exponentially lower chance of success (resets on failure or using another skill.)`;
+      return `Tharox draws the attention of all enemies to himself for ${this.tauntDuration} turn(s), daring them to strike against his immovable bulk. He gains ${this.damageReductionAmount}% Damage Reduction (except Absolute Damage) for ${this.damageReductionDuration} turn(s). Consecutive uses have an exponentially lower chance of success (resets on failure or using another skill.)`;
     },
 
     targetSpec: ["self"],
@@ -29,6 +29,7 @@ const tharoxSkills = [
       user.applyDamageReduction({
         amount: this.damageReductionAmount,
         duration: this.damageReductionDuration,
+        type: "percent",
         context,
       });
 
@@ -85,7 +86,7 @@ const tharoxSkills = [
       // Filter out falsy (e.g., if taunt not applied)
       const logs = tauntLogs.filter(Boolean);
       logs.unshift({
-        log: `${userName} executed <b>Primeval Taunt</b>. All enemies were taunted and ${userName} gained ${this.damageReductionAmount} Damage Reduction.`,
+        log: `${userName} executed <b>Primeval Taunt</b>. All enemies were taunted and ${userName} gained ${this.damageReductionAmount}% Damage Reduction.`,
       });
       return logs;
     },
@@ -94,40 +95,34 @@ const tharoxSkills = [
   {
     key: "carapace_impact",
     name: "Carapace Impact",
-    maxDefScaling: 95,
-    minDefScaling: 40,
+    maxDefScaling: 80,
+    minDefScaling: 35,
+    noRiskPenaltyPercent: 20,
     damageMode: "standard",
     contact: true,
     priority: 0,
     description() {
-      return `Tharox crashes into the chosen target with the overwhelming weight of his stone-like frame, dealing damage equal to ${this.maxDefScaling}% of his Defense at full health. The more wounded he becomes, the less force he can bring to bear — his devastating strength waning down to ${this.minDefScaling}% as his colossal body begins to falter.`;
+      return `Tharox crashes into the chosen target with the overwhelming weight of his stone-like frame, dealing damage equal to ${this.maxDefScaling}% of his Defense at full health. The more wounded he becomes, the less force he can bring to bear — his devastating strength waning down to ${this.minDefScaling}% as his colossal body begins to falter. If he has taken no damage this turn or the previous one, his own caution costs him ${this.noRiskPenaltyPercent}% of that damage.`;
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const hpRatio = Math.max(0, Math.min(1, user.HP / user.maxHP));
+      const defenseConversion =
+        (this.minDefScaling +
+          (this.maxDefScaling - this.minDefScaling) * hpRatio) /
+        100;
 
-      let defenseConversion;
+      let baseDamage = user.Defense * defenseConversion;
 
-      if (hpRatio > 0.75) {
-        // 75%–100% HP: 95% → 80%
-        defenseConversion =
-          0.80 + 0.15 * ((hpRatio - 0.75) / 0.25);
-      } else if (hpRatio > 0.50) {
-        // 50%–75% HP: 80% → 65%
-        defenseConversion =
-          0.65 + 0.15 * ((hpRatio - 0.50) / 0.25);
-      } else if (hpRatio > 0.25) {
-        // 25%–50% HP: 65% → 50%
-        defenseConversion =
-          0.50 + 0.15 * ((hpRatio - 0.25) / 0.25);
-      } else {
-        // 0%–25% HP: 50% → 40%
-        defenseConversion =
-          0.40 + 0.10 * (hpRatio / 0.25);
+      const lastHitTurn = user.runtime.tharoxLastHitTurn;
+      const wasAtRisk =
+        lastHitTurn === context.currentTurn ||
+        lastHitTurn === context.currentTurn - 1;
+
+      if (!wasAtRisk) {
+        baseDamage *= 1 - this.noRiskPenaltyPercent / 100;
       }
-
-      const baseDamage = user.Defense * defenseConversion;
 
       const result = new DamageEvent({
         attacker: user,

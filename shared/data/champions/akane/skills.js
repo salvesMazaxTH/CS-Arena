@@ -59,10 +59,11 @@ const akaneSkills = [
     name: "Bloodbath",
     lifeStealBuff: 95,
     buffDuration: 2,
+    edgeDamagePercent: 18,
     priority: 0,
 
     description() {
-      return `The demon beneath Akane's calm surfaces to feed. For ${this.buffDuration} turn(s) she gains +${this.lifeStealBuff}% Life Steal, every cut she lands flowing back into her as HP.`;
+      return `The demon beneath Akane's calm surfaces to feed. For ${this.buffDuration} turn(s) she gains +${this.lifeStealBuff}% Life Steal, every cut she lands flowing back into her as HP. The first blow she lands while the fury lasts is driven home with an extra ${this.edgeDamagePercent}% of her Attack.`;
     },
 
     targetSpec: ["self"],
@@ -76,8 +77,33 @@ const akaneSkills = [
         statModifierSrc: user,
       });
 
+      const edgeDamagePercent = this.edgeDamagePercent;
+
+      user.runtime.hookEffects ??= [];
+      user.runtime.hookEffects = user.runtime.hookEffects.filter(
+        (hook) => hook.key !== "bloodbath_edge",
+      );
+
+      user.addHookEffect(
+        {
+          type: "buff",
+          key: "bloodbath_edge",
+          name: "Bloodbath",
+          expiresAtTurn: context.currentTurn + this.buffDuration,
+          hookScope: { onBeforeDmgDealing: "attacker" },
+          onBeforeDmgDealing({ attacker }) {
+            attacker.runtime.hookEffects = attacker.runtime.hookEffects.filter(
+              (hook) => hook.key !== "bloodbath_edge",
+            );
+
+            return { bonusDamage: (attacker.Attack * edgeDamagePercent) / 100 };
+          },
+        },
+        context,
+      );
+
       return {
-        log: `${formatChampionName(user)} bathes in blood, gaining +${this.lifeStealBuff}% Life Steal for ${this.buffDuration} turn(s).`,
+        log: `${formatChampionName(user)} bathes in blood, gaining +${this.lifeStealBuff}% Life Steal for ${this.buffDuration} turn(s) and readying a killing edge.`,
       };
     },
   },
