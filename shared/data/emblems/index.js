@@ -16,6 +16,7 @@ import { demigodsTrial } from "./demigods_trial.js";
 import { stormFist } from "./storm_fist.js";
 import { assassinsAmbush } from "./assassins_ambush.js";
 import { permafrost } from "./permafrost.js";
+import { dragonsFury } from "./dragons_fury.js";
 
 export { evaluateEmblemEligibilityForRoster } from "./eligibility.js";
 
@@ -38,4 +39,5 @@ export const EMBLEMS = [
   stormFist,
   assassinsAmbush,
   permafrost,
+  dragonsFury,
 ];
