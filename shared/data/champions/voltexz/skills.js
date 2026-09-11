@@ -55,7 +55,7 @@ const voltexzSkills = [
     key: "twin_lightnings",
     name: "Twin Lightnings",
 
-    bf: 40,
+    bf: 45,
     contact: false,
     damageMode: "standard",
     priority: 0,
