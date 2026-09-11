@@ -7,7 +7,7 @@ export const freeCompany = {
   emblems: [],
   champions: [
     "torren",
-    "theopetra",
+    "tharox",
     "thorwells",
     "eryon",
     "bruno",
