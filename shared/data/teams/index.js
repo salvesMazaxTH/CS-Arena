@@ -4,6 +4,8 @@ import { freeCompany } from "./prebuilt/free_company.js";
 import { ironlads } from "./prebuilt/ironlads.js";
 import { justHealDrex } from "./prebuilt/just_heal_drex.js";
 import { arcaneWinter } from "./prebuilt/arcane_winter.js";
+import { bedrockCourt } from "./prebuilt/bedrock_court.js";
+import { shadowCovenant } from "./prebuilt/shadow_covenant.js";
 
 export {
   TEAM_SIZE,
@@ -18,4 +20,6 @@ export const PREBUILT_TEAMS = [
   ironlads,
   justHealDrex,
   arcaneWinter,
+  bedrockCourt,
+  shadowCovenant,
 ];
