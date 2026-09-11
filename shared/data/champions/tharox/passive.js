@@ -6,11 +6,12 @@ export default {
   name: "Unyielding Mass",
   stacksNeeded: 3,
   defBonus: 15,
-  healingPerMaxHP: 0.025,
+  healingPerMaxHP: 0.015,
   defensePerHealingStep: 75,
-  shieldPercentage: 0.075,
+  shieldPercentage: 0.05,
+  sustainHpThreshold: 0.70,
   description() {
-    return `Whenever Tharox is struck, he gains 1 Inertia stack. At ${this.stacksNeeded}, consume them and gain +${this.defBonus} permanent Defense. Additionally, he heals for ${this.healingPerMaxHP * 100}% of his Max HP for every ${this.defensePerHealingStep} Defense he has and gains a shield equivalent to ${this.shieldPercentage * 100}% of his Max HP.`;
+    return `Whenever Tharox is struck, he gains 1 Inertia stack. At ${this.stacksNeeded}, consume them and gain +${this.defBonus} permanent Defense. If his HP is at ${this.sustainHpThreshold * 100}% or below, he additionally heals for ${this.healingPerMaxHP * 100}% of his Max HP for every ${this.defensePerHealingStep} Defense he has and gains a shield equivalent to ${this.shieldPercentage * 100}% of his Max HP.`;
   },
 
   hookScope: {
@@ -19,6 +20,8 @@ export default {
 
   onAfterDmgTaking({ attacker, owner, actualDmg, context }) {
     if (!(actualDmg > 0) || attacker.id === owner.id) return;
+
+    owner.runtime.tharoxLastHitTurn = context.currentTurn;
 
     owner.runtime.tharoxInerciaStacks =
       (owner.runtime.tharoxInerciaStacks || 0) + 1;
@@ -38,33 +41,32 @@ export default {
       isPermanent: true,
     });
 
-    const defenseMultipliers = Math.floor(owner.Defense / this.defensePerHealingStep);
-    const healingAmount =
-      owner.maxHP * this.healingPerMaxHP * defenseMultipliers;
-
-    if (healingAmount > 0) {
-      new HealEvent({
-        target: owner,
-        amount: healingAmount,
-        context,
-        source: owner,
-      }).execute();
-    }
-
-    const shieldAmount = owner.maxHP * this.shieldPercentage;
-
-    owner.addShield(shieldAmount, 0, context, "regular");
-
     let log =
       `<b>[Passive - Unyielding Mass]</b> ${formatChampionName(owner)} ` +
       `consumed ${this.stacksNeeded} Inertia and gained +${this.defBonus} permanent Defense! ` +
       `(Defense: ${owner.Defense}).`;
 
-    if (healingAmount > 0) {
-      log += `\nHealed ${Math.floor(healingAmount)} HP (${defenseMultipliers} × ${this.healingPerMaxHP * 100}% of Max HP).`;
-    }
+    if (owner.HP / owner.maxHP <= this.sustainHpThreshold) {
+      const defenseMultipliers = Math.floor(owner.Defense / this.defensePerHealingStep);
+      const healingAmount =
+        owner.maxHP * this.healingPerMaxHP * defenseMultipliers;
 
-    log += `\nGained a shield of ${Math.floor(shieldAmount)} HP.`;
+      if (healingAmount > 0) {
+        new HealEvent({
+          target: owner,
+          amount: healingAmount,
+          context,
+          source: owner,
+        }).execute();
+
+        log += `\nHealed ${Math.floor(healingAmount)} HP (${defenseMultipliers} × ${this.healingPerMaxHP * 100}% of Max HP).`;
+      }
+
+      const shieldAmount = owner.maxHP * this.shieldPercentage;
+      owner.addShield(shieldAmount, 0, context, "regular");
+
+      log += `\nGained a shield of ${Math.floor(shieldAmount)} HP.`;
+    }
 
     if (statResult?.log) {
       log += `\n${statResult.log}`;
