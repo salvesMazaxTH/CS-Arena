@@ -81,13 +81,17 @@ export class TurnResolver {
       const user = this.combat.activeChampions.get(action.userId);
 
       if (!user) {
-        this.refundActionResource(user, action);
+        // The Momentum is only spent inside executeSkillAction, so an actor who
+        // left the field before its turn came up has nothing to refund.
+        const gone = this.combat.getChampion(action.userId);
         actionResults.push({
           executed: false,
           reason: "inactive",
           user,
           action,
-          logMessage: `Unknown champion's action ignored (not active).`,
+          logMessage: gone
+            ? `${formatChampionName(gone)} is no longer on the field, and their action is lost.`
+            : `Unknown champion's action ignored (not active).`,
         });
         continue;
       }
@@ -408,7 +412,7 @@ export class TurnResolver {
       action,
     );
 
-    this.processImmediateChampionMutations(context);
+    skillResults.push(...this.processImmediateChampionMutations(context));
 
     // Capture the intermediate snapshot NOW, before the next action mutates the champions
 
@@ -494,7 +498,7 @@ export class TurnResolver {
           ? [actionResolvedResults]
           : [];
 
-      this.processImmediateChampionMutations(context);
+      const mutationResults = this.processImmediateChampionMutations(context);
 
       context._intermediateSnapshot = snapshotChampions(
         this.combat.activeChampions,
@@ -514,6 +518,7 @@ export class TurnResolver {
           },
           ...normalizedActionResolvedResults,
           ...registeredResults,
+          ...mutationResults,
         ],
         claimPoints,
         scorePayload: this.match.getScorePayload(),
@@ -534,16 +539,17 @@ export class TurnResolver {
 
   processImmediateChampionMutations(context) {
     const requests = context?.flags?.championMutationRequests;
-    if (!Array.isArray(requests) || requests.length === 0) return;
+    if (!Array.isArray(requests) || requests.length === 0) return [];
 
     const deferredRequests = [];
+    const logs = [];
 
     for (const request of requests) {
       if (!request || typeof request !== "object") continue;
 
       const shouldApplyImmediately =
         request.timing !== "postTurn" &&
-        ["transform", "swap", "restore"].includes(request.mode);
+        ["transform", "swap", "restore", "vanish"].includes(request.mode);
 
       if (!shouldApplyImmediately) {
         deferredRequests.push(request);
@@ -555,10 +561,15 @@ export class TurnResolver {
         continue;
       }
 
-      this.mutationHandler(request, { context, timing: "immediate" });
+      const mutated = this.mutationHandler(request, {
+        context,
+        timing: "immediate",
+      });
+      if (mutated?.log) logs.push({ log: mutated.log });
     }
 
     context.flags.championMutationRequests = deferredRequests;
+    return logs;
   }
 
   // ============================================================
@@ -638,18 +649,6 @@ export class TurnResolver {
     }
 
     return { denied: false };
-  }
-
-  // ============================================================
-  //  RESOURCE REFUND
-  // ============================================================
-
-  refundActionResource(user, action) {
-    if (!user || !action) return;
-    const amount = Number(action.momentumCost) || 0;
-    if (amount > 0) {
-      user.addMomentum({ amount });
-    }
   }
 
   // ============================================================
