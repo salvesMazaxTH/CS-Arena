@@ -267,7 +267,18 @@ export class Champion {
       const value = runtime[key];
       if (typeof value === "function") {
         delete runtime[key];
-      } else if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+      } else if (Array.isArray(value)) {
+        // Visual event snapshots must be immutable. In particular, shields are
+        // registered by the damage event before reactive after-hooks run; if
+        // this array stays aliased to runtime.shields, a later addShield() or
+        // shield consumption rewrites the already-emitted damage snapshot and
+        // makes the client render a future shield too early.
+        try {
+          runtime[key] = JSON.parse(JSON.stringify(value));
+        } catch {
+          delete runtime[key];
+        }
+      } else if (value !== null && typeof value === "object") {
         try {
           runtime[key] = JSON.parse(JSON.stringify(value));
         } catch {
