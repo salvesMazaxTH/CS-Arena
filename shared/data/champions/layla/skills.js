@@ -10,7 +10,7 @@ const laylaSkills = [
     key: "count_every_breath",
     name: "Count Every Breath",
 
-    bf: 85,
+    bf: 75,
     paralyzeDuration: 1,
 
     contact: false,

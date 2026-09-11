@@ -9,7 +9,7 @@ const maliMagarcSkills = [
     key: "unshaped_arc",
     name: "Unshaped Arc",
 
-    bf: 80,
+    bf: 75,
     damageMode: "piercing",
     piercingPercentage: 40,
     momentumSpend: 10,

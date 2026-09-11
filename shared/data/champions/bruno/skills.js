@@ -59,7 +59,7 @@ const brunoSkills = [
   {
     key: "glacial_charge",
     name: "Glacial Charge",
-    bf: 90,
+    bf: 80,
     contact: true,
     damageMode: "standard",
     priority: 0,
