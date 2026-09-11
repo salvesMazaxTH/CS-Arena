@@ -29,6 +29,8 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
     : Array.from(champions.values());
 
   for (const champ of champArray) {
+    // A fallen champion still answers the event about the death itself.
+    if (champ.alive === false && eventName !== "onChampionDeath") continue;
     if (SpawnProtection.blocksReaction(eventName, champ)) continue;
 
     const hookSources = [];

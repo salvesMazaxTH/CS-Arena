@@ -6,7 +6,6 @@ export default {
   Attack: 280,
   Defense: 55,
   Speed: 100,
-  Critical: 0,
 
   classKey: "assassin",
   elementalAffinities: ["lightning"],

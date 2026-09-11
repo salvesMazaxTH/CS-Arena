@@ -235,7 +235,7 @@ export function getTotalDamageReduction(champion, currentTurn) {
     }
   }
 
-  return { flat, percent };
+  return { flat, percent: Math.min(percent, 100) };
 }
 
 // Per-stat floor and ceiling. Both the clamp on the way in and the recompute
@@ -243,6 +243,7 @@ export function getTotalDamageReduction(champion, currentTurn) {
 const STAT_LIMITS = {
   Critical: { min: 0, max: 95 },
   Evasion: { min: 0, max: 75 },
+  LifeSteal: { min: 0, max: 999 },
   default: { min: 10, max: 999 },
 };
 

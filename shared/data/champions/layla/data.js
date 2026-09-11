@@ -6,7 +6,6 @@ export default {
   Attack: 325,
   Defense: 50,
   Speed: 95,
-  Critical: 0,
 
   elementalAffinities: ["lightning"],
   classKey: "mage",

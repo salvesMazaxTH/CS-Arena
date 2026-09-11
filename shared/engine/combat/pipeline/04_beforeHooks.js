@@ -68,13 +68,60 @@ export function runBeforeHooks(event) {
 // Increases carry as a flat amount, reductions as a proportion, a cap as a plain ceiling.
 function _carryHookDamage(damage, phase) {
   if (phase.sawDamageOverride) {
-    damage =
-      phase.damageDelta > 0
-        ? damage + phase.damageDelta
-        : damage * phase.damageRatio;
+    damage = (damage + phase.damageDelta) * phase.damageRatio;
   }
 
   return Math.min(damage, phase.damageCap);
+}
+
+// Every hook of a phase reads the same payload snapshot, so what each one asks
+// for is a delta against that snapshot: increases add up, reductions multiply.
+function _composedField(starting, ceiling = Infinity) {
+  return {
+    starting: Number(starting) || 0,
+    ceiling,
+    delta: 0,
+    scale: 1,
+    floor: 0,
+    ratio: 1,
+    saw: false,
+
+    apply(requested) {
+      const value = Number(requested) || 0;
+      this.saw = true;
+
+      if (value > this.starting) this.delta += value - this.starting;
+      else if (this.starting > 0) this.ratio *= value / this.starting;
+    },
+
+    scaleBy(multiplier) {
+      this.scale *= Number(multiplier) || 1;
+      this.saw = true;
+    },
+
+    raiseFloor(minimum) {
+      this.floor = Math.max(this.floor, Number(minimum) || 0);
+      this.saw = true;
+    },
+
+    get value() {
+      const raised = Math.max(
+        (this.starting + this.delta) * this.scale,
+        this.floor,
+      );
+
+      // Reductions come last so a denial still wins over a scale or a floor.
+      return Math.min(raised, this.ceiling) * this.ratio;
+    },
+  };
+}
+
+// Within one phase a denial outranks a pierce, and Absolute outranks both.
+const MODE_RANK = { piercing: 0, standard: 1, absolute: 2 };
+
+function _strongerMode(current, next) {
+  if (current === undefined) return next;
+  return (MODE_RANK[next] ?? 0) > (MODE_RANK[current] ?? 0) ? next : current;
 }
 
 function _applyBeforeDealingPassive(event) {
@@ -142,12 +189,13 @@ function _processHook(event, eventName, payload) {
     damageCap: Infinity,
   };
 
-  // Every hook reads the same payload snapshot, so their results compose as
-  // ratios against it — a "last one wins" overwrite would drop all the others.
-  const startingDamage = Number(payload.damage) || 0;
-  let damageRatio = 1;
-  let sawDamageOverride = false;
-  let smallestRequestedDamage = Infinity;
+  const damage = _composedField(payload.damage);
+  const baseDamage = _composedField(payload.baseDamage);
+  const preMitigation = _composedField(
+    payload.preMitigationDamage ?? payload.damage,
+  );
+  const piercing = _composedField(payload.piercingPercentage, 100);
+  let mode;
   let damageCap = Infinity;
   let bonusAdded = 0;
 
@@ -162,15 +210,7 @@ function _processHook(event, eventName, payload) {
 
     // Mutação de estado do evento
     if (r.damage !== undefined) {
-      const requestedDamage = Number(r.damage);
-      sawDamageOverride = true;
-      smallestRequestedDamage = Math.min(
-        smallestRequestedDamage,
-        requestedDamage,
-      );
-      if (startingDamage > 0) {
-        damageRatio *= requestedDamage / startingDamage;
-      }
+      damage.apply(r.damage);
     }
     // A ceiling, not a damage value: it must not scale with the hit.
     if (r.damageCap !== undefined) {
@@ -182,20 +222,22 @@ function _processHook(event, eventName, payload) {
       bonusAdded += Number(r.bonusDamage) || 0;
     }
     if (r.baseDamage !== undefined) {
-      event.baseDamage = Number(r.baseDamage);
-      summary.damageModelChanged = true;
+      baseDamage.apply(r.baseDamage);
     }
     if (r.mode !== undefined) {
-      event.mode = r.mode;
-      summary.damageModelChanged = true;
+      mode = _strongerMode(mode, r.mode);
     }
     if (r.piercingPercentage !== undefined) {
-      event.piercingPercentage = Number(r.piercingPercentage);
-      summary.damageModelChanged = true;
+      piercing.apply(r.piercingPercentage);
+    }
+    if (r.piercingMultiplier !== undefined) {
+      piercing.scaleBy(r.piercingMultiplier);
+    }
+    if (r.piercingFloor !== undefined) {
+      piercing.raiseFloor(r.piercingFloor);
     }
     if (r.preMitigationDamage !== undefined) {
-      summary.preMitigationDamage = Number(r.preMitigationDamage);
-      summary.damageModelChanged = true;
+      preMitigation.apply(r.preMitigationDamage);
     }
     if (r.crit !== undefined) {
       summary.critChanged = true;
@@ -211,15 +253,32 @@ function _processHook(event, eventName, payload) {
     });
   }
 
-  if (sawDamageOverride) {
-    event.damage =
-      startingDamage > 0
-        ? startingDamage * damageRatio
-        : smallestRequestedDamage;
+  if (baseDamage.saw) {
+    event.baseDamage = baseDamage.value;
+    summary.damageModelChanged = true;
+  }
+
+  if (mode !== undefined) {
+    event.mode = mode;
+    summary.damageModelChanged = true;
+  }
+
+  if (piercing.saw) {
+    event.piercingPercentage = Math.max(0, Math.min(100, piercing.value));
+    summary.damageModelChanged = true;
+  }
+
+  if (preMitigation.saw) {
+    summary.preMitigationDamage = preMitigation.value;
+    summary.damageModelChanged = true;
+  }
+
+  if (damage.saw) {
+    event.damage = damage.value;
 
     summary.sawDamageOverride = true;
-    summary.damageRatio = damageRatio;
-    summary.damageDelta = event.damage - startingDamage;
+    summary.damageRatio = damage.ratio;
+    summary.damageDelta = damage.delta;
   }
 
   if (Number.isFinite(damageCap)) {

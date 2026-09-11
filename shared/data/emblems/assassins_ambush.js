@@ -19,7 +19,8 @@ function isAssassin(champion) {
 export const assassinsAmbush = {
   key: "assassins_ambush",
   name: "Emblem of the Assassin's Ambush",
-  piercingPercentage: 25,
+  piercingMultiplier: 1.25,
+  minimumPiercing: 25,
 
   requirements: {
     classKey: {
@@ -29,27 +30,25 @@ export const assassinsAmbush = {
   },
 
   description() {
-    return `Your Assassin class champions' attacks always deal Piercing Damage, ignoring an extra ${this.piercingPercentage}% of the target's Defense on top of any Piercing the hit already carries.`;
+    return `Your Assassin class champions' attacks always deal Piercing Damage, ignoring ${Math.round((this.piercingMultiplier - 1) * 100)}% more Defense than the attack already ignores, and never less than ${this.minimumPiercing}% of it.`;
   },
 
   hookScope: {
     onBeforeDmgDealing: "attacker",
   },
 
-  onBeforeDmgDealing({ attacker, defender, owner, mode, piercingPercentage }) {
+  onBeforeDmgDealing({ attacker, defender, owner, mode }) {
     if (!attacker || !owner || attacker.team !== owner.team) return;
     if (!isAssassin(attacker)) return;
 
     // Absolute damage already ignores Defense entirely — never downgrade it.
     if (mode === "absolute") return;
 
-    const current = mode === "piercing" ? Number(piercingPercentage || 0) : 0;
-    const total = Math.min(100, current + this.piercingPercentage);
-
     return {
       mode: "piercing",
-      piercingPercentage: total,
-      log: `<b>[Emblem — Assassin's Ambush]</b> ${defender?.name ?? "the target"} is caught in the ambush: the strike ignores ${total}% of their Defense.`,
+      piercingMultiplier: this.piercingMultiplier,
+      piercingFloor: this.minimumPiercing,
+      log: `<b>[Emblem — Assassin's Ambush]</b> ${defender?.name ?? "the target"} is caught in the ambush: the strike ignores ${Math.round((this.piercingMultiplier - 1) * 100)}% more of their Defense, never under ${this.minimumPiercing}%.`,
     };
   },
 };
