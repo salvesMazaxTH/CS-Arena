@@ -6,6 +6,7 @@ import { justHealDrex } from "./prebuilt/just_heal_drex.js";
 import { arcaneWinter } from "./prebuilt/arcane_winter.js";
 import { bedrockCourt } from "./prebuilt/bedrock_court.js";
 import { shadowCovenant } from "./prebuilt/shadow_covenant.js";
+import { cinderfistPact } from "./prebuilt/cinderfist_pact.js";
 
 export {
   TEAM_SIZE,
@@ -22,4 +23,5 @@ export const PREBUILT_TEAMS = [
   arcaneWinter,
   bedrockCourt,
   shadowCovenant,
+  cinderfistPact,
 ];
