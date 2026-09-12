@@ -48,7 +48,7 @@ export const assassinsAmbush = {
       mode: "piercing",
       piercingMultiplier: this.piercingMultiplier,
       piercingFloor: this.minimumPiercing,
-      log: `<b>[Emblem — Assassin's Ambush]</b> ${defender?.name ?? "the target"} is caught in the ambush: the strike ignores ${Math.round((this.piercingMultiplier - 1) * 100)}% more of their Defense, never under ${this.minimumPiercing}%.`,
+      log: `<b>[Emblem — Assassin's Ambush]</b> ${defender?.name ?? "the target"} is caught in the ambush: the strike ignores ${Math.round((this.piercingMultiplier - 1) * 100)}% more of their Defense.`,
     };
   },
 };
