@@ -11,7 +11,7 @@ export const bedrockCourt = {
     "gryskarchu",
     "avarik",
     "avarion",
-    "reyskarone",
+    "ysvane",
     "aren_marevoth",
     "naelthos",
   ],
