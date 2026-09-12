@@ -12,6 +12,20 @@ import { snapshotChampions } from "./snapshotChampions.js";
 import { TargetFilter } from "./targetFilter.js";
 import { getBlindMiss } from "../../data/statusEffects/blind.js";
 
+export const BASE_MOMENTUM_REGEN = 6;
+export const MOMENTUM_REGEN_PER_TURN = 3;
+export const MAX_MOMENTUM_REGEN = 24;
+
+// The start-of-turn regen climbs with the turn number, so the opening turns stay
+// slow and ultimates only become affordable once the match has developed.
+export function getGlobalMomentumRegen(turn) {
+  const t = Math.max(1, Math.floor(Number(turn) || 1));
+  return Math.min(
+    MAX_MOMENTUM_REGEN,
+    BASE_MOMENTUM_REGEN + MOMENTUM_REGEN_PER_TURN * (t - 1),
+  );
+}
+
 // Zero damage (pure heal/buff) keeps a floor of 1 Momentum, below the Light tier.
 function getMomentumFromDamageDealt(totalDamage) {
   const d = Math.max(0, Math.floor(Number(totalDamage) || 0));
@@ -478,6 +492,8 @@ export class TurnResolver {
       this.match.addPointForSlot(scoringSlot, claimPoints);
       user.addPointsScored(claimPoints);
 
+      this.applyMomentumFromContext({ user, context });
+
       const actionResolvedResults = emitCombatEvent(
         "onActionResolved",
         {
@@ -766,6 +782,20 @@ export class TurnResolver {
   // ============================================================
   //  POST-ACTION MOMENTUM APPLICATION
   // ============================================================
+
+  applyGlobalMomentumRegen(champion, context) {
+    if (!champion.alive) return;
+
+    this.applyResourceChange({
+      target: champion,
+      amount: getGlobalMomentumRegen(this.combat.currentTurn),
+      context,
+      sourceId: champion.id,
+      visualPhase: "global_turn_regen",
+      visualAfterHooks: true,
+      debugLabel: "global_turn_regen",
+    });
+  }
 
   applyMomentumFromContext({ user, context }) {
     const damageEvents = context.visual.damageEvents || [];

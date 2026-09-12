@@ -19,7 +19,7 @@ const kyleHayatoSkills = [
 
     bf: 60,
     paralyzedDuration: 1,
-    momentumStealAmount: 8,
+    momentumStealAmount: 5,
 
     contact: true,
     damageMode: "standard",
@@ -137,7 +137,7 @@ const kyleHayatoSkills = [
     name: "Usurper's Bolt",
 
     bf: 95,
-    momentumStealAmount: 18,
+    momentumStealAmount: 16,
     claimDivertPercent: 50,
     markWindow: 2,
 

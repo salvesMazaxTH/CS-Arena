@@ -531,31 +531,6 @@ function validateActionIntent(user, skill, socket) {
 }
 
 // ============================================================
-//  MOMENTUM HELPERS
-// ============================================================
-
-/** Applies the global start-of-turn momentum regen (+8 per turn). */
-function applyGlobalMomentumRegen(champion, context, resolver) {
-  if (!champion || !champion.alive) return;
-
-  const GLOBAL_MOMENTUM_REGEN = 8;
-
-  if (resolver) {
-    resolver.applyResourceChange({
-      target: champion,
-      amount: GLOBAL_MOMENTUM_REGEN,
-      context,
-      sourceId: champion.id,
-      visualPhase: "global_turn_regen",
-      visualAfterHooks: true,
-      debugLabel: "global_turn_regen",
-    });
-  } else {
-    champion.addMomentum(GLOBAL_MOMENTUM_REGEN);
-  }
-}
-
-// ============================================================
 //  COMBAT ACTION EMISSION (v2)
 // ============================================================
 
@@ -950,7 +925,7 @@ function handleStartTurn() {
 
   // Global momentum regen.
   match.combat.activeChampions.forEach((champion) => {
-    applyGlobalMomentumRegen(champion, turnStartContext, resolver);
+    resolver.applyGlobalMomentumRegen(champion, turnStartContext);
   });
 
   // After the purge, or the sweep would strip the arrival state they land with.

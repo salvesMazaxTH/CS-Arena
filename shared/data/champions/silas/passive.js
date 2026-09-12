@@ -4,7 +4,7 @@ export default {
   key: "unwitnessed",
   name: "Unwitnessed",
 
-  momentumGain: 10,
+  momentumGain: 9,
 
   // No live counter here on purpose: the champion card is one of the few places
   // the double could read differently from the man.
