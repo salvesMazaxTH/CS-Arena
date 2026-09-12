@@ -141,7 +141,8 @@ Esses campos permitem controlar a ordem e o momento exato em que mensagens apare
 │   │   │
 │   │   └── match/                  # Estado de sessão/partida
 │   │       ├── GameMatch.js        # Container mestre (LobbyState + CombatState)
-│   │       └── Player.js           # Dados de um jogador conectado
+│   │       ├── Player.js           # Dados de um jogador conectado
+│   │       └── matchRules.js       # Constantes de regra da partida (SCORE_THRESHOLD)
 │   │
 │   ├── data/
 │   │   ├── championDB.js           # Re-export do índice de campeões

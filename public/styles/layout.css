@@ -118,20 +118,29 @@ header h1 {
 /* -------------------------------- */
 
 .battle-stage {
+  --lineup-inset: 14px;
+  --lineup-width: clamp(100px, 12vw, 140px);
+  --arena-padding: clamp(10px, 2vw, 18px);
+
   position: relative;
   width: min(100%, 1200px);
   margin: 0 auto;
-  padding-inline: clamp(76px, 7vw, 108px);
+  /* A lineup banner may only lap the arena's own padding, never its content. */
+  padding-inline: max(
+    clamp(76px, 7vw, 108px),
+    calc(var(--lineup-inset) + var(--lineup-width) + 4px - var(--arena-padding))
+  );
   overflow: visible;
 }
 
 .arena {
+  --arena-gap: clamp(8px, 1.2vw, 14px);
   width: min(100%, 820px);
   margin: clamp(8px, 1.4vw, 16px) auto;
-  padding: clamp(10px, 2vw, 18px);
+  padding: var(--arena-padding);
   display: flex;
   flex-direction: column;
-  gap: clamp(8px, 1.2vw, 14px);
+  gap: var(--arena-gap);
 
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 22px;
@@ -160,11 +169,10 @@ header h1 {
   gap: clamp(6px, 1vw, 12px);
 
   min-height: clamp(108px, 24vh, 210px);
-  padding: clamp(22px, 3vw, 32px) clamp(10px, 1.8vw, 16px)
-    clamp(10px, 1.8vw, 16px);
+  padding: clamp(12px, 2vw, 18px) clamp(10px, 1.8vw, 16px);
 
   border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 18px;
+  border-radius: 0 0 18px 18px;
   background:
     linear-gradient(
       180deg,
@@ -188,58 +196,114 @@ body.team-selection-active .team-container:hover {
   transform: translateY(-2px);
 }
 
-.team-container::before {
-  content: "TIME " attr(data-team);
-  position: absolute;
-  top: 10px;
-  left: 12px;
-  z-index: 0;
-
-  color: rgba(255, 255, 255, 0.1);
-  font-size: 0.65rem;
-  line-height: 1;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  pointer-events: none;
-}
-
-.player-name-display {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45em;
-  font-size: clamp(0.82rem, 1.9vw, 1.08rem);
-  font-weight: bold;
-  margin: 0;
-  padding: clamp(5px, 0.8vw, 8px) clamp(10px, 1.5vw, 14px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 999px;
-  background: rgba(8, 10, 14, 0.7);
-  text-shadow: 0 0 10px rgba(0, 0, 0, 0.28);
-  text-align: center;
+.player-plate {
+  --plate-accent: 0, 150, 255;
   position: relative;
   z-index: 1;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 8px 18px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: clamp(10px, 2vw, 20px);
+
+  margin-bottom: calc(var(--arena-gap) * -1);
+  padding: clamp(7px, 1vw, 11px) clamp(12px, 1.8vw, 18px)
+    clamp(9px, 1.3vw, 13px);
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: none;
+  border-radius: 18px 18px 0 0;
+  background: linear-gradient(
+    180deg,
+    rgba(var(--plate-accent), 0.16),
+    rgba(8, 10, 14, 0.88) 70%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-.player-name-display[data-team="1"] {
-  color: #0096ff;
+.player-plate-identity {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  min-width: 0;
 }
 
-.player-name-display[data-team="2"] {
-  color: #ff0000;
+.player-plate-name {
+  overflow: hidden;
+  font-size: clamp(0.86rem, 1.7vw, 1.02rem);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.94);
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.player-name-score-separator {
-  color: inherit;
+.player-plate-you {
+  flex: none;
+  padding: 0.12em 0.5em 0.16em;
+  border: 1px solid rgba(var(--plate-accent), 0.5);
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(var(--plate-accent), 1);
+}
+
+.player-plate:not([data-self="true"]) .player-plate-you {
+  display: none;
+}
+
+.player-plate-score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.12em;
+  flex: none;
+  font-family: "Chakra Petch", "Montserrat", sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 
 .player-name-score {
-  min-width: 1ch;
-  color: inherit;
+  font-size: clamp(1.35rem, 3.2vw, 1.95rem);
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow: 0 0 18px rgba(var(--plate-accent), 0.45);
+}
+
+.player-plate-goal {
+  font-size: clamp(0.64rem, 1.2vw, 0.78rem);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.34);
+}
+
+.player-plate-track {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.player-plate-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: rgba(var(--plate-accent), 0.9);
+  box-shadow: 0 0 10px rgba(var(--plate-accent), 0.65);
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.player-plate[data-team="2"],
+.arena--mirrored .player-plate[data-team="1"] {
+  --plate-accent: 255, 58, 58;
+}
+
+.arena--mirrored .player-plate[data-team="2"] {
+  --plate-accent: 0, 150, 255;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-plate-fill {
+    transition: none;
+  }
 }
 
 .team-container .champion {
@@ -259,10 +323,6 @@ body.team-selection-active .team-container:hover {
   );
 }
 
-.team-1::before {
-  color: rgba(0, 150, 255, 0.16);
-}
-
 .team-2 {
   border-color: rgba(255, 0, 0, 0.4);
   box-shadow:
@@ -276,39 +336,28 @@ body.team-selection-active .team-container:hover {
   );
 }
 
-.team-2::before {
-  color: rgba(255, 0, 0, 0.16);
-}
-
 @media (max-width: 540px), (max-height: 760px) and (pointer: coarse) {
   .battle-stage {
     padding-inline: clamp(8px, 2.5vw, 14px);
   }
 
   .arena {
+    --arena-gap: 8px;
+    --arena-padding: 8px;
     width: 100%;
-    padding: 8px;
-    gap: 8px;
     border-radius: 18px;
   }
 
   .team-container {
     min-height: clamp(94px, 22vh, 170px);
-    padding: 22px 8px 8px;
+    padding: 10px 8px;
     gap: 6px;
-    border-radius: 16px;
+    border-radius: 0 0 16px 16px;
   }
 
-  .team-container::before {
-    top: 8px;
-    left: 10px;
-    font-size: 0.58rem;
-  }
-
-  .player-name-display {
-    padding: 4px 10px;
-    font-size: clamp(0.76rem, 3.8vw, 0.96rem);
-    border-radius: 12px;
+  .player-plate {
+    padding: 6px 10px 8px;
+    border-radius: 16px 16px 0 0;
   }
 }
 
@@ -321,13 +370,13 @@ body.team-selection-active .team-container:hover {
    ============================================ */
 
 /* Reorder flex items: team-2 on top, team-1 on bottom */
-.arena--mirrored .player-name-display[data-team="2"] {
+.arena--mirrored .player-plate[data-team="2"] {
   order: 1;
 }
 .arena--mirrored .team-container.team-2 {
   order: 2;
 }
-.arena--mirrored .player-name-display[data-team="1"] {
+.arena--mirrored .player-plate[data-team="1"] {
   order: 3;
 }
 .arena--mirrored .team-container.team-1 {
@@ -340,24 +389,10 @@ body.team-selection-active .team-container:hover {
   box-shadow: 0 0 15px rgba(255, 0, 0, 0.1);
   background: linear-gradient(transparent, rgba(255, 0, 0, 0.05));
 }
-.arena--mirrored .team-1::before {
-  color: rgba(255, 0, 0, 0.1);
-}
 .arena--mirrored .team-2 {
   border-color: rgba(0, 150, 255, 0.4);
   box-shadow: 0 0 15px rgba(0, 150, 255, 0.1);
   background: rgba(0, 150, 255, 0.05);
-}
-.arena--mirrored .team-2::before {
-  color: rgba(0, 150, 255, 0.1);
-}
-
-/* Swap player-name-display colors: local (2) → blue, opponent (1) → red */
-.arena--mirrored .player-name-display[data-team="1"] {
-  color: #ff0000;
-}
-.arena--mirrored .player-name-display[data-team="2"] {
-  color: #0096ff;
 }
 
 /* -------------------------------- */

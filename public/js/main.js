@@ -61,7 +61,6 @@ const socket = io({
   reconnectionDelay: 1000,
 });
 
-// Restore player name display logic (without score)
 socket.on("playerNamesUpdate", (namesArray) => {
   playerNames.clear();
   namesArray.forEach(([slot, name]) => playerNames.set(parseInt(slot), name));
@@ -69,20 +68,11 @@ socket.on("playerNamesUpdate", (namesArray) => {
 });
 
 function updatePlayerNamesUI() {
-  const player1NameDisplayEl = document.getElementById("player1-name-display");
-  const player2NameDisplayEl = document.getElementById("player2-name-display");
-
-  const player1Name = playerNames.get(0);
-  const player2Name = playerNames.get(1);
-
-  if (player1NameDisplayEl) {
-    player1NameDisplayEl.textContent =
-      playerTeam === 1 ? "You" : `Opponent (${player1Name || "Unknown"})`;
-  }
-  if (player2NameDisplayEl) {
-    player2NameDisplayEl.textContent =
-      playerTeam === 2 ? "You" : `Opponent (${player2Name || "Unknown"})`;
-  }
+  [1, 2].forEach((team) => {
+    const nameEl = document.getElementById(`player${team}-name-display`);
+    nameEl.textContent = playerNames.get(team - 1) || "Waiting…";
+    nameEl.closest(".player-plate").dataset.self = String(playerTeam === team);
+  });
 }
 
 // ============================================================
@@ -330,6 +320,8 @@ socket.on("playerAssigned", (data) => {
   playerTeam = data.team;
   username = data.username;
   window.playerTeam = playerTeam;
+
+  updatePlayerNamesUI();
 
   playerEmblems = Array.isArray(data.emblems) ? data.emblems.slice() : [];
   renderPlayerEmblemStrip();

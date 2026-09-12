@@ -1,18 +1,24 @@
+import { SCORE_THRESHOLD } from "/shared/engine/match/matchRules.js";
+
 /**
  * Team scoreboard: updates the two player score displays with an animated
  * increment/decrement, and paces the scoreboard reaction during CLAIM plays.
- * Self-contained — reads and writes only its own DOM elements.
  */
 export function createScoreboard() {
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  function updateScoreValue(element, newValue) {
-    if (!element) return;
+  [1, 2].forEach((team) => {
+    document.getElementById(`player${team}-goal-display`).textContent =
+      `/${SCORE_THRESHOLD}`;
+  });
 
+  function updateScoreValue(element, progressFill, newValue) {
     const oldValue = Number(element.textContent) || 0;
     const nextValue = Number(newValue) || 0;
 
     if (oldValue === nextValue) return;
+
+    progressFill.style.width = `${Math.min(100, (nextValue / SCORE_THRESHOLD) * 100)}%`;
 
     const increasing = nextValue > oldValue;
     const delta = Math.abs(nextValue - oldValue);
@@ -55,10 +61,12 @@ export function createScoreboard() {
 
     updateScoreValue(
       document.getElementById("player1-score-display"),
+      document.getElementById("player1-progress-fill"),
       score.player1 ?? 0,
     );
     updateScoreValue(
       document.getElementById("player2-score-display"),
+      document.getElementById("player2-progress-fill"),
       score.player2 ?? 0,
     );
   }

@@ -1,4 +1,5 @@
 import { getClaimMaxPoints, getClaimPoints } from "../combat/claim.js";
+import { SCORE_THRESHOLD } from "./matchRules.js";
 import { championDB } from "../../data/championDB.js";
 import { getDuoForCore } from "../../data/duos.js";
 import { SpawnProtection } from "../combat/spawnProtection.js";
@@ -711,7 +712,7 @@ class CombatState {
   checkGameEnd({
     maxTurns = 20,
     checkTurnLimit = false,
-    scoreThreshold = 45,
+    scoreThreshold = SCORE_THRESHOLD,
   } = {}) {
     if (!this.gameEnded && checkTurnLimit && this.currentTurn >= maxTurns) {
       this.gameEnded = true;
@@ -965,7 +966,7 @@ export class GameMatch {
   checkGameEnd({
     maxTurns = 20,
     checkTurnLimit = false,
-    scoreThreshold = 45,
+    scoreThreshold = SCORE_THRESHOLD,
   } = {}) {
     return this.combat.checkGameEnd({
       maxTurns,
