@@ -621,6 +621,8 @@ class CombatState {
       ? 0
       : claimValueAtDeath + deathBonus + comebackBonus;
 
+    champion.runtime.deathConcededPoints = killPoints;
+
     let scoreAwarded = false;
 
     if (killPoints > 0) {
