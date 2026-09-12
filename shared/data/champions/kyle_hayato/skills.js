@@ -25,7 +25,7 @@ const kyleHayatoSkills = [
     damageMode: "standard",
     element: "lightning",
     critOptions: { disable: true },
-    priority: 1,
+    priority: 0,
 
     description() {
       return `Kyle closes the distance in a single crack of current and takes what he needs on the way past. Deals physical damage equal to ${this.bf}% of his Attack, is never a critical hit, Paralyzes the chosen enemy for ${this.paralyzedDuration} turn(s), and steals up to ${this.momentumStealAmount} Momentum from them.`;
@@ -94,7 +94,7 @@ const kyleHayatoSkills = [
     damageMode: "standard",
     element: "lightning",
     critOptions: { disable: true },
-    priority: 2,
+    priority: 0,
 
     description() {
       return `Kyle steps out of the space between one flash of lightning and the next, lands the hit before the thunder even catches up, and is already gone. Deals physical damage equal to ${this.bf}% of his Attack plus ${this.bonusFlat} flat, is never a critical hit, and leaves him Invisible for up to ${this.invisibleDuration} turns, ending early the moment he acts again.`;
