@@ -192,8 +192,10 @@ const sfxVolumeSlider = document.getElementById("sfx-volume");
 window.StatusIndicator = StatusIndicator;
 window.gameEnded = gameEnded;
 window.resetCombat = () => {
-  if (!editMode.enabled) return;
+  if (!editMode.enabled) return "resetCombat is only available in edit mode.";
+
   socket.emit("debugResetCombat");
+  return "Combat reset.";
 };
 
 // ============================================================
@@ -1715,6 +1717,18 @@ socket.on("actionFailed", (message) => {
   pendingSummonChampionKey = null;
   resolveSummonReminderRequest({ summoned: false });
   combatAnimations.handleActionFailed(message);
+});
+
+socket.on("combatReset", ({ turn = 1, score } = {}) => {
+  currentTurn = turn;
+  hasConfirmedEndTurn = false;
+  isResolvingTurn = false;
+  gameEnded = false;
+  pendingSummonChampionKey = null;
+
+  closeSummonReminder();
+  removeActionBar();
+  combatAnimations.handleCombatReset({ turn, score });
 });
 
 socket.on("turnLocked", () => {

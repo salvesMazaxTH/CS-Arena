@@ -250,7 +250,7 @@ const laisaelisSkills = [
             });
 
             return {
-              damage: survivalDamage(owner, survivalHP),
+              damageCap: survivalDamage(owner, survivalHP),
               log: `${formatChampionName(owner)} is kept on the field with ${survivalHP} HP.`,
             };
           },

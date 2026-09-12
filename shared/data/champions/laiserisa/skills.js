@@ -199,7 +199,7 @@ const laiserisaSkills = [
           });
 
           return {
-            damage: survivalDamage(owner, 1),
+            damageCap: survivalDamage(owner, 1),
             log: `${formatChampionName(user)} and ${formatChampionName(twin)} are bound for the Nothingness together.`,
           };
         },

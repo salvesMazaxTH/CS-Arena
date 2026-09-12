@@ -1719,6 +1719,18 @@ export function createCombatAnimationManager(deps) {
     handleGameStateUpdate(gameState) {
       enqueue("gameStateUpdate", gameState);
     },
+    handleCombatReset({ turn = 1, score } = {}) {
+      reset();
+
+      const log = document.getElementById("combat-log");
+      if (log) log.innerHTML = "";
+
+      scoreboard.update(score);
+      deps.setCurrentTurn(turn);
+
+      isFirstTurnUpdate = true;
+      updateTurnDisplay(turn);
+    },
     handleTurnUpdate(turn) {
       enqueue("turnUpdate", turn);
     },

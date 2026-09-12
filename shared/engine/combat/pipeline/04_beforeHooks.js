@@ -5,47 +5,19 @@ export function runBeforeHooks(event) {
   // Absolute hits reach the hooks too, but canRunHook filters every listener
   // out unless its kit opts in with hookPolicies.<event>.allowOnAbsolute.
 
-  const preHookCrit = _snapshotCrit(event.crit);
-  const basePreMitigationDamage = event.preMitigationDamage ?? event.damage;
-  const preHookBaseDamage = Number(event.baseDamage ?? 0);
+  const baseline = {
+    crit: _snapshotCrit(event.crit),
+    preMitigationDamage: event.preMitigationDamage ?? event.damage,
+    baseDamage: Number(event.baseDamage ?? 0),
+  };
 
+  // The defender must answer the number the attacker's hooks settled on, so the
+  // dealing phase is recomposed before the taking phase ever reads the damage.
   const deal = _applyBeforeDealingPassive(event);
+  _recompose(event, baseline, [deal]);
+
   const take = _applyBeforeTakingPassive(event);
-
-  const critWasChanged =
-    deal.critChanged ||
-    take.critChanged ||
-    !_isSameCrit(preHookCrit, _snapshotCrit(event.crit));
-
-  const damageModelWasChanged =
-    deal.damageModelChanged || take.damageModelChanged;
-
-  if (critWasChanged || damageModelWasChanged) {
-    // Recompõe usando dano pré-mitigação para que mudança de crítico
-    // impacte defesa, mitigação e dano final da mesma forma do step 3.
-    const preMitigationFromHooks =
-      take.preMitigationDamage ?? deal.preMitigationDamage;
-
-    if (typeof preMitigationFromHooks === "number") {
-      event.damage = preMitigationFromHooks;
-    } else if (
-      damageModelWasChanged &&
-      preHookBaseDamage > 0 &&
-      Number(event.baseDamage ?? 0) > 0
-    ) {
-      // Mantém proporção de quaisquer ajustes feitos no step 2
-      // quando o hook altera o baseDamage no step 4.
-      const ratio = Number(event.baseDamage) / preHookBaseDamage;
-      event.damage = basePreMitigationDamage * ratio;
-    } else {
-      event.damage = basePreMitigationDamage;
-    }
-
-    composeDamage(event);
-
-    event.damage = _carryHookDamage(event.damage, deal);
-    event.damage = _carryHookDamage(event.damage, take);
-  }
+  _recompose(event, baseline, [deal, take]);
 
   // Consolida logs e efeitos no estado da classe/contexto
   if (deal.logs.length) event.beforeLogs.push(...deal.logs);
@@ -62,6 +34,43 @@ export function runBeforeHooks(event) {
       },
       event.allChampions ?? event.context?.allChampions,
     );
+  }
+}
+
+// Rebuilds the hit from the pre-mitigation baseline so a crit or damage-model
+// change reaches defense and mitigation exactly as it would have in step 3.
+function _recompose(event, baseline, phases) {
+  const critChanged =
+    phases.some((p) => p.critChanged) ||
+    !_isSameCrit(baseline.crit, _snapshotCrit(event.crit));
+
+  const damageModelChanged = phases.some((p) => p.damageModelChanged);
+  if (!critChanged && !damageModelChanged) return;
+
+  const preMitigationFromHooks = phases.reduce(
+    (found, p) => p.preMitigationDamage ?? found,
+    undefined,
+  );
+
+  if (typeof preMitigationFromHooks === "number") {
+    event.damage = preMitigationFromHooks;
+  } else if (
+    damageModelChanged &&
+    baseline.baseDamage > 0 &&
+    Number(event.baseDamage ?? 0) > 0
+  ) {
+    // Mantém proporção de quaisquer ajustes feitos no step 2
+    // quando o hook altera o baseDamage no step 4.
+    const ratio = Number(event.baseDamage) / baseline.baseDamage;
+    event.damage = baseline.preMitigationDamage * ratio;
+  } else {
+    event.damage = baseline.preMitigationDamage;
+  }
+
+  composeDamage(event);
+
+  for (const phase of phases) {
+    event.damage = _carryHookDamage(event.damage, phase);
   }
 }
 

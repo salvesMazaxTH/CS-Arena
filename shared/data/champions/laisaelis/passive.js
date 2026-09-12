@@ -75,7 +75,7 @@ export default {
     });
 
     return {
-      damage: survivalDamage(owner, this.survivalHP),
+      damageCap: survivalDamage(owner, this.survivalHP),
       log: `${formatChampionName(owner)} holds on with ${this.survivalHP} HP${cleansed ? ", cleansed of all that afflicted her" : ""}.`,
     };
   },

@@ -64,7 +64,7 @@ export default {
     });
 
     return {
-      damage: Math.max(
+      damageCap: Math.max(
         owner.HP + regularShieldTotal(owner) - survivalHP,
         0,
       ),

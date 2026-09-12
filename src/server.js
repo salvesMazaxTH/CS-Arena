@@ -32,7 +32,6 @@ import { getDuoForCore } from "../shared/data/duos.js";
 import { SpawnProtection } from "../shared/engine/combat/spawnProtection.js";
 import { Nothingness } from "../shared/engine/combat/nothingness.js";
 import { rosterChampionKey } from "../shared/engine/match/championTransformation.js";
-import { Champion } from "../shared/core/Champion.js";
 import { formatChampionName } from "../shared/ui/formatters.js";
 
 import { emitCombatEvent } from "../shared/engine/combat/combatEvents.js";
@@ -502,6 +501,32 @@ function emitChampionDeath(deathResult) {
   });
 }
 
+// Held until the envelopes are out, or a champion leaves the DOM before the
+// animation of the blow that took it away gets to play.
+const pendingFieldDepartures = [];
+
+/** Applies a champion mutation, queueing the field exit of anyone it takes away. */
+function applyChampionMutation(request, options = {}) {
+  const result = match.combat.mutateChampion(request, options);
+
+  if (request?.mode === "vanish" && result?.champion) {
+    pendingFieldDepartures.push({
+      championId: result.champion.id,
+      leavesNoDeath: true,
+      unmakingPalette: result.champion.runtime?.unmakingPalette ?? null,
+    });
+  }
+
+  return result;
+}
+
+/** Emits the queued field exits of champions that left without dying. */
+function flushFieldDepartures() {
+  while (pendingFieldDepartures.length) {
+    io.emit("championRemoved", pendingFieldDepartures.shift());
+  }
+}
+
 // ============================================================
 //  ACTION VALIDATION (pre-resolution)
 // ============================================================
@@ -598,7 +623,7 @@ function handleEndTurn() {
   // Resolve every action through the TurnResolver.
   const resolver = new TurnResolver(match, editMode, {
     mutationHandler: (request, meta = {}) =>
-      match.combat.mutateChampion(request, { context: meta.context ?? null }),
+      applyChampionMutation(request, { context: meta.context ?? null }),
   });
   const { actionResults, deathResults, deathContext } = resolver.resolveTurn();
 
@@ -639,6 +664,8 @@ function handleEndTurn() {
     }
   }
 
+  flushFieldDepartures();
+
   for (const death of deathResults) {
     emitChampionDeath(death);
   }
@@ -657,9 +684,10 @@ function handleEndTurn() {
   // creature is not registered as dead.
   if (allChampionMutationRequests.length > 0) {
     for (const req of allChampionMutationRequests) {
-      match.combat.mutateChampion(req);
+      applyChampionMutation(req);
     }
 
+    flushFieldDepartures();
     broadcastGameState();
   }
 
@@ -808,7 +836,7 @@ function handleScheduledEffect(effect, context) {
     }
 
     case "championMutation": {
-      const result = match.combat.mutateChampion(effect.payload);
+      const result = applyChampionMutation(effect.payload);
       if (result?.log && context?.registerDialog) {
         context.registerDialog({
           message: result.log,
@@ -965,6 +993,8 @@ function handleStartTurn() {
       null,
   });
 
+  flushFieldDepartures();
+
   // The removal must reach the client after the envelope, or the champion
   // leaves the DOM before its own damage animation gets to play.
   for (const death of deathResults) {
@@ -989,25 +1019,22 @@ function resetGameState() {
   gameOverEmitted = false;
 }
 
-/** Resets combat state (HP, buffs, ult, etc.) while keeping champions and players (debug/test only). */
+/** Empties the field and rebuilds each reserve from its roster (debug/test only). */
 function resetCombatState() {
-  const snapshot = [...match.combat.combatSnapshot];
-
   revealConcealedSummons();
+  pendingFieldDepartures.length = 0;
   match.combat.reset();
+  match.combat.start();
 
-  for (const champ of snapshot) {
-    const baseData = championDB[champ.championKey];
+  for (const player of match.players) {
+    if (!player) continue;
 
-    const newChampion = Champion.fromBaseData(baseData, champ.id, champ.team, {
-      combatSlot: champ.combatSlot,
-    });
-
-    match.combat.registerChampion(newChampion, { trackSnapshot: false });
+    match.combat.reserveQueues.set(player.team, [
+      ...player.selectedChampionKeys,
+    ]);
   }
 
-  match.combat.combatSnapshot = snapshot;
-  match.combat.start();
+  waitingForAnimations = false;
   gameOverEmitted = false;
 }
 
@@ -1025,8 +1052,17 @@ io.on("connection", (socket) => {
 
   // Combat reset (debug).
   socket.on("debugResetCombat", () => {
+    if (!editMode.enabled) return;
+
     resetCombatState();
+
+    io.emit("combatReset", {
+      turn: match.getCurrentTurn(),
+      score: match.getScorePayload(),
+    });
+
     broadcastGameState();
+    startFirstChampionChoicePhase();
   });
 
   // Start of turn, once animations finish on both clients.
