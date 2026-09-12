@@ -81,7 +81,7 @@ const laiserisaSkills = [
     key: "return_to_nothing",
     name: "Return to Nothing",
 
-    vanishTurns: 1,
+    vanishTurns: 2,
 
     contact: false,
     priority: 3,
