@@ -838,17 +838,13 @@ export function createCombatAnimationManager(deps) {
     if (!target) return;
     const { championEl, name } = target;
 
-    await showDialog(`${name} tried to evade the attack...`);
-
     if (evaded) {
       championEl.classList.add("evasion");
 
       await waitForAnimation(championEl, 600);
 
       championEl.classList.remove("evasion");
-      await showDialog(`${name} SUCCESSFULLY evaded the attack!!`);
-    } else {
-      await showDialog(`...but failed to evade.`);
+      await showDialog(`${name} evaded the attack!`);
     }
   }
 
