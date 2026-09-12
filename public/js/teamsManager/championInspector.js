@@ -32,6 +32,12 @@ function renderKitEntry(entry, { kind, champion }) {
     cost = `<span class="tm-kit-cost">${entry.momentumCost} Momentum</span>`;
   } else if (kind === "skill" && Number.isFinite(entry.bf) && entry.bf > 0) {
     cost = `<span class="tm-kit-cost">${entry.bf} bf</span>`;
+  } else if (
+    kind === "skill" &&
+    Number.isFinite(entry.bfPerHit) &&
+    entry.bfPerHit > 0
+  ) {
+    cost = `<span class="tm-kit-cost">${entry.bfPerHit} bf/hit</span>`;
   }
 
   return `

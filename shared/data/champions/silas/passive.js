@@ -1,3 +1,4 @@
+import { SpawnProtection } from "../../../engine/combat/spawnProtection.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
@@ -40,6 +41,7 @@ export default {
 
   onTurnStart({ owner, context }) {
     if (owner.runtime.silasMirageOwnerId) return;
+    if (SpawnProtection.isActive(owner)) return;
 
     const previousTurn = (context?.currentTurn ?? 0) - 1;
     if (previousTurn < 1) return;

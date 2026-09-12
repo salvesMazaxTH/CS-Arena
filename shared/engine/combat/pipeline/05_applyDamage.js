@@ -14,6 +14,7 @@ export function applyDamage(event) {
     event.defender,
     currentTurn,
   );
+  event.defender.runtime.claimValueBeforeDeathTurn = currentTurn;
 
   const hpBefore = event.defender.HP;
   const shieldBefore = Array.isArray(event.defender.runtime?.shields)

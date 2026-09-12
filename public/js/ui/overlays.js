@@ -183,11 +183,13 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
           }
 
           ${
-            skill.bf
+            skill.bf || skill.bfPerHit
               ? `
             <div class="skill-meta-item">
               <span class="meta-label">BF:</span>
-              <span class="meta-value">${skill.bf}%</span>
+              <span class="meta-value">${
+                skill.bf ? `${skill.bf}%` : `${skill.bfPerHit}% per hit`
+              }</span>
             </div>
           `
               : ""

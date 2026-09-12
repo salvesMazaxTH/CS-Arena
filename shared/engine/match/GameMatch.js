@@ -1,4 +1,4 @@
-import { getClaimMaxPoints } from "../combat/claim.js";
+import { getClaimMaxPoints, getClaimPoints } from "../combat/claim.js";
 import { championDB } from "../../data/championDB.js";
 import { getDuoForCore } from "../../data/duos.js";
 import { SpawnProtection } from "../combat/spawnProtection.js";
@@ -603,9 +603,15 @@ class CombatState {
     const scoringSlot = scoringTeam - 1;
     const victimSlot = champion.team - 1;
     const isMinion = champion.entityType === "minion";
+    // The pre-damage stamp only describes the turn it was taken on; a death
+    // that never went through a DamageEvent has to be valued live.
+    const stampedValue =
+      champion.runtime?.claimValueBeforeDeathTurn === this.currentTurn
+        ? Number(champion.runtime.claimValueBeforeDeath) || 0
+        : getClaimPoints(champion, this.currentTurn);
     const claimValueAtDeath = Math.min(
       getClaimMaxPoints(champion),
-      Math.max(0, Number(champion.runtime?.claimValueBeforeDeath ?? 0) || 0),
+      Math.max(0, stampedValue),
     );
 
     // Every death concedes the CLAIM value of the dead champion at the moment of death (even if 0) plus a fixed 2pts bonus for the kill itself.
