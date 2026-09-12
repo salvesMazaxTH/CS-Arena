@@ -118,27 +118,8 @@ export class TurnResolver {
 
       const result = this.executeSkillAction(action, turnExecutionMap, context);
 
-      const scoreResults = (result?.results || []).filter(
-        (entry) => entry?.type === "score",
-      );
-
-      if (scoreResults.length > 0) {
-        for (const scoreResult of scoreResults) {
-          this.match.addPointForSlot(
-            scoreResult.scoringSlot,
-            scoreResult.amount,
-          );
-
-          const scoringChamp = this.combat.activeChampions.get(
-            scoreResult.sourceId,
-          );
-          if (scoringChamp?.team - 1 === scoreResult.scoringSlot) {
-            scoringChamp.addPointsScored(scoreResult.amount);
-          }
-        }
-
-        result.scorePayload = this.match.getScorePayload();
-      }
+      const scorePayload = this.applyScoreResults(result?.results);
+      if (scorePayload) result.scorePayload = scorePayload;
 
       actionResults.push(result);
 
@@ -163,7 +144,28 @@ export class TurnResolver {
     const deathContext = this.createBaseContext({ sourceId: null });
     const deathResults = this.processChampionDeaths(deathContext);
 
-    return { actionResults, deathResults, switchResults };
+    return { actionResults, deathResults, switchResults, deathContext };
+  }
+
+  /** Banks every score entry a resolved context registered; null if it had none. */
+  applyScoreResults(results) {
+    const scoreResults = (results || []).filter(
+      (entry) => entry?.type === "score",
+    );
+    if (scoreResults.length === 0) return null;
+
+    for (const scoreResult of scoreResults) {
+      this.match.addPointForSlot(scoreResult.scoringSlot, scoreResult.amount);
+
+      const scoringChamp = this.combat.activeChampions.get(
+        scoreResult.sourceId,
+      );
+      if (scoringChamp?.team - 1 === scoreResult.scoringSlot) {
+        scoringChamp.addPointsScored(scoreResult.amount);
+      }
+    }
+
+    return this.match.getScorePayload();
   }
 
   // ============================================================
@@ -255,11 +257,13 @@ export class TurnResolver {
           // appended explicitly: passives that react to their OWN death (such
           // as Jeff's revival) must still be reached, and it is the only hook
           // that fires for deaths that never went through a DamageEvent.
-          emitCombatEvent(
+          const hookResults = emitCombatEvent(
             "onChampionDeath",
             { deadChampion: champ, context },
             [...this.combat.activeChampions.values(), champ],
           );
+
+          context.registerHookLogs(hookResults);
         }
       }
     }

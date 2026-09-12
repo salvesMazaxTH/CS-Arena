@@ -600,7 +600,7 @@ function handleEndTurn() {
     mutationHandler: (request, meta = {}) =>
       match.combat.mutateChampion(request, { context: meta.context ?? null }),
   });
-  const { actionResults, deathResults } = resolver.resolveTurn();
+  const { actionResults, deathResults, deathContext } = resolver.resolveTurn();
 
   // Collect all championMutationRequests BEFORE emitting envelopes; they are
   // processed after deathResults so the new creature is never flagged as dead.
@@ -642,6 +642,16 @@ function handleEndTurn() {
   for (const death of deathResults) {
     emitChampionDeath(death);
   }
+
+  emitCombatEnvelopesFromContext({
+    user: null,
+    skill: { key: "champion_death", name: "Champion Death" },
+    context: deathContext,
+    scorePayload: resolver.applyScoreResults(deathContext.registeredResults),
+    log:
+      envelopeBuilder.collectLogs(deathContext.registeredResults).join("\n") ||
+      null,
+  });
 
   // Now process championMutationRequests (after deathResults) so the new
   // creature is not registered as dead.
@@ -949,6 +959,10 @@ function handleStartTurn() {
     user: null,
     skill: { key: "turn_start", name: "Turn Start" },
     context: turnStartContext,
+    scorePayload: resolver.applyScoreResults(turnStartContext.registeredResults),
+    log:
+      envelopeBuilder.collectLogs(turnStartContext.registeredResults).join("\n") ||
+      null,
   });
 
   // The removal must reach the client after the envelope, or the champion
