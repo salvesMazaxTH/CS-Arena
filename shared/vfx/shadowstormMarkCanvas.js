@@ -47,7 +47,7 @@ export function startShadowstormMark(canvas) {
   function drawArcs() {
     ctx.save();
     ctx.lineCap = "round";
-    ctx.shadowColor = "#8f7bff";
+    ctx.shadowColor = "#4fd8ff";
     ctx.shadowBlur = 8;
 
     for (const arc of arcs) {
@@ -57,7 +57,7 @@ export function startShadowstormMark(canvas) {
         ctx.lineTo(arc.points[i][0], arc.points[i][1]);
       }
       ctx.globalAlpha = 0.55 + 0.35 * Math.random();
-      ctx.strokeStyle = "#d8ccff";
+      ctx.strokeStyle = "#d6f9ff";
       ctx.lineWidth = arc.width;
       ctx.stroke();
     }
@@ -78,9 +78,9 @@ export function startShadowstormMark(canvas) {
       cy,
       radius * 1.15,
     );
-    grad.addColorStop(0, "rgba(30, 12, 60, 0)");
-    grad.addColorStop(0.7, "rgba(80, 50, 170, 0.4)");
-    grad.addColorStop(1, "rgba(18, 8, 40, 0)");
+    grad.addColorStop(0, "rgba(8, 34, 52, 0)");
+    grad.addColorStop(0.7, "rgba(34, 126, 172, 0.4)");
+    grad.addColorStop(1, "rgba(5, 20, 34, 0)");
     ctx.beginPath();
     ctx.arc(cx, cy, radius * 1.15, 0, Math.PI * 2);
     ctx.fillStyle = grad;
@@ -89,7 +89,7 @@ export function startShadowstormMark(canvas) {
     ctx.globalAlpha = 0.42 * pulse;
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = "#6f5bd0";
+    ctx.strokeStyle = "#4db6d8";
     ctx.lineWidth = 1.6;
     ctx.setLineDash([radius * 0.22, radius * 0.16]);
     ctx.lineDashOffset = -time * 0.9;
@@ -120,8 +120,8 @@ export function startShadowstormMark(canvas) {
       ctx.globalAlpha = this.alpha * (0.5 + 0.5 * Math.sin(time * 0.08));
       ctx.beginPath();
       ctx.arc(x, y, this.size, 0, Math.PI * 2);
-      ctx.fillStyle = "#c9b8ff";
-      ctx.shadowColor = "#7a5cff";
+      ctx.fillStyle = "#bff0ff";
+      ctx.shadowColor = "#12a7d6";
       ctx.shadowBlur = 5;
       ctx.fill();
       ctx.restore();

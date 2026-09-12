@@ -25,6 +25,10 @@ const kyleHayatoSkills = [
     damageMode: "standard",
     element: "lightning",
     critOptions: { disable: true },
+
+    hitVfx: "slash",
+    hitVfxPalette: "azure",
+
     priority: 0,
 
     description() {
@@ -92,12 +96,14 @@ const kyleHayatoSkills = [
 
     contact: true,
     damageMode: "standard",
-    element: "lightning",
     critOptions: { disable: true },
+
+    hitVfx: "slash",
+
     priority: 0,
 
     description() {
-      return `Kyle steps out of the space between one flash of lightning and the next, lands the hit before the thunder even catches up, and is already gone. Deals physical damage equal to ${this.bf}% of his Attack plus ${this.bonusFlat} flat, is never a critical hit, and leaves him Invisible for up to ${this.invisibleDuration} turns, ending early the moment he acts again.`;
+      return `The air cracks white around Kyle and for a heartbeat the enemy is watching the wrong place — the lightning is a trick of the eye, and it is the blade that arrives. Deals physical damage plus ${this.bonusFlat} bonus damage, is never a critical hit, and leaves him Invisible for up to ${this.invisibleDuration} turns, ending early the moment he acts again.`;
     },
 
     targetSpec: ["enemy"],

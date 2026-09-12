@@ -44,6 +44,7 @@ const PALETTES = Object.freeze({
   water: { core: "#f0feff", mid: "#7fd4ff", deep: "#2e92f6" },
   ice: { core: "#f4ffff", mid: "#b6f2ff", deep: "#56b2ce" },
   lightning: { core: "#fffce0", mid: "#ffe66b", deep: "#e0a915" },
+  azure: { core: "#f2ffff", mid: "#7df9ff", deep: "#12a7d6" },
   earth: { core: "#fff4e2", mid: "#d2a878", deep: "#8a5a2b" },
   violet: { core: "#fbf0ff", mid: "#c98bff", deep: "#7b2fd6" },
   crimson: { core: "#fff0f0", mid: "#ff6b6b", deep: "#b3121b" },
@@ -70,8 +71,12 @@ const FADE_DURATION = 0.3;
 const LIFETIME =
   TRACE_DURATION + HOLD_DURATION + OPEN_DURATION + FADE_DURATION;
 
+// Arcs are rebuilt every few frames rather than every one: the flicker is what
+// sells them, and recomputing them 60x a second buys nothing.
+const ARC_FRAMES = 4;
+
 export class SlashEffect {
-  constructor(ctx, center, size, baseAngle, paletteKey) {
+  constructor(ctx, center, size, baseAngle, paletteKey, arcing) {
     this.ctx = ctx;
     this.center = center;
     this.age = 0;
@@ -90,6 +95,56 @@ export class SlashEffect {
     this.length = size * 2.3;
     this.maxWidth = size * 0.15;
     this.particleScale = getParticleScale();
+
+    this.arcing = arcing;
+    this.arcs = [];
+    this.arcFrame = 0;
+  }
+
+  buildArcs() {
+    const perpX = -this.dirY;
+    const perpY = this.dirX;
+    const count = Math.max(1, Math.round(3 * this.particleScale));
+
+    this.arcs = Array.from({ length: count }, () => {
+      const from = (Math.random() - 0.5) * this.length * 0.75;
+      const reach = this.maxWidth * (2 + Math.random() * 3.5);
+      const side = Math.random() < 0.5 ? 1 : -1;
+      const segments = 4;
+      const points = [];
+
+      for (let i = 0; i <= segments; i += 1) {
+        const t = i / segments;
+        const along = from + t * this.length * 0.18 * side;
+        const off = side * reach * t + (Math.random() - 0.5) * reach * 0.55;
+        points.push([
+          this.center.x + this.dirX * along + perpX * off,
+          this.center.y + this.dirY * along + perpY * off,
+        ]);
+      }
+
+      return points;
+    });
+  }
+
+  drawArcs(fade) {
+    const { ctx } = this;
+
+    ctx.lineCap = "round";
+    ctx.strokeStyle = this.colors.mid;
+    ctx.lineWidth = 1.4;
+
+    for (const points of this.arcs) {
+      ctx.globalAlpha = fade * (0.45 + Math.random() * 0.45);
+      ctx.beginPath();
+      ctx.moveTo(points[0][0], points[0][1]);
+      for (let i = 1; i < points.length; i += 1) {
+        ctx.lineTo(points[i][0], points[i][1]);
+      }
+      ctx.stroke();
+    }
+
+    ctx.globalAlpha = 1;
   }
 
   spawnSparks() {
@@ -138,6 +193,15 @@ export class SlashEffect {
             : 1 - (since - OPEN_DURATION) / FADE_DURATION;
         // Ease-out so the tear snaps open and then settles.
         this.drawFissure(1 - Math.pow(1 - open, 3), Math.max(fade, 0));
+
+        if (this.arcing) {
+          if (this.arcFrame <= 0) {
+            this.buildArcs();
+            this.arcFrame = ARC_FRAMES;
+          }
+          this.arcFrame -= 1;
+          this.drawArcs(Math.max(fade, 0));
+        }
       }
     }
     this.drawSparks(dt);
@@ -276,12 +340,19 @@ export class SlashEffect {
 const PADDING_SCALE = 1;
 const PADDING_FLOOR = 250;
 
-export async function playSlash({ userEl, targetEl, skill, canvasBatch }) {
+export async function playSlash({
+  userEl,
+  targetEl,
+  skill,
+  hit,
+  canvasBatch,
+}) {
   if (!targetEl) return;
 
   // Authorial override first, then the element, then plain steel for the
   // physical cuts that carry no element at all.
-  const requested = skill?.hitVfxPalette || skill?.element;
+  const requested =
+    hit?.hitVfxPalette || skill?.hitVfxPalette || hit?.element || skill?.element;
   const paletteKey = requested in PALETTES ? requested : "steel";
 
   const rect = targetEl.getBoundingClientRect();
@@ -298,7 +369,14 @@ export async function playSlash({ userEl, targetEl, skill, canvasBatch }) {
   }
 
   const buildEffect = (ctx) =>
-    new SlashEffect(ctx, center, size, baseAngle, paletteKey);
+    new SlashEffect(
+      ctx,
+      center,
+      size,
+      baseAngle,
+      paletteKey,
+      (hit?.element ?? skill?.element) === "lightning",
+    );
   const padding = size * PADDING_SCALE + PADDING_FLOOR;
 
   targetEl.classList.add("slash-hit");

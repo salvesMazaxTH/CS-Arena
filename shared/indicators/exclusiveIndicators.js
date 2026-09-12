@@ -70,7 +70,7 @@ registerRuntimeCounterIndicator(
   {
     type: "emoji",
     value: "🌩️",
-    background: "rgba(96, 78, 190, 0.85)",
+    background: "rgba(40, 140, 185, 0.85)",
     label: "Marked",
   },
 );
