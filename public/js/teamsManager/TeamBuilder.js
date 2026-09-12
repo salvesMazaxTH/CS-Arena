@@ -322,6 +322,31 @@ export class TeamBuilder {
     return true;
   }
 
+  // A duo tile stands for all of its cores at once, so it matches a filter
+  // whenever any core does — the same "some" semantics a multi-species
+  // champion already gets from getChampionSpecies.
+  _duoPassesFilters(duo) {
+    const { element, klass, species, text } = this.filters;
+    if (text && !duo.name.toLowerCase().includes(text.toLowerCase())) return false;
+
+    const cores = duo.cores.map((key) => championDB[key]);
+    if (element && !cores.some((c) => championAffinityKeys(c).includes(element))) {
+      return false;
+    }
+    if (klass && !cores.some((c) => normalizeChampionClassKey(c) === klass)) {
+      return false;
+    }
+    if (
+      species &&
+      !cores.some((c) =>
+        getChampionSpecies(c).some((s) => s.toLowerCase() === species),
+      )
+    ) {
+      return false;
+    }
+    return true;
+  }
+
   _renderRoster() {
     const grid = this.refs.roster;
     const visible = this._rosterKeys().filter((key) =>
@@ -330,16 +355,9 @@ export class TeamBuilder {
 
     const tiles = visible.map((key) => this._rosterTileMarkup(key));
 
-    if (
-      !this.filters.text &&
-      !this.filters.element &&
-      !this.filters.klass &&
-      !this.filters.species
-    ) {
-      Object.values(duoDB)
-        .filter((duo) => this._isDuoOffered(duo))
-        .forEach((duo) => tiles.push(this._duoTileMarkup(duo)));
-    }
+    Object.values(duoDB)
+      .filter((duo) => this._isDuoOffered(duo) && this._duoPassesFilters(duo))
+      .forEach((duo) => tiles.push(this._duoTileMarkup(duo)));
 
     grid.innerHTML = tiles.join("") || `<p class="tm-roster-empty">No champions match.</p>`;
 
