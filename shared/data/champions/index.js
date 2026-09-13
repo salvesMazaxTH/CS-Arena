@@ -72,6 +72,7 @@ import layla from "./layla/index.js";
 import mali_magarc from "./mali_magarc/index.js";
 import mali_magarc_primordial from "./mali_magarc_primordial/index.js";
 import leone_daverio from "./leone_daverio/index.js";
+import yuki from "./yuki/index.js";
 
 const championDB = {
   atlas,
@@ -148,6 +149,7 @@ const championDB = {
   mali_magarc,
   mali_magarc_primordial,
   leone_daverio,
+  yuki,
 };
 
 export default championDB;
