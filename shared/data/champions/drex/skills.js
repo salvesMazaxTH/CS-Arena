@@ -252,7 +252,7 @@ const drexSkills = [
           user.addShield(shieldAmount, 0, context, "regular", {
             expiresAtTurn: context.currentTurn + this.shieldDecayTurns,
             sourceKey: this.key,
-            visualVariant: "drex_blood",
+            visualVariant: "blood",
           });
 
           results.push({

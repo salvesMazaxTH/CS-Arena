@@ -60,7 +60,9 @@ const cassianSkills = [
       }
 
       const shieldAmount = Math.round(user.Defense * this.shieldRatio);
-      user.addShield(shieldAmount, 0, context, "regular");
+      user.addShield(shieldAmount, 0, context, "regular", {
+        visualVariant: "blood",
+      });
 
       return {
         log: `${formatChampionName(user)} wraps himself in living blood armor, gaining a ${shieldAmount}-point shield!`,
@@ -185,7 +187,9 @@ const cassianSkills = [
         }
       } else if (effectConnected(mainDamage, "turn_of_the_tide_shield")) {
         const shieldAmount = Math.round(user.maxHP * this.shieldRatio);
-        user.addShield(shieldAmount, 0, context, "regular");
+        user.addShield(shieldAmount, 0, context, "regular", {
+          visualVariant: "blood",
+        });
       }
 
       user.passive.flipForm(user, context);

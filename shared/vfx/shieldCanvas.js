@@ -13,7 +13,7 @@ const SHIELD_PALETTES = {
     ring: "rgba(184, 108, 255, 0.92)",
     arc: "rgba(133, 54, 214, 0.95)",
   },
-  drex_blood: {
+  blood: {
     grid: "rgba(255, 40, 40, 0.22)",
     glowInner: "rgba(255, 20, 20, 0.14)",
     glowOuter: "rgba(110, 0, 0, 0.72)",
