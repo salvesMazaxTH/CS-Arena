@@ -665,7 +665,11 @@ export function purgeExpiredStatModifiers(champion, currentTurn) {
   const remaining = [];
 
   for (const modifier of champion.statModifiers) {
-    if (modifier.expiresAtTurn <= currentTurn && !modifier.isPermanent) {
+    if (
+      modifier.expiresAtTurn <= currentTurn &&
+      !modifier.isPermanent &&
+      !modifier.statusKey
+    ) {
       affectedStats.add(modifier.statName);
     } else {
       remaining.push(modifier);

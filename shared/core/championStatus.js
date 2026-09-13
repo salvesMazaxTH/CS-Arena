@@ -543,6 +543,7 @@ export function purgeExpiredStatusEffects(champion, currentTurn, context) {
   ] of champion.statusEffects.entries()) {
     if (statusEffectData.expiresAtTurn <= currentTurn) {
       champion.statusEffects.delete(statusEffectName);
+      revertStatModifiersFromStatus(champion, statusEffectName);
       removedStatusEffects.push(statusEffectName);
 
       const decay = StatusEffectsRegistry[statusEffectName]?.decaysTo;
