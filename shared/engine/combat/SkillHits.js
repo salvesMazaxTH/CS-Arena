@@ -35,6 +35,8 @@ export class SkillHits {
       bonusDamage: spec.bonusDamage ?? skill.bonusDamage,
       piercingPercentage: spec.piercingPercentage,
       ignoreDamageReduction: spec.ignoreDamageReduction,
+      ignoreAffinityResistance:
+        spec.ignoreAffinityResistance ?? skill.ignoreAffinityResistance,
       hitLabel: spec.label ?? null,
       suppressLog: spec.suppressLog ?? skill.suppressLog ?? false,
       context,

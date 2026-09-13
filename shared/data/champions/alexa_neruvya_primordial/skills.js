@@ -72,6 +72,7 @@ const alexaNeruvyaPrimordialSkills = [
 
     bf: 95,
     damageMode: "piercing",
+    ignoreAffinityResistance: true,
     piercingPercentage: 55,
     contact: false,
     element: "water",
@@ -81,7 +82,7 @@ const alexaNeruvyaPrimordialSkills = [
     priority: 0,
 
     description() {
-      return `Alexa Neruvya calls down the full judgment of the drowned age on the chosen target, dealing devastating Water magical damage that ignores ${this.piercingPercentage}% of their Defense.`;
+      return `Alexa Neruvya calls down the full judgment of the drowned age on the chosen target, dealing devastating Water magical damage that ignores ${this.piercingPercentage}% of their Defense. No elemental resistance holds the drowned age back.`;
     },
 
     targetSpec: ["enemy"],

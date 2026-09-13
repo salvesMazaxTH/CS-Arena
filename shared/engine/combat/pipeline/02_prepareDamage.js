@@ -5,37 +5,37 @@
 const ELEMENTAL_MATRIX = {
   steel: {
     weakTo: ["fire"],
-    resists: ["air", "ice"],
+    resists: ["steel", "air", "ice"],
   },
 
   earth: {
     weakTo: ["water"],
-    resists: ["lightning", "fire"],
+    resists: ["earth", "lightning", "fire"],
   },
 
   fire: {
     weakTo: ["water", "earth"],
-    resists: ["ice", "air"],
+    resists: ["fire", "ice", "air"],
   },
 
   water: {
     weakTo: ["lightning", "ice"],
-    resists: ["fire"],
+    resists: ["water", "fire"],
   },
 
   lightning: {
     weakTo: ["earth"],
-    resists: ["air"],
+    resists: ["lightning", "air"],
   },
 
   air: {
     weakTo: ["fire", "ice"],
-    resists: ["earth"],
+    resists: ["air", "earth"],
   },
 
   ice: {
     weakTo: ["fire", "steel"],
-    resists: ["water"],
+    resists: ["ice", "water"],
   },
 };
 
@@ -56,6 +56,9 @@ function applyAffinity(event, debugMode) {
     });
   }
 
+  const ignoresResistance =
+    event.ignoreAffinityResistance && event.damageDepth === 0;
+
   let multiplier = 1;
   let weakCount = 0;
   let resistCount = 0;
@@ -70,7 +73,7 @@ function applyAffinity(event, debugMode) {
       weakCount++;
     }
 
-    if (relation.resists?.includes(skillElement)) {
+    if (!ignoresResistance && relation.resists?.includes(skillElement)) {
       multiplier *= 0.6;
       resistCount++;
     }

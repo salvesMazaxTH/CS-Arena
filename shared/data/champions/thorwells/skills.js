@@ -184,6 +184,7 @@ const thorwellsSkills = [
     contact: false,
     damageMode: "standard",
     hitVfxPalette: "lightning",
+    ignoreAffinityResistance: true,
     isUltimate: true,
     momentumCost: 55,
     priority: 0,
@@ -191,7 +192,7 @@ const thorwellsSkills = [
     speedGain: 10,
 
     description() {
-      return `Thorwells stops holding the sky up and lets the open weight of it fall on every enemy at once for heavy Lightning damage. Each Conductor among them is struck for +${this.conductorBonusPercent}% damage as Piercing, ignoring ${this.piercingPercentage}% of their Defense, and the mark burns out. The storm only climbs from here — Thorwells gains +${this.speedGain} Speed permanently.`;
+      return `Thorwells stops holding the sky up and lets the open weight of it fall on every enemy at once for heavy Lightning damage. Each Conductor among them is struck for +${this.conductorBonusPercent}% damage as Piercing, ignoring ${this.piercingPercentage}% of their Defense, and the mark burns out. The storm only climbs from here — Thorwells gains +${this.speedGain} Speed permanently. No elemental resistance stands under the open sky.`;
     },
 
     targetSpec: ["all:enemy"],

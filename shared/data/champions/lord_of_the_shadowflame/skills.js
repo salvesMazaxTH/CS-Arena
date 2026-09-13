@@ -66,6 +66,7 @@ const lordOfTheShadowflameSkills = [
 
     contact: true,
     damageMode: "standard",
+    ignoreAffinityResistance: true,
     isUltimate: true,
     momentumCost: 55,
     priority: 0,
@@ -82,7 +83,7 @@ const lordOfTheShadowflameSkills = [
     ],
 
     description() {
-      return `There was never anything left to hold back — the Flame spends this body like it's already spent. Deals physical damage, taking ${this.recoilPercentOfMaxHP}% of its Max HP as Absolute recoil damage whether the blow lands or not.`;
+      return `There was never anything left to hold back — the Flame spends this body like it's already spent. Deals physical damage, taking ${this.recoilPercentOfMaxHP}% of its Max HP as Absolute recoil damage whether the blow lands or not. No elemental resistance dims the Shadowflame.`;
     },
 
     targetSpec: ["enemy"],

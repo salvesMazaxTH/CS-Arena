@@ -139,6 +139,10 @@ export class DamageEvent {
     // Per-hit, never on the shared context: reflects must not inherit the pierce.
     this.ignoreDamageReduction = params.ignoreDamageReduction ?? false;
 
+    // Only honoured on a primary hit (depth 0); weaknesses still apply.
+    this.ignoreAffinityResistance =
+      params.ignoreAffinityResistance ?? skill?.ignoreAffinityResistance ?? false;
+
     this.damageDepth = this.context.damageDepth ?? 0;
 
     this.hookPolicy = DEFAULT_HOOK_POLICY;

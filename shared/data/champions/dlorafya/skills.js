@@ -173,7 +173,7 @@ const dlorafyaSkills = [
     name: "Cataclysm of the Divine Pyre",
 
     bf: 120,
-    reductedDamagePercent: 20,
+    reductedDamagePercent: 15,
     burnDuration: 2,
 
     isUltimate: true,
@@ -183,12 +183,13 @@ const dlorafyaSkills = [
 
     contact: false,
     damageMode: "standard",
+    ignoreAffinityResistance: true,
     priority: 0,
 
     element: "fire",
 
     description() {
-      return `A hurricane of divine fire engulfs the arena, dealing Fire magical damage to <b>ALL</b> characters except D'Lorafya himself, who is untouched by it. His <b>allies with Fire Affinity</b> are recognized by the flame and take only ${this.reductedDamagePercent}% damage. Every enemy struck is left Burning for ${this.burnDuration} turn(s), which takes even when the strike deals no damage. This attack cannot be evaded.`;
+      return `A hurricane of divine fire engulfs the arena, dealing Fire magical damage to <b>ALL</b> characters except D'Lorafya himself, who is untouched by it. His <b>allies with Fire Affinity</b> are recognized by the flame and take only ${this.reductedDamagePercent}% damage. Every enemy struck is left Burning for ${this.burnDuration} turn(s), which takes even when the strike deals no damage. This attack cannot be evaded, and no elemental resistance dims the divine fire.`;
     },
 
     targetSpec: ["all"],

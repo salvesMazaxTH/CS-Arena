@@ -121,13 +121,15 @@ const vornOmegaSkills = [
 
     contact: true,
     damageMode: "standard",
+    element: "steel",
     hitVfx: "multislash",
+    ignoreAffinityResistance: true,
     priority: 0,
 
     targetSpec: ["enemy"],
 
     description() {
-      return `VØRN Ω opens the core he was built around, which is the one thing his makers told him never to do, and there is nobody left to tell him again. Every plate still on him comes off at once. Deals physical damage equal to ${this.bf}% of his Attack, plus ${this.bfPerPlate}% for every plate he had already thrown off before opening — a machine that waited is a heavier one.`;
+      return `VØRN Ω opens the core he was built around, which is the one thing his makers told him never to do, and there is nobody left to tell him again. Every plate still on him comes off at once. Deals physical damage equal to ${this.bf}% of his Attack, plus ${this.bfPerPlate}% for every plate he had already thrown off before opening — a machine that waited is a heavier one. No elemental resistance turns the core aside.`;
     },
 
     resolve({ user, targets, context = {} }) {
