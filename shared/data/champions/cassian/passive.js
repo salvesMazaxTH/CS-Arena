@@ -4,9 +4,9 @@ export default {
   key: "blood_tide",
   name: "Blood Tide",
 
-  meterThreshold: 60,
-  meterPerHitDealt: 10,
-  meterPerHitTaken: 14,
+  meterThreshold: 56,
+  meterGainTowardForm: 14,
+  meterGainAwayFromForm: 10,
 
   offenseDeltas: {
     Attack: 45,
@@ -34,14 +34,24 @@ export default {
     if (attacker !== owner) return;
     if (!(actualDmg > 0)) return;
 
-    return this._addMeter(owner, this.meterPerHitDealt, context);
+    const headingToOffense = owner.runtime?.cassianForm !== "offense";
+    const amount = headingToOffense
+      ? this.meterGainTowardForm
+      : this.meterGainAwayFromForm;
+
+    return this._addMeter(owner, amount, context);
   },
 
   onAfterDmgTaking({ defender, actualDmg, owner, context }) {
     if (defender !== owner) return;
     if (!(actualDmg > 0)) return;
 
-    return this._addMeter(owner, this.meterPerHitTaken, context);
+    const headingToDefense = owner.runtime?.cassianForm === "offense";
+    const amount = headingToDefense
+      ? this.meterGainTowardForm
+      : this.meterGainAwayFromForm;
+
+    return this._addMeter(owner, amount, context);
   },
 
   _addMeter(owner, amount, context) {
