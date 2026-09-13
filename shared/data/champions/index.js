@@ -71,6 +71,7 @@ import jack from "./jack/index.js";
 import layla from "./layla/index.js";
 import mali_magarc from "./mali_magarc/index.js";
 import mali_magarc_primordial from "./mali_magarc_primordial/index.js";
+import leone_daverio from "./leone_daverio/index.js";
 
 const championDB = {
   atlas,
@@ -146,6 +147,7 @@ const championDB = {
   layla,
   mali_magarc,
   mali_magarc_primordial,
+  leone_daverio,
 };
 
 export default championDB;
