@@ -10,6 +10,7 @@
 // ============================================================
 
 import { createArcaneBoltGL } from "./arcaneBoltGLAnimation.js";
+import { createChargedRoundGL } from "./chargedRoundGLAnimation.js";
 import { createEarthBoltGL } from "./earthBoltGLAnimation.js";
 import { createFireBoltGL } from "./fireBoltGLAnimation.js";
 import { createIceBoltGL } from "./iceBoltGLAnimation.js";
@@ -152,6 +153,8 @@ registerSkillAnimation("default_ice_big", createIceBoltGL(1.4, true));
 registerSkillAnimation("default_earth", createEarthBoltGL(1));
 registerSkillAnimation("default_earth_big", createEarthBoltGL(1.4, true));
 registerSkillAnimation("default_musket_ball", createMusketBallGL(1));
+registerSkillAnimation("default_charged_round", createChargedRoundGL(1));
+registerSkillAnimation("default_charged_round_big", createChargedRoundGL(1.4));
 registerSkillAnimation("default_radiant_bolt", createRadiantBoltGL(1));
 registerSkillAnimation("default_radiant_beam", createRadiantBeamGL(1));
 registerSkillAnimation("default_slash", playSlash);
