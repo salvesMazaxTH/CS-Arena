@@ -7,7 +7,7 @@ export default {
   HP: 335,
   Attack: 225,
   Defense: 115,
-  Speed: 55,
+  Speed: 70,
 
   classKey: "mage",
   elementalAffinities: ["water"],

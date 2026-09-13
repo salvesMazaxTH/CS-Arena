@@ -5,7 +5,7 @@ export default {
   HP: 305,
   Attack: 325,
   Defense: 70,
-  Speed: 80,
+  Speed: 70,
 
   classKey: "mage",
   species: ["human"],

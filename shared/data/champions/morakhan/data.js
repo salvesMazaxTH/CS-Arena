@@ -4,7 +4,7 @@ export default {
   HP: 340,
   Attack: 150,
   Defense: 160,
-  Speed: 80,
+  Speed: 60,
 
   elementalAffinities: ["steel"],
   classKey: "tank",

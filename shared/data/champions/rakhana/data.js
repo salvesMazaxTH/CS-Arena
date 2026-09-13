@@ -4,7 +4,7 @@ export default {
   HP: 325,
   Attack: 225,
   Defense: 120,
-  Speed: 90,
+  Speed: 65,
 
   elementalAffinities: ["steel"],
   classKey: "brawler",

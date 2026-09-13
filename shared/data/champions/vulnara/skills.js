@@ -21,13 +21,14 @@ const vulnaraSkills = [
     name: "Predatory Instincts",
 
     critBuff: 30,
+    speedBuff: 15,
     duration: 3,
 
     contact: false,
-    priority: 0,
+    priority: 2,
 
     description() {
-      return `Vulnara goes still and lets the hunter take over, her eye settling on every opening at once: she gains +${this.critBuff}% Critical for ${this.duration} turn(s).`;
+      return `Vulnara goes still and lets the hunter take over, her eye settling on every opening at once as her legs coil beneath her: she gains +${this.critBuff}% Critical and +${this.speedBuff} Speed for ${this.duration} turn(s).`;
     },
 
     targetSpec: ["self"],
@@ -40,8 +41,15 @@ const vulnaraSkills = [
         context,
       });
 
+      user.modifyStat({
+        statName: "Speed",
+        amount: this.speedBuff,
+        duration: this.duration,
+        context,
+      });
+
       return {
-        log: `${formatChampionName(user)} sharpens her instincts, gaining +${this.critBuff}% Critical for ${this.duration} turn(s)!`,
+        log: `${formatChampionName(user)} sharpens her instincts, gaining +${this.critBuff}% Critical and +${this.speedBuff} Speed for ${this.duration} turn(s)!`,
       };
     },
   },

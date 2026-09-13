@@ -7,7 +7,7 @@ export default {
   HP: 280,
   Attack: 335,
   Defense: 45,
-  Speed: 75,
+  Speed: 80,
   LifeSteal: 20,
 
   classKey: "assassin",
