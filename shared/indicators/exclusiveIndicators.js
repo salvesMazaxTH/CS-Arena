@@ -153,3 +153,15 @@ registerRuntimeCounterIndicator("mali_unrefined", "maliUnrefined", {
   label: "Essence",
   showStackCount: true,
 });
+
+// Cassian's Blood Tide (runtime.cassianBloodMeter): fills from every hit he
+// lands or takes, flipping his form between defense and offense once full.
+// Icon: "Transfuse" by Lorc (game-icons.net, CC BY 3.0).
+registerRuntimeCounterIndicator("cassian_blood_tide", "cassianBloodMeter", {
+  type: "image",
+  value: "/assets/indicators/blood_tide_indicator.svg",
+  background: "rgba(150, 20, 30, 0.85)",
+  label: "Blood Tide",
+  showStackCount: true,
+  imageSize: 35,
+});

@@ -319,6 +319,10 @@ export const StatusIndicator = {
           img.src = icon.value;
           img.alt = icon.label || statusEffectName;
           img.className = "indicator-image";
+          if (icon.imageSize) {
+            img.style.width = `${icon.imageSize}px`;
+            img.style.height = `${icon.imageSize}px`;
+          }
           indicator.appendChild(img);
         }
 
