@@ -116,7 +116,10 @@ export class CombatEnvelopeBuilder {
           }
         : null,
       // Every damageEvent carries skillKey so the client can animate per hit.
-      damageEvents: damageEvents.map((event) => ({ ...event, skillKey })),
+      damageEvents: damageEvents.map((event) => ({
+        ...event,
+        skillKey: event.skillKey ?? skillKey,
+      })),
       healEvents,
       lifestealEvents,
       shieldEvents,

@@ -58,57 +58,51 @@ const BIG_EARTHBOLT_SKILLS = new Set();
 // `hit` is the individual DamageEvent's own element/contact, which override the
 // skill's: one skill can throw hits of different elements, or a ranged sub-hit.
 function resolveDefaultAnimationKey(skill, hit) {
-  // Authorial motif, from the hit when it names one. It wins over the element
-  // fallback and applies to melee too, since a cut is usually contact-based.
-  // Checked before the skill-object guard below: a passive's hit carries its
-  // own hitVfx but the passive itself is never a member of champion.skills,
-  // so `skill` legitimately comes back undefined for it.
+  // A passive's hit carries its own visual data, yet the passive is never a
+  // member of champion.skills, so `skill` is legitimately absent here.
   const motif = hit?.hitVfx ?? skill?.hitVfx;
   if (motif) return `default_${motif}`;
 
-  // Before the skill guard for the same reason the motif is: a passive's own
-  // contact hit deserves the lunge too.
+  // Authorial motifs and contact win over the element fallback below.
   if ((hit?.contact ?? skill?.contact) === true) return "default_contact";
-
-  if (!skill || typeof skill !== "object") return null;
 
   // Basic Shot is one shared skill whose `type` each champion overrides, so the
   // magical version is told apart here rather than by a motif on every kit.
-  if (skill.key === "basic_shot" && skill.type === "magical") {
+  if (skill?.key === "basic_shot" && skill.type === "magical") {
     return "default_arcane_bolt";
   }
 
-  const element = hit?.element ?? skill.element;
+  const element = hit?.element ?? skill?.element;
 
   // No damage gate here: this only runs from the DamageEvent handler.
   const key = DEFAULT_ELEMENT_ANIMATIONS[element] || null;
   if (
     key === "default_fire" &&
-    (skill.isUltimate === true || BIG_FIREBALL_SKILLS.has(skill.key))
+    (skill?.isUltimate === true || BIG_FIREBALL_SKILLS.has(skill?.key))
   ) {
     return "default_fire_big";
   }
   if (
     key === "default_water" &&
-    (skill.isUltimate === true || BIG_WATERBOLT_SKILLS.has(skill.key))
+    (skill?.isUltimate === true || BIG_WATERBOLT_SKILLS.has(skill?.key))
   ) {
     return "default_water_big";
   }
   if (
     key === "default_ice" &&
-    (skill.isUltimate === true || BIG_ICEBOLT_SKILLS.has(skill.key))
+    (skill?.isUltimate === true || BIG_ICEBOLT_SKILLS.has(skill?.key))
   ) {
     return "default_ice_big";
   }
   if (
     key === "default_earth" &&
-    (skill.isUltimate === true || BIG_EARTHBOLT_SKILLS.has(skill.key))
+    (skill?.isUltimate === true || BIG_EARTHBOLT_SKILLS.has(skill?.key))
   ) {
     return "default_earth_big";
   }
   if (
     key === "default_lightning" &&
-    (skill.isUltimate === true || BIG_LIGHTNING_SKILLS.has(skill.key))
+    (skill?.isUltimate === true || BIG_LIGHTNING_SKILLS.has(skill?.key))
   ) {
     return "default_lightning_big";
   }

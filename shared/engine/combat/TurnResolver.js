@@ -1276,6 +1276,7 @@ export class TurnResolver {
         element = null,
         contact = null,
         hitVfx = null,
+        skillKey = null,
         flags,
       } = {}) {
         if (!target?.id) return;
@@ -1322,6 +1323,7 @@ export class TurnResolver {
           element,
           contact,
           hitVfx,
+          skillKey,
           evaded: flags?.evaded,
           immune: !!flags?.immune,
           immuneMessage: flags?.immuneMessage ?? null,

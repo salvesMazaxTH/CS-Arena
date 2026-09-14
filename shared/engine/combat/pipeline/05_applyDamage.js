@@ -59,6 +59,7 @@ export function applyDamage(event) {
     element: event.element,
     contact: event.contact,
     hitVfx: event.hitVfx,
+    skillKey: event.skill?.key ?? null,
     flags: {
       ...event.flags,
       evaded: event.evasionAttempted ? false : undefined,

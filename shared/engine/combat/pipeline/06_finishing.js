@@ -42,6 +42,7 @@ export function processFinishing(event) {
       element: event.element,
       contact: event.contact,
       hitVfx: event.hitVfx,
+      skillKey: event.skill?.key ?? null,
       flags: finishingFlags,
     });
   }
