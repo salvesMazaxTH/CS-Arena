@@ -1,6 +1,8 @@
 // Emblem eligibility: whether a roster satisfies an emblem's requirements.
 // championDB is injected so this module stays decoupled from the data layer.
 
+import { championHasClass } from "../championClasses.js";
+
 /** Champion species as a normalized lowercase list, from either shape it may take. */
 function getChampionSpecies(champion) {
   if (!champion) return [];
@@ -20,29 +22,6 @@ function getChampionSpecies(champion) {
   }
 
   return [];
-}
-
-/** First class-like tag on the champion, normalized, or null. */
-function normalizeChampionClassKey(champion) {
-  if (!champion) return null;
-
-  const candidates = [
-    champion.classKey,
-    champion.classTag,
-    champion.role,
-    champion.archetype,
-  ];
-
-  for (const candidate of candidates) {
-    if (typeof candidate !== "string") continue;
-    const normalized = candidate
-      .replace(/^class\s*:\s*/i, "")
-      .trim()
-      .toLowerCase();
-    if (normalized) return normalized;
-  }
-
-  return null;
 }
 
 /**
@@ -105,8 +84,8 @@ export function evaluateEmblemEligibilityForRoster(
       .trim()
       .toLowerCase();
     const requiredCount = Number(requirements.classKey.count || 0);
-    const actualCount = roster.filter(
-      (champion) => normalizeChampionClassKey(champion) === targetClass,
+    const actualCount = roster.filter((champion) =>
+      championHasClass(champion, targetClass),
     ).length;
     checks.push(actualCount >= requiredCount);
   }

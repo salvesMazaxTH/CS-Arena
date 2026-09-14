@@ -8,6 +8,6 @@ export default {
   Speed: 55,
 
   elementalAffinities: ["ice"],
-  classKey: "tank",
+  classKey: ["tank", "mage"],
   species: ["frostborn"],
 };

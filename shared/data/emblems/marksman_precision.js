@@ -1,20 +1,6 @@
 // shared/data/emblems/marksman_precision.js
 
-function isMarksman(champion) {
-  if (!champion) return false;
-  const candidates = [
-    champion.classKey,
-    champion.classTag,
-    champion.role,
-    champion.archetype,
-  ];
-  for (const candidate of candidates) {
-    if (typeof candidate !== "string") continue;
-    const normalized = candidate.replace(/^class\s*:\s*/i, "").trim().toLowerCase();
-    if (normalized === "marksman") return true;
-  }
-  return false;
-}
+import { championHasClass } from "../championClasses.js";
 
 export const marksmanPrecision = {
   key: "marksman_precision",
@@ -35,7 +21,7 @@ export const marksmanPrecision = {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
     if (!champion || !owner) return;
     if (champion.team !== owner.team) return;
-    if (!isMarksman(champion)) return;
+    if (!championHasClass(champion, "marksman")) return;
 
     // Mark that this champion has already received the emblem buff
     if (champion.runtime?._marksmanPrecisionApplied) return;

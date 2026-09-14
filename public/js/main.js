@@ -3,6 +3,7 @@ import {
   CLAIM_MIN_MOMENTUM,
   CLAIM_DESCRIPTION,
 } from "../../shared/engine/combat/claim.js";
+import { getChampionClassKeys } from "../../shared/data/championClasses.js";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -634,21 +635,8 @@ function toReadableLabel(value) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function normalizeChampionClassKey(champion) {
-  if (typeof champion.classKey === "string") {
-    const normalized = champion.classKey.trim().toLowerCase();
-    if (championClassConfig[normalized]) return normalized;
-  }
-
-  if (typeof champion.classTag === "string") {
-    const normalized = champion.classTag
-      .replace(/^class\s*:\s*/i, "")
-      .trim()
-      .toLowerCase();
-    if (championClassConfig[normalized]) return normalized;
-  }
-
-  return null;
+function normalizeChampionClassKeys(champion) {
+  return getChampionClassKeys(champion).filter((key) => championClassConfig[key]);
 }
 
 function getChampionSpecies(champion) {
@@ -681,19 +669,17 @@ function getChampionFrontBadges(champion) {
     : typeof champion.elementalAffinities === "string"
       ? [champion.elementalAffinities.trim().toLowerCase()].filter(Boolean)
       : [];
-  const classKey = normalizeChampionClassKey(champion);
-  const classInfo = classKey ? championClassConfig[classKey] : null;
-
   const badges = [];
 
-  if (classInfo || champion.classIcon || champion.classIconUrl) {
+  normalizeChampionClassKeys(champion).forEach((classKey) => {
+    const classInfo = championClassConfig[classKey];
     badges.push({
       type: "class",
-      label: classInfo ? `Class: ${classInfo.label}` : "Class",
-      iconText: champion.classIcon || classInfo?.icon || "?",
-      iconUrl: champion.classIconUrl || classInfo?.iconUrl || null,
+      label: `Class: ${classInfo.label}`,
+      iconText: classInfo.icon,
+      iconUrl: classInfo.iconUrl ?? null,
     });
-  }
+  });
 
   affinityKeys.forEach((affinityKey) => {
     badges.push({
@@ -782,8 +768,9 @@ const EMBLEM_REQUIREMENT_KINDS = Object.freeze([
     readTarget: (requirement) =>
       requirement.value ?? requirement.class ?? requirement.key,
     countMatches: (roster, target) =>
-      roster.filter((champion) => normalizeChampionClassKey(champion) === target)
-        .length,
+      roster.filter((champion) =>
+        normalizeChampionClassKeys(champion).includes(target),
+      ).length,
     describe: (identity) => `${identity.label} class`,
   },
   {
@@ -1005,6 +992,14 @@ const firstChoiceOverlay = document.getElementById("firstChoiceOverlay");
 const firstChoiceChips = document.getElementById("firstChoiceChips");
 const firstChoiceCancel = document.getElementById("firstChoiceCancel");
 
+function syncLineupBannerLock() {
+  if (!lineupBanner) return;
+
+  const locked = isResolvingTurn || gameEnded;
+  lineupBanner.classList.toggle("input-locked", locked);
+  lineupBanner.setAttribute("aria-disabled", String(locked));
+}
+
 // A duo's cores collapse into a single entry: they are summoned as one, so
 // offering two chips that do the same thing would misrepresent the action.
 function lineupEntries(championKeys) {
@@ -1109,11 +1104,14 @@ function renderLineupBanner() {
   });
 
   lineupBanner.classList.toggle("hidden", !hasAny);
+  syncLineupBannerLock();
 }
 
 /** Handles a click on a lineup chip after the 1v1 first-choice phase, to manually summon that champion. */
 /** Eligibility is decided by the server; this only guards against double-submitting the same request. */
 function requestSummonFromLineup(chip) {
+  if (isResolvingTurn || gameEnded) return;
+
   const championKey = chip.dataset.championKey;
   if (!championKey) return;
 
@@ -1128,6 +1126,7 @@ function requestSummonFromLineup(chip) {
 /** Sends a line-up summon request, unless one is already awaiting a server reply. */
 /** Returns whether the request was actually sent. */
 function emitLineupSummon(championKey) {
+  if (isResolvingTurn || gameEnded) return false;
   if (!championKey || pendingSummonChampionKey) return false;
 
   pendingSummonChampionKey = championKey;
@@ -1725,6 +1724,7 @@ socket.on("combatReset", ({ turn = 1, score } = {}) => {
   isResolvingTurn = false;
   gameEnded = false;
   pendingSummonChampionKey = null;
+  syncLineupBannerLock();
 
   closeSummonReminder();
   removeActionBar();
@@ -1735,6 +1735,7 @@ socket.on("turnLocked", () => {
   document.getElementById("undo-actions-btn").disabled = true;
   hasConfirmedEndTurn = false;
   isResolvingTurn = true;
+  syncLineupBannerLock();
   closeSummonReminder();
   removeActionBar();
 });
@@ -1746,6 +1747,7 @@ socket.on("turnUpdate", (turn) => {
 socket.on("gameOver", (data) => {
   combatAnimations.handleGameOver(data);
   gameEnded = true;
+  syncLineupBannerLock();
   closeSummonReminder();
 
   // Stop music when game is over
@@ -1776,6 +1778,7 @@ function applyTurnUpdate(turn) {
   combatAnimations.updateTurnDisplay(currentTurn);
   hasConfirmedEndTurn = false;
   isResolvingTurn = false;
+  syncLineupBannerLock();
   pendingSummonChampionKey = null;
   closeSummonReminder();
   renderLineupBanners(lastLineupsByTeam);

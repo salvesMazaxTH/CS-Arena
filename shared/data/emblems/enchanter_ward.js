@@ -1,20 +1,6 @@
 // shared/data/emblems/enchanter_ward.js
 
-function isEnchanter(champion) {
-  if (!champion) return false;
-  const candidates = [
-    champion.classKey,
-    champion.classTag,
-    champion.role,
-    champion.archetype,
-  ];
-  for (const candidate of candidates) {
-    if (typeof candidate !== "string") continue;
-    const normalized = candidate.replace(/^class\s*:\s*/i, "").trim().toLowerCase();
-    if (normalized === "enchanter") return true;
-  }
-  return false;
-}
+import { championHasClass } from "../championClasses.js";
 
 export const enchanterWard = {
   key: "enchanter_ward",
@@ -35,7 +21,7 @@ export const enchanterWard = {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
     if (!champion || !owner) return;
     if (champion.team !== owner.team) return;
-    if (!isEnchanter(champion)) return;
+    if (!championHasClass(champion, "enchanter")) return;
 
     // Mark that this champion has already received the emblem buff
     if (champion.runtime?._enchanterWardApplied) return;
@@ -57,7 +43,7 @@ export const enchanterWard = {
   onBeforeHealing({ healSrc, amount, owner }) {
     if (!amount || amount <= 0) return;
     if (healSrc?.team !== owner?.team) return;
-    if (!isEnchanter(healSrc)) return;
+    if (!championHasClass(healSrc, "enchanter")) return;
 
     return {
       amount: Math.round(amount * 1.15),

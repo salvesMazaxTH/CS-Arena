@@ -11,7 +11,7 @@ import { TEAM_SIZE, validateTeamComposition } from "/shared/data/teams/index.js"
 import {
   escapeHtml,
   renderChampionIdentityBadgesMarkup,
-  normalizeChampionClassKey,
+  normalizeChampionClassKeys,
   sortChampionKeysAlphabetically,
   getChampionSpecies,
   toReadableLabel,
@@ -312,7 +312,9 @@ export class TeamBuilder {
       return false;
     }
     if (element && !championAffinityKeys(champion).includes(element)) return false;
-    if (klass && normalizeChampionClassKey(champion) !== klass) return false;
+    if (klass && !normalizeChampionClassKeys(champion).includes(klass)) {
+      return false;
+    }
     if (
       species &&
       !getChampionSpecies(champion).some((s) => s.toLowerCase() === species)
@@ -333,7 +335,7 @@ export class TeamBuilder {
     if (element && !cores.some((c) => championAffinityKeys(c).includes(element))) {
       return false;
     }
-    if (klass && !cores.some((c) => normalizeChampionClassKey(c) === klass)) {
+    if (klass && !cores.some((c) => normalizeChampionClassKeys(c).includes(klass))) {
       return false;
     }
     if (

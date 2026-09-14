@@ -1,20 +1,6 @@
 // shared/data/emblems/silent_blade.js
 
-function isAssassin(champion) {
-  if (!champion) return false;
-  const candidates = [
-    champion.classKey,
-    champion.classTag,
-    champion.role,
-    champion.archetype,
-  ];
-  for (const candidate of candidates) {
-    if (typeof candidate !== "string") continue;
-    const normalized = candidate.replace(/^class\s*:\s*/i, "").trim().toLowerCase();
-    if (normalized === "assassin") return true;
-  }
-  return false;
-}
+import { championHasClass } from "../championClasses.js";
 
 export const silentBlade = {
   key: "silent_blade",
@@ -35,7 +21,7 @@ export const silentBlade = {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
     if (!champion || !owner) return;
     if (champion.team !== owner.team) return;
-    if (!isAssassin(champion)) return;
+    if (!championHasClass(champion, "assassin")) return;
 
     // Mark that this champion has already received the emblem buff
     if (champion.runtime?._silentBladeApplied) return;

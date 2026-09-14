@@ -5,24 +5,7 @@
 // Both halves of the roster are rewarded — the Speed grant is just tuned per
 // half, since Lightning champions are already fast and Brawlers usually are not.
 
-function isBrawler(champion) {
-  if (!champion) return false;
-  const candidates = [
-    champion.classKey,
-    champion.classTag,
-    champion.role,
-    champion.archetype,
-  ];
-  for (const candidate of candidates) {
-    if (typeof candidate !== "string") continue;
-    const normalized = candidate
-      .replace(/^class\s*:\s*/i, "")
-      .trim()
-      .toLowerCase();
-    if (normalized === "brawler") return true;
-  }
-  return false;
-}
+import { championHasClass } from "../championClasses.js";
 
 function hasLightningAffinity(champion) {
   const affinities = Array.isArray(champion?.elementalAffinities)
@@ -38,7 +21,7 @@ function hasLightningAffinity(champion) {
 // Speed granted to each half of the emblem, keyed by the test that qualifies a
 // champion for it. A champion that is both takes the higher grant, not the sum.
 const SPEED_GRANTS = [
-  { matches: isBrawler, amount: 12 },
+  { matches: (champion) => championHasClass(champion, "brawler"), amount: 12 },
   { matches: hasLightningAffinity, amount: 5 },
 ];
 
@@ -50,7 +33,7 @@ function getSpeedGrant(champion) {
 }
 
 function carriesTheStorm(champion) {
-  return isBrawler(champion) || hasLightningAffinity(champion);
+  return championHasClass(champion, "brawler") || hasLightningAffinity(champion);
 }
 
 export const stormFist = {

@@ -8,7 +8,7 @@ import {
 import { MAX_TEAM_EMBLEMS } from "/shared/data/teams/index.js";
 import {
   escapeHtml,
-  normalizeChampionClassKey,
+  normalizeChampionClassKeys,
   getChampionSpecies,
 } from "./championCardMarkup.js";
 
@@ -51,8 +51,9 @@ const EMBLEM_REQUIREMENT_KINDS = Object.freeze([
     readTarget: (requirement) =>
       requirement.value ?? requirement.class ?? requirement.key,
     countMatches: (roster, target) =>
-      roster.filter((champion) => normalizeChampionClassKey(champion) === target)
-        .length,
+      roster.filter((champion) =>
+        normalizeChampionClassKeys(champion).includes(target),
+      ).length,
     describe: (identity) => `${identity.label} class`,
   },
   {

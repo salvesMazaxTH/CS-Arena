@@ -1,20 +1,6 @@
 // shared/data/emblems/assassins_ambush.js
 
-function isAssassin(champion) {
-  if (!champion) return false;
-  const candidates = [
-    champion.classKey,
-    champion.classTag,
-    champion.role,
-    champion.archetype,
-  ];
-  for (const candidate of candidates) {
-    if (typeof candidate !== "string") continue;
-    const normalized = candidate.replace(/^class\s*:\s*/i, "").trim().toLowerCase();
-    if (normalized === "assassin") return true;
-  }
-  return false;
-}
+import { championHasClass } from "../championClasses.js";
 
 export const assassinsAmbush = {
   key: "assassins_ambush",
@@ -39,7 +25,7 @@ export const assassinsAmbush = {
 
   onBeforeDmgDealing({ attacker, defender, owner, mode }) {
     if (!attacker || !owner || attacker.team !== owner.team) return;
-    if (!isAssassin(attacker)) return;
+    if (!championHasClass(attacker, "assassin")) return;
 
     // Absolute damage already ignores Defense entirely — never downgrade it.
     if (mode === "absolute") return;

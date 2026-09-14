@@ -2,6 +2,7 @@ import {
   ELEMENT_IDENTITIES,
   CLASS_IDENTITIES,
 } from "/shared/ui/identityPalette.js";
+import { getChampionClassKeys } from "/shared/data/championClasses.js";
 
 export function escapeHtml(value) {
   return String(value ?? "")
@@ -24,21 +25,8 @@ export function toReadableLabel(value) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export function normalizeChampionClassKey(champion) {
-  if (typeof champion.classKey === "string") {
-    const normalized = champion.classKey.trim().toLowerCase();
-    if (CLASS_IDENTITIES[normalized]) return normalized;
-  }
-
-  if (typeof champion.classTag === "string") {
-    const normalized = champion.classTag
-      .replace(/^class\s*:\s*/i, "")
-      .trim()
-      .toLowerCase();
-    if (CLASS_IDENTITIES[normalized]) return normalized;
-  }
-
-  return null;
+export function normalizeChampionClassKeys(champion) {
+  return getChampionClassKeys(champion).filter((key) => CLASS_IDENTITIES[key]);
 }
 
 export function getChampionSpecies(champion) {
@@ -65,19 +53,17 @@ function getChampionFrontBadges(champion) {
     : typeof champion.elementalAffinities === "string"
       ? [champion.elementalAffinities.trim().toLowerCase()].filter(Boolean)
       : [];
-  const classKey = normalizeChampionClassKey(champion);
-  const classInfo = classKey ? CLASS_IDENTITIES[classKey] : null;
-
   const badges = [];
 
-  if (classInfo || champion.classIcon || champion.classIconUrl) {
+  normalizeChampionClassKeys(champion).forEach((classKey) => {
+    const classInfo = CLASS_IDENTITIES[classKey];
     badges.push({
       type: "class",
-      label: classInfo ? `Class: ${classInfo.label}` : "Class",
-      iconText: champion.classIcon || classInfo?.icon || "?",
-      iconUrl: champion.classIconUrl || classInfo?.iconUrl || null,
+      label: `Class: ${classInfo.label}`,
+      iconText: classInfo.icon,
+      iconUrl: classInfo.iconUrl ?? null,
     });
-  }
+  });
 
   affinityKeys.forEach((affinityKey) => {
     badges.push({

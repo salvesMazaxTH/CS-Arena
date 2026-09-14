@@ -1,20 +1,6 @@
 // shared/data/emblems/mage_arcana.js
 
-function isMage(champion) {
-  if (!champion) return false;
-  const candidates = [
-    champion.classKey,
-    champion.classTag,
-    champion.role,
-    champion.archetype,
-  ];
-  for (const candidate of candidates) {
-    if (typeof candidate !== "string") continue;
-    const normalized = candidate.replace(/^class\s*:\s*/i, "").trim().toLowerCase();
-    if (normalized === "mage") return true;
-  }
-  return false;
-}
+import { championHasClass } from "../championClasses.js";
 
 export const mageArcana = {
   key: "mage_arcana",
@@ -40,7 +26,7 @@ export const mageArcana = {
   onBeforeDmgDealing({ attacker, skill, owner }) {
     if (!attacker || !skill) return;
     if (attacker.team !== owner?.team) return;
-    if (!isMage(attacker)) return;
+    if (!championHasClass(attacker, "mage")) return;
 
     return {
       bonusDamage: this.bonusDamage,

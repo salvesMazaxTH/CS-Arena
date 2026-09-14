@@ -1,20 +1,6 @@
 // shared/data/emblems/tank_bulwark.js
 
-function isTank(champion) {
-  if (!champion) return false;
-  const candidates = [
-    champion.classKey,
-    champion.classTag,
-    champion.role,
-    champion.archetype,
-  ];
-  for (const candidate of candidates) {
-    if (typeof candidate !== "string") continue;
-    const normalized = candidate.replace(/^class\s*:\s*/i, "").trim().toLowerCase();
-    if (normalized === "tank") return true;
-  }
-  return false;
-}
+import { championHasClass } from "../championClasses.js";
 
 export const tankBulwark = {
   key: "tank_bulwark",
@@ -35,7 +21,7 @@ export const tankBulwark = {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
     if (!champion || !owner) return;
     if (champion.team !== owner.team) return;
-    if (!isTank(champion)) return;
+    if (!championHasClass(champion, "tank")) return;
 
     // Mark that this champion has already received the emblem buff
     if (champion.runtime?._tankBulwarkApplied) return;

@@ -1,20 +1,6 @@
 // shared/data/emblems/brawler_fury.js
 
-function isBrawler(champion) {
-  if (!champion) return false;
-  const candidates = [
-    champion.classKey,
-    champion.classTag,
-    champion.role,
-    champion.archetype,
-  ];
-  for (const candidate of candidates) {
-    if (typeof candidate !== "string") continue;
-    const normalized = candidate.replace(/^class\s*:\s*/i, "").trim().toLowerCase();
-    if (normalized === "brawler" || normalized === "bralwer") return true;
-  }
-  return false;
-}
+import { championHasClass } from "../championClasses.js";
 
 export const brawlerFury = {
   key: "brawler_fury",
@@ -35,7 +21,7 @@ export const brawlerFury = {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
     if (!champion || !owner) return;
     if (champion.team !== owner.team) return;
-    if (!isBrawler(champion)) return;
+    if (!championHasClass(champion, "brawler")) return;
 
     // Mark that this champion has already received the emblem buff
     if (champion.runtime?._brawlerFuryApplied) return;
