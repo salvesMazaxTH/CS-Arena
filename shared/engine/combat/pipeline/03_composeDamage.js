@@ -16,57 +16,45 @@ function defToMitPct(defense, debugMode) {
     return 0;
   }
 
-  // --- Constantes globais do modelo ---
-  const BASE_DEF = 220;
-  const BASE_REDUCTION = 0.75;
   const MAX_REDUCTION = 0.95;
-  const K = 0.0045;
 
-  // --- Curva base (até 150) ---
+  // --- Curva de mitigação por Defesa ---
   const curve = {
     0: 0.0,
     35: 0.25,
     60: 0.4,
     85: 0.53,
     110: 0.6,
-    150: 0.65,
-    200: 0.72,
+    125: 0.633,
+    150: 0.68,
+    175: 0.72,
+    200: 0.754,
     220: 0.78,
+    300: 0.85,
+    400: 0.9,
+    600: MAX_REDUCTION,
   };
 
   const keys = Object.keys(curve)
     .map(Number)
     .sort((a, b) => a - b);
 
-  let effective = 0;
+  const top = keys[keys.length - 1];
+  let effective = curve[top];
 
-  // ================================
-  // Segmento 1 — interpolado
-  // ================================
-  if (defense <= BASE_DEF) {
-    if (defense <= keys[0]) {
-      effective = curve[keys[0]];
-    } else {
-      for (let i = 0; i < keys.length - 1; i++) {
-        const a = keys[i];
-        const b = keys[i + 1];
+  if (defense <= keys[0]) {
+    effective = curve[keys[0]];
+  } else if (defense < top) {
+    for (let i = 0; i < keys.length - 1; i++) {
+      const a = keys[i];
+      const b = keys[i + 1];
 
-        if (defense >= a && defense <= b) {
-          const t = (defense - a) / (b - a);
-          effective = curve[a] + t * (curve[b] - curve[a]);
-          break;
-        }
+      if (defense >= a && defense <= b) {
+        const t = (defense - a) / (b - a);
+        effective = curve[a] + t * (curve[b] - curve[a]);
+        break;
       }
     }
-  }
-  // ================================
-  // Segmento 2 — cauda assintótica
-  // ================================
-  else {
-    effective =
-      BASE_REDUCTION +
-      (MAX_REDUCTION - BASE_REDUCTION) *
-        (1 - Math.exp(-K * (defense - BASE_DEF)));
   }
 
   // Segurança numérica
