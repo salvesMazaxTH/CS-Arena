@@ -91,14 +91,13 @@ const helyraSkills = [
     damageMode: "standard",
     element: "lightning",
     hitVfx: "charged_round_big",
-    doublesArc: true,
     isUltimate: true,
     momentumCost: 55,
     priority: 0,
     targetSpec: ["enemy"],
 
     description() {
-      return `Helyra runs the whole length of the hall with both guns open, and every pane and plinth between her and the chosen target comes apart in her wake. Deals physical damage, and the current that leaps off the chosen target carries twice its usual share.`;
+      return `Helyra runs the whole length of the hall with both guns open, and every pane and plinth between her and the chosen target comes apart in her wake. Deals physical damage.`;
     },
 
     resolve({ user, targets, context = {} }) {
