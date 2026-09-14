@@ -28,12 +28,27 @@ function commitTo(champion, skillKey, context) {
 
   champion.runtime.meowCommittedSkill = skillKey;
   champion.runtime.meowCommitModifiers = champion.statModifiers.slice(from);
+  champion.runtime.meowBuffActive = true;
 }
 
 function abandonCommitment(champion) {
   champion.removeStatModifiers(champion.runtime.meowCommitModifiers ?? []);
   delete champion.runtime.meowCommitModifiers;
   delete champion.runtime.meowCommittedSkill;
+  delete champion.runtime.meowBuffActive;
+}
+
+function holdCommitment(champion, skillKey) {
+  champion.runtime.meowCommittedSkill = skillKey;
+  champion.runtime.meowBuffActive = false;
+}
+
+function hasActiveBuff(champion) {
+  return (
+    champion.runtime.meowBuffActive === true ||
+    (Array.isArray(champion.runtime.meowCommitModifiers) &&
+      champion.runtime.meowCommitModifiers.length > 0)
+  );
 }
 
 export default {
@@ -41,7 +56,7 @@ export default {
   name: "Nine Lives",
 
   description() {
-    return `Killer Meow kills the way a cat does, which is to say once, the same way, over and over until the city learns the shape of it. The first ability he uses settles into him as a habit worth +${ATTACK_BONUS} Attack and +${SPEED_BONUS} Speed for as long as he keeps to it. Reaching for anything else breaks the habit and spends his lives — ${FIRST_SWITCH_COST} for the first change, one more for each after it — and with ${STARTING_LIVES} lives to his name he has exactly three changes of mind in him. He cannot reach for what he can no longer pay for.`;
+    return `Killer Meow kills the way a cat does, which is to say once, the same way, over and over until the city learns the shape of it. The first ability he uses settles into him as a habit worth +${ATTACK_BONUS} Attack and +${SPEED_BONUS} Speed for as long as he keeps to it. Reaching for anything else breaks the habit and spends his lives — ${FIRST_SWITCH_COST} for the first change, one more for each after it — leaving him without the bonuses for that turn. With ${STARTING_LIVES} lives to his name he has exactly three changes of mind in him, and he cannot reach for what he can no longer pay for.`;
   },
 
   hookScope: {
@@ -68,9 +83,18 @@ export default {
     owner.runtime.meowLivesAtLock = owner.runtime.meowLives;
 
     const committed = owner.runtime.meowCommittedSkill;
-    if (committed === action.skillKey) return;
-
     const skill = owner.skills.find((s) => s.key === action.skillKey);
+    const skillName = skill?.name ?? action.skillKey;
+
+    if (committed === action.skillKey) {
+      if (hasActiveBuff(owner) || !skill?.bf) return;
+
+      commitTo(owner, action.skillKey, context);
+
+      return {
+        log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} keeps to ${skill.name}, and the habit returns with +${ATTACK_BONUS} Attack and +${SPEED_BONUS} Speed.`,
+      };
+    }
 
     if (committed === undefined) {
       if (!skill?.bf) return;
@@ -87,7 +111,7 @@ export default {
     owner.runtime.meowLives = Math.max(0, owner.runtime.meowLives - cost);
 
     abandonCommitment(owner);
-    if (skill?.bf) commitTo(owner, action.skillKey, context);
+    if (skill?.bf) holdCommitment(owner, action.skillKey);
 
     context.registerDialog({
       message: `${formatChampionName(owner)} changes his mind, and it costs him ${cost} of his lives.`,
