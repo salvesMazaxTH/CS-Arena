@@ -165,3 +165,22 @@ registerRuntimeCounterIndicator("cassian_blood_tide", "cassianBloodMeter", {
   showStackCount: true,
   imageSize: 35,
 });
+
+// Killer Meow's Nine Lives (runtime.meowLives): what he still has left to spend
+// on changing his mind.
+registerRuntimeCounterIndicator("meow_lives", "meowLives", {
+  type: "emoji",
+  value: "🐾",
+  background: "rgba(60, 60, 70, 0.85)",
+  label: "Lives",
+  showStackCount: true,
+});
+
+// Killer Meow's committed ability (runtime.meowCommittedSkill): the habit he is
+// locked into while it holds.
+registerRuntimeCounterIndicator("meow_commitment", "meowCommittedSkill", {
+  type: "emoji",
+  value: "🔒",
+  background: "rgba(150, 110, 40, 0.85)",
+  label: "Committed",
+});
