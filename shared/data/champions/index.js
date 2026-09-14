@@ -75,6 +75,7 @@ import leone_daverio from "./leone_daverio/index.js";
 import yuki from "./yuki/index.js";
 import cassian from "./cassian/index.js";
 import helyra from "./helyra/index.js";
+import lorraine from "./lorraine/index.js";
 import killer_meow from "./killer_meow/index.js";
 
 const championDB = {
@@ -155,6 +156,7 @@ const championDB = {
   yuki,
   cassian,
   helyra,
+  lorraine,
   killer_meow,
 };
 
