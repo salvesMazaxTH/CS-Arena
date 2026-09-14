@@ -65,6 +65,21 @@ export class TurnResolver {
 
     const turnExecutionMap = new Map(); // championId -> executionIndex
 
+    // Nobody can act any more and the order has not been read yet, so this is
+    // the only window where hidden state may settle without leaking.
+    const lockContext = this.createBaseContext({ sourceId: null });
+    lockContext.registerHookLogs(
+      emitCombatEvent(
+        "onActionsLocked",
+        {
+          pendingActions: this.combat.pendingActions,
+          context: lockContext,
+        },
+        this.combat.activeChampions,
+        { players: this.match.players },
+      ),
+    );
+
     while (this.combat.pendingActions.length > 0) {
       const actions = this.combat.pendingActions;
 
@@ -144,7 +159,13 @@ export class TurnResolver {
     const deathContext = this.createBaseContext({ sourceId: null });
     const deathResults = this.processChampionDeaths(deathContext);
 
-    return { actionResults, deathResults, switchResults, deathContext };
+    return {
+      actionResults,
+      deathResults,
+      switchResults,
+      deathContext,
+      lockContext,
+    };
   }
 
   /** Banks every score entry a resolved context registered; null if it had none. */
@@ -606,10 +627,6 @@ export class TurnResolver {
     if (hardCCDenial) {
       return hardCCDenial;
     }
-
-    for (const champ of this.combat.activeChampions.values()) {
-    }
-
 
     // Find the action's main target (first valid target)
     let mainTarget = null;

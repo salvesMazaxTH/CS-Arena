@@ -552,6 +552,22 @@ function validateActionIntent(user, skill, socket) {
     return false;
   }
 
+  // Only the acting champion's own hook sources are consulted, so a denial can
+  // never become information the opponent reads off the declaration.
+  const intentResults = emitCombatEvent(
+    "onValidateActionIntent",
+    { actionSource: user, skill },
+    [user],
+    { players: match.players },
+  );
+
+  for (const res of intentResults) {
+    if (res?.deny) {
+      socket.emit("skillDenied", res.message || "This action is unavailable.");
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -625,7 +641,17 @@ function handleEndTurn() {
     mutationHandler: (request, meta = {}) =>
       applyChampionMutation(request, { context: meta.context ?? null }),
   });
-  const { actionResults, deathResults, deathContext } = resolver.resolveTurn();
+  const { actionResults, deathResults, deathContext, lockContext } =
+    resolver.resolveTurn();
+
+  emitCombatEnvelopesFromContext({
+    user: null,
+    skill: { key: "actions_locked", name: "Turn Lock" },
+    context: lockContext,
+    log:
+      envelopeBuilder.collectLogs(lockContext.registeredResults).join("\n") ||
+      null,
+  });
 
   // Collect all championMutationRequests BEFORE emitting envelopes; they are
   // processed after deathResults so the new creature is never flagged as dead.
