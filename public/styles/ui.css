@@ -1604,7 +1604,7 @@
   align-items: center;
   justify-content: center;
   gap: 1px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   height: 15px;
   min-height: 15px;
   max-height: 15px;
@@ -1616,8 +1616,10 @@
   background: linear-gradient(180deg, rgba(8, 8, 8, 0.12), rgba(8, 8, 8, 0.72));
 }
 .lineup-chip-identity-row .champion-identity-badge {
-  width: 19px;
-  height: 19px;
+  flex: 0 1 19px;
+  min-width: 0;
+  height: auto;
+  aspect-ratio: 1;
   font-size: 0.78rem;
   border-width: 2px;
 }
@@ -2036,18 +2038,17 @@
 }
 .first-choice-chips .lineup-chip-identity-row {
   bottom: 6px;
-  width: calc(100% - 10px);
+  width: calc(100% - 6px);
   height: 34px;
   min-height: 34px;
   max-height: 34px;
   gap: 4px;
-  padding: 3px 5px;
+  padding: 3px 4px;
   border-radius: 12px;
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.78));
 }
 .first-choice-chips .champion-identity-badge {
-  width: 30px;
-  height: 30px;
+  flex-basis: 30px;
   font-size: 0.96rem;
   border-width: 2px;
 }
