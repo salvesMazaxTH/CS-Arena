@@ -11,38 +11,51 @@ const ELEMENT_IDENTITIES = Object.freeze({
   fire: {
     label: "Fire",
     icon: "🔥",
+    iconUrl: "/assets/indicators/fire_element_icon.svg",
     background: "rgba(186, 54, 36, 0.95)",
     border: "rgba(255, 182, 160, 0.68)",
   },
   water: {
     label: "Water",
     icon: "🌊",
+    iconUrl: "/assets/indicators/water_element_icon.svg",
     background: "rgba(35, 105, 194, 0.92)",
     border: "rgba(150, 205, 255, 0.72)",
   },
   lightning: {
     label: "Lightning",
     icon: "⚡",
+    iconUrl: "/assets/indicators/lightning_element_icon.svg",
     background: "rgba(199, 173, 55, 0.9)",
     border: "rgba(255, 239, 170, 0.68)",
   },
   earth: {
     label: "Earth",
-    icon: "🌱",
+    icon: "🪨",
+    iconUrl: "/assets/indicators/earth_element_icon.svg",
     background: "rgba(110, 72, 38, 0.94)",
     border: "rgba(205, 165, 120, 0.7)",
   },
   ice: {
     label: "Ice",
     icon: "❄️",
+    iconUrl: "/assets/indicators/ice_element_icon.svg",
     background: "rgba(86, 178, 206, 0.92)",
     border: "rgba(198, 242, 255, 0.72)",
   },
   steel: {
     label: "Steel",
-    icon: "🛡️",
+    icon: "⚙️",
+    iconUrl: "/assets/indicators/steel_element_icon.svg",
     background: "rgba(112, 118, 128, 0.95)",
     border: "rgba(225, 230, 235, 0.65)",
+  },
+  air: {
+    label: "Air",
+    icon: "🌪️",
+    iconUrl: "/assets/indicators/air_element_icon.svg",
+    background: "rgba(150, 170, 185, 0.9)",
+    border: "rgba(225, 235, 240, 0.68)",
   },
 });
 

@@ -700,7 +700,7 @@ function getChampionFrontBadges(champion) {
       type: "affinity",
       label: `Affinity: ${toReadableLabel(affinityKey)}`,
       iconText: affinityBadgeByKey[affinityKey] ?? "✨",
-      iconUrl: null,
+      iconUrl: ELEMENT_IDENTITIES[affinityKey]?.iconUrl ?? null,
     });
   });
 

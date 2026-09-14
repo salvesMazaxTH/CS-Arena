@@ -1,4 +1,7 @@
-import { elementEmoji } from "../../../shared/ui/elementEmoji.js";
+import {
+  getElementIdentity,
+  renderIdentityIconMarkup,
+} from "../../../shared/ui/identityPalette.js";
 import {
   CLAIM_ACTION_KEY,
   getClaimPoints,
@@ -203,7 +206,10 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
           <div class="skill-overlay-element-row">
             <span class="meta-label">Element:</span>
             <span class="meta-value">
-              ${elementEmoji[skill.element] || skill.element}
+              ${renderIdentityIconMarkup(getElementIdentity(skill.element), {
+                className: "skill-overlay-element-icon",
+                alt: skill.element,
+              })}
             </span>
           </div>
         `

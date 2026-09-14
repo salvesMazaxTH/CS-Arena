@@ -172,7 +172,7 @@ Esses campos permitem controlar a ordem e o momento exato em que mensagens apare
 │   │
 │   ├── ui/
 │   │   ├── formatters.js           # HTML formatters (nomes com cor de time)
-│   │   ├── elementEmoji.js         # Mapeamento elemento → emoji
+│   │   ├── identityPalette.js      # Identidade visual (ícone + cores) de elementos e classes
 │   │   └── statusIndicator.js      # Gerenciador visual de ícones de status
 │   │
 │   ├── utils/
