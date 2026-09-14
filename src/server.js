@@ -629,6 +629,13 @@ function emitGameOverIfNeeded({ checkTurnLimit = false } = {}) {
 }
 
 function handleEndTurn() {
+  // The server becomes authoritative about the phase before notifying clients.
+  // Summons received after this point belong to the next planning window and
+  // must not mutate the field while the current turn is being resolved.
+  if (match.combat.phase !== "planning") return;
+  match.combat.phase = "resolving";
+  waitingForAnimations = true;
+
   io.emit("turnLocked");
 
   // Nobody can act any more, so this is the moment the line-up summons made
@@ -741,7 +748,6 @@ function handleEndTurn() {
   }
 
   // Signal clients that every combat event has been emitted.
-  waitingForAnimations = true;
   io.emit("combatPhaseComplete");
 }
 
@@ -883,6 +889,7 @@ function handleScheduledEffect(effect, context) {
 
 /** Runs start-of-turn processing: scheduled effects, hooks, purges and global regen. */
 function handleStartTurn() {
+  match.combat.phase = "starting";
   const currentTurn = match.combat.currentTurn;
 
   // Flip the client's turn header before any start-of-turn log or animation is
@@ -1031,6 +1038,10 @@ function handleStartTurn() {
   // last real champion outside the regular end-turn action flow.
   emitGameOverIfNeeded();
 
+  // This is the only point at which a new planning window becomes available.
+  // Set it before broadcasting so the client state and server validation agree.
+  // A finished match must never reopen its planning window.
+  match.combat.phase = match.isGameEnded() ? "ended" : "planning";
   broadcastGameState();
 }
 
@@ -1449,6 +1460,15 @@ io.on("connection", (socket) => {
     const playerSlot = match.getSlotBySocket(socket.id);
     const player = match.getPlayer(playerSlot);
     if (!player) return;
+
+    if (match.isGameEnded() || match.combat.phase !== "planning") {
+      return socket.emit(
+        "actionFailed",
+        match.isGameEnded()
+          ? "The combat has already ended."
+          : "You cannot summon while the turn is being resolved.",
+      );
+    }
 
     const team = player.team;
 

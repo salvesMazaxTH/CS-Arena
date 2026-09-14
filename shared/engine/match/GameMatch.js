@@ -101,6 +101,7 @@ class CombatState {
 
   reset() {
     this.currentTurn = 1;
+    this.phase = "planning";
     this.pendingActions = [];
     this.activeChampions = new Map();
     this.deadChampions = new Map();
@@ -122,6 +123,7 @@ class CombatState {
   resetProgress() {
     this.pendingActions = [];
     this.currentTurn = 1;
+    this.phase = "planning";
     this.playersReadyToEndTurn.clear();
     this.finishedAnimationSockets.clear();
     this.turnHistory.clear();
