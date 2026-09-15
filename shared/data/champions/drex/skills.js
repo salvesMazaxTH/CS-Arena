@@ -189,6 +189,8 @@ const drexSkills = [
     damageMode: "standard",
     isUltimate: true,
     momentumCost: 55,
+    hitVfx: "arcane_bolt_big",
+    hitVfxPalette: "crimson",
     priority: 0,
     targetSpec: ["enemy"],
 
