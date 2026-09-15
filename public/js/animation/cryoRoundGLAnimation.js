@@ -3,7 +3,8 @@
 // and the impact lands late, after the line is already gone.
 
 import { getElementCenter } from "./animationUtils.js";
-import { getParticleScale, recordEffectFrame } from "./effectQuality.js";
+import { getParticleScale } from "./effectQuality.js";
+import { ensureStage, startLoop, screenToWorld } from "./glStage.js";
 
 const FROST_TINT = 0xbfe6ff;
 const CORE_TINT = 0xffffff;
@@ -155,14 +156,12 @@ let glowTex = null;
 let shardTex = null;
 let ringTex = null;
 
-function screenToWorld(x, y, camera) {
-  const ndcX = (x / window.innerWidth) * 2 - 1;
-  const ndcY = -(y / window.innerHeight) * 2 + 1;
-  const ray = new THREE.Raycaster();
-  ray.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
-  const out = new THREE.Vector3();
-  ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), out);
-  return out;
+function bakeTextures() {
+  if (!frostTex) frostTex = makeFrostTexture();
+  if (!flowerTex) flowerTex = makeFlowerTexture();
+  if (!glowTex) glowTex = makeGlowTexture();
+  if (!shardTex) shardTex = makeShardTexture();
+  if (!ringTex) ringTex = makeRingTexture();
 }
 
 function billboard(w, h, opacity, tex, blending) {
@@ -341,78 +340,6 @@ class CryoRoundGL {
   }
 }
 
-let stage = null;
-
-function ensureStage() {
-  if (stage) return stage;
-  const container = document.getElementById("webgl-container");
-  if (!container || typeof THREE === "undefined") return null;
-
-  let renderer;
-  try {
-    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false });
-  } catch {
-    return null;
-  }
-  if (!renderer || !renderer.getContext()) return null;
-
-  if (!frostTex) frostTex = makeFrostTexture();
-  if (!flowerTex) flowerTex = makeFlowerTexture();
-  if (!glowTex) glowTex = makeGlowTexture();
-  if (!shardTex) shardTex = makeShardTexture();
-  if (!ringTex) ringTex = makeRingTexture();
-
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.z = 15;
-  camera.updateMatrixWorld();
-
-  renderer.setPixelRatio(1);
-  renderer.setClearAlpha(0);
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.domElement.style.position = "absolute";
-  renderer.domElement.style.top = "0";
-  renderer.domElement.style.left = "0";
-  container.appendChild(renderer.domElement);
-
-  stage = { renderer, scene, camera, effects: [], raf: 0, last: 0 };
-
-  window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-
-  return stage;
-}
-
-function startLoop() {
-  if (stage.raf) return;
-  stage.last = performance.now();
-  const frame = (now) => {
-    const dt = Math.min(Math.max((now - stage.last) / 1000, 0), 1 / 30);
-    stage.last = now;
-    recordEffectFrame(dt);
-
-    for (let i = stage.effects.length - 1; i >= 0; i--) {
-      const entry = stage.effects[i];
-      if (!entry.effect.update(dt)) {
-        entry.effect.dispose(stage.scene);
-        stage.effects.splice(i, 1);
-        entry.resolve();
-      }
-    }
-    stage.renderer.render(stage.scene, stage.camera);
-
-    if (stage.effects.length === 0) {
-      stage.raf = 0;
-      return;
-    }
-    stage.raf = requestAnimationFrame(frame);
-  };
-  stage.raf = requestAnimationFrame(frame);
-}
-
 export function createCryoRoundGL(scale, grand = false) {
   return async (opts) => {
     const { userEl, targetEl } = opts;
@@ -420,6 +347,7 @@ export function createCryoRoundGL(scale, grand = false) {
 
     const st = ensureStage();
     if (!st) return;
+    bakeTextures();
 
     const tc = getElementCenter(targetEl);
     const to = screenToWorld(tc.x, tc.y, st.camera);
