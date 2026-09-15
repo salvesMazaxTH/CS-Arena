@@ -184,3 +184,37 @@ registerRuntimeCounterIndicator("meow_commitment", "meowCommittedSkill", {
   background: "rgba(150, 110, 40, 0.85)",
   label: "Committed",
 });
+
+// Weyne's Stillness (runtime.weyneStillness): the shots she chose not to take,
+// riding every round she does fire until something makes her lose HP.
+// Icon: "Lungs" by Delapouite (game-icons.net, CC BY 3.0).
+registerRuntimeCounterIndicator("weyne_stillness", "weyneStillness", {
+  type: "image",
+  value: "/assets/indicators/weyne_stillness_indicator.svg",
+  background: "rgba(40, 80, 115, 0.88)",
+  label: "Stillness",
+  showStackCount: true,
+  imageSize: 32,
+});
+
+// Weyne's Steady (runtime.weyneSteady): the turns nobody has drawn her blood,
+// each one worth hit chance on her Basic Shot.
+// Icon: "Dead eye" by Lorc (game-icons.net, CC BY 3.0).
+registerRuntimeCounterIndicator("weyne_steady", "weyneSteady", {
+  type: "image",
+  value: "/assets/indicators/weyne_steady_indicator.svg",
+  background: "rgba(55, 100, 140, 0.88)",
+  label: "Steady",
+  showStackCount: true,
+  imageSize: 32,
+});
+
+// Weyne's Cold Zero (runtime.weyneZeroed): the round she has already measured.
+// Icon: "Reticule" by Lorc (game-icons.net, CC BY 3.0).
+registerRuntimeCounterIndicator("weyne_cold_zero", "weyneZeroed", {
+  type: "image",
+  value: "/assets/indicators/weyne_cold_zero_indicator.svg",
+  background: "rgba(70, 120, 160, 0.88)",
+  label: "Cold Zero",
+  imageSize: 32,
+});

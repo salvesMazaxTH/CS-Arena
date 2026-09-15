@@ -418,3 +418,40 @@
     filter: brightness(1);
   }
 }
+
+/* Cryogenic round (applied to champion portrait: the mark, then the wound) */
+
+.cryo-marked {
+  animation: cryoMark 0.5s ease-out;
+}
+
+@keyframes cryoMark {
+  0% {
+    filter: brightness(1);
+  }
+  100% {
+    filter: brightness(1.12) saturate(0.72) contrast(1.06)
+      drop-shadow(0 0 6px rgba(190, 230, 255, 0.75));
+  }
+}
+
+.cryo-hit {
+  animation: cryoWound 0.9s ease-out;
+}
+
+@keyframes cryoWound {
+  0% {
+    filter: brightness(1) saturate(0.75);
+  }
+  8% {
+    filter: brightness(2.6) saturate(0.5) contrast(1.2)
+      drop-shadow(0 0 14px rgba(224, 246, 255, 0.95));
+  }
+  55% {
+    filter: brightness(1.1) saturate(0.6) contrast(1.08)
+      drop-shadow(0 0 8px rgba(170, 214, 250, 0.6));
+  }
+  100% {
+    filter: brightness(1) saturate(1);
+  }
+}

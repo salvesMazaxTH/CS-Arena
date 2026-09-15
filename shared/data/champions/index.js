@@ -76,8 +76,9 @@ import yuki from "./yuki/index.js";
 import cassian from "./cassian/index.js";
 import helyra from "./helyra/index.js";
 import lorraine from "./lorraine/index.js";
-import sarkoveth from "./sarkoveth/index.js";
+import farkoveth from "./farkoveth/index.js";
 import killer_meow from "./killer_meow/index.js";
+import weyne from "./weyne/index.js";
 
 const championDB = {
   atlas,
@@ -159,7 +160,8 @@ const championDB = {
   helyra,
   lorraine,
   killer_meow,
-  sarkoveth,
+  farkoveth,
+  weyne,
 };
 
 export default championDB;
