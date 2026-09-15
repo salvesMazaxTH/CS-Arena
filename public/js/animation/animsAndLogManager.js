@@ -939,31 +939,10 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   async function animateBuff(effect) {
-    const { sourceId, targetId, sourceName, targetName } = effect || {};
+    const { targetId } = effect || {};
     const target = resolveTargetVisual(targetId);
     if (!target) return;
-    const { championEl, portraitWrapper, champion: targetChampion } = target;
-
-    const resolvedTargetName = targetChampion
-      ? formatChampionName(targetChampion)
-      : targetName || "Target";
-
-    const sourceChampion = deps.activeChampions.get(sourceId);
-    const resolvedSourceName = sourceChampion
-      ? formatChampionName(sourceChampion)
-      : sourceName || null;
-
-    // Self-buff when there is no source, or source === target.
-    let text;
-    if (!sourceId || sourceId === targetId) {
-      text = `${resolvedTargetName} buffed themselves.`;
-    } else if (resolvedSourceName) {
-      text = `${resolvedTargetName} was buffed by ${resolvedSourceName}.`;
-    } else {
-      text = `${resolvedTargetName} was buffed.`;
-    }
-
-    await showDialog(text);
+    const { championEl, portraitWrapper } = target;
 
     championEl.classList.add("buff");
     createFloatElement(portraitWrapper, "+BUFF", "buff-float");
@@ -980,10 +959,6 @@ export function createCombatAnimationManager(deps) {
     const { attackerId } = effect;
     const championEl = getChampionElement(attackerId);
     const portraitWrapper = championEl?.querySelector(".portrait-wrapper");
-
-    await showDialog(
-      `${championName(attackerId)} was <b>taunted</b> and had their target redirected!`,
-    );
 
     championEl.classList.add("taunt");
     createFloatElement(portraitWrapper, "TAUNTED", "taunt-float");
