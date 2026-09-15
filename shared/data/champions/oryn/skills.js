@@ -29,13 +29,10 @@ const orynSkills = [
     element: "lightning",
 
     description() {
-      return `Oryn lifts the pins in his forearms and the air leans toward him. He Taunts two chosen enemies for ${this.tauntDuration} turn(s), releasing any enemy he was already Taunting, and braces for the answer, gaining ${this.damageReductionPercent}% Damage Reduction for ${this.damageReductionDuration} turn(s).`;
+      return `Oryn lifts the pins in his forearms and the air leans toward him. He Taunts the chosen enemy for ${this.tauntDuration} turn(s), releasing any enemy he was already Taunting, and braces for the answer, gaining ${this.damageReductionPercent}% Damage Reduction for ${this.damageReductionDuration} turn(s).`;
     },
 
-    targetSpec: [
-      { type: "enemy", unique: true },
-      { type: "enemy", unique: true },
-    ],
+    targetSpec: ["enemy"],
 
     resolve({ user, targets, context = {} }) {
       user.damageReductionModifiers = user.damageReductionModifiers.filter(
@@ -50,7 +47,7 @@ const orynSkills = [
         context,
       });
 
-      // The sky only leans toward two at a time.
+      // The sky only leans toward one at a time.
       for (const champ of context.aliveChampions) {
         champ.tauntEffects = champ.tauntEffects.filter(
           (taunt) => taunt.taunterId !== user.id,
