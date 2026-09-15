@@ -91,7 +91,7 @@ const kyleHayatoSkills = [
     name: "Between Flashes",
 
     bf: 75,
-    bonusFlat: 25,
+    bonusDamage: 20,
     invisibleDuration: 2,
 
     contact: true,
@@ -103,17 +103,16 @@ const kyleHayatoSkills = [
     priority: 0,
 
     description() {
-      return `The air cracks white around Kyle and for a heartbeat the enemy is watching the wrong place — the lightning is a trick of the eye, and it is the blade that arrives. Deals physical damage plus ${this.bonusFlat} bonus damage, is never a critical hit, and leaves him Invisible for up to ${this.invisibleDuration} turns, ending early the moment he acts again.`;
+      return `The air cracks white around Kyle and for a heartbeat the enemy is watching the wrong place — the lightning is a trick of the eye, and it is the blade that arrives. Deals physical damage plus ${this.bonusDamage} bonus damage, is never a critical hit, and leaves him Invisible for up to ${this.invisibleDuration} turns, ending early the moment he acts again.`;
     },
 
     targetSpec: ["enemy"],
 
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
-      const baseDamage = (user.Attack * this.bf) / 100 + this.bonusFlat;
-
       const result = new DamageEvent({
-        baseDamage,
+        baseDamage: (user.Attack * this.bf) / 100,
+        bonusDamage: this.bonusDamage,
         attacker: user,
         defender: enemy,
         skill: this,

@@ -17,10 +17,9 @@ const thorwellsSkills = [
     },
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
-      const baseDamage = (user.Attack * this.bf) / 100 + this.bonusFlat;
-
       const result = new DamageEvent({
-        baseDamage,
+        baseDamage: (user.Attack * this.bf) / 100,
+        bonusDamage: this.bonusDamage,
         attacker: user,
         defender: enemy,
         skill: this,
