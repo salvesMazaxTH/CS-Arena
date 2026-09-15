@@ -2,8 +2,6 @@ export default {
   name: "Harlan Greeves",
   portrait: "/assets/portraits/harlan_greeves.webp",
 
-  unreleased: true,
-
   HP: 335,
   Attack: 295,
   Defense: 65,
