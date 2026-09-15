@@ -74,7 +74,7 @@ const selinaSkills = [
     priority: 1,
 
     hits: [
-      { id: "flare", type: "magical" },
+      { id: "flare", type: "magical", hitVfx: "radiant_bolt" },
       {
         id: "cut",
         label: "Blade",
