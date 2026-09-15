@@ -152,7 +152,7 @@ const kyleHayatoSkills = [
     element: "lightning",
     critOptions: { disable: true },
     isUltimate: true,
-    momentumCost: 55,
+    momentumCost: 58,
     priority: 0,
 
     description() {
