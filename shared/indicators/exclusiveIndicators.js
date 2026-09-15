@@ -185,6 +185,16 @@ registerRuntimeCounterIndicator("meow_commitment", "meowCommittedSkill", {
   label: "Committed",
 });
 
+// Calyphera's Facets (runtime.calypheraFacets): the lines of light the long
+// fight has cut through her, each one raising the damage she deals.
+registerRuntimeCounterIndicator("calyphera_facets", "calypheraFacets", {
+  type: "emoji",
+  value: "💎",
+  background: "rgba(120, 170, 200, 0.85)",
+  label: "Facets",
+  showStackCount: true,
+});
+
 // Weyne's Stillness (runtime.weyneStillness): the shots she chose not to take,
 // riding every round she does fire until something makes her lose HP.
 // Icon: "Lungs" by Delapouite (game-icons.net, CC BY 3.0).
