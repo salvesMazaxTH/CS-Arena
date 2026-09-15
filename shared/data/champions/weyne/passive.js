@@ -38,7 +38,7 @@ export default {
 
     return `Weyne breathes out, and the breath hangs frozen in front of the scope until the city below her stops moving. Her Basic Shot is the only thing in her kit that can miss: it lands ${this.baseHitChance}% of the time, and every turn she ends without losing HP adds ${this.hitChancePerSteady}% to that (Max: ${this.maxSteady} turn(s), a certainty).
 
-    Every turn she spends not shooting — CLAIM, Total Block or Cold Zero — she gathers one stack of <b>Stillness</b> (Max: ${this.maxStillness}), and every shot she fires carries ${this.stillnessBonusDamage} bonus damage for each stack she holds. Shooting does not spend them: losing HP does, and it empties her hit chance in the same moment.
+    Every turn she spends not shooting, she gathers one stack of <b>Stillness</b> (Max: ${this.maxStillness}), and every shot she fires carries ${this.stillnessBonusDamage} bonus damage for each stack she holds. Shooting does not spend them: losing HP does, and it empties her hit chance in the same moment.
 
     <b>Hit chance: ${hitChance(champion)}% — Stillness: ${stillness}/${this.maxStillness} (Steady: ${steady}/${this.maxSteady})</b>`;
   },
