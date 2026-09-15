@@ -3,7 +3,7 @@ import { formatChampionName } from "../../../ui/formatters.js";
 import basicShot from "../generic/basicShot.js";
 
 const maliMagarcSkills = [
-  { ...basicShot, type: "magical", bonusFlat: 30 },
+  { ...basicShot, type: "magical", bonusDamage: 25 },
 
   {
     key: "unshaped_arc",
