@@ -196,7 +196,7 @@ const kaiSkills = [
     priority: 0,
     element: "fire",
     isUltimate: true,
-    momentumCost: 33,
+    momentumCost: 50,
     description() {
       return `Kai throws himself forward and lets go of everything at once: ${this.punches} blazing punches scatter at random across all enemies, each one dealing ${this.damagePerHit} physical damage.
 
