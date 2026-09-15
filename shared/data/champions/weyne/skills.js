@@ -8,7 +8,7 @@ const weyneSkills = [
   {
     ...basicShot,
 
-    bf: 45,
+    bf: 50,
     bonusDamage: 25,
 
     element: "ice",
