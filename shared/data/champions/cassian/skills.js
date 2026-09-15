@@ -21,6 +21,8 @@ const cassianSkills = [
     name: "Living Blood",
 
     shieldRatio: 0.45,
+    damageReduction: 10,
+    damageReductionDuration: 2,
     attackBuff: 45,
     critBuff: 20,
     buffDuration: 2,
@@ -33,7 +35,7 @@ const cassianSkills = [
         return `Cassian's blood thickens along his forearms into a razor edge: he gains +${this.attackBuff} Attack and +${this.critBuff}% Critical for ${this.buffDuration} turn(s).`;
       }
 
-      return `Cassian calls his own blood to the surface, wrapping himself in a living, physical aura of protection: he gains a shield worth ${this.shieldRatio * 100}% of his Defense.`;
+      return `Cassian calls his own blood to the surface, wrapping himself in a living, physical aura of protection: he gains a shield worth ${this.shieldRatio * 100}% of his Defense and reduces the damage he takes by ${this.damageReduction}% for ${this.damageReductionDuration} turn(s).`;
     },
 
     targetSpec: ["self"],
@@ -64,8 +66,16 @@ const cassianSkills = [
         visualVariant: "blood",
       });
 
+      user.applyDamageReduction({
+        amount: this.damageReduction,
+        duration: this.damageReductionDuration,
+        type: "percent",
+        source: this.key,
+        context,
+      });
+
       return {
-        log: `${formatChampionName(user)} wraps himself in living blood armor, gaining a ${shieldAmount}-point shield!`,
+        log: `${formatChampionName(user)} wraps himself in living blood armor, gaining a ${shieldAmount}-point shield and ${this.damageReduction}% damage reduction for ${this.damageReductionDuration} turn(s)!`,
       };
     },
   },
