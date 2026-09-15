@@ -13,4 +13,8 @@ export default {
   species: ["human", "enhanced"],
 
   elementalAffinities: ["ice"],
+
+  // So the Steady and Stillness indicators show from turn 1 instead of only
+  // appearing once her passive first touches them.
+  initialRuntime: { weyneSteady: 0, weyneStillness: 0 },
 };
