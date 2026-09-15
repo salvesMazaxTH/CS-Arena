@@ -178,8 +178,7 @@ const thorwellsSkills = [
     key: "wrath_of_the_open_sky",
     name: "Wrath of the Open Sky",
     bf: 110,
-    conductorBonusPercent: 10,
-    piercingPercentage: 65,
+    piercingPercentage: 45,
     contact: false,
     damageMode: "standard",
     hitVfxPalette: "lightning",
@@ -191,7 +190,7 @@ const thorwellsSkills = [
     speedGain: 10,
 
     description() {
-      return `Thorwells stops holding the sky up and lets the open weight of it fall on every enemy at once for heavy Lightning damage. Each Conductor among them is struck for +${this.conductorBonusPercent}% damage as Piercing, ignoring ${this.piercingPercentage}% of their Defense, and the mark burns out. The storm only climbs from here — Thorwells gains +${this.speedGain} Speed permanently. No elemental resistance stands under the open sky.`;
+      return `Thorwells stops holding the sky up and lets the open weight of it fall on every enemy at once for heavy Lightning damage. Each Conductor among them is struck as Piercing, ignoring ${this.piercingPercentage}% of their Defense, and the mark burns out. The storm only climbs from here — Thorwells gains +${this.speedGain} Speed permanently. No elemental resistance stands under the open sky.`;
     },
 
     targetSpec: ["all:enemy"],
@@ -207,9 +206,7 @@ const thorwellsSkills = [
         const charged = enemy.hasStatusEffect("conductor");
 
         const result = new DamageEvent({
-          baseDamage: charged
-            ? baseDamage * (1 + this.conductorBonusPercent / 100)
-            : baseDamage,
+          baseDamage,
           attacker: user,
           defender: enemy,
           skill: this,

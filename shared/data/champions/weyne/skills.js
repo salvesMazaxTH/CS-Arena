@@ -58,7 +58,7 @@ const weyneSkills = [
     key: "cold_zero",
     name: "Cold Zero",
 
-    priority: 0,
+    priority: 2,
     targetSpec: ["self"],
 
     description() {
