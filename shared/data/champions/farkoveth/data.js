@@ -1,6 +1,6 @@
 export default {
-  name: "Sarkoveth",
-  portrait: "/assets/portraits/sarkoveth.webp",
+  name: "Farkoveth",
+  portrait: "/assets/portraits/farkoveth.webp",
 
   unreleased: true,
 

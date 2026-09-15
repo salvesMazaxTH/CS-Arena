@@ -9,7 +9,7 @@ export function spendDefense({ user, amount, context }) {
     statModifierSrc: user,
   });
 
-  user.runtime.sarkovethDefenseSpentTurn = context.currentTurn;
+  user.runtime.farkovethDefenseSpentTurn = context.currentTurn;
   return Math.abs(appliedAmount);
 }
 
@@ -21,7 +21,7 @@ export default {
   healingReduction: 75,
 
   description() {
-    return `Sarkoveth is not flesh, and what mends flesh barely finds purchase on him: anything that would restore his HP restores ${this.healingReduction}% less. What he does have is time — at the start of a turn, if he spent no Defense on his previous turn, the stone knits back +${this.defenseRegen} Defense, never above the Defense he was carved with.`;
+    return `Farkoveth is not flesh, and what mends flesh barely finds purchase on him: anything that would restore his HP restores ${this.healingReduction}% less. What he does have is time — at the start of a turn, if he spent no Defense on his previous turn, the stone knits back +${this.defenseRegen} Defense, never above the Defense he was carved with.`;
   },
 
   hookScope: {
@@ -35,7 +35,7 @@ export default {
   },
 
   onTurnStart({ owner, context }) {
-    if (owner.runtime.sarkovethDefenseSpentTurn === context.currentTurn - 1) {
+    if (owner.runtime.farkovethDefenseSpentTurn === context.currentTurn - 1) {
       return;
     }
 

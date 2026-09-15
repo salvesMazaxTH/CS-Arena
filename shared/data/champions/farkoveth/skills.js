@@ -3,7 +3,7 @@ import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
 import { spendDefense } from "./passive.js";
 
-const sarkovethSkills = [
+const farkovethSkills = [
   basicStrike,
 
   {
@@ -18,7 +18,7 @@ const sarkovethSkills = [
     targetSpec: ["self"],
 
     description() {
-      return `Four metres of hooded stone settle onto whatever will hold them and stop being a thing anyone thinks to look at. Sarkoveth spends his action to become Invisible for ${this.effectDuration} turn(s), acting through it without breaking cover, and the next damaging skill he uses deals +${this.nextSkillBonus}% damage.`;
+      return `Four metres of hooded stone settle onto whatever will hold them and stop being a thing anyone thinks to look at. Farkoveth spends his action to become Invisible for ${this.effectDuration} turn(s), acting through it without breaking cover, and the next damaging skill he uses deals +${this.nextSkillBonus}% damage.`;
     },
 
     resolve({ user, context = {} }) {
@@ -79,7 +79,7 @@ const sarkovethSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `He breaks a shard off his own forearm, sets it against the kunai and lets the edge carry the weight of the piece he just lost. Sarkoveth spends ${this.defenseCost} of his Defense to deal physical damage plus bonus damage equal to ${this.bonusPerDefense}x the Defense actually spent.`;
+      return `He breaks a shard off his own forearm, sets it against the kunai and lets the edge carry the weight of the piece he just lost. Farkoveth spends ${this.defenseCost} of his Defense to deal physical damage plus bonus damage equal to ${this.bonusPerDefense}x the Defense actually spent.`;
     },
 
     resolve({ user, targets, context = {} }) {
@@ -119,7 +119,7 @@ const sarkovethSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Sarkoveth stops holding himself together and drops the whole four metres of it onto the chosen target at once. He spends every point of Defense he still has to deal physical damage plus bonus damage equal to ${this.bonusPerDefense}x the Defense spent, and is left with none of it.`;
+      return `Farkoveth stops holding himself together and drops the whole four metres of it onto the chosen target at once. He spends every point of Defense he still has to deal physical damage plus bonus damage equal to ${this.bonusPerDefense}x the Defense spent, and is left with none of it.`;
     },
 
     resolve({ user, targets, context = {} }) {
@@ -145,4 +145,4 @@ const sarkovethSkills = [
   },
 ];
 
-export default sarkovethSkills;
+export default farkovethSkills;
