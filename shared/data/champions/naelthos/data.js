@@ -7,6 +7,6 @@ export default {
   Speed: 35,
 
   elementalAffinities: ["water"],
-  classKey: "brawler",
+  classKey: ["tank", "mage"],
   species: ["merfolk"],
 };

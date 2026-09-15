@@ -7,6 +7,6 @@ export default {
   Speed: 25,
 
   elementalAffinities: ["earth"],
-  classKey: "tank",
+  classKey: ["tank", "enchanter"],
   species: ["spirit", "avatar", "numen"],
 };

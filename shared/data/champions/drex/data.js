@@ -9,6 +9,6 @@ export default {
   Speed: 65,
   LifeSteal: 15,
 
-  classKey: "mage",
+  classKey: ["brawler", "mage"],
   species: ["vampire"],
 };

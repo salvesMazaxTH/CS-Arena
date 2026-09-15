@@ -230,7 +230,7 @@ const drexSkills = [
         attacker: user,
         defender: enemy,
         skill: this,
-        type: "physical",
+        type: "magical",
         context,
         allChampions: context?.allChampions,
       }).execute();

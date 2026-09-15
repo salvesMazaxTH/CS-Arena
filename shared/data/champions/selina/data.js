@@ -7,6 +7,6 @@ export default {
   Defense: 90,
   Speed: 90,
 
-  classKey: "enchanter",
+  classKey: ["enchanter", "mage"],
   species: ["demigod"],
 };
