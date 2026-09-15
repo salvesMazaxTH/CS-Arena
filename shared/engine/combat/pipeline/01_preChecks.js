@@ -5,8 +5,7 @@ import { SpawnProtection } from "../spawnProtection.js";
 export function preChecks(event) {
   /*     console.log("DEBUG ATTACKER:", event.attacker);
   console.log("DEBUG DEFENDER:", event.defender); */
-  const activeChampions =
-    event?.context?.activeChampions ?? event?.context?.allChampions;
+  const activeChampions = event?.context?.allChampions;
 
   if (
     !event?.defender?.id ||
@@ -15,6 +14,10 @@ export function preChecks(event) {
   ) {
     return _buildInactiveTargetResult(event);
   }
+
+  // The target was on the field for this action, so its later absence needs no
+  // explanation to a player who just watched it happen.
+  event.context.dialogDedupeKeys.add(_inactiveDialogKey(event.defender.id));
 
   if (SpawnProtection.isActive(event.defender)) {
     return _buildUnreachableResult(event, null, { silent: true });
@@ -236,23 +239,34 @@ function _buildBlockedResult(
   };
 }
 
+function _inactiveDialogKey(defenderId) {
+  return `inactive-target:${defenderId}`;
+}
+
 function _buildInactiveTargetResult(event) {
   const targetName = formatChampionName(event.defender);
   const username = event.attacker ? formatChampionName(event.attacker) : null;
-  const skillName = event.skill?.name || "habilidade";
-  const message = `${targetName} não está ativo em combate e não pôde ser atingido.`;
+  const skillName = event.skill?.name || "skill";
 
-  event.context.registerDialog({
-    message,
+  const alreadyExplained = event.context.dialogDedupeKeys.has(
+    _inactiveDialogKey(event.defender?.id ?? targetName),
+  );
 
-    sourceId: event.attacker?.id ?? null,
-    targetId: event.defender?.id ?? null,
-    damageDepth: event.damageDepth ?? 0,
-  });
+  if (!alreadyExplained) {
+    event.context.registerDialog({
+      message: `${targetName} is not active in combat and could not be hit.`,
+      dedupeKey: _inactiveDialogKey(event.defender?.id ?? targetName),
+      sourceId: event.attacker?.id ?? null,
+      targetId: event.defender?.id ?? null,
+      damageDepth: event.damageDepth ?? 0,
+    });
+  }
 
-  const log = username
-    ? `${username} tentou usar ${skillName} em ${targetName}, mas o alvo não está ativo em combate.`
-    : `${targetName} não está ativo em combate.`;
+  const log = alreadyExplained
+    ? undefined
+    : username
+      ? `${username} tried to use ${skillName} on ${targetName}, but the target is not active in combat.`
+      : `${targetName} is not active in combat.`;
 
   return {
     baseDamage: event.baseDamage,

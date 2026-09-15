@@ -1144,6 +1144,7 @@ export class TurnResolver {
 
     const combat = this.combat;
     const editMode = this.editMode;
+    const dialogDedupeKeys = new Set();
 
     return {
       currentTurn: combat.currentTurn,
@@ -1183,6 +1184,8 @@ export class TurnResolver {
       },
 
       _lastEventRef: null, // reference to the last registered event, useful for dialogs that need to refer to it
+      // Dialogs already spoken in this action, by key.
+      dialogDedupeKeys,
 
       registeredResults: [],
 
@@ -1524,8 +1527,14 @@ export class TurnResolver {
         sourceId = null,
         targetId = null,
         duration = null,
+        dedupeKey = null,
       } = {}) {
         if (!message) return;
+
+        if (dedupeKey) {
+          if (dialogDedupeKeys.has(dedupeKey)) return;
+          dialogDedupeKeys.add(dedupeKey);
+        }
 
         const dialogObj = {
           message,
