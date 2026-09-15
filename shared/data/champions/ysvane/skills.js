@@ -1,5 +1,6 @@
 import { regularShieldTotal } from "../../../core/championCombat.js";
 import { formatChampionName } from "../../../ui/formatters.js";
+import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 import basicShot from "../generic/basicShot.js";
 import { KEPT_RUNTIME_FLAG, KEPT_DURATION } from "./passive.js";
 
@@ -211,7 +212,7 @@ const ysvaneSkills = [
     targetSpec: ["self"],
 
     resolve({ user, context = {} }) {
-      const allies = context.aliveChampions.filter((c) => c.team === user.team);
+      const allies = TargetFilter.candidates("ally", user, context.aliveChampions ?? []);
       const crystallized = [];
 
       for (const ally of allies) {

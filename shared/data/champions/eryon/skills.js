@@ -1,5 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
+import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 import basicShot from "../generic/basicShot.js";
 
 const eryonSkills = [
@@ -26,9 +27,7 @@ const eryonSkills = [
     targetSpec: ["self"],
 
     resolve({ user, context, resolver }) {
-      const allies = context.aliveChampions.filter(
-        (c) => c.team === user.team,
-      );
+      const allies = TargetFilter.candidates("ally", user, context.aliveChampions ?? []);
 
       if (!allies.length) return;
 
@@ -85,9 +84,7 @@ const eryonSkills = [
     resolve({ user, targets, context, resolver }) {
       const [target] = targets;
 
-      const allies = context.aliveChampions.filter(
-        (c) => c.team === user.team,
-      );
+      const allies = TargetFilter.candidates("ally", user, context.aliveChampions ?? []);
 
       let drained = 0;
 
@@ -143,9 +140,7 @@ const eryonSkills = [
     },
 
     resolve({ user, context, resolver }) {
-      const allies = context.aliveChampions.filter(
-        (c) => c.team === user.team,
-      );
+      const allies = TargetFilter.candidates("ally", user, context.aliveChampions ?? []);
 
       const pool = [];
 

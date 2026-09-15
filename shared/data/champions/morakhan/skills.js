@@ -1,5 +1,6 @@
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { formatChampionName } from "../../../ui/formatters.js";
+import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 import basicStrike from "../generic/basicStrike.js";
 
 const morakhanSkills = [
@@ -90,7 +91,7 @@ const morakhanSkills = [
     targetSpec: ["self"],
 
     resolve({ user, context }) {
-      const allies = context.aliveChampions.filter((c) => c.team === user.team);
+      const allies = TargetFilter.candidates("ally", user, context.aliveChampions ?? []);
 
       for (const ally of allies) {
         // 🛡️ Damage reduction via native system

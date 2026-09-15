@@ -3,6 +3,7 @@ import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
+import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 import totalBlock from "../generic/totalBlock.js";
 import { SELINA_WARD } from "./passive.js";
 
@@ -139,9 +140,7 @@ const selinaSkills = [
 
     resolve({ user, targets, context = {} }) {
       const enemies = targets.filter((c) => c.team !== user.team && c.alive);
-      const allies = (context.aliveChampions ?? []).filter(
-        (c) => c.team === user.team && c.alive,
-      );
+      const allies = TargetFilter.candidates("ally", user, context.aliveChampions ?? []);
 
       const baseDamage = (user.Attack * this.bf) / 100;
       const results = [];

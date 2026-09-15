@@ -1,6 +1,7 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
+import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 import basicStrike from "../generic/basicStrike.js";
 
 const sebastianIgnisSkills = [
@@ -99,9 +100,7 @@ const sebastianIgnisSkills = [
       const reduction =
         this.damageReductionPercent + this.perStackPercent * stacks;
 
-      const allies = (context.aliveChampions ?? []).filter(
-        (c) => c.team === user.team,
-      );
+      const allies = TargetFilter.candidates("ally", user, context.aliveChampions ?? []);
 
       for (const ally of allies) {
         ally.applyDamageReduction({

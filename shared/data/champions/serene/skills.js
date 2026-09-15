@@ -2,6 +2,7 @@ import { regularShieldTotal } from "../../../core/championCombat.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
+import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 import basicShot from "../generic/basicShot.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
 
@@ -154,7 +155,7 @@ const sereneSkills = [
     resolve({ user, context = {} }) {
       const ownerId = user.id;
 
-      const allies = context.aliveChampions.filter((c) => c.team === user.team);
+      const allies = TargetFilter.candidates("ally", user, context.aliveChampions ?? []);
 
       const alreadyActive = allies.some((c) =>
         c.runtime.hookEffects?.some((e) => e.key === "epiphany_threshold"),
@@ -224,9 +225,7 @@ const sereneSkills = [
               { source: "epiphany" },
             );
 
-            const allies = context.aliveChampions.filter(
-              (c) => c.team === owner.team,
-            );
+            const allies = TargetFilter.candidates("ally", owner, context.aliveChampions ?? []);
 
             for (const champ of allies) {
               champ.runtime.hookEffects = champ.runtime.hookEffects.filter(
