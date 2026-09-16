@@ -1,5 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 
@@ -134,6 +135,9 @@ const jeffTheDeathSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
+
+      const mainDamage = Array.isArray(damageResult) ? damageResult[0] : damageResult;
+      if (!effectConnected(mainDamage, "deaths_embrace_mark")) return damageResult;
 
       // Mark the enemy.
       enemy.runtime.markedByDeathsEmbrace = true;
