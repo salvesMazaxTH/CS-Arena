@@ -6,6 +6,7 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
   const results = [];
 
   const players = options.players ?? payload?.context?.players ?? [];
+  const canRun = options?.canRun;
 
 
 
@@ -61,7 +62,6 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
       }
 
       const scope = source.hookScope?.[eventName];
-      const canRun = options?.canRun;
 
       if (scope && payload[scope] !== champ) continue;
       if (typeof canRun === "function" && !canRun(eventName, champ, source)) {
@@ -95,6 +95,9 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
       const hook = source[eventName];
       if (typeof hook !== "function") continue;
 
+      if (typeof canRun === "function" && !canRun(eventName, null, source)) {
+        continue;
+      }
 
       try {
         const res = hook.call(source, {

@@ -16,12 +16,12 @@ export const firelord = {
     return `Your Fire attacks deal ${this.bonusDmg} bonus damage.`;
   },
 
-  onBeforeDmgDealing({ attacker, skill, owner }) {
-    if (!attacker || !skill) return;
+  onBeforeDmgDealing({ attacker, element, owner }) {
+    if (!attacker || !owner) return;
 
     if (attacker.team !== owner.team) return;
 
-    if (skill.element !== "fire") return;
+    if (element !== "fire") return;
 
     return {
       bonusDamage: this.bonusDmg,

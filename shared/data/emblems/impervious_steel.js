@@ -14,6 +14,10 @@ export const impervious_steel = {
     return `Your champions gain 15% damage reduction (except Absolute Damage) and halve the effectiveness of Piercing damage against them.`;
   },
 
+  hookPolicies: {
+    onBeforeDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
+  },
+
   hookScope: {
     onBeforeDmgTaking: "defender",
   },
