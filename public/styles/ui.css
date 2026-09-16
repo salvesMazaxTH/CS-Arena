@@ -1706,8 +1706,7 @@
       rgba(255, 74, 74, 0.96) calc(50% + 2.5px),
       transparent calc(50% + 2.5px)
     );
-  filter:
-    drop-shadow(0 0 2px rgba(0, 0, 0, 0.95))
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.95))
     drop-shadow(0 0 7px rgba(255, 40, 40, 0.45));
 }
 
@@ -2644,6 +2643,117 @@ body.perspective-team2 .combat-dialog-bubble .team-2 {
   margin: 0;
   white-space: pre-line;
   text-shadow: 0 0 10px rgba(0, 255, 150, 0.25);
+}
+
+/* ============================================
+   ULTIMATE DIALOG (gold sparks running the border)
+   ============================================ */
+
+.combat-dialog.ultimate .combat-dialog-bubble {
+  position: relative;
+  z-index: 0;
+  border-color: rgba(212, 175, 55, 0.65);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.6),
+    0 0 26px rgba(212, 175, 55, 0.35);
+}
+
+.combat-dialog.ultimate .ultimate-skill-name {
+  color: #f0cf72;
+  text-shadow:
+    0 0 10px rgba(212, 175, 55, 0.55),
+    0 1px 2px rgba(0, 0, 0, 0.85);
+}
+
+.dialog-sparks {
+  display: none;
+}
+
+/* Each carrier fills the bubble and moves by whole multiples of its own size,
+   so its corner-anchored spark lands exactly on the next corner. */
+.combat-dialog.ultimate .dialog-sparks {
+  display: block;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.combat-dialog.ultimate .dialog-sparks i {
+  position: absolute;
+  inset: 0;
+  animation: ultimateDialogSpark 3.4s linear infinite;
+  will-change: transform;
+}
+
+.combat-dialog.ultimate .dialog-sparks i::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #fffaf0 0 18%,
+    #ffe9a8 38%,
+    #f0cf72 58%,
+    rgba(255, 164, 58, 0.55) 74%,
+    rgba(255, 140, 40, 0) 100%
+  );
+  box-shadow: 0 0 10px rgba(255, 196, 92, 0.75);
+}
+
+.combat-dialog.ultimate .dialog-sparks i:nth-child(2) {
+  animation-delay: -1.15s;
+}
+
+.combat-dialog.ultimate .dialog-sparks i:nth-child(2)::before {
+  width: 7px;
+  height: 7px;
+  top: -3.5px;
+  left: -3.5px;
+}
+
+.combat-dialog.ultimate .dialog-sparks i:nth-child(3) {
+  animation-delay: -2.35s;
+}
+
+.combat-dialog.ultimate .dialog-sparks i:nth-child(3)::before {
+  width: 8px;
+  height: 8px;
+  top: -4px;
+  left: -4px;
+}
+
+.combat-dialog.ultimate #combat-dialog-text {
+  position: relative;
+  z-index: 1;
+}
+
+/* The long edges get the bulk of the cycle so the spark keeps an even pace. */
+@keyframes ultimateDialogSpark {
+  0% {
+    transform: translate(0, 0);
+  }
+  43% {
+    transform: translate(100%, 0);
+  }
+  50% {
+    transform: translate(100%, 100%);
+  }
+  93% {
+    transform: translate(0, 100%);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .combat-dialog.ultimate .dialog-sparks {
+    display: none;
+  }
 }
 
 /* ============================================ 

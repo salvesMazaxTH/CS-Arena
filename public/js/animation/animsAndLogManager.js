@@ -377,7 +377,10 @@ export function createCombatAnimationManager(deps) {
 
         const targetId = event.targetId ?? null;
 
-        if (current.length && (targetId === null || seenTargets.has(targetId))) {
+        if (
+          current.length &&
+          (targetId === null || seenTargets.has(targetId))
+        ) {
           batches.push(current);
           current = [];
           seenTargets = new Set();
@@ -920,7 +923,8 @@ export function createCombatAnimationManager(deps) {
     if (effect.immuneQuiet) return;
 
     const { targetId, immuneMessage } = effect;
-    const message = immuneMessage || `${championName(targetId)} is <b>Immune!</b>`;
+    const message =
+      immuneMessage || `${championName(targetId)} is <b>Immune!</b>`;
     await showDialog(message);
   }
 
@@ -1035,7 +1039,7 @@ export function createCombatAnimationManager(deps) {
 
       matchStats.show(effect?.champions);
 
-      let timeLeft = 120;
+      let timeLeft = 210;
       countdownEl.textContent = `Returning to login in ${timeLeft}s...`;
 
       const interval = setInterval(() => {
@@ -1165,7 +1169,8 @@ export function createCombatAnimationManager(deps) {
   async function handleActionDialog(action) {
     if (!action) return;
 
-    const { userId, userName, skillName, targetId, targetName } = action;
+    const { userId, userName, skillKey, skillName, targetId, targetName } =
+      action;
 
     const userChampion = deps.activeChampions.get(userId);
 
@@ -1173,9 +1178,15 @@ export function createCombatAnimationManager(deps) {
       ? formatChampionName(userChampion)
       : userName || "Someone";
 
+    const isUltimate =
+      userChampion?.skills?.find((s) => s?.key === skillKey)?.isUltimate ===
+      true;
+
+    const nameClass = isUltimate ? ' class="ultimate-skill-name"' : "";
+
     const resolvedSkillName = skillName
-      ? `<b>${typeof skillName === "object" ? skillName.name : skillName}</b>`
-      : "<b>a skill</b>";
+      ? `<b${nameClass}>${typeof skillName === "object" ? skillName.name : skillName}</b>`
+      : `<b${nameClass}>a skill</b>`;
 
     // Fully trust the server-provided target.
     const hasValidTarget = targetId && targetId !== userId && targetName;
@@ -1184,7 +1195,7 @@ export function createCombatAnimationManager(deps) {
       ? `${resolvedUserName} used ${resolvedSkillName} on ${targetName}.`
       : `${resolvedUserName} used ${resolvedSkillName}.`;
 
-    await showDialog(dialogText);
+    await showDialog(dialogText, undefined, { ultimate: isUltimate });
   }
 
   function createDialogController() {
@@ -1238,13 +1249,15 @@ export function createCombatAnimationManager(deps) {
   // sequential even when their animations run in parallel.
   let dialogQueueTail = Promise.resolve();
 
-  function showDialog(text, duration) {
-    const run = dialogQueueTail.then(() => presentDialog(text, duration));
+  function showDialog(text, duration, options) {
+    const run = dialogQueueTail.then(() =>
+      presentDialog(text, duration, options),
+    );
     dialogQueueTail = run.catch(() => {});
     return run;
   }
 
-  async function presentDialog(text, duration) {
+  async function presentDialog(text, duration, options) {
     const dialog = deps.combatDialog;
     const dialogText = deps.combatDialogText;
     if (!dialog || !dialogText) return;
@@ -1252,6 +1265,7 @@ export function createCombatAnimationManager(deps) {
     const dialogController = createDialogController();
     activeDialogController = dialogController;
     dialogText.innerHTML = text;
+    dialog.classList.toggle("ultimate", options?.ultimate === true);
     dialog.classList.remove("hidden", "leaving");
     dialog.classList.add("active");
 
@@ -1269,7 +1283,7 @@ export function createCombatAnimationManager(deps) {
       await dialogController.waitWithOptionalSkip(TIMING.DIALOG_LEAVE);
     }
 
-    dialog.classList.remove("active", "leaving");
+    dialog.classList.remove("active", "leaving", "ultimate");
     dialog.classList.add("hidden");
     if (activeDialogController === dialogController) {
       activeDialogController = null;
@@ -1393,7 +1407,10 @@ export function createCombatAnimationManager(deps) {
 
     // Reported back so the caller can re-sort the row: a slot can move after
     // creation, and DOM order otherwise stays frozen at arrival order.
-    if (snap.combatSlot !== undefined && snap.combatSlot !== champion.combatSlot) {
+    if (
+      snap.combatSlot !== undefined &&
+      snap.combatSlot !== champion.combatSlot
+    ) {
       champion.combatSlot = snap.combatSlot;
       slotChanged = true;
     }
