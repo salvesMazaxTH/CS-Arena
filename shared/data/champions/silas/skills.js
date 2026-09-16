@@ -232,14 +232,15 @@ const silasSkills = [
           asEntityType: "minion",
 
           onSpawn: (mirage, spawnContext) => {
+            mirage.runtime.leavesNoDeath = true;
+            mirage.runtime.unmakingPalette = "hollow";
+
             if (!user.alive) {
               mirage.HP = 0;
               mirage.alive = false;
               return;
             }
 
-            mirage.runtime.leavesNoDeath = true;
-            mirage.runtime.unmakingPalette = "hollow";
             mirage.runtime.silasMirageOwnerId = user.id;
             mirage.runtime.silasMirageSpawnTurn = spawnContext.currentTurn;
 
