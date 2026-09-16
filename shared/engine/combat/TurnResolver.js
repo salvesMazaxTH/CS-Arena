@@ -847,6 +847,7 @@ export class TurnResolver {
 
     for (const event of damageEvents) {
       if (!event?.targetId) continue;
+      if (event.denyMomentumFromDamage) continue;
 
       const amount = Math.max(0, Number(event.amount) || 0);
       if (amount <= 0) continue;
@@ -1349,6 +1350,7 @@ export class TurnResolver {
           immuneMessage: flags?.immuneMessage ?? null,
           immuneQuiet: !!flags?.immuneQuiet,
           shieldBlocked: !!flags?.shieldBlocked,
+          denyMomentumFromDamage: !!flags?.denyMomentumFromDamage,
           finishing: hasFinishing,
           finishingType,
           targetState: target.serializeVisualState(),

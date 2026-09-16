@@ -43,6 +43,7 @@ const noyreSkills = [
         type: "magical",
         context,
         allChampions: context.allChampions,
+        flags: { denyMomentumFromDamage: true },
       }).execute();
 
       resolver.applyResourceChange({
