@@ -78,6 +78,7 @@ import helyra from "./helyra/index.js";
 import lorraine from "./lorraine/index.js";
 import farkoveth from "./farkoveth/index.js";
 import killer_meow from "./killer_meow/index.js";
+import kazeminus from "./kazeminus/index.js";
 import calyphera from "./calyphera/index.js";
 import weyne from "./weyne/index.js";
 
@@ -163,6 +164,7 @@ const championDB = {
   killer_meow,
   farkoveth,
   calyphera,
+  kazeminus,
   weyne,
 };
 

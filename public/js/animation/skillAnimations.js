@@ -9,6 +9,7 @@
 //  function, then register it at the bottom of this file.
 // ============================================================
 
+import { createAirBoltGL } from "./airBoltGLAnimation.js";
 import { createArcaneBoltGL } from "./arcaneBoltGLAnimation.js";
 import { createChargedRoundGL } from "./chargedRoundGLAnimation.js";
 import { createCryoRoundGL } from "./cryoRoundGLAnimation.js";
@@ -47,6 +48,7 @@ const DEFAULT_ELEMENT_ANIMATIONS = {
   water: "default_water",
   ice: "default_ice",
   earth: "default_earth",
+  air: "default_air",
 };
 
 // Non-ultimate skills that still deserve the big blast, per element.
@@ -55,6 +57,7 @@ const BIG_WATERBOLT_SKILLS = new Set();
 const BIG_ICEBOLT_SKILLS = new Set();
 const BIG_LIGHTNING_SKILLS = new Set();
 const BIG_EARTHBOLT_SKILLS = new Set();
+const BIG_AIRBOLT_SKILLS = new Set();
 
 // `hit` is the individual DamageEvent's own element/contact, which override the
 // skill's: one skill can throw hits of different elements, or a ranged sub-hit.
@@ -102,6 +105,12 @@ function resolveDefaultAnimationKey(skill, hit) {
     return "default_earth_big";
   }
   if (
+    key === "default_air" &&
+    (skill?.isUltimate === true || BIG_AIRBOLT_SKILLS.has(skill?.key))
+  ) {
+    return "default_air_big";
+  }
+  if (
     key === "default_lightning" &&
     (skill?.isUltimate === true || BIG_LIGHTNING_SKILLS.has(skill?.key))
   ) {
@@ -147,6 +156,8 @@ registerSkillAnimation("default_ice", createIceBoltGL(1));
 registerSkillAnimation("default_ice_big", createIceBoltGL(1.4, true));
 registerSkillAnimation("default_earth", createEarthBoltGL(1));
 registerSkillAnimation("default_earth_big", createEarthBoltGL(1.4, true));
+registerSkillAnimation("default_air", createAirBoltGL(1));
+registerSkillAnimation("default_air_big", createAirBoltGL(1.4, true));
 registerSkillAnimation("default_musket_ball", createMusketBallGL(1));
 registerSkillAnimation("default_charged_round", createChargedRoundGL(1));
 registerSkillAnimation("default_charged_round_big", createChargedRoundGL(1.4));

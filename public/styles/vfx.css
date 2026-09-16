@@ -348,6 +348,27 @@
   }
 }
 
+/* Air hit effect (applied to champion portrait when the wind blade lands) */
+
+.air-hit {
+  animation: airFlash 0.32s ease-out;
+}
+
+@keyframes airFlash {
+  0% {
+    filter: brightness(1);
+  }
+  18% {
+    filter: brightness(1.5) saturate(0.3) contrast(0.85) blur(1.6px);
+  }
+  46% {
+    filter: brightness(1.15) saturate(0.7) blur(0.5px);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
 /* Radiant hit effect (Seymour): the portrait washes out, colour wrung from it */
 
 .radiant-hit {
