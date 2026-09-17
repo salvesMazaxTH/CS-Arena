@@ -1,5 +1,5 @@
 import { getClaimMaxPoints, getClaimPoints } from "../combat/claim.js";
-import { SCORE_THRESHOLD } from "./matchRules.js";
+import { SCORE_THRESHOLD, applyGenericScoreHalving } from "./matchRules.js";
 import { championDB } from "../../data/championDB.js";
 import { getDuoForCore } from "../../data/duos.js";
 import { SpawnProtection } from "../combat/spawnProtection.js";
@@ -626,18 +626,19 @@ class CombatState {
       (this.playerScores[victimSlot] || 0) -
       (this.playerScores[scoringSlot] || 0);
     const comebackBonus = !isMinion && scoreDeficit >= 10 ? 2 : 0;
-    const killPoints = champion.runtime?.leavesNoDeath
+    const rawKillPoints = champion.runtime?.leavesNoDeath
       ? 0
       : claimValueAtDeath + deathBonus + comebackBonus;
 
-    champion.runtime.deathConcededPoints = killPoints;
-
     let scoreAwarded = false;
+    let killPoints = 0;
 
-    if (killPoints > 0) {
-      this.addPointForSlot(scoringSlot, killPoints);
+    if (rawKillPoints > 0) {
+      killPoints = this.addPointForSlot(scoringSlot, rawKillPoints, true);
       scoreAwarded = true;
     }
+
+    champion.runtime.deathConcededPoints = killPoints;
 
     this.logTurnEvent("championDied", {
       championId,
@@ -759,19 +760,21 @@ class CombatState {
     this.summonedThisTurn.clear();
   }
 
-  addPointForSlot(slot, amount = 1) {
+  addPointForSlot(slot, amount = 1, generic = false) {
     if (!Array.isArray(this.playerScores)) this.playerScores = [0, 0];
     const normalizedSlot = Number(slot);
-    const normalizedAmount = Number(amount) || 0;
-    if (!Number.isInteger(normalizedSlot) || normalizedSlot < 0) return;
-    this.playerScores[normalizedSlot] = Math.max(
-      0,
-      (this.playerScores[normalizedSlot] || 0) + normalizedAmount,
-    );
+    if (!Number.isInteger(normalizedSlot) || normalizedSlot < 0) return 0;
+    const currentScore = this.playerScores[normalizedSlot] || 0;
+    const rawAmount = Number(amount) || 0;
+    const awarded = generic
+      ? applyGenericScoreHalving(currentScore, rawAmount)
+      : rawAmount;
+    this.playerScores[normalizedSlot] = Math.max(0, currentScore + awarded);
+    return awarded;
   }
 
   addPointsForSlot(slot, amount = 1) {
-    this.addPointForSlot(slot, amount);
+    return this.addPointForSlot(slot, amount);
   }
 
   setWinnerScore(slot, score = 0) {
@@ -945,12 +948,12 @@ export class GameMatch {
     return this.combat.gameEnded;
   }
 
-  addPointForSlot(slot, amount = 1) {
-    this.combat.addPointForSlot(slot, amount);
+  addPointForSlot(slot, amount = 1, generic = false) {
+    return this.combat.addPointForSlot(slot, amount, generic);
   }
 
   addPointsForSlot(slot, amount = 1) {
-    this.addPointForSlot(slot, amount);
+    return this.addPointForSlot(slot, amount);
   }
 
   setWinnerScore(slot, score = 0) {

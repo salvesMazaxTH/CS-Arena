@@ -96,6 +96,7 @@ export class Champion {
 
     this.momentumMax = 100;
     this.momentum = 0;
+    this.momentumPeak = 0;
 
     this.initializeResources(stats);
 
@@ -228,6 +229,7 @@ export class Champion {
       LifeSteal: this.LifeSteal,
       momentum: this.momentum,
       momentumMax: this.momentumMax,
+      momentumPeak: this.momentumPeak,
       matchStats: this.getMatchStatsSnapshot(),
 
       ...this.serializeVisualState(),
@@ -344,6 +346,7 @@ export class Champion {
       0,
       Math.min(this.momentumMax, Math.round(momentum)),
     );
+    this.momentumPeak = Math.max(this.momentumPeak || 0, this.momentum);
   }
 
   // Operações públicas
@@ -392,6 +395,7 @@ export class Champion {
     const applied = next - this.momentum;
 
     this.momentum = next;
+    this.momentumPeak = Math.max(this.momentumPeak || 0, this.momentum);
     return applied;
   }
 

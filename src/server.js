@@ -39,10 +39,7 @@ import { Action } from "../shared/engine/combat/Action.js";
 import { TurnResolver } from "../shared/engine/combat/TurnResolver.js";
 import { CombatEnvelopeBuilder } from "../shared/engine/combat/CombatEnvelopeBuilder.js";
 
-import {
-  CLAIM_ACTION_KEY,
-  CLAIM_MIN_MOMENTUM,
-} from "../shared/engine/combat/claim.js";
+import { CLAIM_ACTION_KEY } from "../shared/engine/combat/claim.js";
 
 import { DamageEvent } from "../shared/engine/combat/DamageEvent.js";
 import { getHardCCActionDenial } from "../shared/core/championStatus.js";
@@ -1560,13 +1557,6 @@ io.on("connection", (socket) => {
     if (skillKey === CLAIM_ACTION_KEY) {
       if (!validateActionIntent(user, null, socket)) return;
 
-      if (
-        !editMode.freeCostSkills &&
-        (Number(user.momentum) || 0) < CLAIM_MIN_MOMENTUM
-      ) {
-        return socket.emit("skillDenied", `Not enough Momentum.`);
-      }
-
       return socket.emit("skillApproved", { userId, skillKey });
     }
 
@@ -1648,13 +1638,6 @@ io.on("connection", (socket) => {
       }
 
       if (!validateActionIntent(user, null, socket)) return;
-
-      if (
-        !editMode.freeCostSkills &&
-        (Number(user.momentum) || 0) < CLAIM_MIN_MOMENTUM
-      ) {
-        return socket.emit("actionFailed", "Not enough Momentum.");
-      }
 
       const action = new Action({ userId, skillKey, targetIds: {} });
       action.priority = 0;

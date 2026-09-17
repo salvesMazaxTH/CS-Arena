@@ -3,11 +3,7 @@ import { getHardCCActionDenial } from "../../core/championStatus.js";
 import { emitCombatEvent } from "./combatEvents.js";
 import { SpawnProtection } from "./spawnProtection.js";
 import { Nothingness } from "./nothingness.js";
-import {
-  CLAIM_ACTION_KEY,
-  CLAIM_MIN_MOMENTUM,
-  getClaimPoints,
-} from "./claim.js";
+import { CLAIM_ACTION_KEY, getClaimPoints } from "./claim.js";
 import { snapshotChampions } from "./snapshotChampions.js";
 import { TargetFilter } from "./targetFilter.js";
 import { getBlindMiss } from "../../data/statusEffects/blind.js";
@@ -471,22 +467,6 @@ export class TurnResolver {
   }
 
   executeClaimAction(user, action, turnExecutionMap, context) {
-    if (
-      !this.editMode.freeCostSkills &&
-      (Number(user.momentum) || 0) < CLAIM_MIN_MOMENTUM
-    ) {
-      return {
-        executed: false,
-        reason: "denied",
-        denial: {
-          denied: true,
-          message: `${formatChampionName(user)} does not have enough Momentum for CLAIM.`,
-        },
-        user,
-        action,
-      };
-    }
-
     const claimSkill = {
       key: CLAIM_ACTION_KEY,
       name: "CLAIM",
@@ -505,17 +485,20 @@ export class TurnResolver {
     try {
       const claimPoints = getClaimPoints(user, this.combat.currentTurn);
 
-      // Publishes the authoritative number of points this CLAIM scored, so
-      // hooks reacting to it (Aren's Abyssal Depths, Avarion's Miser's Toll)
-      // read the value that was actually awarded instead of recomputing it.
-      context.preActionClaimPoints = claimPoints;
-
       this.registerSkillUsageInTurn(user, claimSkill, {});
 
       const scoringSlot = user.team - 1;
+      const awardedClaimPoints = this.match.addPointForSlot(
+        scoringSlot,
+        claimPoints,
+        true,
+      );
 
-      this.match.addPointForSlot(scoringSlot, claimPoints);
-      user.addPointsScored(claimPoints);
+      // Publishes the authoritative number of points this CLAIM scored, so
+      // hooks reacting to it (Aren's Abyssal Depths, Avarion's Miser's Toll)
+      // read the value that was actually awarded instead of recomputing it.
+      context.preActionClaimPoints = awardedClaimPoints;
+      user.addPointsScored(awardedClaimPoints);
 
       this.applyMomentumFromContext({ user, context });
 

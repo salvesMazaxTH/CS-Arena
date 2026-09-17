@@ -1,14 +1,15 @@
 export const CLAIM_ACTION_KEY = "claim";
-export const CLAIM_MIN_MOMENTUM = 25;
+export const CLAIM_BASE_POINTS = 1;
+export const CLAIM_MOMENTUM_MILESTONES = [35, 60, 80];
 export const CLAIM_MAX_POINTS = 6;
 // Minions are cheaper targets: their CLAIM (and what their death concedes) caps at 3.
 export const CLAIM_MAX_POINTS_MINION = 3;
 
 export const CLAIM_DESCRIPTION =
-  "Earns you match points instead of acting. Points scale with your current " +
-  "Momentum — 1, 2, or 3 at 25, 50, and 75 — plus 1 for every 2 turns this " +
-  `champion has spent on the field, up to ${CLAIM_MAX_POINTS}. ` +
-  `Requires ${CLAIM_MIN_MOMENTUM} Momentum.`;
+  `Earns you match points instead of acting. Every champion starts at ${CLAIM_BASE_POINTS} point ` +
+  "and permanently gains 1 more the first time its Momentum ever reaches " +
+  `${CLAIM_MOMENTUM_MILESTONES.join(", ")} — spending Momentum never takes a point back — ` +
+  `plus 1 for every 2 turns this champion has spent on the field, up to ${CLAIM_MAX_POINTS}.`;
 
 export function getClaimMaxPoints(champion) {
   return champion?.entityType === "minion"
@@ -16,23 +17,15 @@ export function getClaimMaxPoints(champion) {
     : CLAIM_MAX_POINTS;
 }
 
-export function getMomentumClaimPoints(momentum) {
-  const value = Math.max(0, Number(momentum) || 0);
-
-  if (value >= 75) return 3;
-  if (value >= 50) return 2;
-  if (value >= 25) return 1;
-  return 0;
+export function getMomentumMilestonePoints(momentumPeak) {
+  const peak = Math.max(0, Number(momentumPeak) || 0);
+  return CLAIM_MOMENTUM_MILESTONES.filter((milestone) => peak >= milestone).length;
 }
 
 export function getClaimPoints(champion, currentTurn) {
-  const momentum = Math.max(0, Number(champion?.momentum) || 0);
+  const momentumPeak = Math.max(0, Number(champion?.momentumPeak) || 0);
+  const basePoints = CLAIM_BASE_POINTS + getMomentumMilestonePoints(momentumPeak);
 
-  if (momentum < CLAIM_MIN_MOMENTUM) {
-    return 0;
-  }
-
-  const momentumPoints = getMomentumClaimPoints(momentum);
   const fieldEntryTurn = Number.isFinite(champion?.runtime?.fieldEntryTurn)
     ? Number(champion.runtime.fieldEntryTurn)
     : Number(currentTurn) || 0;
@@ -40,9 +33,5 @@ export function getClaimPoints(champion, currentTurn) {
   // One point for every two turns spent on the field.
   const fieldPoints = Math.floor(turnsInField / 2);
 
-  return Math.min(getClaimMaxPoints(champion), momentumPoints + fieldPoints);
-}
-
-export function getClaimPointsFromMomentum(momentum) {
-  return getMomentumClaimPoints(momentum);
+  return Math.min(getClaimMaxPoints(champion), basePoints + fieldPoints);
 }

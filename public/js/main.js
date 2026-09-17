@@ -1,6 +1,5 @@
 import {
   CLAIM_ACTION_KEY,
-  CLAIM_MIN_MOMENTUM,
   CLAIM_DESCRIPTION,
 } from "../../shared/engine/combat/claim.js";
 import { getChampionClassKeys } from "../../shared/data/championClasses.js";
@@ -1946,7 +1945,7 @@ function showActionBarSlot({ playerAdvanced = true } = {}) {
   const claimBtn = document.createElement("button");
   claimBtn.className = "action-bar-skill-btn claim";
   claimBtn.textContent = "CLAIM";
-  claimBtn.title = "Scores points based on your current Momentum.";
+  claimBtn.title = CLAIM_DESCRIPTION;
 
   claimBtn.addEventListener("mouseenter", () =>
     showSkillOverlay(claimBtn, claimSkill, champion),
@@ -1956,9 +1955,6 @@ function showActionBarSlot({ playerAdvanced = true } = {}) {
 
   claimBtn.addEventListener("click", () => handleClaimUsage(champion));
 
-  if (!editMode.freeCostSkills && champion.momentum < CLAIM_MIN_MOMENTUM) {
-    claimBtn.disabled = true;
-  }
   skillsBar.appendChild(claimBtn);
 
   champion.skills.forEach((skill) => {
@@ -2039,12 +2035,6 @@ async function handleClaimUsage(champion) {
 
   if (!editMode.actMultipleTimesPerTurn && champion.hasActedThisTurn) {
     alert(`${champion.name} has already acted this turn.`);
-    return;
-  }
-
-  if (!editMode.freeCostSkills && CLAIM_MIN_MOMENTUM > champion.momentum) {
-    alert("Not enough Momentum for CLAIM.");
-    champion.updateUI(currentTurn);
     return;
   }
 
