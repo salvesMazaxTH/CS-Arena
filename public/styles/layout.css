@@ -275,6 +275,73 @@ body.team-selection-active .team-container:hover {
   color: rgba(255, 255, 255, 0.34);
 }
 
+.player-plate-penalty {
+  position: relative;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.08em 0.34em 0.12em;
+  border: 1px solid rgba(255, 204, 0, 0.55);
+  border-radius: 999px;
+  background: rgba(255, 204, 0, 0.14);
+  font-size: clamp(0.6rem, 1.1vw, 0.72rem);
+  font-weight: 700;
+  line-height: 1;
+  color: #ffcc00;
+  text-shadow: 0 0 8px rgba(255, 204, 0, 0.5);
+  cursor: help;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.player-plate-penalty:hover,
+.player-plate-penalty:focus-visible {
+  background: rgba(255, 204, 0, 0.24);
+  transform: scale(1.08);
+}
+
+.player-plate-penalty:focus-visible {
+  outline: 1px solid rgba(255, 204, 0, 0.8);
+  outline-offset: 2px;
+}
+
+.player-plate-penalty[hidden] {
+  display: none;
+}
+
+.player-plate-penalty::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  z-index: 20;
+  width: max-content;
+  max-width: 200px;
+  padding: 0.55em 0.7em;
+  border: 1px solid rgba(255, 204, 0, 0.35);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(24, 18, 4, 0.97), rgba(8, 8, 10, 0.97));
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+  text-align: center;
+  text-shadow: none;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(-4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.player-plate-penalty:hover::after,
+.player-plate-penalty:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 .player-plate-track {
   position: absolute;
   inset: auto 0 0 0;

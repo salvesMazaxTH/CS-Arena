@@ -1,4 +1,7 @@
-import { SCORE_THRESHOLD } from "/shared/engine/match/matchRules.js";
+import {
+  SCORE_THRESHOLD,
+  GENERIC_SCORE_HALVING_THRESHOLD,
+} from "/shared/engine/match/matchRules.js";
 
 /**
  * Team scoreboard: updates the two player score displays with an animated
@@ -56,6 +59,10 @@ export function createScoreboard() {
     );
   }
 
+  function updatePenaltyBadge(element, value) {
+    element.hidden = (Number(value) || 0) < GENERIC_SCORE_HALVING_THRESHOLD;
+  }
+
   function update(score) {
     if (!score) return;
 
@@ -67,6 +74,15 @@ export function createScoreboard() {
     updateScoreValue(
       document.getElementById("player2-score-display"),
       document.getElementById("player2-progress-fill"),
+      score.player2 ?? 0,
+    );
+
+    updatePenaltyBadge(
+      document.getElementById("player1-score-penalty"),
+      score.player1 ?? 0,
+    );
+    updatePenaltyBadge(
+      document.getElementById("player2-score-penalty"),
       score.player2 ?? 0,
     );
   }
