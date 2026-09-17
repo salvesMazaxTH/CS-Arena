@@ -116,8 +116,8 @@ const vornOmegaSkills = [
     isUltimate: true,
     momentumCost: 55,
 
-    bf: 90,
-    bfPerPlate: 18,
+    bf: 87,
+    bfPerPlate: 10,
 
     contact: true,
     damageMode: "standard",

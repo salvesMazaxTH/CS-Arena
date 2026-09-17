@@ -3,7 +3,7 @@ export default {
   portrait: "/assets/portraits/kael_drath_vulcano.webp",
 
   HP: 425,
-  Attack: 190,
+  Attack: 165,
   Defense: 120,
   Speed: 30,
 

@@ -12,10 +12,9 @@ export default {
     onAfterDmgTaking: "defender",
   },
 
-  onAfterDmgTaking({ attacker, defender, owner, damage, context }) {
-    if (damage <= 0) return;
-    // Never applies to himself.
-    if (defender.id === owner?.id) return;
+  onAfterDmgTaking({ attacker, owner, actualDmg, context }) {
+    if (!(actualDmg > 0) || !owner.alive) return;
+    if (!attacker?.alive || attacker.id === owner.id) return;
 
     attacker.applyStatusEffect("burning", this.burnDuration, context);
   },
