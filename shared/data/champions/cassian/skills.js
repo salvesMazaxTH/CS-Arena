@@ -94,6 +94,7 @@ const cassianSkills = [
     bleedDuration: 2,
 
     damageMode: "standard",
+    hitVfxPalette: "crimson",
     priority: 0,
 
     description(champion) {
@@ -119,6 +120,7 @@ const cassianSkills = [
         skill: this,
         type: isOffense ? "physical" : "magical",
         contact: isOffense,
+        hitVfx: isOffense ? null : "lash",
         context,
         allChampions: context?.allChampions,
       }).execute();
