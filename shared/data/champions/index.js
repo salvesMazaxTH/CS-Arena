@@ -81,6 +81,7 @@ import killer_meow from "./killer_meow/index.js";
 import kazeminus from "./kazeminus/index.js";
 import calyphera from "./calyphera/index.js";
 import weyne from "./weyne/index.js";
+import gorvakharr from "./gorvakharr/index.js";
 
 const championDB = {
   atlas,
@@ -166,6 +167,7 @@ const championDB = {
   calyphera,
   kazeminus,
   weyne,
+  gorvakharr,
 };
 
 export default championDB;
