@@ -7,21 +7,36 @@ export default {
   lsPerProc: 2,
   awakenThreshold: 43,
   lsTierSize: 6,
-  dmgAmpPerTier: 7,
+  dmgAmpPerTier: 4,
   piercingRatioPerTier: 2,
   dmgReductPerTier: 2,
-  lsHealAmpPerTier: 6,
+  lsHealAmpPerTier: 5,
 
   permDmgModId: "drex_bloodthirst_scaling",
   dmgReductionSrc: "drex_bloodthirst_scaling",
   pseudoPermanentDurationTurns: 9999,
 
-  description() {
+  description(champion) {
+    const lifesteal = Number(champion?.LifeSteal || 0);
+    const tiers = Math.max(0, Math.floor(lifesteal / this.lsTierSize));
+    const awakened = champion?.runtime?.drexBloodAscension === true;
+    const activeTiers = awakened ? tiers : 0;
+    const damageAmp = activeTiers * this.dmgAmpPerTier;
+    const piercing = Math.min(
+      100,
+      activeTiers * this.piercingRatioPerTier,
+    );
+    const damageReduction = activeTiers * this.dmgReductPerTier;
+    const healingAmp = activeTiers * this.lsHealAmpPerTier;
+
     return `Drex gains +${this.lsPerProc}% permanent LifeSteal whenever an ally applies Bleeding or whenever an enemy takes Bleeding damage.
 
     The first time Drex reaches ${this.awakenThreshold}% LifeSteal, he enters permanent Crimson Frenzy.
 
-    For every ${this.lsTierSize}% LifeSteal, Drex gains +${this.dmgAmpPerTier}% bonus damage, converts Standard Damage into Piercing Damage with ${this.piercingRatioPerTier}% Defense piercing, gains ${this.dmgReductPerTier}% Damage Reduction, and restores ${this.lsHealAmpPerTier}% more HP from LifeSteal.`;
+    For every ${this.lsTierSize}% LifeSteal, Drex gains +${this.dmgAmpPerTier}% bonus damage, converts Standard Damage into Piercing Damage with ${this.piercingRatioPerTier}% Defense piercing, gains ${this.dmgReductPerTier}% Damage Reduction, and restores ${this.lsHealAmpPerTier}% more HP from LifeSteal.
+
+    Current Bloodthirst: <b>${lifesteal}% LifeSteal</b> (${activeTiers} tier${activeTiers === 1 ? "" : "s"}).
+    Current Crimson Frenzy bonuses: <b>+${damageAmp}% damage</b>, <b>${damageReduction}% Damage Reduction</b>, <b>+${healingAmp}% LifeSteal healing</b>, and <b>${piercing}% Defense piercing</b>.`;
   },
 
   hookScope: {
