@@ -78,7 +78,7 @@ registerRuntimeCounterIndicator(
 // Zyrelle's revolver: current rounds loaded (runtime.zyrelleAmmo), 0-6.
 registerRuntimeCounterIndicator("zyrelle_ammo", "zyrelleAmmo", {
   type: "image",
-  value: "/assets/indicators/ammo_indicator.png",
+  value: "/assets/indicators/zyrelle_ammo_indicator.svg",
   background: "rgba(100, 200, 255, 0.8)",
   label: "Ammo",
   showStackCount: true,
