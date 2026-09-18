@@ -23,7 +23,7 @@ const gorvakharrSkills = [
     damageMode: "standard",
     type: "physical",
     element: "fire",
-    hitVfx: "slash",
+    hitVfx: "chain_lash",
     priority: 0,
 
     description() {
