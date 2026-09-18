@@ -53,8 +53,8 @@ const lorraineSkills = [
     name: "Irrefutable Thrust",
 
     bf: 90,
-    freshDuelBonus: 60,
-    bonusLostPerTurn: 20,
+    freshDuelBonus: 30,
+    bonusLostPerTurn: 10,
     bleedStacks: 1,
 
     contact: true,
