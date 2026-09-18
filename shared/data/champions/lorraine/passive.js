@@ -111,6 +111,12 @@ export default {
       critOptions: { disable: true },
     });
 
+    context.registerDialog?.({
+      message: `${formatChampionName(owner)} catches the blade on hers and turns it aside — the answer is already on its way back.`,
+      sourceId: owner.id,
+      targetId: attacker.id,
+    });
+
     return {
       damage: Number(damage) * (1 - this.parryReduction / 100),
       log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} turns the blow aside and answers it in the same motion.`,
