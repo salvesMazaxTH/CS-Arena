@@ -19,7 +19,7 @@ export function runBeforeHooks(event) {
   const take = _applyBeforeTakingPassive(event);
   _recompose(event, baseline, [deal, take]);
 
-  // Consolida logs e efeitos no estado da classe/contexto
+  // Consolidate logs and effects into the class/context state
   if (deal.logs.length) event.beforeLogs.push(...deal.logs);
   if (take.logs.length) event.beforeLogs.push(...take.logs);
 
@@ -59,8 +59,7 @@ function _recompose(event, baseline, phases) {
     baseline.baseDamage > 0 &&
     Number(event.baseDamage ?? 0) > 0
   ) {
-    // Mantém proporção de quaisquer ajustes feitos no step 2
-    // quando o hook altera o baseDamage no step 4.
+    // Keeps the step 2 proportion when a step 4 hook changes baseDamage.
     const ratio = Number(event.baseDamage) / baseline.baseDamage;
     event.damage = baseline.preMitigationDamage * ratio;
   } else {
@@ -173,13 +172,6 @@ function _applyBeforeTakingPassive(event) {
 }
 
 function _processHook(event, eventName, payload) {
-  // JSON.stringify força o JS a ler o valor exato AGORA, sem preguiça de log
-  /*   console.log("[ALL CHAMPIONS DEBUG]", event.allChampions); */
-
-  // Verifique se o event.allChampions não foi redefinido por acidente
-  if (!event.allChampions || event.allChampions.length === 0) {
-    /*  console.error("❌ ERRO CRÍTICO: allChampions sumiu antes do emit!"); */
-  }
   const results =
     emitCombatEvent(eventName, payload, event.allChampions, {
       players: event.players,
@@ -211,13 +203,13 @@ function _processHook(event, eventName, payload) {
   for (const r of results) {
     if (!r) continue;
 
-    // Caso legado: Array direto de logs
+    // Legacy case: a plain array of logs
     if (Array.isArray(r)) {
       summary.logs.push(...r);
       continue;
     }
 
-    // Mutação de estado do evento
+    // Event state mutation
     if (r.damage !== undefined) {
       damage.apply(r.damage);
     }
@@ -256,7 +248,7 @@ function _processHook(event, eventName, payload) {
       event.crit = r.crit;
     }
 
-    // Consolidação de Logs e Effects (Uso de set de chaves para enxugar)
+    // Consolidate logs and effects
     ["log", "logs"].forEach((key) => {
       if (r[key]) {
         const val = Array.isArray(r[key]) ? r[key] : [r[key]];

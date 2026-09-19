@@ -3,8 +3,6 @@ import { emitCombatEvent } from "../combatEvents.js";
 import { SpawnProtection } from "../spawnProtection.js";
 
 export function preChecks(event) {
-  /*     console.log("DEBUG ATTACKER:", event.attacker);
-  console.log("DEBUG DEFENDER:", event.defender); */
   const activeChampions = event?.context?.allChampions;
 
   if (
