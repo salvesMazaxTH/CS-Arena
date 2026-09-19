@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { SpawnProtection } from "../../../engine/combat/spawnProtection.js";
 
 export default {
   key: "weight_of_ages",
@@ -12,6 +13,9 @@ export default {
   onTurnStart({ owner, context }) {
     owner.runtime ??= {};
     owner.runtime.weightOfAgesTriggers ??= 0;
+
+    // The turn-start sweep runs before spawn protection is cleared.
+    if (SpawnProtection.isActive(owner)) return;
 
     if (owner.runtime.weightOfAgesTriggers >= this.maxTriggers) {
       return;
