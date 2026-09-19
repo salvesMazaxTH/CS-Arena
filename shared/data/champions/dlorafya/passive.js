@@ -11,27 +11,31 @@ export default {
   piercingPerExcessPoint: 1,
   piercingCap: 75,
   piercingCapVsBurning: 100,
-
-  // --- Kindling (setup) ---
-  emberAttackGain: 10,
-  emberDuration: 3,
+  heavyJudgmentThreshold: 70,
+  heavyJudgmentPenalty: 0.35,
 
   description(champion) {
     return (
       `<b>Judgment:</b> those who hide behind armor are judged by it. When D'Lorafya damages a target whose Defense is higher than his own, ` +
-      `the hit becomes Piercing, ignoring <b>${this.piercingPerExcessPoint}%</b> of the target's Defense for each point of Defense it has above his ` +
-      `(max <b>${this.piercingCap}%</b>). If the target is <b>Burning</b>, the cap is lifted to <b>${this.piercingCapVsBurning}%</b>, and at full judgment the hit becomes <b>Absolute</b> — ignoring Defense <i>and</i> all damage reduction.<br>` +
-      `<b>Kindling:</b> the first time each turn D'Lorafya damages a Burning enemy with Fire, he gains <b>+${this.emberAttackGain} Attack</b> for ${this.emberDuration} turn(s) (stacking).<br>` +
-      `<b>Divine Flame:</b> the fire he sets is no mortal flame — his Burning sears for <b>${DLORAFYA_BURN_DAMAGE_MULTIPLIER}x</b> the damage of an ordinary Burn each turn.`
+      `the hit becomes Piercing, ignoring <b>${this.piercingPerExcessPoint}%</b> of the target's Defense per point of Defense above his ` +
+      `(max <b>${this.piercingCap}%</b>, or <b>${this.piercingCapVsBurning}%</b> against a <b>Burning</b> target, which makes the hit <b>Absolute</b>). ` +
+      `A judgment of <b>${this.heavyJudgmentThreshold}%</b> or more consumes the flame: the hit deals <b>${Math.round(this.heavyJudgmentPenalty * 100)}%</b> less damage.<br>` +
+      `<b>Divine Flame:</b> his Burning is no mortal flame: it sears for <b>${DLORAFYA_BURN_DAMAGE_MULTIPLIER}x</b> the damage of an ordinary Burn each turn.`
     );
   },
 
   hookScope: {
     onBeforeDmgDealing: "attacker",
-    onAfterDmgDealing: "attacker",
   },
 
-  onBeforeDmgDealing({ attacker, owner, defender, mode, piercingPercentage }) {
+  onBeforeDmgDealing({
+    attacker,
+    owner,
+    defender,
+    mode,
+    damage,
+    piercingPercentage,
+  }) {
     if (attacker !== owner) return;
     if (!defender) return;
     if (mode === "absolute") return;
@@ -45,55 +49,36 @@ export default {
 
     const judged = Math.min(cap, excess * this.piercingPerExcessPoint);
 
-    // At full judgment the verdict is Absolute, not merely Piercing. 100%
-    // Piercing already zeroes the target's Defense, but Absolute additionally
-    // bypasses their flat/percentage damage reduction — which is exactly the
-    // armor-stacking defender this clause exists to punish.
+    // The deeper the flame eats through armor, the less of it is left to burn.
+    const scorched = judged >= this.heavyJudgmentThreshold;
+    const scaled = scorched
+      ? { damage: Number(damage || 0) * (1 - this.heavyJudgmentPenalty) }
+      : {};
+    const spent = scorched
+      ? `, but spends itself doing so (-${Math.round(this.heavyJudgmentPenalty * 100)}% damage)`
+      : "";
+
     if (judged >= 100) {
       return {
+        ...scaled,
         mode: "absolute",
         log:
           `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} passes final judgment on ` +
-          `${formatChampionName(defender)}: the flame ignores their Defense and all damage reduction entirely.`,
+          `${formatChampionName(defender)}: the flame ignores their Defense and all damage reduction entirely${spent}.`,
       };
     }
 
-    // Never downgrade a hit that already pierces harder.
     if (mode === "piercing" && Number(piercingPercentage || 0) >= judged) {
       return;
     }
 
     return {
+      ...scaled,
       mode: "piercing",
       piercingPercentage: judged,
       log:
         `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)}'s flame judges ` +
-        `${formatChampionName(defender)}'s armor, ignoring ${Math.round(judged)}% of their Defense.`,
-    };
-  },
-
-  onAfterDmgDealing({ attacker, owner, defender, damage, element, context }) {
-    if (attacker !== owner) return;
-    if (!damage || damage <= 0) return;
-    if (element !== "fire") return;
-    if (!defender?.hasStatusEffect?.("burning")) return;
-
-    const turn = context?.currentTurn ?? 0;
-    if (owner.runtime.dlorafyaKindlingTurn === turn) return;
-    owner.runtime.dlorafyaKindlingTurn = turn;
-
-    owner.modifyStat({
-      statName: "Attack",
-      amount: this.emberAttackGain,
-      duration: this.emberDuration,
-      context,
-      statModifierSrc: owner,
-    });
-
-    return {
-      log:
-        `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} feeds on the pyre ` +
-        `and gains +${this.emberAttackGain} Attack.`,
+        `${formatChampionName(defender)}'s armor, ignoring ${Math.round(judged)}% of their Defense${spent}.`,
     };
   },
 };
