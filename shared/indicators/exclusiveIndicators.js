@@ -242,3 +242,14 @@ registerRuntimeCounterIndicator("victoria_stored_heat", "victoriaStoredHeat", {
   label: "Stored Heat",
   showStackCount: true,
 });
+
+// Bergrisa's Sediment (runtime.bergrisaSediment): the layers of the world that
+// have settled into her, blunting what she takes and restoring HP each turn.
+registerRuntimeCounterIndicator("bergrisa_sediment", "bergrisaSediment", {
+  type: "emoji",
+  value: "🪨",
+  background: "rgba(105, 95, 80, 0.88)",
+  label: "Sediment",
+  showStackCount: true,
+});
+
