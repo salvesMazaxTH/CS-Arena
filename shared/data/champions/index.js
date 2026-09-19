@@ -82,6 +82,7 @@ import kazeminus from "./kazeminus/index.js";
 import calyphera from "./calyphera/index.js";
 import weyne from "./weyne/index.js";
 import gorvakharr from "./gorvakharr/index.js";
+import victoria from "./victoria/index.js";
 
 const championDB = {
   atlas,
@@ -168,6 +169,7 @@ const championDB = {
   kazeminus,
   weyne,
   gorvakharr,
+  victoria,
 };
 
 export default championDB;

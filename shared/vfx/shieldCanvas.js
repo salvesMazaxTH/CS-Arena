@@ -20,6 +20,13 @@ const SHIELD_PALETTES = {
     ring: "rgba(255, 60, 60, 0.92)",
     arc: "rgba(180, 20, 20, 0.96)",
   },
+  fire: {
+    grid: "rgba(255, 150, 40, 0.24)",
+    glowInner: "rgba(255, 120, 30, 0.16)",
+    glowOuter: "rgba(120, 30, 0, 0.7)",
+    ring: "rgba(255, 170, 60, 0.94)",
+    arc: "rgba(255, 90, 20, 0.96)",
+  },
   supreme: {
     grid: "rgba(255, 220, 100, 0.26)",
     glowInner: "rgba(255, 215, 80, 0.16)",

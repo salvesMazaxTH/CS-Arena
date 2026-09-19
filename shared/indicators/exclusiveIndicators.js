@@ -228,3 +228,26 @@ registerRuntimeCounterIndicator("weyne_cold_zero", "weyneZeroed", {
   label: "Cold Zero",
   imageSize: 32,
 });
+
+// Victoria's Ember Brand (runtime.victoriaEmberBrandUntilTurn): her next hit
+// on the branded enemy pierces part of their Defense.
+registerRuntimeCounterIndicator(
+  "victoria_ember_brand",
+  "victoriaEmberBrandUntilTurn",
+  {
+    type: "emoji",
+    value: "♨️",
+    background: "rgba(255, 110, 30, 0.85)",
+    label: "Branded",
+  },
+);
+
+// The heat Victoria's Phoenix Aegis is holding (runtime.victoriaStoredHeat),
+// released on every enemy the moment the aegis ends.
+registerRuntimeCounterIndicator("victoria_stored_heat", "victoriaStoredHeat", {
+  type: "emoji",
+  value: "🌋",
+  background: "rgba(200, 60, 0, 0.85)",
+  label: "Stored Heat",
+  showStackCount: true,
+});
