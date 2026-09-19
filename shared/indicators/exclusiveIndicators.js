@@ -176,15 +176,6 @@ registerRuntimeCounterIndicator("meow_lives", "meowLives", {
   showStackCount: true,
 });
 
-// Killer Meow's committed ability (runtime.meowCommittedSkill): the habit he is
-// locked into while it holds.
-registerRuntimeCounterIndicator("meow_commitment", "meowCommittedSkill", {
-  type: "emoji",
-  value: "🔒",
-  background: "rgba(150, 110, 40, 0.85)",
-  label: "Committed",
-});
-
 // Calyphera's Facets (runtime.calypheraFacets): the lines of light the long
 // fight has cut through her, each one raising the damage she deals.
 registerRuntimeCounterIndicator("calyphera_facets", "calypheraFacets", {
