@@ -4,7 +4,7 @@ export default {
   key: "the_colossal_hush",
   name: "The Colossal Hush",
 
-  powerThreshold: 380, // Attack + current HP
+  powerThreshold: 400, // Attack + current HP
   stunDuration: 2,
 
   description() {
