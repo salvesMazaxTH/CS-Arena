@@ -59,6 +59,8 @@ export function applyDamage(event) {
     element: event.element,
     contact: event.contact,
     hitVfx: event.hitVfx,
+    defenseVfx: event.defenseVfx,
+    reaction: (event.context.damageDepth || 0) > 0,
     skillKey: event.skill?.key ?? null,
     flags: {
       ...event.flags,

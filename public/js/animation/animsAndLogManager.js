@@ -377,9 +377,14 @@ export function createCombatAnimationManager(deps) {
 
         const targetId = event.targetId ?? null;
 
+        // A reaction waits only when the hit it answers plays a defensive
+        // motif of its own, which has to be read before the answer lands.
+        const waitsForDefense =
+          event.reaction && current.some((e) => e.defenseVfx);
+
         if (
           current.length &&
-          (targetId === null || seenTargets.has(targetId))
+          (targetId === null || seenTargets.has(targetId) || waitsForDefense)
         ) {
           batches.push(current);
           current = [];
@@ -602,6 +607,7 @@ export function createCombatAnimationManager(deps) {
       element,
       contact,
       hitVfx,
+      defenseVfx,
     } = effect;
 
     const target = resolveTargetVisual(targetId);
@@ -620,6 +626,14 @@ export function createCombatAnimationManager(deps) {
         userEl,
         skill,
         hit: { element, contact, hitVfx },
+        canvasBatch,
+      });
+    }
+
+    if (defenseVfx) {
+      await animateSkill(`default_${defenseVfx}`, {
+        targetEl: championEl,
+        userEl,
         canvasBatch,
       });
     }

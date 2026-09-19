@@ -1,10 +1,10 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
-import basicStrike from "../generic/basicStrike.js";
+import totalBlock from "../generic/totalBlock.js";
 import { DUEL_CRIT_DURATION, declareDuel, turnsInDuel } from "./passive.js";
 
 const lorraineSkills = [
-  basicStrike,
+  totalBlock,
 
   {
     key: "terms_of_the_duel",

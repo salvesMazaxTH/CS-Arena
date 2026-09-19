@@ -154,6 +154,9 @@ export class DamageEvent {
 
     this.evasionAttempted = false;
 
+    // Motif a defensive hook asks the client to play on the defender.
+    this.defenseVfx = null;
+
     this.beforeLogs = [];
     this.afterLogs = [];
     this.extraResults = [];

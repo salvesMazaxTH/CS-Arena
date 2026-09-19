@@ -248,6 +248,9 @@ function _processHook(event, eventName, payload) {
     if (r.preMitigationDamage !== undefined) {
       preMitigation.apply(r.preMitigationDamage);
     }
+    if (r.defenseVfx !== undefined && !event.defenseVfx) {
+      event.defenseVfx = r.defenseVfx;
+    }
     if (r.crit !== undefined) {
       summary.critChanged = true;
       event.crit = r.crit;

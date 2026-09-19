@@ -7,6 +7,7 @@ const riposteSkill = {
   key: "code_of_honor_riposte",
   name: "Code of Honor",
   contact: true,
+  hitVfx: "riposte",
 };
 
 function currentDuelTarget(owner, context) {
@@ -61,7 +62,7 @@ export default {
   name: "Code of Honor",
 
   duelDamagePercent: 15,
-  parryChance: 35,
+  parryChance: 99,
   parryReduction: 80,
   riposteBf: 35,
 
@@ -118,6 +119,7 @@ export default {
     });
 
     return {
+      defenseVfx: "parry",
       damage: Number(damage) * (1 - this.parryReduction / 100),
       log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} turns the blow aside and answers it in the same motion.`,
     };

@@ -1280,6 +1280,8 @@ export class TurnResolver {
         element = null,
         contact = null,
         hitVfx = null,
+        defenseVfx = null,
+        reaction = false,
         skillKey = null,
         flags,
       } = {}) {
@@ -1327,6 +1329,8 @@ export class TurnResolver {
           element,
           contact,
           hitVfx,
+          defenseVfx,
+          reaction: !!reaction,
           skillKey,
           evaded: flags?.evaded,
           immune: !!flags?.immune,
