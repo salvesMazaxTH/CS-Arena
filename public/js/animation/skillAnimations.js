@@ -31,6 +31,7 @@ import { playMultislash } from "./multislashAnimation.js";
 import { playParry, playRiposte } from "./parryAnimation.js";
 import { playSlash } from "./slashAnimation.js";
 import { createWaterBoltGL } from "./waterBoltGLAnimation.js";
+import { createWaterShurikenGL } from "./waterShurikenGLAnimation.js";
 import { playContactLunge } from "./contactLungeAnimation.js";
 
 const skillAnimationRegistry = new Map();
@@ -156,6 +157,7 @@ registerSkillAnimation("default_fire", createFireBoltGL(1));
 registerSkillAnimation("default_fire_big", createFireBoltGL(1.368, true));
 registerSkillAnimation("default_water", createWaterBoltGL(1));
 registerSkillAnimation("default_water_big", createWaterBoltGL(1.4, true));
+registerSkillAnimation("default_water_shuriken", createWaterShurikenGL(1));
 registerSkillAnimation("default_ice", createIceBoltGL(1));
 registerSkillAnimation("default_ice_big", createIceBoltGL(1.4, true));
 registerSkillAnimation("default_earth", createEarthBoltGL(1));

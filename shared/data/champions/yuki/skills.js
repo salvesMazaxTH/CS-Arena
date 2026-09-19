@@ -47,6 +47,7 @@ const yukiSkills = [
     damageMode: "standard",
     element: "water",
     priority: 0,
+    hitVfx: "water_shuriken",
     targetSpec: ["enemy"],
 
     description() {
