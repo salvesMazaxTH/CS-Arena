@@ -242,6 +242,7 @@ function createContext({ allChampions, turn, sourceId }) {
     aliveChampions: allChampions,
     logs: [],
     dialogs: [],
+    dialogDedupeKeys: new Set(),
     damageEvents: [],
     resourceChanges: [],
     heals: [],
