@@ -1,7 +1,7 @@
 // Ronan's regular specials (knuckle_flare, say_that_again): Kai's fiery melee
 // motif re-lit in deeper dragon-ember tones and re-timed so the fist reads as
 // heavy rather than fast. Three.js + bloom in the shared #webgl-container. His
-// ultimate is a separate claw rake (ronanDragonClawAnimation.js).
+// ultimate is a separate claw rake (clawAnimation.js).
 
 import { getElementCenter } from "./animationUtils.js";
 

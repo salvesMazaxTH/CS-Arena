@@ -18,7 +18,7 @@ const killerMeowSkills = [
 
     contact: true,
     damageMode: "standard",
-    hitVfx: "slash",
+    hitVfx: "claw",
     priority: 0,
 
     targetSpec: ["enemy"],
@@ -65,7 +65,7 @@ const killerMeowSkills = [
 
     contact: true,
     damageMode: "piercing",
-    hitVfx: "slash",
+    hitVfx: "claw",
     priority: 0,
 
     targetSpec: ["enemy"],
@@ -115,7 +115,7 @@ const killerMeowSkills = [
 
     contact: true,
     damageMode: "standard",
-    hitVfx: "slash",
+    hitVfx: "multislash",
     priority: 0,
 
     targetSpec: ["enemy"],

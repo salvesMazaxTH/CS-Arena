@@ -1,6 +1,4 @@
-// Ronan's ultimate (ignisars_temper): for one punch he stops being a man with
-// dragon blood and is only the dragon, so the hit lands as a four-gash claw rake
-// torn across the target's portrait in dragon-fire tones. 2D canvas over the
+// A four-gash claw rake torn across the target's portrait. 2D canvas over the
 // target only, so it stays cheap on weak devices.
 
 import {
@@ -11,10 +9,10 @@ import {
 import { getParticleScale } from "./effectQuality.js";
 
 const SPRITE_SIZE = 48;
-const PALETTE = Object.freeze({
-  core: "#fff1d6",
-  mid: "#ff801f",
-  deep: "#c11606",
+export const CLAW_PALETTES = Object.freeze({
+  // Bared steel-bright claws: the default any champion's rake falls back to.
+  feral: Object.freeze({ core: "#ffffff", mid: "#cfe2f2", deep: "#5d7f9c" }),
+  dragon: Object.freeze({ core: "#fff1d6", mid: "#ff801f", deep: "#c11606" }),
 });
 
 function makeGlowSprite(color) {
@@ -34,10 +32,15 @@ function makeGlowSprite(color) {
   return sprite;
 }
 
-let sprites = null;
-function getSprites() {
-  sprites ??= [PALETTE.core, PALETTE.mid, PALETTE.deep].map(makeGlowSprite);
-  return sprites;
+const spriteCache = new Map();
+function getSprites(palette) {
+  if (!spriteCache.has(palette)) {
+    spriteCache.set(
+      palette,
+      [palette.core, palette.mid, palette.deep].map(makeGlowSprite),
+    );
+  }
+  return spriteCache.get(palette);
 }
 
 // The whole paw rakes through fast; each claw is staggered a hair so the set
@@ -47,15 +50,16 @@ const WOUND_DURATION = 0.52;
 const STAGGER = 0.028;
 const SPLIT_DELAY = 0.12;
 
-class DragonClawEffect {
-  constructor(ctx, center, size, rakeAngle) {
+class ClawRakeEffect {
+  constructor(ctx, center, size, rakeAngle, palette) {
     this.ctx = ctx;
     this.center = center;
     this.size = size;
     this.age = 0;
     this.sparks = [];
     this.particleScale = getParticleScale();
-    this.sprites = getSprites();
+    this.palette = palette;
+    this.sprites = getSprites(palette);
 
     // Claws run across `axis`; the paw sweeps along `rake`, which is where the
     // four gashes are spaced out and slightly bowed into a fan.
@@ -154,9 +158,9 @@ class DragonClawEffect {
     const head = this.clawPoint(claw, to);
     const tailPt = this.clawPoint(claw, from);
     const grad = ctx.createLinearGradient(tailPt.x, tailPt.y, head.x, head.y);
-    grad.addColorStop(0, `${PALETTE.deep}00`);
-    grad.addColorStop(0.6, `${PALETTE.mid}9c`);
-    grad.addColorStop(1, PALETTE.core);
+    grad.addColorStop(0, `${this.palette.deep}00`);
+    grad.addColorStop(0.6, `${this.palette.mid}9c`);
+    grad.addColorStop(1, this.palette.core);
 
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -202,7 +206,7 @@ class DragonClawEffect {
     const ny = Math.sin(this.rake);
     const steps = 10;
 
-    ctx.strokeStyle = PALETTE.core;
+    ctx.strokeStyle = this.palette.core;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     for (const side of [1, -1]) {
@@ -249,22 +253,30 @@ class DragonClawEffect {
 const PADDING_SCALE = 1.1;
 const PADDING_FLOOR = 300;
 
-export async function playRonanDragonClaw({ userEl, targetEl }) {
-  if (!targetEl) return;
+export function createClaw(palette = CLAW_PALETTES.feral) {
+  return async function playClaw({ userEl, targetEl }) {
+    if (!targetEl) return;
 
-  const rect = targetEl.getBoundingClientRect();
-  const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-  const size = Math.max(rect.width, rect.height);
+    const rect = targetEl.getBoundingClientRect();
+    const center = {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+    };
+    const size = Math.max(rect.width, rect.height);
 
-  let rakeAngle = Math.PI * 0.16;
-  if (userEl) {
-    const u = getElementCenter(userEl);
-    rakeAngle = Math.atan2(center.y - u.y, center.x - u.x) + Math.PI * 0.12;
-  }
+    let rakeAngle = Math.PI * 0.16;
+    if (userEl) {
+      const u = getElementCenter(userEl);
+      rakeAngle = Math.atan2(center.y - u.y, center.x - u.x) + Math.PI * 0.12;
+    }
 
-  targetEl.classList.add("slash-hit");
-  setTimeout(() => targetEl.classList.remove("slash-hit"), 380);
+    targetEl.classList.add("slash-hit");
+    setTimeout(() => targetEl.classList.remove("slash-hit"), 380);
 
-  const box = computeEffectBox([center], size * PADDING_SCALE + PADDING_FLOOR);
-  await runSoloEffect(box, (ctx) => new DragonClawEffect(ctx, center, size, rakeAngle));
+    const box = computeEffectBox([center], size * PADDING_SCALE + PADDING_FLOOR);
+    await runSoloEffect(
+      box,
+      (ctx) => new ClawRakeEffect(ctx, center, size, rakeAngle, palette),
+    );
+  };
 }
