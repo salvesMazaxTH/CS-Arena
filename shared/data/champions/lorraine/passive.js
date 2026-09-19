@@ -62,7 +62,7 @@ export default {
   name: "Code of Honor",
 
   duelDamagePercent: 15,
-  parryChance: 99,
+  parryChance: 35,
   parryReduction: 80,
   riposteBf: 35,
 
