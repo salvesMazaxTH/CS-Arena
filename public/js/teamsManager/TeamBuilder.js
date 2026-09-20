@@ -23,6 +23,48 @@ import {
 import { renderEmblemPanel } from "./emblemPanel.js";
 
 const ZONES = ["roster", "inspector", "team"];
+const MIN_RECENT_CHAMPIONS_COUNT = 4;
+const NEW_CHAMPIONS_SEEN_STORAGE_KEY = "csa.teamsManager.newChampionsSeen.v1";
+
+function readSeenChampionKeys() {
+  try {
+    const stored = JSON.parse(
+      localStorage.getItem(NEW_CHAMPIONS_SEEN_STORAGE_KEY) || "[]",
+    );
+    return new Set(Array.isArray(stored) ? stored : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function getRecentChampionKeys() {
+  const today = new Date();
+  const todayDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const datedChampions = Object.entries(championDB)
+    .filter(([, champion]) => champion.releaseDate)
+    .sort(([, a], [, b]) => b.releaseDate.localeCompare(a.releaseDate));
+
+  const plannedChampions = datedChampions.filter(
+    ([, champion]) => champion.releaseDate > todayDate,
+  );
+  const releasedChampions = datedChampions.filter(
+    ([, champion]) => champion.releaseDate <= todayDate,
+  );
+
+  const cutoffDate =
+    releasedChampions[
+      Math.min(MIN_RECENT_CHAMPIONS_COUNT, releasedChampions.length) - 1
+    ]?.[1]?.releaseDate;
+
+  return new Set(
+    [
+      ...plannedChampions.map(([key]) => key),
+      ...releasedChampions
+        .filter(([, champion]) => champion.releaseDate >= cutoffDate)
+        .map(([key]) => key),
+    ],
+  );
+}
 
 function championAffinityKeys(champion) {
   const raw = Array.isArray(champion.elementalAffinities)
@@ -46,9 +88,17 @@ export class TeamBuilder {
     this.editMode = editMode;
     this.draft = null;
     this.focusKey = null;
-    this.filters = { element: null, klass: null, species: null, text: "" };
+    this.filters = {
+      element: null,
+      klass: null,
+      species: null,
+      text: "",
+      sort: "name",
+    };
     this._draggedKey = null;
     this._draggedFromSlot = -1;
+    this.recentChampionKeys = getRecentChampionKeys();
+    this.seenChampionKeys = readSeenChampionKeys();
   }
 
   open(team) {
@@ -64,7 +114,13 @@ export class TeamBuilder {
       emblems: Array.isArray(team?.emblems) ? [...team.emblems] : [],
       derivedFrom: team?.derivedFrom ?? null,
     };
-    this.filters = { element: null, klass: null, species: null, text: "" };
+    this.filters = {
+      element: null,
+      klass: null,
+      species: null,
+      text: "",
+      sort: "name",
+    };
     this.focusKey =
       champions.find(Boolean) ?? this._rosterKeys()[0] ?? null;
 
@@ -101,6 +157,11 @@ export class TeamBuilder {
                 aria-label="Search champions by name">
               <select class="tm-roster-species" data-facet="species"
                 aria-label="Filter by species"></select>
+              <select class="tm-roster-sort" aria-label="Sort champions">
+                <option value="name">Name (A–Z)</option>
+                <option value="release-desc">Release (newest)</option>
+                <option value="release-asc">Release (oldest)</option>
+              </select>
               <div class="tm-filter-row" data-facet="element"></div>
               <div class="tm-filter-row" data-facet="klass"></div>
             </div>
@@ -229,6 +290,13 @@ export class TeamBuilder {
       this.filters.species = speciesSelect.value || null;
       this._renderRoster();
     });
+
+    const sortSelect = this.root.querySelector(".tm-roster-sort");
+    sortSelect.value = this.filters.sort;
+    sortSelect.addEventListener("change", () => {
+      this.filters.sort = sortSelect.value;
+      this._renderRoster();
+    });
   }
 
   _syncFilterChips() {
@@ -351,15 +419,26 @@ export class TeamBuilder {
 
   _renderRoster() {
     const grid = this.refs.roster;
-    const visible = this._rosterKeys().filter((key) =>
-      this._passesFilters(championDB[key]),
-    );
 
-    const tiles = visible.map((key) => this._rosterTileMarkup(key));
+    const championEntries = this._rosterKeys()
+      .filter((key) => this._passesFilters(championDB[key]))
+      .map((key) => ({
+        name: championDB[key].name,
+        releaseDate: championDB[key].releaseDate,
+        markup: this._rosterTileMarkup(key),
+      }));
 
-    Object.values(duoDB)
+    const duoEntries = Object.values(duoDB)
       .filter((duo) => this._isDuoOffered(duo) && this._duoPassesFilters(duo))
-      .forEach((duo) => tiles.push(this._duoTileMarkup(duo)));
+      .map((duo) => ({
+        name: duo.name,
+        releaseDate: duo.releaseDate,
+        markup: this._duoTileMarkup(duo),
+      }));
+
+    const tiles = [...championEntries, ...duoEntries]
+      .sort((a, b) => this._compareRosterEntries(a, b))
+      .map((entry) => entry.markup);
 
     grid.innerHTML = tiles.join("") || `<p class="tm-roster-empty">No champions match.</p>`;
 
@@ -368,11 +447,13 @@ export class TeamBuilder {
       const focusKey = duoKey ? duoDB[duoKey].cores[0] : championKey;
 
       tile.querySelector('[data-act="pick"]').addEventListener("click", () => {
+        this._markChampionSeen(duoKey ? duoDB[duoKey].cores : [championKey]);
         this.focusKey = focusKey;
         if (duoKey) this._handleDuoClick(duoDB[duoKey]);
         else this._addChampion(championKey);
       });
       tile.querySelector('[data-act="peek"]').addEventListener("click", () => {
+        this._markChampionSeen(duoKey ? duoDB[duoKey].cores : [championKey]);
         this._setFocus(focusKey);
         this._showZone("inspector");
       });
@@ -397,7 +478,22 @@ export class TeamBuilder {
       name: champion.name,
       portrait: champion.portrait,
       footer: renderChampionIdentityBadgesMarkup(champion),
+      isNew: this._isNewChampion(key),
     });
+  }
+
+  _compareRosterEntries(a, b) {
+    if (this.filters.sort === "name") {
+      return a.name.localeCompare(b.name);
+    }
+
+    const dateA = a.releaseDate || "0000-01-01";
+    const dateB = b.releaseDate || "0000-01-01";
+    const byDate = dateA.localeCompare(dateB);
+    if (byDate !== 0) {
+      return this.filters.sort === "release-desc" ? -byDate : byDate;
+    }
+    return a.name.localeCompare(b.name);
   }
 
   _duoTileMarkup(duo) {
@@ -410,10 +506,11 @@ export class TeamBuilder {
     });
   }
 
-  _tileMarkup({ attribute, extraClass, name, portrait, footer }) {
+  _tileMarkup({ attribute, extraClass, name, portrait, footer, isNew = false }) {
     const safeName = escapeHtml(name);
     return `
-      <div class="tm-roster-tile${extraClass}" draggable="true" ${attribute}>
+      <div class="tm-roster-tile${extraClass}${isNew ? " is-new" : ""}" draggable="true" ${attribute}>
+        ${isNew ? '<span class="tm-new-champion-badge" aria-label="New champion">NEW</span>' : ""}
         <button type="button" class="tm-roster-pick" data-act="pick">
           <span class="tm-roster-portrait">
             <img src="${escapeHtml(portrait)}" alt="" loading="lazy">
@@ -427,6 +524,32 @@ export class TeamBuilder {
         </button>
       </div>
     `;
+  }
+
+  _isNewChampion(key) {
+    return this.recentChampionKeys.has(key) && !this.seenChampionKeys.has(key);
+  }
+
+  _markChampionSeen(keys) {
+    const championKeys = keys.filter((key) => this.recentChampionKeys.has(key));
+    if (!championKeys.length) return;
+
+    championKeys.forEach((key) => this.seenChampionKeys.add(key));
+    try {
+      localStorage.setItem(
+        NEW_CHAMPIONS_SEEN_STORAGE_KEY,
+        JSON.stringify([...this.seenChampionKeys]),
+      );
+    } catch {
+      // The visual state still updates when storage is unavailable.
+    }
+
+    this.refs.roster.querySelectorAll(".tm-roster-tile").forEach((tile) => {
+      if (championKeys.includes(tile.dataset.championKey)) {
+        tile.classList.remove("is-new");
+        tile.querySelector(".tm-new-champion-badge")?.remove();
+      }
+    });
   }
 
   _markRoster() {

@@ -365,7 +365,8 @@ html {
   border-color: var(--tm-signal);
 }
 
-.tm-roster-species {
+.tm-roster-species,
+.tm-roster-sort {
   width: 100%;
   padding: 8px 30px 8px 12px;
   border-radius: 9px;
@@ -381,7 +382,8 @@ html {
   cursor: pointer;
 }
 
-.tm-roster-species:focus {
+.tm-roster-species:focus,
+.tm-roster-sort:focus {
   outline: none;
   border-color: var(--tm-signal);
 }
@@ -454,6 +456,46 @@ img.tm-filter-chip-icon {
   transition:
     border-color 0.1s ease,
     background 0.1s ease;
+}
+
+.tm-roster-tile.is-new {
+  border-color: rgba(0, 255, 153, 0.78);
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 153, 0.2),
+    0 0 18px rgba(0, 255, 153, 0.24);
+}
+
+.tm-new-champion-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  padding: 3px 7px;
+  border-radius: 999px;
+  color: #04140d;
+  background: var(--tm-signal);
+  box-shadow: 0 0 12px rgba(0, 255, 153, 0.55);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  animation: tm-new-champion-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes tm-new-champion-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(0, 255, 153, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(0, 255, 153, 0.8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-new-champion-badge {
+    animation: none;
+  }
 }
 
 .tm-roster-pick {
