@@ -61,6 +61,7 @@ const kaeldrathVulcanoSkills = [
     priority: 0,
 
     element: "fire",
+    hitVfx: "magma_bomb",
 
     description() {
       return `Kael'Drath hurls a knot of molten rock at the chosen target, dealing Fire magical damage and leaving them Burning for ${this.burnDuration} turn(s).

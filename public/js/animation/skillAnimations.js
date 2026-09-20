@@ -33,6 +33,7 @@ import { playSlash } from "./slashAnimation.js";
 import { createWaterBoltGL } from "./waterBoltGLAnimation.js";
 import { createGroundedChargeGL } from "./groundedChargeGLAnimation.js";
 import { createLiquidSteelLanceGL } from "./liquidSteelLanceGLAnimation.js";
+import { createMagmaBombGL } from "./magmaBombGLAnimation.js";
 import { createRootsGL } from "./rootsGLAnimation.js";
 import { createWaterShurikenGL } from "./waterShurikenGLAnimation.js";
 import { createTidalLanceGL } from "./tidalLanceGLAnimation.js";
@@ -61,7 +62,7 @@ const DEFAULT_ELEMENT_ANIMATIONS = {
 };
 
 // Non-ultimate skills that still deserve the big blast, per element.
-const BIG_FIREBALL_SKILLS = new Set(["magma_bomb"]);
+const BIG_FIREBALL_SKILLS = new Set();
 const BIG_WATERBOLT_SKILLS = new Set();
 const BIG_ICEBOLT_SKILLS = new Set();
 const BIG_LIGHTNING_SKILLS = new Set();
@@ -168,6 +169,7 @@ registerSkillAnimation("default_liquid_steel_lance", createLiquidSteelLanceGL(1)
 registerSkillAnimation("default_grounded_charge", createGroundedChargeGL(1));
 registerSkillAnimation("default_tidal_lance", createTidalLanceGL(1));
 registerSkillAnimation("default_undertow", createUndertowGL(1.25));
+registerSkillAnimation("default_magma_bomb", createMagmaBombGL(1.15));
 registerSkillAnimation("default_ice", createIceBoltGL(1));
 registerSkillAnimation("default_ice_big", createIceBoltGL(1.4, true));
 registerSkillAnimation("default_earth", createEarthBoltGL(1));
