@@ -23,6 +23,7 @@ const gryskarchuSkills = [
     element: "earth",
     rootDuration: 2,
     contact: false,
+    hitVfx: "roots",
 
     priority: 0,
 

@@ -476,3 +476,22 @@
     filter: brightness(1) saturate(1);
   }
 }
+
+/* Root hit effect (applied to champion portrait when the vines close) */
+
+.root-hit {
+  animation: rootFlash 0.42s ease-out;
+}
+
+@keyframes rootFlash {
+  0% {
+    filter: brightness(1);
+  }
+  22% {
+    filter: brightness(0.82) saturate(1.5) hue-rotate(58deg);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
