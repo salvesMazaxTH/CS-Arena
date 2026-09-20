@@ -25,6 +25,7 @@ const sabrinaSkills = [
 
     damageMode: "standard",
     element: "water",
+    hitVfx: "tidal_lance",
     description() {
       return `Fires a concentrated lance of water at an enemy, dealing Water magical damage and applying Chilled for ${this.chillDuration} turn(s).`;
     },
