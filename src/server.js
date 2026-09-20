@@ -56,11 +56,11 @@ import {
 // ============================================================
 
 const editMode = {
-  enabled: true,
-  autoLogin: true,
+  enabled: false,
+  autoLogin: false,
   autoSelection: false, // Auto-pick champions (skip the selection screen)
   actMultipleTimesPerTurn: false,
-  unavailableChampions: true,
+  unavailableChampions: false,
   damageOutput: null, // Fixed damage value for tests (e.g. 999). null = off. (SERVER-ONLY)
   alwaysCrit: false, // Force a crit on every attack. (SERVER-ONLY)
   alwaysEvade: false, // Force evasion on every attack. (SERVER-ONLY)
