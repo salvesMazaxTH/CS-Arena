@@ -19,6 +19,7 @@ const nytheraSkills = [
 
     damageMode: "standard",
     element: "ice",
+    hitVfx: "boreal_edge",
     description() {
       return `Nythera draws an edge of northern wind across the chosen target, dealing Ice magical damage and leaving them Chilled for ${this.chillDuration} turn(s).
 
