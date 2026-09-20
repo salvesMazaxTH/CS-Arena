@@ -79,6 +79,7 @@ const orynSkills = [
     damageMode: "standard",
     priority: 1,
     element: "lightning",
+    hitVfx: "grounded_charge",
 
     description() {
       return `Oryn drives a pin into the chosen enemy and lets the charge he has been carrying run down it, dealing Lightning magical damage equal to ${this.defenseScaling}% of his Defense and leaving them Paralyzed for ${this.paralyzeDuration} turn(s).`;
