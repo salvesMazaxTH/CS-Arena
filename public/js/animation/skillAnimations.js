@@ -36,6 +36,7 @@ import { createLiquidSteelLanceGL } from "./liquidSteelLanceGLAnimation.js";
 import { createRootsGL } from "./rootsGLAnimation.js";
 import { createWaterShurikenGL } from "./waterShurikenGLAnimation.js";
 import { createTidalLanceGL } from "./tidalLanceGLAnimation.js";
+import { createUndertowGL } from "./undertowGLAnimation.js";
 import { playContactLunge } from "./contactLungeAnimation.js";
 
 const skillAnimationRegistry = new Map();
@@ -166,6 +167,7 @@ registerSkillAnimation("default_roots", createRootsGL(1));
 registerSkillAnimation("default_liquid_steel_lance", createLiquidSteelLanceGL(1));
 registerSkillAnimation("default_grounded_charge", createGroundedChargeGL(1));
 registerSkillAnimation("default_tidal_lance", createTidalLanceGL(1));
+registerSkillAnimation("default_undertow", createUndertowGL(1.25));
 registerSkillAnimation("default_ice", createIceBoltGL(1));
 registerSkillAnimation("default_ice_big", createIceBoltGL(1.4, true));
 registerSkillAnimation("default_earth", createEarthBoltGL(1));

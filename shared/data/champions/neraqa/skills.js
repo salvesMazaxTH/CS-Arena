@@ -117,7 +117,7 @@ const neraqaSkills = [
     key: "the_undertow",
     name: "The Undertow",
 
-    bf: 180,
+    bf: 235,
     delayTurns: 2,
     piercingPercentage: 40,
 
@@ -127,6 +127,7 @@ const neraqaSkills = [
     momentumCost: 55,
     priority: 4,
     element: "water",
+    hitVfx: "undertow",
 
     description() {
       return `Neraqa draws the whole sea back from the field. Nothing happens where the enemies stand — not this turn, not the next — but at the close of that next turn the water she pulled away comes down on every enemy it left, dealing Water magical damage equal to ${this.bf}% of her Attack and ignoring ${this.piercingPercentage}% of their Defense: the weight of the sea does not care about armour, and it is the heaviest blow she can land. An enemy who dies or leaves before then is not there when it falls, and if Neraqa herself is gone the wave never returns.`;
@@ -135,6 +136,7 @@ const neraqaSkills = [
     targetSpec: ["all:enemy"],
 
     resolve({ user, targets, context = {} }) {
+      const skillDef = this;
       const storedBaseDamage = (user.Attack * this.bf) / 100;
       const piercingPercentage = this.piercingPercentage;
       const detonateTurn = context.currentTurn + this.delayTurns;
@@ -157,6 +159,7 @@ const neraqaSkills = [
             detonateTurn,
             storedBaseDamage,
             piercingPercentage,
+            skillDef,
 
             onTurnStart({ owner, context }) {
               if (context.currentTurn < this.detonateTurn) return;
@@ -172,12 +175,7 @@ const neraqaSkills = [
                 baseDamage: this.storedBaseDamage,
                 attacker: neraqa,
                 defender: owner,
-                skill: {
-                  key: "the_undertow",
-                  name: "The Undertow",
-                  element: "water",
-                  contact: false,
-                },
+                skill: this.skillDef,
                 type: "magical",
                 mode: "piercing",
                 piercingPercentage: this.piercingPercentage,
