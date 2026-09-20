@@ -28,6 +28,7 @@ const tyrenSkills = [
     damageMode: "standard",
     priority: 0,
     element: "steel",
+    hitVfx: "liquid_steel_lance",
 
     snareDuration: 2,
 
