@@ -1,5 +1,6 @@
 export default {
   name: "Alexa Neruvya Primordial",
+  releaseDate: "2026-08-24",
   portrait: "/assets/portraits/alexa_transformed.webp",
   selectable: false,
 

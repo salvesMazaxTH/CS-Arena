@@ -1,5 +1,6 @@
 export default {
   name: "Cassian",
+  releaseDate: "2026-09-13",
   portrait: "/assets/portraits/cassian.webp",
 
   unreleased: true,

@@ -1,5 +1,6 @@
 export default {
   name: "Noyre",
+  releaseDate: "2026-04-17",
   portrait: "/assets/portraits/noyre.webp",
 
 

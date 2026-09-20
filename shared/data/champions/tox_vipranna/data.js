@@ -1,5 +1,6 @@
 export default {
   name: "Tox Vipranna",
+  releaseDate: "2026-04-24",
   portrait: "/assets/portraits/tox_vipranna.webp",
 
   HP: 355,

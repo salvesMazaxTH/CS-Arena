@@ -1,5 +1,6 @@
 export default {
   name: "Tony Raiturus",
+  releaseDate: "2026-09-09",
   portrait: "/assets/portraits/tony_raiturus.webp",
 
   HP: 325,

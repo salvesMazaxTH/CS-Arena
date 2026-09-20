@@ -1,5 +1,6 @@
 export default {
   name: "Calyphera",
+  releaseDate: "2026-09-23",
   portrait: "/assets/portraits/calyphera.webp",
 
   unreleased: true,

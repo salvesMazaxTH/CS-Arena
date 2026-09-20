@@ -2,6 +2,7 @@ import { MAX_AMMO } from "./ammo.js";
 
 export default {
   name: "Zyrelle",
+  releaseDate: "2026-08-23",
   portrait: "/assets/portraits/zyrelle.webp",
 
   HP: 300,

@@ -1,5 +1,6 @@
 export default {
   name: "Weyne",
+  releaseDate: "2026-09-27",
   portrait: "/assets/portraits/weyne.webp",
 
   unreleased: true,

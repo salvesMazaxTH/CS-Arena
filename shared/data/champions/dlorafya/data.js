@@ -1,5 +1,6 @@
 export default {
   name: "D'Lorafya",
+  releaseDate: "2026-08-19",
   portrait: "/assets/portraits/dlorafya.webp",
 
   HP: 310,

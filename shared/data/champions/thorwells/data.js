@@ -1,5 +1,6 @@
 export default {
   name: "Thorwells",
+  releaseDate: "2026-08-30",
   portrait: "/assets/portraits/thorwells.webp",
 
   HP: 350,

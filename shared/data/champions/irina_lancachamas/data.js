@@ -1,5 +1,6 @@
 export default {
   name: "Irina Lançachamas",
+  releaseDate: "2026-08-24",
   portrait: "/assets/portraits/irina_lancachamas.webp",
 
   HP: 290,

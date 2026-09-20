@@ -1,5 +1,6 @@
 export default {
   name: "Drex",
+  releaseDate: "2026-05-06",
   portrait: "/assets/portraits/drex.webp",
 
 

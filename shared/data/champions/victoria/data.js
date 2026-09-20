@@ -1,7 +1,7 @@
 export default {
   name: "Victoria",
+  releaseDate: "2026-09-20",
   portrait: "/assets/portraits/victoria.webp",
-  unreleased: true,
 
   HP: 330,
   Attack: 215,

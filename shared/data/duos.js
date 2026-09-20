@@ -7,6 +7,7 @@ const duoDB = {
     name: "Laisaelis & Laiserisa",
     portrait: "/assets/portraits/laisaelis_e_laiserisa.webp",
     cores: ["laisaelis", "laiserisa"],
+    releaseDate: "2026-09-01",
   },
 };
 

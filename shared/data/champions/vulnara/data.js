@@ -1,5 +1,6 @@
 export default {
   name: "Vulnara",
+  releaseDate: "2026-03-15",
   portrait: "/assets/portraits/vulnara.webp",
 
   HP: 300,

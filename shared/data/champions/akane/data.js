@@ -1,5 +1,6 @@
 export default {
   name: "Akane",
+  releaseDate: "2026-04-26",
   portrait: "/assets/portraits/akane.webp",
 
   HP: 290,

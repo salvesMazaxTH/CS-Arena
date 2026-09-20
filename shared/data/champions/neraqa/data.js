@@ -1,8 +1,7 @@
 export default {
   name: "Neraqa",
+  releaseDate: "2026-09-20",
   portrait: "/assets/portraits/neraqa.webp",
-
-  unreleased: true,
 
   HP: 335,
   Attack: 225,

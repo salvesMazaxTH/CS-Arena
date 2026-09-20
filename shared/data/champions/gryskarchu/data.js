@@ -1,5 +1,6 @@
 export default {
   name: "Gryskarchu",
+  releaseDate: "2026-02-10",
   portrait: "/assets/portraits/gryskarchu.webp",
   HP: 460,
   Attack: 95,

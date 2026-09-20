@@ -1,5 +1,6 @@
 export default {
   name: "Alexa Neruvya",
+  releaseDate: "2026-08-23",
   portrait: "/assets/portraits/alexa_neruvya.webp",
 
   HP: 335,

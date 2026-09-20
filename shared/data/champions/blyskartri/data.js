@@ -1,5 +1,6 @@
 export default {
   name: "Blyskartri",
+  releaseDate: "2026-02-21",
   portrait: "/assets/portraits/blyskartri.webp",
 
   HP: 345,

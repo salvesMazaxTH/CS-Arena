@@ -1,5 +1,6 @@
 export default {
   name: "VØRN Ω",
+  releaseDate: "2026-09-04",
   portrait: "/assets/portraits/vorn_omega.webp",
 
   HP: 380,

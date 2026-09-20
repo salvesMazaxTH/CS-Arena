@@ -1,5 +1,6 @@
 export default {
   name: "Lord of the Shadowflame",
+  releaseDate: "2026-09-06",
   portrait: "/assets/portraits/clay_lord_of_the_shadowflame.webp",
   portraitByOrigin: {
     clay: "/assets/portraits/clay_lord_of_the_shadowflame.webp",

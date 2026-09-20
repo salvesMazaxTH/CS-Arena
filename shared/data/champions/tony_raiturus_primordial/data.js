@@ -1,5 +1,6 @@
 export default {
   name: "Tony Raiturus Primordial",
+  releaseDate: "2026-09-09",
   portrait: "/assets/portraits/tony_raiturus_transformed.webp",
   selectable: false,
 

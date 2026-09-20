@@ -1,5 +1,6 @@
 export default {
   name: "Sengoku Primordial",
+  releaseDate: "2026-04-13",
   portrait: "/assets/portraits/sengoku_transformed.webp",
   selectable: false,
 

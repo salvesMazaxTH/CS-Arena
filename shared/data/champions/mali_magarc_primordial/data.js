@@ -1,5 +1,6 @@
 export default {
   name: "Mali Magarc Primordial",
+  releaseDate: "2026-09-10",
   portrait: "/assets/portraits/mali_magarc_transformed.webp",
   selectable: false,
 

@@ -1,5 +1,6 @@
 export default {
   name: "Tharox",
+  releaseDate: "2026-02-04",
   portrait: "/assets/portraits/tharox.webp",
   HP: 380,
   Attack: 135,

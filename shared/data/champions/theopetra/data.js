@@ -1,5 +1,6 @@
 export default {
   name: "Theópetra",
+  releaseDate: "2026-04-12",
   portrait: "/assets/portraits/theopetra.webp",
 
   HP: 350,

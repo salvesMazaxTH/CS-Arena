@@ -1,5 +1,6 @@
 export default {
   name: "Myrra",
+  releaseDate: "2026-04-26",
   portrait: "/assets/portraits/myrra.webp",
 
   HP: 320,

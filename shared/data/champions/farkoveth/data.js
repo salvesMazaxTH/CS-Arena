@@ -1,5 +1,6 @@
 export default {
   name: "Farkoveth",
+  releaseDate: "2026-09-14",
   portrait: "/assets/portraits/farkoveth.webp",
 
   unreleased: true,

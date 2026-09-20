@@ -1,5 +1,6 @@
 export default {
   name: "Jeff The Death",
+  releaseDate: "2026-03-18",
   portrait: "/assets/portraits/jeff_the_death.webp",
 
   HP: 350,

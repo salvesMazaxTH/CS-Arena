@@ -1,5 +1,6 @@
 export default {
   name: "Voltexz",
+  releaseDate: "2026-02-06",
   portrait: "/assets/portraits/voltexz.webp",
   HP: 295,
   Attack: 360,

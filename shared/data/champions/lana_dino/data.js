@@ -1,5 +1,6 @@
 export default {
   name: "Tutu",
+  releaseDate: "2026-04-02",
   portrait: "/assets/portraits/tutu.webp",
   HP: 180,
   Attack: 80,

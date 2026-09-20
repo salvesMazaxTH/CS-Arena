@@ -1,5 +1,6 @@
 export default {
   name: "Atlas",
+  releaseDate: "2026-09-04",
   portrait: "/assets/portraits/atlas.webp",
 
   HP: 375,

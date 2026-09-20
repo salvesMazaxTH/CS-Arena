@@ -1,5 +1,6 @@
 export default {
   name: "Sebastian Ignis",
+  releaseDate: "2026-09-05",
   portrait: "/assets/portraits/sebastian_ignis.webp",
 
   HP: 350,

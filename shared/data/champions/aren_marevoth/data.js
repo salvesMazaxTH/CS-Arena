@@ -1,5 +1,6 @@
 export default {
   name: "Aren Marevóth",
+  releaseDate: "2026-08-14",
   portrait: "/assets/portraits/aren_marevoth.webp",
   HP: 385,
   Attack: 135,

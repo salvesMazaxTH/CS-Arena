@@ -1,5 +1,6 @@
 export default {
   name: "Vael",
+  releaseDate: "2026-02-04",
   portrait: "/assets/portraits/vael.webp",
   HP: 305,
   Attack: 330,

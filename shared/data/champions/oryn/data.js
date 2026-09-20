@@ -1,5 +1,6 @@
 export default {
   name: "Oryn",
+  releaseDate: "2026-08-31",
   portrait: "/assets/portraits/oryn.webp",
 
   HP: 360,

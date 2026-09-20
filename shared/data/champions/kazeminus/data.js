@@ -1,8 +1,7 @@
 export default {
   name: "Kazeminus",
+  releaseDate: "2026-09-20",
   portrait: "/assets/portraits/kazeminus.webp",
-
-  unreleased: true,
 
   HP: 300,
   Attack: 315,

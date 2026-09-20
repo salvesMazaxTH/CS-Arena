@@ -1,5 +1,6 @@
 export default {
   name: "Layla",
+  releaseDate: "2026-09-10",
   portrait: "/assets/portraits/layla.webp",
 
   HP: 290,

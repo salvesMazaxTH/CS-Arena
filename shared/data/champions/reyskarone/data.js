@@ -1,5 +1,6 @@
 export default {
   name: "Reyskarone",
+  releaseDate: "2026-02-10",
   portrait: "/assets/portraits/reyskarone.webp",
 
   HP: 330,

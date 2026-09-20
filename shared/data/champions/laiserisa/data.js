@@ -1,5 +1,6 @@
 export default {
   name: "Laiserisa",
+  releaseDate: "2026-09-01",
   portrait: "/assets/portraits/laiserisa.webp",
   hiddenFromDraftGrid: true,
   classKey: "enchanter",

@@ -1,5 +1,6 @@
 export default {
   name: "Ysvane",
+  releaseDate: "2026-08-31",
   portrait: "/assets/portraits/ysvane.webp",
 
   HP: 345,

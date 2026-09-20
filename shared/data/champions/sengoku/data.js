@@ -1,5 +1,6 @@
 export default {
   name: "Sengoku",
+  releaseDate: "2026-04-12",
   portrait: "/assets/portraits/sengoku.webp",
 
   HP: 350,

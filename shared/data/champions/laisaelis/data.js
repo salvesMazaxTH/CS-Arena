@@ -1,5 +1,6 @@
 export default {
   name: "Laisaelis",
+  releaseDate: "2026-09-01",
   portrait: "/assets/portraits/laisaelis.webp",
   hiddenFromDraftGrid: true,
 

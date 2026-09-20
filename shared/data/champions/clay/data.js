@@ -1,5 +1,6 @@
 export default {
   name: "Clay",
+  releaseDate: "2026-09-05",
   portrait: "/assets/portraits/clay.webp",
 
   HP: 340,

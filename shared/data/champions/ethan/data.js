@@ -1,5 +1,6 @@
 export default {
   name: "Ethan",
+  releaseDate: "2026-09-06",
   portrait: "/assets/portraits/ethan.webp",
 
   HP: 325,

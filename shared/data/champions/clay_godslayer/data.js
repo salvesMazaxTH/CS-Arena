@@ -1,5 +1,6 @@
 export default {
   name: "Clay, Godslayer",
+  releaseDate: "2026-09-05",
   portrait: "/assets/portraits/clay_godslayer.webp",
   selectable: false,
 

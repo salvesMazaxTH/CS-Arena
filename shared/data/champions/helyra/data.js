@@ -1,5 +1,6 @@
 export default {
   name: "Helyra",
+  releaseDate: "2026-09-27",
   portrait: "/assets/portraits/helyra.webp",
   
   unreleased: true,

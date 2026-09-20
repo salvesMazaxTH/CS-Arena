@@ -1,5 +1,6 @@
 export default {
   name: "Node-SPARCKINA-07",
+  releaseDate: "2026-02-12",
   portrait: "/assets/portraits/node_sparckina_07.webp",
   HP: 320,
   Attack: 230,

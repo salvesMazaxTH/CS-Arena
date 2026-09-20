@@ -1,5 +1,6 @@
 export default {
   name: "Elias Cross",
+  releaseDate: "2026-02-28",
   portrait: "/assets/portraits/elias_cross.webp",
   
   HP: 300,

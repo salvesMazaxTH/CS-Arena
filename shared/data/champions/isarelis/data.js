@@ -1,5 +1,6 @@
 export default {
   name: "Isarelis",
+  releaseDate: "2026-04-13",
   portrait: "/assets/portraits/isarelis.webp",
 
   HP: 300,

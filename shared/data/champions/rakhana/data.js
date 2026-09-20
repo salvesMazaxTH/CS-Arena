@@ -1,5 +1,6 @@
 export default {
   name: "Rakhana",
+  releaseDate: "2026-08-16",
   portrait: "/assets/portraits/rakhana.webp",
   HP: 325,
   Attack: 225,

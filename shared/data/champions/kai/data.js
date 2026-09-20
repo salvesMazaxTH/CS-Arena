@@ -1,5 +1,6 @@
 export default {
   name: "Kai",
+  releaseDate: "2026-02-19",
   portrait: "/assets/portraits/kai.webp",
 
   HP: 325,

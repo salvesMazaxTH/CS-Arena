@@ -1,5 +1,6 @@
 export default {
   name: "Leone D'Averio",
+  releaseDate: "2026-09-13",
   portrait: "/assets/portraits/leone_daverio.webp",
 
   unreleased: true,
