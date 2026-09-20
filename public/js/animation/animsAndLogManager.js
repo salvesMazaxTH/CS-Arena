@@ -15,8 +15,8 @@ import { playDeathClaimEffect } from "../../../shared/vfx/deathClaim.js";
 import { CLAIM_ACTION_KEY } from "../../../shared/engine/combat/claim.js";
 import { audioManager } from "../utils/AudioManager.js";
 import { animateSkill } from "./skillAnimations.js";
-import { playUnmakingEffect } from "./unmakingAnimation.js";
-import { EffectCanvasBatch } from "./effectCanvasBatch.js";
+import { playUnmakingEffect } from "./effects/unmakingAnimation.js";
+import { EffectCanvasBatch } from "./core/effectCanvasBatch.js";
 import { createMatchStatsPanel } from "../ui/matchStats.js";
 import { createScoreboard } from "../ui/scoreboard.js";
 

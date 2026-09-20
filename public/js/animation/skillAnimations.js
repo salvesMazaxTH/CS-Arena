@@ -9,36 +9,36 @@
 //  function, then register it at the bottom of this file.
 // ============================================================
 
-import { createAirBoltGL } from "./airBoltGLAnimation.js";
-import { createArcaneBoltGL } from "./arcaneBoltGLAnimation.js";
-import { createChargedRoundGL } from "./chargedRoundGLAnimation.js";
-import { createCryoRoundGL } from "./cryoRoundGLAnimation.js";
-import { createEarthBoltGL } from "./earthBoltGLAnimation.js";
-import { createFireBoltGL } from "./fireBoltGLAnimation.js";
-import { createIceBoltGL } from "./iceBoltGLAnimation.js";
-import { createMusketBallGL } from "./musketBallGLAnimation.js";
-import { createRadiantBeamGL } from "./radiantBeamGLAnimation.js";
-import { createRadiantBoltGL } from "./radiantBoltGLAnimation.js";
-import { playFlamingArrow } from "./flamingArrowAnimation.js";
-import { playPoisonedArrow } from "./poisonedArrowAnimation.js";
-import { createLightningBolt } from "./lightningAnimation.js";
-import { playChainLash } from "./chainLashAnimation.js";
-import { playLash } from "./lashAnimation.js";
-import { playMeleePunch } from "./meleePunchAnimation.js";
-import { playRonanPunch } from "./ronanPunchAnimation.js";
-import { CLAW_PALETTES, createClaw } from "./clawAnimation.js";
-import { playMultislash } from "./multislashAnimation.js";
-import { playParry, playRiposte } from "./parryAnimation.js";
-import { playSlash } from "./slashAnimation.js";
-import { createWaterBoltGL } from "./waterBoltGLAnimation.js";
-import { createGroundedChargeGL } from "./groundedChargeGLAnimation.js";
-import { createLiquidSteelLanceGL } from "./liquidSteelLanceGLAnimation.js";
-import { createMagmaBombGL } from "./magmaBombGLAnimation.js";
-import { createRootsGL } from "./rootsGLAnimation.js";
-import { createWaterShurikenGL } from "./waterShurikenGLAnimation.js";
-import { createTidalLanceGL } from "./tidalLanceGLAnimation.js";
-import { createUndertowGL } from "./undertowGLAnimation.js";
-import { playContactLunge } from "./contactLungeAnimation.js";
+import { createAirBoltGL } from "./effects/airBoltGLAnimation.js";
+import { createArcaneBoltGL } from "./effects/arcaneBoltGLAnimation.js";
+import { createChargedRoundGL } from "./effects/chargedRoundGLAnimation.js";
+import { createCryoRoundGL } from "./effects/cryoRoundGLAnimation.js";
+import { createEarthBoltGL } from "./effects/earthBoltGLAnimation.js";
+import { createFireBoltGL } from "./effects/fireBoltGLAnimation.js";
+import { createIceBoltGL } from "./effects/iceBoltGLAnimation.js";
+import { createMusketBallGL } from "./effects/musketBallGLAnimation.js";
+import { createRadiantBeamGL } from "./effects/radiantBeamGLAnimation.js";
+import { createRadiantBoltGL } from "./effects/radiantBoltGLAnimation.js";
+import { playFlamingArrow } from "./effects/flamingArrowAnimation.js";
+import { playPoisonedArrow } from "./effects/poisonedArrowAnimation.js";
+import { createLightningBolt } from "./effects/lightningAnimation.js";
+import { playChainLash } from "./effects/chainLashAnimation.js";
+import { playLash } from "./effects/lashAnimation.js";
+import { playMeleePunch } from "./effects/meleePunchAnimation.js";
+import { playRonanPunch } from "./effects/ronanPunchAnimation.js";
+import { CLAW_PALETTES, createClaw } from "./effects/clawAnimation.js";
+import { playMultislash } from "./effects/multislashAnimation.js";
+import { playParry, playRiposte } from "./effects/parryAnimation.js";
+import { playSlash } from "./effects/slashAnimation.js";
+import { createWaterBoltGL } from "./effects/waterBoltGLAnimation.js";
+import { createGroundedChargeGL } from "./effects/groundedChargeGLAnimation.js";
+import { createLiquidSteelLanceGL } from "./effects/liquidSteelLanceGLAnimation.js";
+import { createMagmaBombGL } from "./effects/magmaBombGLAnimation.js";
+import { createRootsGL } from "./effects/rootsGLAnimation.js";
+import { createWaterShurikenGL } from "./effects/waterShurikenGLAnimation.js";
+import { createTidalLanceGL } from "./effects/tidalLanceGLAnimation.js";
+import { createUndertowGL } from "./effects/undertowGLAnimation.js";
+import { playContactLunge } from "./effects/contactLungeAnimation.js";
 
 const skillAnimationRegistry = new Map();
 
