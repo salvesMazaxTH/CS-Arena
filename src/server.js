@@ -2,6 +2,7 @@
 //  IMPORTS
 // ============================================================
 
+import "dotenv/config";
 import express from "express";
 import compression from "compression";
 import { createServer } from "http";
@@ -50,6 +51,7 @@ import {
   PREBUILT_TEAMS,
   validateTeamComposition,
 } from "../shared/data/teams/index.js";
+import { isEditModeClean, recordMatchResult } from "./analytics/supabaseAnalytics.js";
 
 // ============================================================
 //  CONFIGURATION
@@ -621,8 +623,24 @@ function emitGameOverIfNeeded({ checkTurnLimit = false } = {}) {
   const winnerTeam = winnerSlot != null ? winnerSlot + 1 : null;
   const winnerName =
     winnerSlot != null ? match.players[winnerSlot]?.username : null;
+  const championRoster = getMatchRosterStats();
 
-  io.emit("gameOver", { winnerTeam, winnerName, champions: getMatchRosterStats() });
+  io.emit("gameOver", { winnerTeam, winnerName, champions: championRoster });
+
+  if (isEditModeClean(editMode)) {
+    recordMatchResult({
+      winnerTeam,
+      turnCount: match.combat.currentTurn,
+      scores: match.combat.playerScores,
+      players: match.players.map((p) => ({
+        team: p.team,
+        username: p.username,
+        championKeys: p.selectedChampionKeys,
+        emblemKeys: p.emblems.map((e) => e.key),
+      })),
+      championRoster,
+    }).catch((err) => console.error("[analytics] upload falhou:", err));
+  }
 }
 
 function handleEndTurn() {
@@ -1720,11 +1738,28 @@ io.on("connection", (socket) => {
     match.combat.gameEnded = true; // mark game as ended on surrender
     gameOverEmitted = true;
 
+    const championRoster = getMatchRosterStats();
+
     io.emit("gameOver", {
       winnerTeam,
       winnerName,
-      champions: getMatchRosterStats(),
+      champions: championRoster,
     });
+
+    if (isEditModeClean(editMode)) {
+      recordMatchResult({
+        winnerTeam,
+        turnCount: match.combat.currentTurn,
+        scores: match.combat.playerScores,
+        players: match.players.map((p) => ({
+          team: p.team,
+          username: p.username,
+          championKeys: p.selectedChampionKeys,
+          emblemKeys: p.emblems.map((e) => e.key),
+        })),
+        championRoster,
+      }).catch((err) => console.error("[analytics] upload falhou:", err));
+    }
   });
 
   // =============================
