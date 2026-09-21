@@ -22,7 +22,10 @@ const naelthosSkills = [
     priority: 0,
     element: "water",
     description() {
-      return `Naelthos calls a calm swell over the chosen target, dealing Water magical damage. The same tide then washes back over his most wounded ally, restoring ${this.healAmount} HP and carrying away every negative status effect clinging to them.`;
+      return {
+        en: `Naelthos calls a calm swell over the chosen target, dealing Water magical damage. The same tide then washes back over his most wounded ally, restoring <b>${this.healAmount}</b> <b>HP</b> and carrying away every negative status effect clinging to them.`,
+        pt: `Naelthos convoca uma onda calma sobre o alvo escolhido, causando dano mágico de Água. A mesma maré então retorna sobre seu aliado mais ferido, restaurando <b>${this.healAmount}</b> de <b>HP</b> e levando embora todo efeito negativo que ainda o prenda.`,
+      };
     },
     targetSpec: ["enemy"],
 
@@ -96,9 +99,14 @@ const naelthosSkills = [
     priority: 2,
     element: "water",
     description() {
-      return `Naelthos comes apart into pure water, untargetable and untouchable for ${this.effectDuration} turn(s).
+      return {
+        en: `Naelthos comes apart into pure water, untargetable and untouchable for <b>${this.effectDuration}</b> turn(s).
 
-      The form breaks the moment he takes an action of his own, and a Lightning skill will find him even so — it interrupts the form, though the water spreads the blow and the damage is halved.`;
+      The form breaks the moment he takes an action of his own, and a Lightning skill will find him even so — it interrupts the form, though the water spreads the blow and the damage is halved.`,
+        pt: `Naelthos se desfaz em água pura, intangível e impossível de ser alvejado por <b>${this.effectDuration}</b> turno(s).
+
+      A forma se desfaz no instante em que ele age por conta própria ou é acertado por uma habilidade de Raio — ela também interrompe a forma, embora a água espalhe o golpe e reduza o dano pela metade.`,
+      };
     },
     targetSpec: ["self"],
 
@@ -189,9 +197,14 @@ const naelthosSkills = [
 
     priority: 0,
     description() {
-      return `Naelthos opens the depths of the Primordial Sea and lets them rise through him: his Max HP swells by up to ${this.hpFactor}% of his base HP, and the same surge floods his current HP. Each invocation swells him less than the last.
+      return {
+        en: `Naelthos opens the depths of the Primordial Sea and lets them rise through him: his <b>Max HP</b> swells by up to <b>${this.hpFactor}%</b> of his base HP, and the same surge floods his current HP. Each invocation swells him less than the last.
 
-      For ${this.effectDuration} turn(s), the Rising Sea carries every blow he lands: his attacks gain +${this.bonusPerStack} bonus damage for every ${this.hpPerStack} current HP, up to ${this.maxBonus}.`;
+      For <b>${this.effectDuration}</b> turn(s), the Rising Sea carries every blow he lands: his attacks gain +<b>${this.bonusPerStack}</b> bonus damage for every <b>${this.hpPerStack}</b> current HP, up to <b>${this.maxBonus}</b>.`,
+        pt: `Naelthos abre as profundezas do Mar Primordial e as deixa subir através dele: seu <b>HP Máximo</b> aumenta em até <b>${this.hpFactor}%</b> de seu HP base, e a mesma torrente inunda seu HP atual. Cada invocação o incha menos que a anterior.
+
+      Por <b>${this.effectDuration}</b> turno(s), o Mar Crescente carrega todo golpe que ele desfere: seus ataques ganham +<b>${this.bonusPerStack}</b> de dano bônus para cada <b>${this.hpPerStack}</b> de HP atual, até um máximo de <b>${this.maxBonus}</b>.`,
+      };
     },
     targetSpec: ["self"],
 

@@ -22,11 +22,14 @@ const raliaSkills = [
     defLoss: 30,
     atkBuff: 35,
     buffDuration: 2,
-    contact: false,
+    contact: true,
 
     priority: 0,
     description() {
-      return `Rália swears an oath in iron and blood, giving up ${this.defLoss} Defense and ${this.selfDamage} HP to gain +${this.atkBuff} Attack for ${this.buffDuration} turn(s). She then falls upon the chosen target, dealing physical damage.`;
+      return {
+        en: `Rália swears an oath in iron and blood, giving up <b>${this.defLoss}</b> <b>Defense</b> and <b>${this.selfDamage}</b> <b>HP</b> to gain +<b>${this.atkBuff}</b> <b>Attack</b> for <b>${this.buffDuration}</b> turn(s). She then falls upon the chosen target, dealing physical damage.`,
+        pt: `Rália faz um juramento de ferro e sangue, abrindo mão de <b>${this.defLoss}</b> de <b>Defesa</b> e <b>${this.selfDamage}</b> de <b>HP</b> para ganhar +<b>${this.atkBuff}</b> de <b>Ataque</b> por <b>${this.buffDuration}</b> turno(s). Em seguida, ela se lança sobre o alvo escolhido, causando dano físico.`,
+      };
     },
     targetSpec: ["self", "enemy"],
     resolve({ user, targets, context = {} }) {
@@ -122,7 +125,10 @@ const raliaSkills = [
 
     priority: 0,
     description() {
-      return `Rália passes judgement with her blade, dealing physical damage to the chosen target and taking the sentence back as her own strength: she restores HP equal to ${this.healPercent}% of the effective damage dealt, never less than ${this.minHeal}. If the judgement is fatal, her player scores ${this.killScorePoints} point.`;
+      return {
+        en: `Rália passes judgement with her blade, dealing physical damage to the chosen target and taking the sentence back as her own strength: she restores <b>HP</b> equal to <b>${this.healPercent}%</b> of the effective damage dealt, never less than <b>${this.minHeal}</b>. If the judgement is fatal, her player scores <b>${this.killScorePoints}</b> point.`,
+        pt: `Rália profere sua sentença com a lâmina, causando dano físico ao alvo escolhido e recolhendo essa sentença de volta como força própria: ela restaura <b>HP</b> igual a <b>${this.healPercent}%</b> do dano efetivo causado, nunca menos que <b>${this.minHeal}</b>. Se a sentença for fatal, seu jogador marca <b>${this.killScorePoints}</b> ponto.`,
+      };
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -188,7 +194,7 @@ const raliaSkills = [
     hitVfx: "multislash",
     piercingPercentage: 75,
 
-    atkDebuff: 20,
+    atkDebuff: 25,
     debuffDuration: 2,
     bleedStacks: 2,
 
@@ -198,9 +204,14 @@ const raliaSkills = [
 
     priority: 0,
     description() {
-      return `Rália drives her blade into the ground and lays down her law over the battlefield. For ${this.debuffDuration} turn(s), every active enemy suffers −${this.atkDebuff} Attack.
+      return {
+        en: `Rália drives her blade into the ground and lays down her law over the battlefield. For <b>${this.debuffDuration}</b> turn(s), every active enemy suffers −<b>${this.atkDebuff}</b> <b>Attack</b>.
 
-      She then sweeps the field, dealing piercing physical damage (${this.piercingPercentage}% piercing) to all living enemies and leaving ${this.bleedStacks} stacks of Bleeding in the wake of her edge.`;
+      She then sweeps the field, dealing <b>piercing</b> physical damage (<b>${this.piercingPercentage}%</b> <b>piercing</b>) to all living enemies and leaving <b>${this.bleedStacks}</b> stacks of Bleeding in the wake of her edge.`,
+        pt: `Rália crava a lâmina no chão e impõe sua lei sobre o campo de batalha. Por <b>${this.debuffDuration}</b> turno(s), todo inimigo ativo sofre −<b>${this.atkDebuff}</b> de <b>Ataque</b>.
+
+      Em seguida, ela varre o campo, causando dano físico <b>perfurante</b> (<b>${this.piercingPercentage}%</b> de <b>perfuração</b>) a todos os inimigos vivos e deixando <b>${this.bleedStacks}</b> stacks de <b>Sangramento</b> no rastro de sua lâmina.`,
+      };
     },
     targetSpec: ["all:enemy"],
     resolve({ user, targets, context = {} }) {

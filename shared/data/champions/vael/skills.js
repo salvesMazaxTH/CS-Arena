@@ -21,7 +21,10 @@ const vaelSkills = [
     priority: 0,
 
     description() {
-      return `Vael flashes forward in a swift slash, dealing damage to the enemy with a chance to land a critical hit.`;
+      return {
+        en: `Vael flashes forward in a swift slash, dealing damage to the enemy with a chance to land a critical hit.`,
+        pt: `Vael avança num lampejo veloz, causando dano ao inimigo com chance de desferir um acerto crítico.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -52,7 +55,10 @@ const vaelSkills = [
     priority: 0,
 
     description() {
-      return `Vael lunges through the chosen target with a swift strike, dealing ${this.bfPrimary}% damage without critical hits. The enemy to the target's left is struck as well, if one exists, taking ${this.bfSecondary}% damage as a guaranteed critical hit.`;
+      return {
+        en: `Vael lunges through the chosen target with a swift strike, dealing <b>${this.bfPrimary}%</b> damage without critical hits. The enemy to the target's left is struck as well, if one exists, taking <b>${this.bfSecondary}%</b> damage as a guaranteed critical hit.`,
+        pt: `Vael investe através do alvo escolhido com um golpe veloz, causando <b>${this.bfPrimary}%</b> de dano sem chance de crítico. O inimigo à esquerda do alvo também é atingido, se houver um, recebendo <b>${this.bfSecondary}%</b> de dano como um acerto crítico garantido.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -118,7 +124,10 @@ const vaelSkills = [
     priority: 0,
 
     description() {
-      return `Vael delivers a devastating strike with his silent blade, dealing massive damage to the chosen target. If this attack kills the target, Vael scores points equal to his current CLAIM value.`;
+      return {
+        en: `Vael delivers a devastating strike with his silent blade, dealing massive damage to the chosen target. If this attack kills the target, Vael scores points equal to his current <b>CLAIM</b> value.`,
+        pt: `Vael desfere um golpe devastador com sua lâmina silenciosa, causando dano massivo ao alvo escolhido. Se esse ataque matar o alvo, Vael marca pontos iguais ao seu valor de <b>CLAIM</b> atual.`,
+      };
     },
 
     targetSpec: ["enemy"],

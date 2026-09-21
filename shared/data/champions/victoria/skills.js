@@ -71,7 +71,10 @@ const victoriaSkills = [
     bf: 30,
     bonusDamage: 20,
     description() {
-      return `Victoria steps in and lets her fist answer, the air curling away from it. Deals physical damage to the chosen target plus ${this.bonusDamage} bonus damage, and no taunt can pull the blow aside.`;
+      return {
+        en: `Victoria steps in and lets her fist answer, the air curling away from it. Deals physical damage to the chosen target plus <b>${this.bonusDamage}</b> bonus damage, and no taunt can pull the blow aside.`,
+        pt: `Victoria avança e deixa o punho responder, o ar se contorcendo ao redor dele. Causa dano físico ao alvo escolhido, mais <b>${this.bonusDamage}</b> de dano bônus, e nenhuma provocação consegue desviar o golpe.`,
+      };
     },
   },
 
@@ -88,7 +91,10 @@ const victoriaSkills = [
     brandDuration: 2,
 
     description() {
-      return `Victoria drags a burning knuckle across the chosen target, dealing physical damage. If they are not Burning yet, the ember catches and leaves them Burning for ${this.burnDuration} turn(s); if they already burn, the fire digs in instead and her next hit on them pierces ${flashpoint.brandPiercing}% of their Defense. No taunt can pull the blow aside.`;
+      return {
+        en:`Victoria drags a burning knuckle across the chosen target, dealing physical damage. If they are not Burning yet, the ember catches and leaves them Burning for <b>${this.burnDuration}</b> turn(s); if they already burn, the fire digs in instead and her next hit on them pierces <b>${flashpoint.brandPiercing}%</b> of their <b>Defense</b>. No taunt can pull the blow aside.`,
+        pt: `Victoria arrasta os nós de seus dedos em chamas pelo alvo escolhido, causando dano físico. Se ele não estiver <b>Queimando</b>, a brasa o alcança, deixando-o <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s); se ele já estiver queimando, a chama cava mais fundo em vez disso e o próximo golpe dela no alvo se torna <b>perfurante</b> (<b>${flashpoint.brandPiercing}%</b> de <b>perfuração</b> da <b>Defesa</b>). Nenhuma provocação pode desviar o golpe.`
+      };
     },
 
     targetSpec: ["enemy"],
@@ -142,7 +148,10 @@ const victoriaSkills = [
     storedPercent: 40,
 
     description() {
-      return `Victoria opens her arms and every ember she has banked closes around her as a pair of burning wings, granting a Shield worth ${this.baseShieldRatio * 100}% of her Defense plus all of her stored heat, for ${this.aegisDuration} turn(s). While the aegis holds, ${this.storedPercent}% of every point of damage aimed at her is banked as heat again, up to ${flashpoint.emberHeatCap}. The moment the aegis breaks or burns out, all of that heat is released on every enemy as magical damage that cannot be evaded.`;
+      return {
+        en: `Victoria opens her arms and every ember she has banked closes around her as a pair of burning wings, granting a <b>Shield</b> worth <b>${this.baseShieldRatio * 100}%</b> of her <b>Defense</b> plus all of her stored heat, for <b>${this.aegisDuration}</b> turn(s). While the aegis holds, <b>${this.storedPercent}%</b> of every point of damage aimed at her is banked as heat again, up to <b>${flashpoint.emberHeatCap}</b>. The moment the aegis breaks or burns out, all of that heat is released on every enemy as magical damage that cannot be evaded.`,
+        pt: `Victoria abre seus braços e toda brasa que ela acumulou se fecha ao seu redor em um par de asas flamejantes, concedendo um <b>Escudo</b> equivalente a <b>${this.baseShieldRatio * 100}%</b> de sua <b>Defesa</b> mais todo o calor armazenado, por <b>${this.aegisDuration}</b> turno(s). Enquanto o égide se mantém de pé, <b>${this.storedPercent}%</b> de todo ponto de dano mirado contra ela é acumulado como calor novamente, até um máximo de <b>${flashpoint.emberHeatCap}</b>. No momento em que o égide se quebra ou expira, todo aquele calor é liberado em todos os inimigos como dano mágico que não pode ser esquivado.`,
+      };
     },
 
     targetSpec: ["self"],
@@ -234,7 +243,10 @@ const victoriaSkills = [
     consumeBonus: 70,
 
     description() {
-      return `Victoria winds up once and brings down something closer to a small sun than a fist, dealing physical damage to the chosen target. If they are Burning, the fire is swallowed whole and the blow lands with ${this.consumeBonus} bonus damage.`;
+      return {
+        en: `Victoria winds up once and brings down something closer to a small sun than a fist, dealing physical damage to the chosen target. If they are Burning, the fire is swallowed whole and the blow lands with <b>${this.consumeBonus}</b> bonus damage.`,
+        pt: `Victoria toma impulso uma única vez e desce algo mais parecido com um pequeno sol do que um punho, causando dano físico ao alvo escolhido. Se ele estiver <b>Queimando</b>, o fogo é engolido por inteiro e o golpe chega com <b>${this.consumeBonus}</b> de dano bônus.`,
+      };
     },
 
     targetSpec: ["enemy"],

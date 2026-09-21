@@ -9,7 +9,7 @@ const tharoxSkills = [
   // ========================
   totalBlock,
   // ========================
-  // Habilidades Especiais
+  // Special Abilities
   // ========================
 
   {
@@ -21,7 +21,10 @@ const tharoxSkills = [
     contact: false,
     priority: 3,
     description() {
-      return `Tharox draws the attention of all enemies to himself for ${this.tauntDuration} turn(s), daring them to strike against his immovable bulk. He gains ${this.damageReductionAmount}% Damage Reduction (except Absolute Damage) for ${this.damageReductionDuration} turn(s). Consecutive uses have an exponentially lower chance of success (resets on failure or using another skill.)`;
+      return {
+        en: `Tharox draws the attention of all enemies to himself for <b>${this.tauntDuration}</b> turn(s), daring them to strike against his immovable bulk. He gains <b>${this.damageReductionAmount}%</b> <b>Damage Reduction</b> (except <b>Absolute Damage</b>) for <b>${this.damageReductionDuration}</b> turn(s). Consecutive uses have an exponentially lower chance of success (resets on failure or using another skill.)`,
+        pt: `Tharox atrai a atenção de todos os inimigos para si por <b>${this.tauntDuration}</b> turno(s), desafiando-os a golpear sua massa imóvel. Ele ganha <b>${this.damageReductionAmount}%</b> de <b>Redução de Dano</b> (exceto <b>Dano Absoluto</b>) por <b>${this.damageReductionDuration}</b> turno(s). Usos consecutivos têm uma chance de sucesso exponencialmente menor (reinicia ao falhar ou ao usar outra habilidade.)`,
+      };
     },
 
     targetSpec: ["self"],
@@ -34,18 +37,10 @@ const tharoxSkills = [
       });
 
       user.runtime.tauntStreak ??= 0;
-      /* console.log(
-        `[Skill - Primeval Taunt] ${user.name} used Primeval Taunt. Current Taunt Streak: ${user.runtime.tauntStreak}`,
-      );
-      */
-      const chance = 1 / Math.pow(3, user.runtime.tauntStreak); // Chance diminui exponencialmente a cada uso
+      const chance = 1 / Math.pow(3, user.runtime.tauntStreak);
       const sucess = Math.random() < chance;
-      /* console.log(
-        `[Skill - Primeval Taunt] ${user.name} attempted Primeval Taunt. Chance: ${chance}, Success?: ${sucess}`,
-      );
-      */
       if (!sucess) {
-        user.runtime.tauntStreak = 0; // Reset streak se a provocação for mal-sucedida
+        user.runtime.tauntStreak = 0;
 
         context.registerDialog({
           message: `But it failed.`,
@@ -63,14 +58,7 @@ const tharoxSkills = [
       }
 
       user.runtime.lastTauntTurn = context.currentTurn;
-
-      // if it was successful, increment the tauntStreak for the next attempt
       user.runtime.tauntStreak += 1;
-      /* console.log(
-        `[Skill - Primeval Taunt] ${user.name} used Primeval Taunt. Current Taunt Streak: ${user.runtime.tauntStreak}`,
-      );
-      */
-      // Get all active champions on the opposing team
 
       const tauntLogs = [];
 
@@ -102,7 +90,10 @@ const tharoxSkills = [
     contact: true,
     priority: 0,
     description() {
-      return `Tharox crashes into the chosen target with the overwhelming weight of his stone-like frame, dealing damage equal to ${this.maxDefScaling}% of his Defense at full health. The more wounded he becomes, the less force he can bring to bear — his devastating strength waning down to ${this.minDefScaling}% as his colossal body begins to falter. If he has taken no damage this turn or the previous one, his own caution costs him ${this.noRiskPenaltyPercent}% of that damage.`;
+      return {
+        en: `Tharox crashes into the chosen target with the overwhelming weight of his stone-like frame, dealing damage equal to <b>${this.maxDefScaling}%</b> of his <b>Defense</b> at full health. The more wounded he becomes, the less force he can bring to bear — his devastating strength waning down to <b>${this.minDefScaling}%</b> as his colossal body begins to falter. If he has taken no damage this turn or the previous one, his own caution costs him <b>${this.noRiskPenaltyPercent}%</b> of that damage.`,
+        pt: `Tharox se lança contra o alvo escolhido com o peso avassalador de seu corpo de pedra, causando dano igual a <b>${this.maxDefScaling}%</b> de sua <b>Defesa</b> quando está com vida cheia. Quanto mais ferido fica, menos força consegue empregar — seu poder devastador cai até <b>${this.minDefScaling}%</b> conforme seu corpo colossal começa a falhar. Se não sofreu dano neste turno nem no anterior, sua própria cautela lhe custa <b>${this.noRiskPenaltyPercent}%</b> desse dano.`,
+      };
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -153,9 +144,14 @@ const tharoxSkills = [
     priority: 2,
 
     description() {
-      return `Tharox unleashes the Apotheosis of the Monolith, becoming an immovable force of living stone for ${this.effectDuration} turn(s). His immense frame hardens further, granting him a SupremeShield and +${this.defBonusWhileShielded} Defense while the shield endures.
+      return {
+        en: `Tharox unleashes the Apotheosis of the Monolith, becoming an immovable force of living stone for <b>${this.effectDuration}</b> turn(s). His immense frame hardens further, granting him a <b>SupremeShield</b> and +<b>${this.defBonusWhileShielded}</b> <b>Defense</b> while the shield endures.
 
-      The power of the Monolith restores his strength as it manifests, healing him based on his bonus Defense. When the SupremeShield is broken, that stored power surges back through his body, restoring HP equal to ${this.healingUponShieldBreakPercent}% of his bonus Defense.`;
+        The power of the Monolith restores his strength as it manifests, healing him based on his bonus <b>Defense</b>. When the <b>SupremeShield</b> is broken, that stored power surges back through his body, restoring <b>HP</b> equal to <b>${this.healingUponShieldBreakPercent}%</b> of his bonus <b>Defense</b>.`,
+        pt: `Tharox libera a Apoteose do Monólito, tornando-se por <b>${this.effectDuration}</b> turno(s) uma força inamovível de pedra viva. Seu corpo imenso se enrijece ainda mais, concedendo-lhe um <b>Escudo Supremo</b> e +<b>${this.defBonusWhileShielded}</b> de <b>Defesa</b> enquanto o escudo perdurar.
+
+        O poder do Monólito restaura suas forças assim que se manifesta, curando-o proporcionalmente à sua <b>Defesa</b> bônus. Quando o <b>Escudo Supremo</b> se rompe, esse poder acumulado retorna com força por seu corpo, restaurando <b>HP</b> igual a <b>${this.healingUponShieldBreakPercent}%</b> de sua <b>Defesa</b> bônus.`,
+      };
     },
 
     targetSpec: ["self"],

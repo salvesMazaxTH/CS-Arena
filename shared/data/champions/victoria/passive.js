@@ -23,7 +23,10 @@ export default {
       ? this.comboChance + this.rebirthComboBonus
       : this.comboChance;
 
-    return `Fire answers Victoria before she asks. Whenever she damages a Burning enemy she banks <b>${heatPercent}%</b> of the damage dealt as heat, up to <b>${this.emberHeatCap}</b>, and the Phoenix Aegis is what turns that heat into a Shield. After any action of hers that deals damage, she has a <b>${base}%</b> chance to come back at the same enemy with her Basic Strike, rising to <b>${base + this.burningComboBonus}%</b> if that enemy is Burning. The first time she is driven to <b>${this.rebirthThreshold * 100}%</b> HP or below, the phoenix in her wakes: she permanently gains <b>+${this.rebirthAttackPercent}%</b> Attack, is wrapped in a Shield worth <b>${this.rebirthShieldRatio * 100}%</b> of her Defense, and from then on banks twice the heat and adds <b>+${this.rebirthComboBonus}</b> percentage points to both of those chances.`;
+    return {
+      en: `Fire answers Victoria before she asks. Whenever she damages a Burning enemy she banks <b>${heatPercent}%</b> of the damage dealt as heat, up to <b>${this.emberHeatCap}</b>, and the Phoenix Aegis is what turns that heat into a <b>Shield</b>. After any action of hers that deals damage, she has a <b>${base}%</b> chance to come back at the same enemy with her Basic Strike, rising to <b>${base + this.burningComboBonus}%</b> if that enemy is Burning. The first time she is driven to <b>${this.rebirthThreshold * 100}%</b> <b>HP</b> or below, the phoenix in her wakes: she permanently gains <b>+${this.rebirthAttackPercent}%</b> <b>Attack</b>, is wrapped in a <b>Shield</b> worth <b>${this.rebirthShieldRatio * 100}%</b> of her <b>Defense</b>, and from then on banks twice the heat and adds <b>+${this.rebirthComboBonus}</b> percentage points to both of those chances.`,
+      pt: `O fogo responde a Victoria antes mesmo de ela pedir. Sempre que causa dano a um inimigo <b>Queimando</b>, ela acumula <b>${heatPercent}%</b> do dano causado como calor, até um máximo de <b>${this.emberHeatCap}</b>, e é o Égide da Fênix que transforma esse calor em <b>Escudo</b>. Após qualquer ação sua que cause dano, ela tem <b>${base}%</b> de chance de voltar contra o mesmo inimigo com seu Golpe Básico, chance que sobe para <b>${base + this.burningComboBonus}%</b> se aquele inimigo estiver <b>Queimando</b>. Na primeira vez em que for reduzida a <b>${this.rebirthThreshold * 100}%</b> de <b>HP</b> ou menos, a fênix nela desperta: ganha permanentemente <b>+${this.rebirthAttackPercent}%</b> de <b>Ataque</b>, é envolta por um <b>Escudo</b> equivalente a <b>${this.rebirthShieldRatio * 100}%</b> de sua <b>Defesa</b>, e passa a acumular o dobro de calor e a somar <b>+${this.rebirthComboBonus}</b> pontos percentuais a ambas as chances.`,
+    };
   },
 
   hookScope: {
@@ -50,6 +53,7 @@ export default {
     delete defender.runtime.victoriaEmberBrandUntilTurn;
 
     return {
+      mode: "piercing",
       piercingPercentage: this.brandPiercing,
       log: `<b>[Passive — ${this.name}]</b> The brand on ${formatChampionName(defender)} opens up for Victoria's fist.`,
     };

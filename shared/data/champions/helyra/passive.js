@@ -14,7 +14,10 @@ export default {
   arcPercent: 25,
 
   description() {
-    return `Helyra has never in her life aimed at one thing. The charge riding her rounds refuses to stop at the body it entered, so every hit she lands jumps from the chosen target to each of the other enemies on the field for ${this.arcPercent}% of the damage it actually dealt, as <b>Absolute Damage</b>.`;
+    return {
+      en: `Helyra has never in her life aimed at one thing. The charge riding her rounds refuses to stop at the body it entered, so every hit she lands jumps from the chosen target to each of the other enemies on the field for <b>${this.arcPercent}%</b> of the damage it actually dealt, as <b>Absolute Damage</b>.`,
+      pt: `Helyra jamais, em toda a sua vida, mirou em uma única coisa. A carga que cavalga por seu corpo se recusa a deter-se no corpo que primeiro atravessa; assim, cada golpe que desfere salta do alvo escolhido para cada um dos outros inimigos no campo, causando <b>${this.arcPercent}%</b> do dano que efetivamente infligiu, como <b>Dano Absoluto</b>.`,
+    };
   },
 
   hookScope: {

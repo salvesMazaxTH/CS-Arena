@@ -19,7 +19,10 @@ const helyraSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Helyra crosses both muzzles on the chosen target without breaking stride, and the marble hall gives back one flat crack instead of two. Deals physical damage.`;
+      return {
+        en: `Helyra crosses both muzzles on the chosen target without breaking stride, and the marble hall gives back one flat crack instead of two. Deals physical damage.`,
+        pt: `Helyra cruza os dois canos sobre o alvo escolhido sem sequer quebrar o passo, e o salão de mármore devolve um único estampido seco, em vez de dois. Causa dano físico.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -52,7 +55,10 @@ const helyraSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Helyra buries a round that never finishes discharging, and from that moment the chosen target is less a person than a path to ground. Deals physical damage and applies Conductor for ${this.conductorDuration} turn(s).`;
+      return {
+        en: `Helyra buries a round that never finishes discharging, and from that moment the chosen target is less a person than a path to ground. Deals physical damage and applies Conductor for <b>${this.conductorDuration}</b> turn(s).`,
+        pt: `Helyra enterra no alvo um projétil que jamais termina de descarregar e, a partir desse instante, o alvo escolhido deixa de ser alguém e passa a ser apenas um caminho até o chão. Causa dano físico e aplica <b>Condutor</b> por <b>${this.conductorDuration}</b> turno(s).`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -97,7 +103,10 @@ const helyraSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Helyra runs the whole length of the hall with both guns open, and every pane and plinth between her and the chosen target comes apart in her wake. Deals physical damage.`;
+      return {
+        en: `Helyra runs the whole length of the hall with both guns open, and every pane and plinth between her and the chosen target comes apart in her wake. Deals physical damage.`,
+        pt: `Helyra atravessa o salão de uma ponta à outra, com as duas armas em punho, e cada vitral e cada pedestal entre ela e o alvo escolhido se desfaz por onde passa. Causa dano físico.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {

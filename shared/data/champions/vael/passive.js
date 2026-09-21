@@ -3,12 +3,14 @@ export default {
   name: "Flawseeking Blade",
 
   critBuff: 15,
-  critCap: 95,
   critThreshold: 50,
   enhancedCritBonus: 85,
 
   description() {
-    return `Each critical hit increases Vael's Critical by +${this.critBuff}% (up to ${this.critCap}%). Once his Critical exceeds ${this.critThreshold}%, his critical damage bonus is increased to ${this.enhancedCritBonus}%.`;
+    return {
+      en: `Each critical hit increases Vael's <b>Critical</b> by +<b>${this.critBuff}%</b>. Once his <b>Critical</b> exceeds <b>${this.critThreshold}%</b>, his critical damage bonus is increased to <b>${this.enhancedCritBonus}%</b>.`,
+      pt: `Cada acerto crítico aumenta o <b>Crítico</b> de Vael em +<b>${this.critBuff}%</b>. Quando seu <b>Crítico</b> ultrapassa <b>${this.critThreshold}%</b>, seu bônus de dano crítico sobe para <b>${this.enhancedCritBonus}%</b>.`,
+    };
   },
 
   hookScope: {

@@ -8,7 +8,10 @@ export default {
   hpPerStack: 25,
   maxHeal: 35,
   description() {
-    return `The sea always comes back for Naelthos. Whenever he is struck, the tide returns to him and he restores ${this.healPerStack} HP for every ${this.hpPerStack} HP lost in that hit, up to ${this.maxHeal} HP per hit.`;
+    return {
+      en: `The sea always comes back for Naelthos. Whenever he is struck, the tide returns to him and he restores <b>${this.healPerStack}</b> <b>HP</b> for every <b>${this.hpPerStack}</b> <b>HP</b> lost in that hit, up to <b>${this.maxHeal}</b> <b>HP</b> per hit.`,
+      pt: `O mar sempre retorna para Naelthos. Sempre que é golpeado, a maré volta até ele e restaura <b>${this.healPerStack}</b> de <b>HP</b> para cada <b>${this.hpPerStack}</b> de <b>HP</b> perdido naquele golpe, até um máximo de <b>${this.maxHeal}</b> de <b>HP</b> por golpe.`,
+    };
   },
 
   hookScope: {

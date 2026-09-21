@@ -40,7 +40,10 @@ export default {
   evasionPerSpeedTaken: EVASION_PER_SPEED_TAKEN,
 
   description() {
-      return `Kazeminus does not hurry and does not need to: the air itself knows who he is, and every breath upon the field moves by his favor, carrying him at the pace it denies to others. He deals 1% bonus damage for every ${this.speedPerBonusPercent} points of Speed he holds over the chosen target. Whenever he takes Speed away from an enemy, he gains Evasion equal to ${this.evasionPerSpeedTaken}% of what he took, for exactly as long as that enemy goes without it.`;
+    return {
+      en: `Kazeminus never hurries, nor does he need to: the air itself knows who he is, and every breath across the field moves in his favor, carrying him at the pace it denies everyone else. He deals <b>1%</b> bonus damage for every <b>${this.speedPerBonusPercent}</b> points of <b>Speed</b> he holds over the chosen target. Whenever he steals <b>Speed</b> from an enemy, he gains <b>Evasion</b> equal to <b>${this.evasionPerSpeedTaken}%</b> of what he took, for exactly as long as that enemy remains without it.`,
+      pt: `Kazeminus não se apressa, nem precisa fazê-lo: o próprio ar sabe quem ele é, e cada sopro sobre o campo se move a seu favor, conduzindo-o no ritmo que nega aos outros. Ele causa <b>1%</b> de dano adicional para cada <b>${this.speedPerBonusPercent}</b> pontos de <b>Velocidade</b> que possuir além do alvo escolhido. Sempre que rouba <b>Velocidade</b> de um inimigo, recebe <b>Esquiva</b> equivalente a <b>${this.evasionPerSpeedTaken}%</b> do que lhe tomou, pelo exato tempo em que aquele inimigo permanecer sem ela.`,
+    };
   },
 
   hookScope: {
