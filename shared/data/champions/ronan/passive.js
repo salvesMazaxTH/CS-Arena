@@ -2,19 +2,21 @@ import { formatChampionName } from "../../../ui/formatters.js";
 
 export const FIXATION_DURATION = 2;
 
-// Ronan only ever answers one person at a time, so an older grudge is dropped
-// rather than stacked. Re-fixating on the same target only refreshes the timer,
-// with no fresh announcement.
+// Ronan only ever answers one person at a time, so an older grudge of his own
+// is dropped rather than stacked.
 export function fixateOn(owner, enemy, duration, context, { chosen = false } = {}) {
   const chosenUntil = owner.runtime.ronanChosenUntilTurn ?? 0;
-
-  // A fight he picked himself outranks the one the last hit handed him, and
-  // only lets go early if that target leaves the field.
-  if (!chosen && chosenUntil > context.currentTurn) {
-    const stillStanding = context.aliveChampions.some(
+  const chosenHolds =
+    chosenUntil > context.currentTurn &&
+    context.aliveChampions.some(
       (champ) => champ.id === owner.runtime.ronanChosenTargetId,
     );
-    if (stillStanding) return null;
+
+  if (!chosenHolds) {
+    delete owner.runtime.ronanChosenUntilTurn;
+    delete owner.runtime.ronanChosenTargetId;
+  } else if (!chosen) {
+    return null;
   }
 
   if (chosen) {
@@ -22,15 +24,24 @@ export function fixateOn(owner, enemy, duration, context, { chosen = false } = {
     owner.runtime.ronanChosenTargetId = enemy.id;
   }
 
-  if (owner.isTauntedBy(enemy.id)) {
-    for (const effect of owner.tauntEffects) {
-      effect.expiresAtTurn = context.currentTurn + duration;
-    }
+  const fixation = owner.tauntEffects.find((effect) => effect.ronanFixation);
+
+  if (fixation?.taunterId === enemy.id) {
+    fixation.expiresAtTurn = context.currentTurn + duration;
     return null;
   }
 
-  owner.tauntEffects = [];
-  return owner.applyTaunt(enemy.id, duration, context);
+  if (fixation) {
+    owner.tauntEffects = owner.tauntEffects.filter(
+      (effect) => effect !== fixation,
+    );
+  }
+
+  const applied = owner.applyTaunt(enemy.id, duration, context);
+  const added = owner.tauntEffects[owner.tauntEffects.length - 1];
+  if (added) added.ronanFixation = true;
+
+  return applied;
 }
 
 export default {
@@ -111,7 +122,11 @@ export default {
 
   onBeforeDmgDealing({ attacker, owner, defender, damage }) {
     if (attacker !== owner) return;
-    if (!owner.isTauntedBy(defender.id)) return;
+
+    const fixated = owner.tauntEffects.some(
+      (effect) => effect.ronanFixation && effect.taunterId === defender.id,
+    );
+    if (!fixated) return;
 
     return { damage: Number(damage) * (1 + this.fixationBonusPercent / 100) };
   },

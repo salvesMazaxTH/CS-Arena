@@ -51,8 +51,8 @@ export default {
   key: "the_flash_arrives_first",
   name: "The Flash Arrives First",
 
-  flashPercent: 55,
-  thunderPercent: 65,
+  flashPercent: 45,
+  thunderPercent: 55,
 
   description() {
     return `Tony Raiturus is a storm wearing a boy, and the boy is always a little ahead of the storm. Every blow he lands splits: only ${this.flashPercent}% of it arrives as the flash, right away, while ${this.thunderPercent}% of it hangs over the target as thunder still on its way. At the start of his next turn all of it lands at once, plus ${THUNDER_FLAT_BONUS} bonus damage, and it cannot be evaded — the strike already happened, the sound is only catching up. If he falls first, the thunder arrives anyway.`;
@@ -62,7 +62,14 @@ export default {
     onBeforeDmgDealing: "attacker",
   },
 
-  onBeforeDmgDealing({ attacker, owner, defender, damage, skill }) {
+  onBeforeDmgDealing({
+    attacker,
+    owner,
+    defender,
+    damage,
+    preMitigationDamage,
+    skill,
+  }) {
     if (attacker !== owner || defender === owner) return;
     if (skill?.splitsIntoThunder === false) return;
 
@@ -70,10 +77,13 @@ export default {
       ? this.thunderPercent * 2
       : this.thunderPercent;
 
+    // The stored share is pre-mitigation so the delayed hit is only mitigated
+    // once, when it lands.
+    const struck = Number(preMitigationDamage ?? damage);
+
     defender.runtime ??= {};
     defender.runtime[THUNDER_RUNTIME_FLAG] =
-      (defender.runtime[THUNDER_RUNTIME_FLAG] ?? 0) +
-      (Number(damage) * share) / 100;
+      (defender.runtime[THUNDER_RUNTIME_FLAG] ?? 0) + (struck * share) / 100;
 
     return { damage: (Number(damage) * this.flashPercent) / 100 };
   },

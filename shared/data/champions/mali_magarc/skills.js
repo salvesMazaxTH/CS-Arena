@@ -133,7 +133,7 @@ const maliMagarcSkills = [
     transformDuration: 2,
 
     description() {
-      return `The shape Mali Magarc wears was always a courtesy to the arena, and he withdraws it. He strikes the chosen target once, then unfolds into the raw arcane he ruled before it had a name — his <b>Primordial Form</b> — for ${this.transformDuration} turn(s), replacing his skills, his passive and his stats. Deals magical damage.`;
+      return `The shape Mali Magarc wears was always a courtesy to the arena, and he withdraws it. He strikes the chosen target once, then unfolds into the raw arcane he ruled before it had a name — his <b>Primordial Form</b> — for ${this.transformDuration} turn(s), replacing his skills, his passive and his stats. As he unfolds, one positive status effect is unmade on every enemy. Deals magical damage.`;
     },
 
     targetSpec: ["enemy"],
@@ -165,6 +165,29 @@ const maliMagarcSkills = [
       results.push({
         log: `${formatChampionName(user)} withdraws his worn shape and unfolds into his <b>Primordial Form</b> for ${this.transformDuration} turn(s)!`,
       });
+
+      let stripped = 0;
+      for (const champ of context.aliveChampions) {
+        if (champ.team === user.team || !champ.alive) continue;
+
+        const [buff] = champ.getStatusEffects({ type: "buff" });
+        if (!buff) continue;
+
+        champ.removeStatusEffect(buff.key);
+        stripped++;
+
+        context.registerDialog?.({
+          message: `The refinement peels off ${formatChampionName(champ)} before the dragon.`,
+          sourceId: user.id,
+          targetId: champ.id,
+        });
+      }
+
+      if (stripped) {
+        results.push({
+          log: `${stripped} positive effect(s) are unmade as ${formatChampionName(user)} unfolds.`,
+        });
+      }
 
       return results;
     },

@@ -51,7 +51,7 @@ const ronanSkills = [
     priority: 0,
 
     description() {
-      return `Ronan picks the fight he wants instead of the one he was handed, and makes very sure the other one wants it too. Deals Fire physical damage and locks the two of them onto each other for ${this.tauntDuration} turn(s): he can aim this even while another grudge holds him, any grudge he was already carrying is dropped, he Taunts himself onto this target instead, and they are left Taunted onto him. Nothing he suffers in the meantime moves his attention off them.`;
+      return `Ronan picks the fight he wants instead of the one he was handed, and makes very sure the other one wants it too. Deals Fire physical damage and locks the two of them onto each other for ${this.tauntDuration} turn(s): he can aim this even while another grudge holds him, any grudge of his own he was already carrying is dropped, he Taunts himself onto this target instead, and they are left Taunted onto him. Nothing he suffers in the meantime moves his attention off them.`;
     },
 
     targetSpec: ["enemy"],
@@ -83,7 +83,7 @@ const ronanSkills = [
     name: "Ignisar's Temper",
 
     bf: 110,
-    ragePercentAsBonus: 100,
+    ragePercentAsBonus: 50,
 
     contact: true,
     damageMode: "standard",

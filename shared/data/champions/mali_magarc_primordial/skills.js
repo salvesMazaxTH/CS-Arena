@@ -8,7 +8,7 @@ const maliMagarcPrimordialSkills = [
     key: "unaimed_discharge",
     name: "Unaimed Discharge",
 
-    bf: 34,
+    bf: 22,
 
     contact: false,
     damageMode: "absolute",
@@ -49,7 +49,7 @@ const maliMagarcPrimordialSkills = [
     key: "first_magic_undivided",
     name: "The First Magic, Undivided",
 
-    bf: 80,
+    bf: 63,
 
     contact: false,
     damageMode: "absolute",

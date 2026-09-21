@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
+import { detonateThunder } from "./passive.js";
 
 const tonyRaiturusSkills = [
   totalBlock,
@@ -102,7 +103,7 @@ const tonyRaiturusSkills = [
     transformDuration: 2,
 
     description() {
-      return `The boy's shape was never the redemption, only the terms of it, and Tony stops honouring them. Deals Lightning magical damage, then he unfolds into the storm he was sentenced to be, his <b>Primordial Form</b>, for ${this.transformDuration} turn(s), replacing his skills, his passive and his stats.`;
+      return `The boy's shape was never the redemption, only the terms of it, and Tony stops honouring them. Deals Lightning magical damage, then he unfolds into the storm he was sentenced to be, his <b>Primordial Form</b>, for ${this.transformDuration} turn(s), replacing his skills, his passive and his stats. As he unfolds, every thunder still owed to an enemy arrives on the spot.`;
     },
 
     targetSpec: ["enemy"],
@@ -134,6 +135,8 @@ const tonyRaiturusSkills = [
       results.push({
         log: `${formatChampionName(user)} stops holding the boy's shape and rises as his <b>Primordial Form</b> for ${this.transformDuration} turn(s)!`,
       });
+
+      results.push(...detonateThunder(user, context));
 
       return results;
     },
