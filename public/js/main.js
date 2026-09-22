@@ -1154,6 +1154,11 @@ let summonReminderEndsTurn = false;
 const summonReminderOverlay = document.getElementById("summonReminderOverlay");
 const summonReminderChips = document.getElementById("summonReminderChips");
 const summonReminderDismiss = document.getElementById("summonReminderDismiss");
+const summonReminderDontShow = document.getElementById("summonReminderDontShow");
+
+// Reset on every combatReset — the checkbox only silences the reminder for
+// the current match, not across matches or page reloads.
+let summonReminderSuppressed = false;
 
 function isSummonReminderOpen() {
   return summonReminderOverlay?.classList.contains("active") === true;
@@ -1188,6 +1193,8 @@ function openSummonReminder(championKeys) {
     button.addEventListener("click", () => summonFromReminder(button));
     summonReminderChips.appendChild(button);
   });
+
+  if (summonReminderDontShow) summonReminderDontShow.checked = false;
 
   summonReminderOverlay.classList.remove("hidden");
   // Force a reflow so the dialog animates in instead of appearing already opaque.
@@ -1251,7 +1258,7 @@ function requestEndTurn() {
   if (hasConfirmedEndTurn || isSummonReminderOpen()) return;
 
   const summonable = getSummonableLineupChampions();
-  if (!summonable.length) {
+  if (!summonable.length || summonReminderSuppressed) {
     endTurn();
     return;
   }
@@ -1260,6 +1267,8 @@ function requestEndTurn() {
 }
 
 summonReminderDismiss?.addEventListener("click", () => {
+  if (summonReminderDontShow?.checked) summonReminderSuppressed = true;
+
   closeSummonReminder();
   endTurn();
 });
@@ -1732,6 +1741,7 @@ socket.on("combatReset", ({ turn = 1, score } = {}) => {
   isResolvingTurn = false;
   gameEnded = false;
   pendingSummonChampionKey = null;
+  summonReminderSuppressed = false;
   syncLineupBannerLock();
 
   closeSummonReminder();

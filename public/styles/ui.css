@@ -3567,6 +3567,27 @@ body.perspective-team2 .combat-dialog-bubble .team-2 {
   outline: none;
 }
 
+.summon-reminder-dont-show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  user-select: none;
+}
+
+.summon-reminder-dont-show:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.summon-reminder-dont-show input {
+  cursor: pointer;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .summon-reminder-overlay,
   .summon-reminder-dialog {
