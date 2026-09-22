@@ -84,6 +84,10 @@ import weyne from "./weyne/index.js";
 import gorvakharr from "./gorvakharr/index.js";
 import victoria from "./victoria/index.js";
 import bergrisa from "./bergrisa/index.js";
+import yresa_petronika from "./yresa_petronika/index.js";
+import yresa_petronika_primordial from "./yresa_petronika_primordial/index.js";
+import yresa_sentinel from "./yresa_sentinel/index.js";
+import yresa_colossus from "./yresa_colossus/index.js";
 
 const championDB = {
   atlas,
@@ -172,6 +176,10 @@ const championDB = {
   gorvakharr,
   victoria,
   bergrisa,
+  yresa_petronika,
+  yresa_petronika_primordial,
+  yresa_sentinel,
+  yresa_colossus,
 };
 
 export default championDB;
