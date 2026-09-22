@@ -692,7 +692,7 @@ Apenas statusEffects com entrada em `StatusIndicator.statusEffectIcons` terão �
 | `imunidade absoluta` | (imagem)      | Ciano            |
 | `tributo`            | TRIB. (texto) | Vermelho         |
 | `queimando`          | 🔥            | Laranja-vermelho |
-| `enraizado`          | 🌱            | Verde            |
+| `enredado`           | 🌱            | Verde            |
 
 Para adicionar uma nova statusEffect com ícone, basta adicionar entrada em `StatusIndicator.statusEffectIcons`.
 

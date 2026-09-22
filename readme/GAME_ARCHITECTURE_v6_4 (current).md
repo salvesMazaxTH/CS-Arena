@@ -301,20 +301,20 @@ O servidor gerencia toda a sessão por meio de uma instância de `GameMatch` (ve
 
 ### Eventos Cliente → Servidor
 
-| Evento                     | Payload                           | Descrição                                      |
-| -------------------------- | --------------------------------- | ---------------------------------------------- |
-| `requestPlayerSlot`        | `username: string`                | Solicita entrada no jogo                       |
+| Evento                     | Payload                                       | Descrição                                        |
+| -------------------------- | --------------------------------------------- | ------------------------------------------------ |
+| `requestPlayerSlot`        | `username: string`                            | Solicita entrada no jogo                         |
 | `readyWithTeam`            | `{ champions: string[8], emblems: string[] }` | Entra no matchmaking com o time escolhido no hub |
-| `cancelReadyWithTeam`      | —                                 | Sai do matchmaking (volta ao hub)             |
-| `requestSkillUse`          | `{ userId, skillKey }`            | Pré-validação antes de mostrar overlay de alvo |
-| `useSkill`                 | `{ userId, skillKey, targetIds }` | Enfileira ação com alvos confirmados           |
-| `requestSwitch`            | —                                 | **Desativado por tempo indeterminado**         |
-| `requestUndoActions`       | —                                 | Cancela todas as ações pendentes do jogador    |
-| `endTurn`                  | —                                 | Confirma fim de turno                          |
-| `surrender`                | —                                 | Rendição imediata                              |
-| `combatAnimationsFinished` | —                                 | Informa que o cliente terminou as animações    |
-| `debugResetCombat`         | —                                 | Reset de combate (debug)                       |
-| `removeChampion`           | `{ championId }`                  | Remove campeão (edit mode)                     |
+| `cancelReadyWithTeam`      | —                                             | Sai do matchmaking (volta ao hub)                |
+| `requestSkillUse`          | `{ userId, skillKey }`                        | Pré-validação antes de mostrar overlay de alvo   |
+| `useSkill`                 | `{ userId, skillKey, targetIds }`             | Enfileira ação com alvos confirmados             |
+| `requestSwitch`            | —                                             | **Desativado por tempo indeterminado**           |
+| `requestUndoActions`       | —                                             | Cancela todas as ações pendentes do jogador      |
+| `endTurn`                  | —                                             | Confirma fim de turno                            |
+| `surrender`                | —                                             | Rendição imediata                                |
+| `combatAnimationsFinished` | —                                             | Informa que o cliente terminou as animações      |
+| `debugResetCombat`         | —                                             | Reset de combate (debug)                         |
+| `removeChampion`           | `{ championId }`                              | Remove campeão (edit mode)                       |
 
 ### Eventos Servidor → Cliente
 
@@ -324,8 +324,8 @@ O servidor gerencia toda a sessão por meio de uma instância de `GameMatch` (ve
 | `serverFull`                | `string`                        | Sala lotada                                  |
 | `waitingForOpponent`        | `string`                        | Aguardando segundo jogador                   |
 | `allPlayersConnected`       | —                               | Ambos jogadores conectados                   |
-| `readyWithTeamRejected`     | `string`                       | Time recusado na validação do servidor       |
-| `allTeamsSelected`          | —                               | Ambos prontos; a partida começa             |
+| `readyWithTeamRejected`     | `string`                        | Time recusado na validação do servidor       |
+| `allTeamsSelected`          | —                               | Ambos prontos; a partida começa              |
 | `gameStateUpdate`           | `{ champions[], currentTurn }`  | Estado completo do jogo                      |
 | `combatAction`              | envelope tipado (ver seção 5.1) | Envelope de ação de combate                  |
 | `combatLog`                 | `string`                        | Mensagem de log avulsa                       |
@@ -1134,10 +1134,10 @@ tempo e dano aninhado (reflect, thorns, contra-ataque, fila de dano extra) nunca
 disparam efeitos reativos** — só o golpe direto dispara. Um tick de DoT, portanto,
 nunca conta como "struck" para um `onAfterDmg*`.
 
-Para os dois *before*-hooks em dano `absolute`, o gate é diferente: eles só
+Para os dois _before_-hooks em dano `absolute`, o gate é diferente: eles só
 rodam com `hookPolicies.<event>.allowOnAbsolute: true`, e quando rodam, rodam em
 **qualquer** dano absolute (direto, DoT ou aninhado), sem passar pelos gates de
-`isDot` / `damageDepth`. Os *after*-hooks em absolute mantêm o gate normal de
+`isDot` / `damageDepth`. Os _after_-hooks em absolute mantêm o gate normal de
 DoT/aninhado. Uma redução via `getTotalDamageReduction` já ignora `absolute`
 sozinha (ver `03_composeDamage.js`); a passiva da Nythera checa `mode` no próprio
 hook.
@@ -1525,7 +1525,7 @@ export const StatusEffectsRegistry = {
 | ------------------ | ------------------ | ------ | ----------------- | -------------------------------------------------------------- |
 | Paralisado         | `paralyzed`        | debuff | softCC, lightning | -100% SPD, 40% chance de negar ação                            |
 | Atordoado          | `stunned`          | debuff | hardCC            | Não pode agir (stun)                                           |
-| Enraizado          | `rooted`           | debuff | hardCC, nature    | Não pode usar skills de contato                                |
+| Enredado           | `rooted`           | debuff | hardCC, nature    | Não pode usar skills de contato                                |
 | Inerte             | `inert`            | debuff | hardCC            | Não pode agir (auto-imposto)                                   |
 | Gelado             | `chilled`          | debuff | statMod, ice      | -50% SPD/ATK                                                   |
 | Congelado          | `frozen`           | debuff | hardCC, ice       | -100% SPD/ATK, não age, quebra ao sofrer dano                  |
@@ -1796,20 +1796,20 @@ await animateSkill(skillKey, { targetEl, userEl, skill });
 
 **Animações registradas atualmente:**
 
-| Chave                                | Efeito                                                                                                                        |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| `quick_hook`, `blazing_fist_barrage` | Swipe trail + fist impact (procedural texture) + smoke particles. Direção calculada de `userEl` → `targetEl`. Lifetime: 1,1s. |
-| `default_lightning`                  | Relâmpago em Canvas 2D com ramificações e flash `.lightning-hit` no alvo.                                                    |
-| `default_fire`                       | Bola de fogo em Canvas 2D (`fireballAnimation.js`): trilha em arco, impacto com brasas, shockwave e flash `.fire-hit`.         |
-| `default_fire_big`                   | Mesma classe `FireballEffect` com `scale: 1.85` — usada por ultimates de fogo e pelas exceções de `BIG_FIREBALL_SKILLS`.        |
-| `default_water`                      | Projétil de água em Canvas 2D (`waterAnimation.js`): trilha em arco, splash com dois anéis, gotículas que se separam em duas levas e caem com gravidade, flash `.water-hit`. |
-| `default_water_big`                  | Mesma classe `WaterBoltEffect` com `scale: 1.85` — usada por ultimates de água e pelas exceções de `BIG_WATERBOLT_SKILLS`.      |
-| `default_slash`                      | Corte único (`slashAnimation.js`): um fio é traçado rápido na diagonal, segura, e então rasga numa fenda larga de bordas luminosas e miolo vazio. Flash `.slash-hit`. |
+| Chave                                | Efeito                                                                                                                                                                             |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `quick_hook`, `blazing_fist_barrage` | Swipe trail + fist impact (procedural texture) + smoke particles. Direção calculada de `userEl` → `targetEl`. Lifetime: 1,1s.                                                      |
+| `default_lightning`                  | Relâmpago em Canvas 2D com ramificações e flash `.lightning-hit` no alvo.                                                                                                          |
+| `default_fire`                       | Bola de fogo em Canvas 2D (`fireballAnimation.js`): trilha em arco, impacto com brasas, shockwave e flash `.fire-hit`.                                                             |
+| `default_fire_big`                   | Mesma classe `FireballEffect` com `scale: 1.85` — usada por ultimates de fogo e pelas exceções de `BIG_FIREBALL_SKILLS`.                                                           |
+| `default_water`                      | Projétil de água em Canvas 2D (`waterAnimation.js`): trilha em arco, splash com dois anéis, gotículas que se separam em duas levas e caem com gravidade, flash `.water-hit`.       |
+| `default_water_big`                  | Mesma classe `WaterBoltEffect` com `scale: 1.85` — usada por ultimates de água e pelas exceções de `BIG_WATERBOLT_SKILLS`.                                                         |
+| `default_slash`                      | Corte único (`slashAnimation.js`): um fio é traçado rápido na diagonal, segura, e então rasga numa fenda larga de bordas luminosas e miolo vazio. Flash `.slash-hit`.              |
 | `default_multislash`                 | Combo (`multislashAnimation.js`): três lâminas escalonadas em leque, faíscas, e cada ferida se abre em duas bordas. Reservado a ultimates de corte e skills que são vários golpes. |
 
 **Fallbacks por elemento**: skills sem animação própria caem em `DEFAULT_ELEMENT_ANIMATIONS` quando são ofensivas (`damageMode` definido) e não fazem contato (`contact: false`) — `lightning` → `default_lightning`, `fire` → `default_fire`, `water` → `default_water`. Skills de fogo com `isUltimate: true`, mais as chaves listadas em `BIG_FIREBALL_SKILLS` (hoje `magma_bomb`), sobem para `default_fire_big`; o mesmo vale para água com `BIG_WATERBOLT_SKILLS` (hoje vazio) e `default_water_big`.
 
-**Motivo autoral — `hitVfx`**: uma skill pode declarar `hitVfx: "slash"` ou `hitVfx: "multislash"` para pedir uma animação pelo *gesto* em vez do elemento. Isso é consultado **antes** do gate de `contact`, porque um corte normalmente é `contact: true`, e vence o fallback de elemento. A chave resolvida é `default_${hitVfx}`.
+**Motivo autoral — `hitVfx`**: uma skill pode declarar `hitVfx: "slash"` ou `hitVfx: "multislash"` para pedir uma animação pelo _gesto_ em vez do elemento. Isso é consultado **antes** do gate de `contact`, porque um corte normalmente é `contact: true`, e vence o fallback de elemento. A chave resolvida é `default_${hitVfx}`.
 
 **Cor do corte — `hitVfxPalette`**: a paleta dos cortes resolve em três níveis, `hitVfxPalette` → `element` → `steel`. As matizes seguem `shared/ui/identityPalette.js` para o corte ler como o mesmo elemento do badge, mas com valores mais claros: blending aditivo lava os tons abafados de badge, e uma lâmina precisa de núcleo quase branco. Além das chaves de elemento existem paletas autorais (`violet` para Akane, `crimson` para o Drex). Os sprites são pré-renderizados uma vez por paleta e cacheados.
 
@@ -2090,15 +2090,15 @@ Flags que afetam combate (`damageOutput`, `alwaysCrit`, `alwaysEvade`, `executio
 
 ### Constantes de Jogo
 
-| Constante                 | Valor   | Descrição                      |
-| ------------------------- | ------- | ------------------------------ |
-| `TEAM_SIZE`               | 3       | Campeões por equipe na seleção |
-| `MAX_SCORE`               | 3       | Pontos para vencer             |
-| Slots simultâneos         | 3       | Campeões em campo por time     |
-| `DISCONNECT_TIMEOUT`      | 30s     | Timeout de reconexão           |
-| `ultCap` (padrão)         | 24      | 6 barras × 4 unidades          |
-| Ult regen global          | +3/turn | Regen para todos os vivos      |
-| Switches por jogador      | 0       | Sistema desativado atualmente  |
+| Constante            | Valor   | Descrição                      |
+| -------------------- | ------- | ------------------------------ |
+| `TEAM_SIZE`          | 3       | Campeões por equipe na seleção |
+| `MAX_SCORE`          | 3       | Pontos para vencer             |
+| Slots simultâneos    | 3       | Campeões em campo por time     |
+| `DISCONNECT_TIMEOUT` | 30s     | Timeout de reconexão           |
+| `ultCap` (padrão)    | 24      | 6 barras × 4 unidades          |
+| Ult regen global     | +3/turn | Regen para todos os vivos      |
+| Switches por jogador | 0       | Sistema desativado atualmente  |
 
 ### Por que AudioManager como singleton?
 

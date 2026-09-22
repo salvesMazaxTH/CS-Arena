@@ -113,7 +113,7 @@
 │   │       ├── effectsRegistry.js
 │   │       ├── atordoado.js
 │   │       ├── paralisado.js
-│   │       ├── enraizado.js
+│   │       ├── enredado.js
 │   │       ├── inerte.js
 │   │       ├── gelado.js
 │   │       ├── congelado.js
@@ -1140,7 +1140,7 @@ StatusEffects são objetos de comportamento registrados em `effectsRegistry.js`.
 export const StatusEffectsRegistry = {
   paralisado,
   atordoado,
-  enraizado,
+  enredado,
   inerte,
   gelado,
   congelado,

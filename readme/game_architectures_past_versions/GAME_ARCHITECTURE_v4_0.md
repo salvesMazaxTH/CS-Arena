@@ -96,7 +96,7 @@
 │           ├── effectsRegistry.js  # Map de todos os status-effects registrados
 │           ├── atordoado.js
 │           ├── paralisado.js
-│           ├── enraizado.js
+│           ├── enredado.js
 │           ├── inerte.js
 │           ├── gelado.js
 │           ├── congelado.js
@@ -900,7 +900,7 @@ StatusEffects são objetos de comportamento registrados num mapa central. Quando
 export const StatusEffectsRegistry = {
   paralisado,
   atordoado,
-  enraizado,
+  enredado,
   inerte,
   gelado,
   congelado,
@@ -1029,7 +1029,7 @@ champion.getStatusEffect("gelado"); // → dados do map ou null
 | `inerte`            | 🔒       | Cinza            |
 | `imunidadeAbsoluta` | (imagem) | Ciano            |
 | `queimando`         | 🔥       | Laranja-vermelho |
-| `enraizado`         | 🌱       | Verde            |
+| `enredado`          | 🌱       | Verde            |
 
 Para adicionar ícone a um novo status-effect, adicione entry em `StatusIndicator.statusEffectIcons`.
 
