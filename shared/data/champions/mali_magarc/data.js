@@ -6,7 +6,7 @@ export default {
   HP: 325,
   Attack: 280,
   Defense: 100,
-  Speed: 88,
+  Speed: 90,
 
   classKey: "mage",
   species: ["primordial dragon", "dragon"],
