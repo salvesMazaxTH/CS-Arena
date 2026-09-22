@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../ui/formatters.js";
+import { isLocalizedText } from "../../i18n/locale.js";
 
 /**
  * Turns resolved combat contexts into the "combatAction" payloads the client
@@ -151,7 +152,8 @@ export class CombatEnvelopeBuilder {
     return { targetId: realTargetIds[0] ?? null, targetName };
   }
 
-  /** Recursively gathers every log/logMessage string out of a results tree. */
+  /** Recursively gathers every log/logMessage entry out of a results tree,
+   *  as either a plain string or a { en, pt } bilingual pair. */
   collectLogs(value, logs = [], visited = new Set()) {
     if (value == null) return logs;
 
@@ -168,9 +170,14 @@ export class CombatEnvelopeBuilder {
     if (typeof value !== "object" || visited.has(value)) return logs;
     visited.add(value);
 
-    if (typeof value.log === "string" && value.log.trim()) logs.push(value.log);
-    if (typeof value.logMessage === "string" && value.logMessage.trim()) {
-      logs.push(value.logMessage);
+    if (isLocalizedText(value)) {
+      logs.push(value);
+      return logs;
+    }
+
+    for (const key of ["log", "logMessage"]) {
+      if (Array.isArray(value[key])) this.collectLogs(value[key], logs, visited);
+      else if (isLocalizedText(value[key])) logs.push(value[key]);
     }
 
     const nestedLogCollections = [

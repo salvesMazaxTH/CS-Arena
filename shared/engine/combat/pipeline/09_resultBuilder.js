@@ -32,10 +32,6 @@ export function buildFinalResult(event) {
     );
   }
 
-  if (allLogs.length) {
-    finalLog += "\n" + allLogs.join("\n");
-  }
-
   if (event.constructor.debugMode) console.groupEnd(); // Close the debug group if it was opened
 
   const mainResult = {
@@ -49,7 +45,8 @@ export function buildFinalResult(event) {
     contact: event.contact,
     hitVfx: event.hitVfx,
     hitId: event.hitId,
-    log: finalLog,
+    // Entries stay unjoined so bilingual { en, pt } logs survive to the client.
+    log: [finalLog, ...allLogs].flat(Infinity).filter(Boolean),
     crit: event.crit,
     damageDepth: event.context.damageDepth,
     skill: event.skill,

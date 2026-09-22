@@ -588,6 +588,14 @@ function emitCombatLogsFromResults(results = []) {
   }
 }
 
+/** Each entry may be a plain string or a { en, pt } pair, so this must stay
+ *  unjoined — only the client, which knows the viewer's locale, may flatten
+ *  it into a single string. */
+function logsOrNull(results) {
+  const logs = envelopeBuilder.collectLogs(results);
+  return logs.length ? logs : null;
+}
+
 // ============================================================
 //  TURN RESOLUTION
 // ============================================================
@@ -670,9 +678,7 @@ function handleEndTurn() {
     user: null,
     skill: { key: "actions_locked", name: "Turn Lock" },
     context: lockContext,
-    log:
-      envelopeBuilder.collectLogs(lockContext.registeredResults).join("\n") ||
-      null,
+    log: logsOrNull(lockContext.registeredResults),
   });
 
   // Collect all championMutationRequests BEFORE emitting envelopes; they are
@@ -681,15 +687,13 @@ function handleEndTurn() {
 
   for (const result of actionResults) {
     if (result.executed) {
-      const actionLog = envelopeBuilder.collectLogs(result.results).join("\n");
-
       emitCombatEnvelopesFromContext({
         user: result.user,
         skill: result.skill,
         context: result.context,
         scorePayload: result.scorePayload ?? null,
         claimPoints: result.claimPoints ?? null,
-        log: actionLog || null,
+        log: logsOrNull(result.results),
       });
 
       const championMutationRequests =
@@ -723,9 +727,7 @@ function handleEndTurn() {
     skill: { key: "champion_death", name: "Champion Death" },
     context: deathContext,
     scorePayload: resolver.applyScoreResults(deathContext.registeredResults),
-    log:
-      envelopeBuilder.collectLogs(deathContext.registeredResults).join("\n") ||
-      null,
+    log: logsOrNull(deathContext.registeredResults),
   });
 
   // Now process championMutationRequests (after deathResults) so the new
@@ -1036,9 +1038,7 @@ function handleStartTurn() {
     skill: { key: "turn_start", name: "Turn Start" },
     context: turnStartContext,
     scorePayload: resolver.applyScoreResults(turnStartContext.registeredResults),
-    log:
-      envelopeBuilder.collectLogs(turnStartContext.registeredResults).join("\n") ||
-      null,
+    log: logsOrNull(turnStartContext.registeredResults),
   });
 
   flushFieldDepartures();

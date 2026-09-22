@@ -115,8 +115,14 @@ export class TurnResolver {
           user,
           action,
           logMessage: gone
-            ? `${formatChampionName(gone)} is no longer on the field, and their action is lost.`
-            : `Unknown champion's action ignored (not active).`,
+            ? {
+                en: `${formatChampionName(gone)} is no longer on the field, and their action is lost.`,
+                pt: `${formatChampionName(gone)} não está mais em campo, e sua ação é perdida.`,
+              }
+            : {
+                en: `Unknown champion's action ignored (not active).`,
+                pt: `Ação de campeão desconhecido ignorada (não está ativo).`,
+              },
         });
         continue;
       }

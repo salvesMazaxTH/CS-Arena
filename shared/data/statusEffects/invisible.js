@@ -19,7 +19,10 @@ const invisible = {
 
     owner.removeStatusEffect(this.key);
     context?.registerDialog?.({
-      message: `${formatChampionName(owner)} slips back into view.`,
+      message: {
+        en: `${formatChampionName(owner)} slips back into view.`,
+        pt: `${formatChampionName(owner)} volta a ficar visível.`,
+      },
       sourceId: owner.id,
     });
   },

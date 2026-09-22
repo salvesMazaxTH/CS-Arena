@@ -1555,8 +1555,9 @@ async function handleSkillUsage(button) {
 }
 
 socket.on("skillDenied", (message) => {
-  console.warn("[SkillDenied]", message);
-  alert(message);
+  const text = resolveText(message, getLocale());
+  console.warn("[SkillDenied]", text);
+  alert(text);
 });
 
 socket.on("skillApproved", async ({ userId, skillKey }) => {
@@ -1851,9 +1852,7 @@ socket.on("combatPhaseComplete", () => {
 });
 
 socket.on("combatLog", (message) => {
-  if (typeof message === "string") {
-    combatAnimations.handleCombatLog(message);
-  }
+  logCombat(resolveText(message, getLocale()));
 });
 
 function logCombat(text) {

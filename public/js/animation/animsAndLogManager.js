@@ -13,6 +13,8 @@ import { playLifestealTransferVFX } from "../../../shared/vfx/lifestealTransferC
 import { StatusIndicator } from "../../../shared/ui/statusIndicator.js";
 import { playDeathClaimEffect } from "../../../shared/vfx/deathClaim.js";
 import { CLAIM_ACTION_KEY } from "../../../shared/engine/combat/claim.js";
+import { resolveText } from "../../../shared/i18n/locale.js";
+import { getLocale } from "../i18n/clientLocale.js";
 import { audioManager } from "../utils/AudioManager.js";
 import { animateSkill } from "./skillAnimations.js";
 import { playUnmakingEffect } from "./effects/unmakingAnimation.js";
@@ -1318,7 +1320,7 @@ export function createCombatAnimationManager(deps) {
 
     const dialogController = createDialogController();
     activeDialogController = dialogController;
-    dialogText.innerHTML = text;
+    dialogText.innerHTML = resolveText(text, getLocale());
     dialog.classList.toggle("ultimate", options?.ultimate === true);
     dialog.classList.remove("hidden", "leaving");
     dialog.classList.add("active");
@@ -1626,7 +1628,13 @@ export function createCombatAnimationManager(deps) {
   //  turn headers for visual separation between turns.
   // ============================================================
 
-  function appendToLog(text) {
+  function appendToLog(rawText) {
+    const text = Array.isArray(rawText)
+      ? rawText
+          .map((entry) => resolveText(entry, getLocale()))
+          .filter(Boolean)
+          .join("\n")
+      : resolveText(rawText, getLocale());
     if (!text) return;
 
     const log = document.getElementById("combat-log");

@@ -14,9 +14,8 @@ import {
   revertChampionTransformation,
 } from "./championTransformation.js";
 
-// Sanity ceiling for the minion slot search. Minions have no rule-level cap;
-// this only keeps the lookup from running away if something goes wrong.
-const MAX_MINION_SLOTS = 24;
+// Every living entity a team fields counts against this, minions included.
+const MAX_ENTITIES_PER_TEAM = 8;
 
 // Percentage stats are left alone: they are already small and rounding to five
 // would distort them.
@@ -275,22 +274,26 @@ class CombatState {
   }
 
   /**
-   * Checks whether the team has room for one more living champion.
-   *
-   * The field cap applies to champions ONLY: minions occupy none of those
-   * slots and have no cap of their own, so a team already fielding three
-   * minions can still summon three champions.
+   * Checks whether the team has room for one more living entity. Champions are
+   * bound by `maxPerTeam`; every entity, minions included, is bound by the
+   * team-wide entity cap.
    */
   canSpawnOnTeam(
     team,
     maxPerTeam = 3,
     { entityType = "champion", requiredSlots = 1 } = {},
   ) {
+    const entitiesOnField = this.getTeamChampions(team, { alive: true });
+
+    if (entitiesOnField.length + requiredSlots > MAX_ENTITIES_PER_TEAM) {
+      return false;
+    }
+
     if (entityType === "minion") return true;
 
-    const championsOnField = this.getTeamChampions(team, {
-      alive: true,
-    }).filter((champion) => champion.entityType !== "minion");
+    const championsOnField = entitiesOnField.filter(
+      (champion) => champion.entityType !== "minion",
+    );
 
     return championsOnField.length + requiredSlots <= maxPerTeam;
   }
@@ -314,8 +317,7 @@ class CombatState {
     );
 
     if (entityType === "minion") {
-      // No minion cap — the ceiling only bounds the iteration.
-      const ceiling = maxPerTeam + MAX_MINION_SLOTS;
+      const ceiling = maxPerTeam + MAX_ENTITIES_PER_TEAM;
       for (let i = maxPerTeam; i < ceiling; i++) {
         if (!occupied.has(i)) return i;
       }
@@ -402,10 +404,9 @@ class CombatState {
     }
     const baseData = { ...dbData, entityType, ...scaledStats };
 
-    // The field cap counts champions only; minions go straight through.
     if (!this.canSpawnOnTeam(team, maxPerTeam, { entityType })) {
       console.warn(
-        `[SPAWN] Aborted: team ${team} already fields ${maxPerTeam} champions (attempted: ${championKey}).`,
+        `[SPAWN] Aborted: team ${team} has no room for another ${entityType} (attempted: ${championKey}).`,
       );
       return null;
     }

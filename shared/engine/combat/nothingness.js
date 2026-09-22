@@ -28,7 +28,10 @@ export class Nothingness {
 
     return {
       champion,
-      log: `${formatChampionName(champion)} slips into the Nothingness.`,
+      log: {
+        en: `${formatChampionName(champion)} slips into the Nothingness.`,
+        pt: `${formatChampionName(champion)} escorrega para o Nada.`,
+      },
     };
   }
 
@@ -73,7 +76,10 @@ export class Nothingness {
 
     return {
       champion,
-      log: `${formatChampionName(champion)} steps back out of the Nothingness.`,
+      log: {
+        en: `${formatChampionName(champion)} steps back out of the Nothingness.`,
+        pt: `${formatChampionName(champion)} retorna do Nada.`,
+      },
     };
   }
 
