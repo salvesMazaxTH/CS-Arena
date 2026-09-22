@@ -343,9 +343,11 @@ export function createCombatAnimationManager(deps) {
       }
     }
 
-    // Plays a whole wave at once: dialogs stay sequential (they share the
-    // single dialog bubble), while the animations themselves overlap and
-    // share one canvas via canvasBatch instead of mounting one each.
+    // Plays a whole wave at once: animations overlap and share one canvas
+    // via canvasBatch. PreDialogs run sequentially before animations (they
+    // gate the action). PostDialogs run in parallel after animations fire,
+    // so AoE hits complete visually before their effects (like affinity
+    // effectiveness) queue into the dialog bubble.
     async function runBatch(batch, handler) {
       for (const event of batch) {
         if (event.preDialogs?.length) await runDialogs(event.preDialogs);
@@ -358,8 +360,13 @@ export function createCombatAnimationManager(deps) {
 
       for (const event of batch) {
         applyEventVisualState(event);
-        if (event.postDialogs?.length) await runDialogs(event.postDialogs);
       }
+
+      await Promise.all(
+        batch.map((event) =>
+          event.postDialogs?.length ? runDialogs(event.postDialogs) : Promise.resolve()
+        )
+      );
     }
 
     // 💥 Splits a chunk of events into "waves" that can be animated at the
@@ -781,19 +788,30 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   async function animateHeal(effect) {
-    const { targetId, amount } = effect;
+    const { targetId, amount, sourceId } = effect;
     const target = resolveTargetVisual(targetId);
     if (!target) return;
     const { championEl, portraitWrapper, name } = target;
 
     await showDialog(`${name} restored health.`);
-    audioManager.play("heal");
 
-    championEl.classList.add("heal");
-    createFloatElement(portraitWrapper, `+${amount}`, "heal-float");
-    updateVisualHP(targetId, amount);
+    // The glow, the float and the bar all fire from the mote's arrival.
+    let glow = Promise.resolve();
+    const onLand = () => {
+      audioManager.play("heal");
+      championEl.classList.add("heal");
+      glow = waitForAnimation(championEl, 600);
+      createFloatElement(portraitWrapper, `+${amount}`, "heal-float");
+      updateVisualHP(targetId, amount);
+    };
 
-    await waitForAnimation(championEl, 600);
+    await animateSkill("default_mending", {
+      userEl: getChampionElement(sourceId),
+      targetEl: championEl,
+      onLand,
+    });
+
+    await glow;
     championEl.classList.remove("heal");
   }
 
@@ -874,23 +892,35 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   async function animateShield(effect) {
-    const { targetId, amount, shieldType } = effect;
+    const { targetId, amount, shieldType, sourceId } = effect;
     const target = resolveTargetVisual(targetId);
     if (!target) return;
+    const { championEl, portraitWrapper } = target;
 
     await showDialog(`${target.name} gained a shield.`);
 
-    createFloatElement(
-      target.portraitWrapper,
-      `🛡️ ${SHIELD_MARKERS[shieldType] ?? amount}`,
-      "shield-float",
-    );
+    let glow = Promise.resolve();
+    const onLand = () => {
+      championEl.classList.add("buff");
+      glow = waitForAnimation(championEl, 600);
+      createFloatElement(
+        portraitWrapper,
+        `🛡️ ${SHIELD_MARKERS[shieldType] ?? amount}`,
+        "shield-float",
+      );
+      updateVisualHP(targetId, 0, null, {
+        shields: effect.targetState?.runtime?.shields,
+      });
+    };
 
-    updateVisualHP(targetId, 0, null, {
-      shields: effect.targetState?.runtime?.shields,
+    await animateSkill("default_boon", {
+      userEl: getChampionElement(sourceId),
+      targetEl: championEl,
+      onLand,
     });
 
-    await wait(300);
+    await glow;
+    championEl.classList.remove("buff");
   }
 
   // ============================================================
@@ -957,15 +987,25 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   async function animateBuff(effect) {
-    const { targetId } = effect || {};
+    const { targetId, sourceId } = effect || {};
     const target = resolveTargetVisual(targetId);
     if (!target) return;
     const { championEl, portraitWrapper } = target;
 
-    championEl.classList.add("buff");
-    createFloatElement(portraitWrapper, "+BUFF", "buff-float");
+    let glow = Promise.resolve();
+    const onLand = () => {
+      championEl.classList.add("buff");
+      glow = waitForAnimation(championEl, 600);
+      createFloatElement(portraitWrapper, "+BUFF", "buff-float");
+    };
 
-    await waitForAnimation(championEl, 600);
+    await animateSkill("default_boon", {
+      userEl: getChampionElement(sourceId),
+      targetEl: championEl,
+      onLand,
+    });
+
+    await glow;
     championEl.classList.remove("buff");
   }
 
