@@ -25,7 +25,10 @@ const laisaelisSkills = [
     priority: 2,
 
     description() {
-      return `Laisaelis looks at something on the field and answers that there could be more of it. At the start of the next turn an Echo of the chosen entity takes the field at her side with its skills, its passive and everything currently upon it, at ${this.echoScale * 100}% of its base stats — only ${this.echoHpScale * 100}% for HP. Only one Echo can hold the field at a time: casting again unravels the old one. The Echo fades after ${this.echoDuration} turns, and its ending is not a death: it concedes no points, and nothing that answers to dying answers to it. Neither sister can be echoed, and neither can an Echo.`;
+      return {
+        en: `Laisaelis looks at something on the field and answers that there could be more of it. At the start of the next turn an <b>Echo</b> of the chosen entity takes the field at her side with its skills, its passive and everything currently upon it, at <b>${this.echoScale * 100}%</b> of its base stats — only <b>${this.echoHpScale * 100}%</b> for HP. Only one Echo can hold the field at a time: casting again unravels the old one. The Echo fades after <b>${this.echoDuration}</b> turns, and its ending is not a death: it concedes no points, and nothing that answers to dying answers to it. Neither sister can be echoed, and neither can an Echo.`,
+        pt: `Laisaelis olha para algo em campo e responde que poderia haver mais disso. No início do próximo turno, um <b>Eco</b> da entidade escolhida entra em campo ao seu lado com suas habilidades, sua passiva e tudo o que a aflige no momento, com <b>${this.echoScale * 100}%</b> de seus atributos base — apenas <b>${this.echoHpScale * 100}%</b> para o HP. Apenas um Eco pode ocupar o campo por vez: conjurar de novo desfaz o anterior. O Eco desaparece após <b>${this.echoDuration}</b> turnos, e seu fim não é uma morte: não concede pontos, e nada que responda à morte responde a ele. Nenhuma das irmãs pode ser ecoada, e nem um Eco pode.`,
+      };
     },
 
     targetSpec: [
@@ -52,7 +55,10 @@ const laisaelisSkills = [
         other.HP = 0;
         other.alive = false;
         context.registerDialog({
-          message: `<b>${skillName}</b> — ${formatChampionName(other)} comes apart as ${formatChampionName(user)} answers anew.`,
+          message: {
+            en: `<b>${skillName}</b> — ${formatChampionName(other)} comes apart as ${formatChampionName(user)} answers anew.`,
+            pt: `<b>${skillName}</b> — ${formatChampionName(other)} se desfaz enquanto ${formatChampionName(user)} responde de novo.`,
+          },
           sourceId: user.id,
           targetId: other.id,
         });
@@ -124,7 +130,10 @@ const laisaelisSkills = [
                 owner.alive = false;
 
                 context.registerDialog({
-                  message: `<b>${skillName}</b> — ${formatChampionName(owner)} was only ever an answer, and it stops being one.`,
+                  message: {
+                    en: `<b>${skillName}</b> — ${formatChampionName(owner)} was only ever an answer, and it stops being one.`,
+                    pt: `<b>${skillName}</b> — ${formatChampionName(owner)} sempre foi apenas uma resposta, e deixa de ser uma.`,
+                  },
                   sourceId: owner.id,
                   targetId: owner.id,
                 });
@@ -135,7 +144,10 @@ const laisaelisSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} looks at ${formatChampionName(source)} and answers that there could be more of it.`,
+        log: {
+          en: `${formatChampionName(user)} looks at ${formatChampionName(source)} and answers that there could be more of it.`,
+          pt: `${formatChampionName(user)} olha para ${formatChampionName(source)} e responde que poderia haver mais disso.`,
+        },
       };
     },
   },
@@ -153,7 +165,10 @@ const laisaelisSkills = [
     priority: 3,
 
     description() {
-      return `Laisaelis steps between an ally and the next thing meant to diminish them. For ${this.wardDuration} turn(s) the chosen ally — herself or her sister included — carries <b>Affliction Ward</b>: the first negative effect that would take hold never does, and the ward is spent turning it away. It stops nothing that merely deals damage.`;
+      return {
+        en: `Laisaelis steps between an ally and the next thing meant to diminish them. For <b>${this.wardDuration}</b> turn(s) the chosen ally — herself or her sister included — carries <b>Affliction Ward</b>: the first negative effect that would take hold never does, and the ward is spent turning it away. It stops nothing that merely deals damage.`,
+        pt: `Laisaelis se coloca entre um aliado e a próxima coisa que pretende diminuí-lo. Por <b>${this.wardDuration}</b> turno(s) o aliado escolhido — ela mesma ou sua irmã inclusive — carrega <b>Proteção contra Aflição</b>: o primeiro efeito negativo que tentaria se fixar nunca se fixa, e a proteção se gasta ao desviá-lo. Ela não impede nada que apenas cause dano.`,
+      };
     },
 
     targetSpec: ["select:ally"],
@@ -166,7 +181,10 @@ const laisaelisSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} stands between ${formatChampionName(ally)} and whatever comes next.`,
+        log: {
+          en: `${formatChampionName(user)} stands between ${formatChampionName(ally)} and whatever comes next.`,
+          pt: `${formatChampionName(user)} se coloca entre ${formatChampionName(ally)} e o que quer que venha a seguir.`,
+        },
       };
     },
   },
@@ -187,7 +205,10 @@ const laisaelisSkills = [
     priority: 4,
 
     description() {
-      return `Laisaelis refuses the one departure she cannot bear and lays an anchor of presence over her sister. For ${this.auraDuration} turn(s), the first lethal effect that would take Laiserisa instead leaves her on the field with ${this.survivalHP} HP. The anchor never spends what Laiserisa carries of her own, and cannot be laid at all while she is absent from the field or lost to the Nothingness.`;
+      return {
+        en: `Laisaelis refuses the one departure she cannot bear and lays an anchor of presence over her sister. For <b>${this.auraDuration}</b> turn(s), the first lethal effect that would take Laiserisa instead leaves her on the field with <b>${this.survivalHP}</b> HP. The anchor never spends what Laiserisa carries of her own, and cannot be laid at all while she is absent from the field or lost to the <b>Nothingness</b>.`,
+        pt: `Laisaelis recusa a única partida que não consegue suportar e lança uma âncora de presença sobre sua irmã. Por <b>${this.auraDuration}</b> turno(s), o primeiro efeito letal que atingiria Laiserisa a deixa em campo com <b>${this.survivalHP}</b> HP. A âncora nunca gasta o que Laiserisa carrega por conta própria, e não pode ser lançada enquanto ela estiver ausente do campo ou perdida no <b>Nada</b>.`,
+      };
     },
 
     targetSpec: ["self"],
@@ -197,7 +218,10 @@ const laisaelisSkills = [
 
       if (!twin) {
         return {
-          log: `${formatChampionName(user)} reaches for her sister and finds nothing to hold.`,
+          log: {
+            en: `${formatChampionName(user)} reaches for her sister and finds nothing to hold.`,
+            pt: `${formatChampionName(user)} estende a mão para sua irmã e não encontra nada para segurar.`,
+          },
         };
       }
 
@@ -244,14 +268,20 @@ const laisaelisSkills = [
             );
 
             context.registerDialog({
-              message: `<b>${skillName}</b> — ${formatChampionName(owner)} is held here, and the ending does not take.`,
+              message: {
+                en: `<b>${skillName}</b> — ${formatChampionName(owner)} is held here, and the ending does not take.`,
+                pt: `<b>${skillName}</b> — ${formatChampionName(owner)} é mantida aqui, e o fim não se concretiza.`,
+              },
               sourceId: owner.id,
               targetId: owner.id,
             });
 
             return {
               damageCap: survivalDamage(owner, survivalHP),
-              log: `${formatChampionName(owner)} is kept on the field with ${survivalHP} HP.`,
+              log: {
+                en: `${formatChampionName(owner)} is kept on the field with ${survivalHP} HP.`,
+                pt: `${formatChampionName(owner)} é mantida em campo com ${survivalHP} HP.`,
+              },
             };
           },
         },
@@ -259,7 +289,10 @@ const laisaelisSkills = [
       );
 
       return {
-        log: `${formatChampionName(user)} anchors ${formatChampionName(twin)} to the field: she is not going anywhere.`,
+        log: {
+          en: `${formatChampionName(user)} anchors ${formatChampionName(twin)} to the field: she is not going anywhere.`,
+          pt: `${formatChampionName(user)} ancora ${formatChampionName(twin)} ao campo: ela não vai a lugar nenhum.`,
+        },
       };
     },
   },

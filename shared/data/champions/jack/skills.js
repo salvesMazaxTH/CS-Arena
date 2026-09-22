@@ -55,7 +55,10 @@ const jackSkills = [
 
       if (!isComingForHim(enemy, user, context)) {
         context.registerDialog({
-          message: `${formatChampionName(user)} steps into where the answer said ${formatChampionName(enemy)} would be, and finds nobody there.`,
+          message: {
+            en: `${formatChampionName(user)} steps into where the answer said ${formatChampionName(enemy)} would be, and finds nobody there.`,
+            pt: `${formatChampionName(user)} avança para onde a resposta disse que ${formatChampionName(enemy)} estaria, e não encontra ninguém ali.`,
+          },
           sourceId: user.id,
           targetId: enemy.id,
         });
@@ -79,7 +82,10 @@ const jackSkills = [
         });
 
         context.registerDialog({
-          message: `${formatChampionName(enemy)} never gets to throw it — ${formatChampionName(user)} was already there.`,
+          message: {
+            en: `${formatChampionName(enemy)} never gets to throw it — ${formatChampionName(user)} was already there.`,
+            pt: `${formatChampionName(enemy)} nunca chega a lançar — ${formatChampionName(user)} já estava lá.`,
+          },
           sourceId: user.id,
           targetId: enemy.id,
         });
@@ -176,7 +182,10 @@ const jackSkills = [
       }
 
       context.registerDialog({
-        message: `${formatChampionName(user)} closes the proof on ${formatChampionName(enemy)}, and looks faintly bored about it.`,
+        message: {
+          en: `${formatChampionName(user)} closes the proof on ${formatChampionName(enemy)}, and looks faintly bored about it.`,
+          pt: `${formatChampionName(user)} fecha a demonstração sobre ${formatChampionName(enemy)}, com um leve ar de tédio.`,
+        },
         sourceId: user.id,
         targetId: enemy.id,
       });

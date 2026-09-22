@@ -67,7 +67,10 @@ export default {
   riposteBf: 35,
 
   description() {
-    return `Lorraine fights one person at a time and considers everyone else in the room a distraction. She is never without a Duel: the first opponent she strikes or is struck by is named on the spot, and if that one falls the most dangerous survivor inherits the quarrel. Against whoever she has named she deals +${this.duelDamagePercent}% damage, and every blow that one aims at her has a ${this.parryChance}% chance of being turned aside, blunted by ${this.parryReduction}% (Absolute Damage excepted) and answered with a riposte that can never be a critical hit.`;
+    return {
+      en: `Lorraine fights one person at a time and considers everyone else in the room a distraction. She is never without a <b>Duel</b>: the first opponent she strikes or is struck by is named on the spot, and if that one falls the most dangerous survivor inherits the quarrel. Against whoever she has named she deals <b>+${this.duelDamagePercent}%</b> damage, and every blow that one aims at her has a <b>${this.parryChance}%</b> chance of being turned aside, blunted by <b>${this.parryReduction}%</b> (<b>Absolute Damage</b> excepted) and answered with a riposte that can never be a <b>critical hit</b>.`,
+      pt: `Lorraine luta com uma pessoa de cada vez e trata todo o resto na sala como distração. Ela nunca está sem um <b>Duelo</b>: o primeiro oponente que ela acerta ou de quem leva um golpe é nomeado ali mesmo, e se esse cair, o sobrevivente mais perigoso herda a rixa. Contra quem ela nomeou, causa <b>+${this.duelDamagePercent}%</b> de dano, e todo golpe que esse alvo desferir contra ela tem <b>${this.parryChance}%</b> de chance de ser desviado, reduzido em <b>${this.parryReduction}%</b> (exceto <b>dano Absoluto</b>) e respondido com uma réplica que nunca pode ser <b>acerto crítico</b>.`,
+    };
   },
 
   hookScope: {
@@ -80,7 +83,10 @@ export default {
     if (!named) return;
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} names ${formatChampionName(named)} and refuses to look anywhere else.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} names ${formatChampionName(named)} and refuses to look anywhere else.`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} nomeia ${formatChampionName(named)} e se recusa a olhar para outro lugar.`,
+      },
     };
   },
 
@@ -113,7 +119,10 @@ export default {
     });
 
     context.registerDialog?.({
-      message: `${formatChampionName(owner)} catches the blade on hers and turns it aside — the answer is already on its way back.`,
+      message: {
+        en: `${formatChampionName(owner)} catches the blade on hers and turns it aside — the answer is already on its way back.`,
+        pt: `${formatChampionName(owner)} apara a lâmina com a sua própria e a desvia — a resposta já está a caminho.`,
+      },
       sourceId: owner.id,
       targetId: attacker.id,
     });
@@ -121,7 +130,10 @@ export default {
     return {
       defenseVfx: "parry",
       damage: Number(damage) * (1 - this.parryReduction / 100),
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} turns the blow aside and answers it in the same motion.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} turns the blow aside and answers it in the same motion.`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} desvia o golpe e já responde no mesmo movimento.`,
+      },
     };
   },
 };

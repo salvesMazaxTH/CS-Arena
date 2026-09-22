@@ -20,7 +20,10 @@ const leoneSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Leone closes the gap between one heartbeat and the next, a flick of his nails opening the chosen target before they register he moved. Deals physical damage and leaves them Bleeding for ${this.bleedingStacks} stack(s).`;
+      return {
+        en: `Leone closes the gap between one heartbeat and the next, a flick of his nails opening the chosen target before they register he moved. Deals <b>physical damage</b> and leaves them <b>Bleeding</b> for <b>${this.bleedingStacks}</b> stack(s).`,
+        pt: `Leone cruza a distância entre uma batida do coração e a outra, e um só floreio de suas garras já abriu o alvo escolhido antes que ele perceba o movimento. Causa <b>dano físico</b> e o deixa <b>Sangrando</b> por <b>${this.bleedingStacks}</b> stack(s).`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -60,7 +63,10 @@ const leoneSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Leone is simply gone, then at the chosen target's throat, teeth sunk into the jugular before they can flinch. Deals physical damage and tears enough away to lower their Defense by ${this.defenseShred} for ${this.shredDuration} turn(s).`;
+      return {
+        en: `Leone is simply gone, then at the chosen target's throat, teeth sunk into the jugular before they can flinch. Deals <b>physical damage</b> and tears enough away to lower their <b>Defense</b> by <b>${this.defenseShred}</b> for <b>${this.shredDuration}</b> turn(s).`,
+        pt: `Leone simplesmente some, e no instante seguinte já está na garganta do alvo escolhido, dentes cravados na jugular antes que ele consiga reagir. Causa <b>dano físico</b> e arranca o suficiente para reduzir a <b>Defesa</b> dele em <b>${this.defenseShred}</b> por <b>${this.shredDuration}</b> turno(s).`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -106,7 +112,10 @@ const leoneSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Leone raises an imaginary toast to the chosen target, then is at their throat before the gesture finishes, draining them dry with a hunger he stopped pretending to hide. Deals physical damage and is always a critical hit.`;
+      return {
+        en: `Leone raises an imaginary toast to the chosen target, then is at their throat before the gesture finishes, draining them dry with a hunger he stopped pretending to hide. Deals <b>physical damage</b> and is always a <b>critical hit</b>.`,
+        pt: `Leone ergue um brinde imaginário ao alvo escolhido, e antes de terminar o gesto já está na garganta dele, drenando-o com uma fome que já não se dá ao trabalho de esconder. Causa <b>dano físico</b> e é sempre um <b>acerto crítico</b>.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {

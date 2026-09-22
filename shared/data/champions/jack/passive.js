@@ -62,7 +62,10 @@ export default {
     if (target.team === owner.team || !owner.alive) return;
 
     context.registerDialog?.({
-      message: `${formatChampionName(owner)} already knew where ${formatChampionName(target)} would seize up, and puts ${this.paralysisDamage} Absolute Damage exactly there.`,
+      message: {
+        en: `${formatChampionName(owner)} already knew where ${formatChampionName(target)} would seize up, and puts ${this.paralysisDamage} Absolute Damage exactly there.`,
+        pt: `${formatChampionName(owner)} já sabia onde ${formatChampionName(target)} iria travar, e coloca ${this.paralysisDamage} de Dano Absoluto exatamente ali.`,
+      },
       sourceId: owner.id,
       targetId: target.id,
     });

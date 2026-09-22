@@ -25,7 +25,10 @@ const jeffTheDeathSkills = [
     priority: 0,
 
     description() {
-      return `Jeff deals Piercing Damage (${this.piercingPercentage}% Piercing) to the chosen enemy target. If Jeff has already died, this ability also deals damage to adjacent champions.`;
+      return {
+        en: `Jeff swings like a man already dead — because he has been, more than once. Deals <b>Piercing Damage</b> (<b>${this.piercingPercentage}%</b> Piercing) to the chosen enemy. If Jeff has already died before, the strike also lands on adjacent champions.`,
+        pt: `Jeff golpeia como um homem já morto — porque já foi, mais de uma vez. Causa <b>Dano Perfurante</b> (<b>${this.piercingPercentage}%</b> Perfurante) ao inimigo escolhido. Se Jeff já morreu antes, o golpe também atinge campeões adjacentes.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -112,11 +115,10 @@ const jeffTheDeathSkills = [
     ],
 
     description() {
-      return `Deals damage to the chosen target and marks them for ${this.markDuration} turn(s).
-      
-      If the target dies while marked, Jeff gains +${this.rewardAttack} permanent Attack.
-      
-      Otherwise, the target takes bonus damage equal to ${this.punishPercent * 100}% of their current HP at the start of each turn.`;
+      return {
+        en: `Death picks a name and waits to see if it holds. Deals damage to the chosen target and marks them for <b>${this.markDuration}</b> turn(s). If the target dies while marked, Jeff gains <b>+${this.rewardAttack}</b> permanent <b>Attack</b>. Otherwise, the target takes bonus damage equal to <b>${this.punishPercent * 100}%</b> of their current HP at the start of each turn.`,
+        pt: `A Morte escolhe um nome e espera para ver se ele se confirma. Causa dano ao alvo escolhido e o marca por <b>${this.markDuration}</b> turno(s). Se o alvo morrer enquanto marcado, Jeff ganha <b>+${this.rewardAttack}</b> de <b>Ataque</b> permanente. Caso contrário, o alvo sofre dano bônus igual a <b>${this.punishPercent * 100}%</b> do seu HP atual no início de cada turno.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -176,18 +178,30 @@ const jeffTheDeathSkills = [
 
           if (result?.immune) {
             return {
-              log: `${formatChampionName(
-                owner,
-              )} is immune to Death's Embrace damage!`,
+              log: {
+                en: `${formatChampionName(
+                  owner,
+                )} is immune to Death's Embrace damage!`,
+                pt: `${formatChampionName(
+                  owner,
+                )} é imune ao dano de Abraço da Morte!`,
+              },
             };
           }
 
           return {
-            log: `${formatChampionName(
-              owner,
-            )} takes ${
-              result?.totalDamage ?? punishDamage
-            } <b>Death's Embrace</b> damage.`,
+            log: {
+              en: `${formatChampionName(
+                owner,
+              )} takes ${
+                result?.totalDamage ?? punishDamage
+              } <b>Death's Embrace</b> damage.`,
+              pt: `${formatChampionName(
+                owner,
+              )} sofre ${
+                result?.totalDamage ?? punishDamage
+              } de dano de <b>Abraço da Morte</b>.`,
+            },
           };
         },
       }, context);
@@ -239,7 +253,10 @@ const jeffTheDeathSkills = [
     threshold: 0.25,
 
     description() {
-      return `Deals moderate damage to the chosen target and marks them for death. At the start of the next turn, if the target is below ${this.threshold * 100}% HP, Death claims them.`;
+      return {
+        en: `Some verdicts don't wait for a killing blow — Jeff has already signed this one. Deals moderate damage to the chosen target and marks them for death. At the start of the next turn, if the target is below <b>${this.threshold * 100}%</b> HP, Death claims them.`,
+        pt: `Alguns vereditos não esperam pelo golpe final — Jeff já assinou este. Causa dano moderado ao alvo escolhido e o marca para morrer. No início do próximo turno, se o alvo estiver abaixo de <b>${this.threshold * 100}%</b> de HP, a Morte o reivindica.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -306,13 +323,19 @@ const jeffTheDeathSkills = [
           );
 
           context.registerDialog({
-            message: `Death claims ${formatChampionName(owner)}!`,
+            message: {
+              en: `Death claims ${formatChampionName(owner)}!`,
+              pt: `A Morte reivindica ${formatChampionName(owner)}!`,
+            },
             sourceId: owner.id,
             targetId: owner.id,
           });
 
           return {
-            log: `<b>Death's Inevitability</b> claims ${formatChampionName(owner)}.`,
+            log: {
+              en: `<b>Death's Inevitability</b> claims ${formatChampionName(owner)}.`,
+              pt: `<b>Inevitabilidade da Morte</b> reivindica ${formatChampionName(owner)}.`,
+            },
           };
         },
 

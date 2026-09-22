@@ -78,7 +78,10 @@ export default {
     if (!result?.appliedAmount) return;
 
     const logs = [
-      `[PASSIVE — ${this.name}] ${formatChampionName(owner)} feeds on ${formatChampionName(source)}'s Bleeding (+${result.appliedAmount}% permanent LifeSteal).`,
+      {
+        en: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} feeds on ${formatChampionName(source)}'s Bleeding (+${result.appliedAmount}% permanent LifeSteal).`,
+        pt: `[PASSIVA — ${this.name}] ${formatChampionName(owner)} se alimenta do Sangramento de ${formatChampionName(source)} (+${result.appliedAmount}% de Roubo de Vida permanente).`,
+      },
     ];
 
     const awakenResult = this._tryAwaken({ owner, context });
@@ -106,7 +109,10 @@ export default {
     if (!result?.appliedAmount) return;
 
     const logs = [
-      `[PASSIVE — ${this.name}] ${formatChampionName(owner)} feeds on ${formatChampionName(defender)}'s Bleeding (+${result.appliedAmount}% permanent LifeSteal).`,
+      {
+        en: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} feeds on ${formatChampionName(defender)}'s Bleeding (+${result.appliedAmount}% permanent LifeSteal).`,
+        pt: `[PASSIVA — ${this.name}] ${formatChampionName(owner)} se alimenta do Sangramento de ${formatChampionName(defender)} (+${result.appliedAmount}% de Roubo de Vida permanente).`,
+      },
     ];
 
     const awakenResult = this._tryAwaken({ owner, context });
@@ -232,7 +238,10 @@ export default {
     });
 
     return {
-      log: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} recalibrates his defenses (${amount}% Damage Reduction).`,
+      log: {
+        en: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} recalibrates his defenses (${amount}% Damage Reduction).`,
+        pt: `[PASSIVA — ${this.name}] ${formatChampionName(owner)} recalibra suas defesas (${amount}% de Redução de Dano).`,
+      },
     };
   },
 
@@ -253,14 +262,20 @@ export default {
     this._refreshDamageReduction({ owner, context });
 
     context?.registerDialog?.({
-      message: `${formatChampionName(owner)} surpasses ${this.awakenThreshold}% LifeSteal and enters permanent <b>Crimson Frenzy</b>!`,
+      message: {
+        en: `${formatChampionName(owner)} surpasses ${this.awakenThreshold}% LifeSteal and enters permanent <b>Crimson Frenzy</b>!`,
+        pt: `${formatChampionName(owner)} ultrapassa ${this.awakenThreshold}% de Roubo de Vida e entra em <b>Frenesi Carmesim</b> permanente!`,
+      },
       sourceId: owner.id,
       targetId: owner.id,
       duration: 1600,
     });
 
     return {
-      log: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} surpasses ${this.awakenThreshold}% LifeSteal and enters permanent Crimson Frenzy!`,
+      log: {
+        en: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} surpasses ${this.awakenThreshold}% LifeSteal and enters permanent Crimson Frenzy!`,
+        pt: `[PASSIVA — ${this.name}] ${formatChampionName(owner)} ultrapassa ${this.awakenThreshold}% de Roubo de Vida e entra em Frenesi Carmesim permanente!`,
+      },
     };
   },
 };

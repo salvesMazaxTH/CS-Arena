@@ -55,7 +55,10 @@ export default {
     return {
       mode: "piercing",
       piercingPercentage: this.brandPiercing,
-      log: `<b>[Passive — ${this.name}]</b> The brand on ${formatChampionName(defender)} opens up for Victoria's fist.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> The brand on ${formatChampionName(defender)} opens up for Victoria's fist.`,
+        pt: `<b>[Passiva — ${this.name}]</b> A marca em ${formatChampionName(defender)} se abre para o punho de Victoria.`,
+      },
     };
   },
 
@@ -78,7 +81,10 @@ export default {
     );
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> Victoria banks ${owner.runtime.victoriaStoredHeat - stored} heat from the fire on ${formatChampionName(defender)}.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> Victoria banks ${owner.runtime.victoriaStoredHeat - stored} heat from the fire on ${formatChampionName(defender)}.`,
+        pt: `<b>[Passiva — ${this.name}]</b> Victoria acumula ${owner.runtime.victoriaStoredHeat - stored} de calor do fogo em ${formatChampionName(defender)}.`,
+      },
     };
   },
 
@@ -107,13 +113,19 @@ export default {
     );
 
     context.registerDialog({
-      message: `${formatChampionName(owner)} burns brighter the closer she gets to going out.`,
+      message: {
+        en: `${formatChampionName(owner)} burns brighter the closer she gets to going out.`,
+        pt: `${formatChampionName(owner)} queima mais forte quanto mais perto está de se apagar.`,
+      },
       sourceId: owner.id,
       targetId: owner.id,
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} is reborn in flame.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} is reborn in flame.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} renasce em chamas.`,
+      },
     };
   },
 
@@ -141,7 +153,10 @@ export default {
     if (Math.random() * 100 >= chance) return;
 
     context.registerDialog({
-      message: `<b>[Passive – "${this.name}"]</b> Victoria is already stepping back in.`,
+      message: {
+        en: `<b>[Passive – "${this.name}"]</b> Victoria is already stepping back in.`,
+        pt: `<b>[Passiva – "${this.name}"]</b> Victoria já está avançando de novo.`,
+      },
       sourceId: owner.id,
       targetId: target.id,
     });

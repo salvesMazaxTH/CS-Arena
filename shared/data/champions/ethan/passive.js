@@ -55,13 +55,19 @@ export default {
     });
 
     context.registerDialog({
-      message: `${formatChampionName(owner)} stops counting angles — there's nothing left worth calculating.`,
+      message: {
+        en: `${formatChampionName(owner)} stops counting angles — there's nothing left worth calculating.`,
+        pt: `${formatChampionName(owner)} para de calcular ângulos — não sobra mais nada que valha a pena calcular.`,
+      },
       sourceId: owner.id,
       targetId: owner.id,
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} rises as <b>the Lord of the Shadowflame</b>.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} rises as <b>the Lord of the Shadowflame</b>.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} se ergue como <b>o Senhor da Chama Sombria</b>.`,
+      },
     };
   },
 };

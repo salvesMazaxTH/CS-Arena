@@ -5,6 +5,7 @@ import { formatChampionName } from "../../../ui/formatters.js";
 import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 import basicShot from "../generic/basicShot.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
+import { pushResultLog } from "../../../engine/combat/resultLog.js";
 
 const sereneSkills = [
   // ========================
@@ -108,19 +109,20 @@ const sereneSkills = [
           this.stunDuration,
           context,
         );
-        if (stunned && stunned.log && result?.log) {
-          result.log += `\n${formatChampionName(enemy)} is drawn into the Quietude!`;
-        } else if (stunned && stunned.log) {
-          result.log = `${formatChampionName(enemy)} is drawn into the Quietude!`;
+        if (stunned && stunned.log) {
+          pushResultLog(result, {
+            en: `${formatChampionName(enemy)} is drawn into the Quietude!`,
+            pt: `${formatChampionName(enemy)} é atraído para a Quietude!`,
+          });
         }
       } else if (
         user.runtime.sereneStreak > 1 &&
         effectConnected(result, "stunned")
       ) {
-        // The Stun roll failed.
-        result.log =
-          (result.log || "") +
-          `\n${formatChampionName(enemy)} resists the Stun!`;
+        pushResultLog(result, {
+          en: `${formatChampionName(enemy)} resists the Stun!`,
+          pt: `${formatChampionName(enemy)} resiste ao Atordoamento!`,
+        });
       }
 
       return result;

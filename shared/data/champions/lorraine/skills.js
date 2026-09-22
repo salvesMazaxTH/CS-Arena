@@ -21,7 +21,10 @@ const lorraineSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Lorraine names the chosen target out loud, and from that moment nobody else on the field is worth the edge of her blade. Deals physical damage and moves her Duel onto them: she Taunts herself onto the chosen target and can answer nobody else until she names another one, and she gains +${this.critDuringDuel} Critical for ${this.critDuration} turn(s).`;
+      return {
+        en: `Lorraine names the chosen target out loud, and from that moment nobody else on the field is worth the edge of her blade. Deals <b>physical damage</b> and moves her <b>Duel</b> onto them: she <b>Taunts</b> herself onto the chosen target and can answer nobody else until she names another one, and she gains <b>+${this.critDuringDuel}</b> <b>Critical</b> for <b>${this.critDuration}</b> turn(s).`,
+        pt: `Lorraine nomeia o alvo escolhido em voz alta, e a partir desse momento mais ninguém no campo merece o fio de sua espada. Causa <b>dano físico</b> e transfere seu <b>Duelo</b> para ele: ela se autoimpõe <b>Provocar</b> sobre o alvo e não pode responder a mais ninguém até nomear outro, e ganha <b>+${this.critDuringDuel}</b> de <b>Crítico</b> por <b>${this.critDuration}</b> turno(s).`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -63,7 +66,10 @@ const lorraineSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `A duel her family would call proper is decided in the first exchange, and Lorraine has never had the patience for the other kind. Deals physical damage, +${this.freshDuelBonus}% on the turn she names the chosen target and ${this.bonusLostPerTurn}% less for every turn her Duel with them has dragged on since, and leaves them Bleeding with ${this.bleedStacks} stack(s).`;
+      return {
+        en: `A duel her family would call proper is decided in the first exchange, and Lorraine has never had the patience for the other kind. Deals <b>physical damage</b>, <b>+${this.freshDuelBonus}%</b> on the turn she names the chosen target and <b>${this.bonusLostPerTurn}%</b> less for every turn her <b>Duel</b> with them has dragged on since, and leaves them <b>Bleeding</b> with <b>${this.bleedStacks}</b> stack(s).`,
+        pt: `Um duelo digno do nome de sua família se resolve na primeira troca, e Lorraine nunca teve paciência para o outro tipo. Causa <b>dano físico</b>, <b>+${this.freshDuelBonus}%</b> no turno em que nomeia o alvo escolhido, com <b>${this.bonusLostPerTurn}%</b> a menos para cada turno que o <b>Duelo</b> se arrastar depois disso, e o deixa <b>Sangrando</b> por <b>${this.bleedStacks}</b> stack(s).`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -115,7 +121,10 @@ const lorraineSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Lorraine steps inside the measure one last time and closes the argument the way her family has always closed one. Deals physical damage with an extra ${this.extraCritChance}% chance of being a critical hit, +${this.openedWoundBonus}% more if the chosen target is already Bleeding, and leaves them Bleeding with ${this.bleedStacks} stack(s).`;
+      return {
+        en: `Lorraine steps inside the measure one last time and closes the argument the way her family has always closed one. Deals <b>physical damage</b> with an extra <b>${this.extraCritChance}%</b> chance of being a <b>critical hit</b>, <b>+${this.openedWoundBonus}%</b> more if the chosen target is already <b>Bleeding</b>, and leaves them <b>Bleeding</b> with <b>${this.bleedStacks}</b> stack(s).`,
+        pt: `Lorraine avança uma última vez e encerra o argumento do jeito que sua família sempre encerrou. Causa <b>dano físico</b> com <b>${this.extraCritChance}%</b> de chance adicional de ser <b>acerto crítico</b>, <b>+${this.openedWoundBonus}%</b> a mais se o alvo escolhido já estiver <b>Sangrando</b>, e o deixa <b>Sangrando</b> por <b>${this.bleedStacks}</b> stack(s).`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {

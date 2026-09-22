@@ -149,7 +149,10 @@ const harlanGreevesSkills = [
       enemy.runtime[WANTED_RUNTIME_FLAG] = true;
 
       context.registerDialog({
-        message: `${formatChampionName(user)} pins the name to the board — dead or alive, this one's getting collected.`,
+        message: {
+          en: `${formatChampionName(user)} pins the name to the board — dead or alive, this one's getting collected.`,
+          pt: `${formatChampionName(user)} fixa o nome no quadro — vivo ou morto, esse vai ser cobrado.`,
+        },
         sourceId: user.id,
         targetId: enemy.id,
       });

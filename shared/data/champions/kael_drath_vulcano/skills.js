@@ -25,7 +25,10 @@ const kaeldrathVulcanoSkills = [
     priority: 0,
 
     description() {
-      return `Kael'Drath brings a molten fist down on the chosen target, dealing physical damage.`;
+      return {
+        en: `Kael'Drath brings a molten fist down on the chosen target, dealing <b>Physical Damage</b>.`,
+        pt: `Kael'Drath desce um punho incandescente sobre o alvo escolhido, causando <b>Dano Físico</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -64,9 +67,14 @@ const kaeldrathVulcanoSkills = [
     hitVfx: "magma_bomb",
 
     description() {
-      return `Kael'Drath hurls a knot of molten rock at the chosen target, dealing Fire magical damage and leaving them Burning for ${this.burnDuration} turn(s).
+      return {
+        en: `Kael'Drath hurls a knot of molten rock at the chosen target, dealing <b>Fire</b> magical damage and leaving them <b>Burning</b> for <b>${this.burnDuration}</b> turn(s).
 
-      The blast splashes onto the enemy standing to their right, if there is one, dealing half of the damage effectively dealt to the main target.`;
+        The blast splashes onto the enemy standing to their right, if there is one, dealing <b>half</b> of the damage effectively dealt to the main target.`,
+        pt: `Kael'Drath arremessa um bloco de rocha derretida contra o alvo escolhido, causando dano mágico de <b>Fogo</b> e deixando-o <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s).
+
+        A explosão respinga no inimigo à direita dele, se houver, causando <b>metade</b> do dano efetivamente causado ao alvo principal.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -146,9 +154,14 @@ const kaeldrathVulcanoSkills = [
     element: "fire",
 
     description() {
-      return `The ground splits open and Kael'Drath lets the mountain speak, dealing Fire magical damage to EVERY champion on the field, allies included.
+      return {
+        en: `The ground splits open and Kael'Drath lets the mountain speak, dealing <b>Fire</b> magical damage to <b>EVERY</b> champion on the field, allies included.
 
-      Those attuned to Fire, Water or Earth stand within their own element and take only ${this.reductedDamagePercent}% of the damage.`;
+        Those attuned to <b>Fire</b>, <b>Water</b> or <b>Earth</b> stand within their own element and take only <b>${this.reductedDamagePercent}%</b> of the damage.`,
+        pt: `O chão se abre e Kael'Drath deixa a montanha falar, causando dano mágico de <b>Fogo</b> a <b>TODOS</b> os campeões em campo, aliados inclusive.
+
+        Aqueles ligados ao <b>Fogo</b>, <b>Água</b> ou <b>Terra</b> permanecem dentro do próprio elemento e sofrem apenas <b>${this.reductedDamagePercent}%</b> do dano.`,
+      };
     },
 
     targetSpec: ["all"],

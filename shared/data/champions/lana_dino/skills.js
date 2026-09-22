@@ -18,7 +18,10 @@ const tutuSkills = [
     damageMode: "standard",
 
     description() {
-      return `Tutu barrels into the chosen target, dealing physical damage, then plants himself in front of whichever ally is worst off, granting them a ${this.shieldAmount} point Shield.`;
+      return {
+        en: `Tutu barrels into the chosen target, dealing physical damage, then plants himself in front of whichever ally is worst off, granting them a <b>${this.shieldAmount}</b> point <b>Shield</b>.`,
+        pt: `Tutu investe contra o alvo escolhido, causando dano físico, e então se planta na frente do aliado em pior estado, concedendo a ele um <b>Escudo</b> de <b>${this.shieldAmount}</b> pontos.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -63,7 +66,10 @@ const tutuSkills = [
     priority: 3,
 
     description() {
-      return `Tutu plants himself in the way and makes far too much noise, Taunting the chosen target for ${this.tauntDuration} turn(s).`;
+      return {
+        en: `Tutu plants himself in the way and makes far too much noise, <b>Taunting</b> the chosen target for <b>${this.tauntDuration}</b> turn(s).`,
+        pt: `Tutu se planta no caminho e faz barulho demais, deixando o alvo escolhido <b>Provocado</b> por <b>${this.tauntDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -75,7 +81,10 @@ const tutuSkills = [
 
       const logs = [tauntLog].filter(Boolean);
       logs.unshift({
-        log: `${formatChampionName(user)} uses <b>Instinctive Taunt</b>. ${formatChampionName(enemy)} is Taunted for ${this.tauntDuration} turn(s).`,
+        log: {
+          en: `${formatChampionName(user)} uses <b>Instinctive Taunt</b>. ${formatChampionName(enemy)} is <b>Taunted</b> for <b>${this.tauntDuration}</b> turn(s).`,
+          pt: `${formatChampionName(user)} usa <b>Instinctive Taunt</b>. ${formatChampionName(enemy)} fica <b>Provocado</b> por <b>${this.tauntDuration}</b> turno(s).`,
+        },
       });
       return logs;
     },

@@ -58,9 +58,14 @@ export default {
     const finalBaseDamage = hookBaseDamage * (1 + this.damageBonusRatio);
 
     context?.registerDialog?.({
-      message: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
-        attacker,
-      )} strikes before the target can react! (+Piercing)`,
+      message: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
+          attacker,
+        )} strikes before the target can react! (+Piercing)`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(
+          attacker,
+        )} golpeia antes que o alvo consiga reagir! (+Perfuração)`,
+      },
       sourceId: attacker.id,
       targetId: defender.id,
     });

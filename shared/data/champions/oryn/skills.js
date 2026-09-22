@@ -225,10 +225,13 @@ const orynSkills = [
                 targetId: owner.id,
               });
 
+              const sentenceLog = {
+                en: `<b>Sentence of the Sky-Courts</b> grounds through ${targetName} — Oryn's team banks 1 point.`,
+                pt: `<b>Sentence of the Sky-Courts</b> se descarrega através de ${targetName} — o time de Oryn marca 1 ponto.`,
+              };
+
               return {
-                log: arr[0]?.log
-                  ? `<b>Sentence of the Sky-Courts</b> grounds through ${targetName} — Oryn's team banks 1 point.\n${arr[0].log}`
-                  : `<b>Sentence of the Sky-Courts</b> grounds through ${targetName} — Oryn's team banks 1 point.`,
+                log: [sentenceLog, arr[0]?.log].flat(Infinity).filter(Boolean),
               };
             },
           },

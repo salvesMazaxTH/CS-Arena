@@ -64,7 +64,10 @@ export default {
       context.currentTurn + this.halfStepMarkDuration;
 
     context.registerDialog({
-      message: `${formatChampionName(owner)} already put the bullet where the other man's watch just stopped.`,
+      message: {
+        en: `${formatChampionName(owner)} already put the bullet where the other man's watch just stopped.`,
+        pt: `${formatChampionName(owner)} já pôs a bala exatamente onde o relógio do outro parou.`,
+      },
       sourceId: owner.id,
       targetId: defender.id,
     });
@@ -100,7 +103,10 @@ export default {
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} collects on the mandate still walking around — ${this.wantedBonusPoints} extra point(s).`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} collects on the mandate still walking around — ${this.wantedBonusPoints} extra point(s).`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} cobra o mandado que ainda anda por aí — ${this.wantedBonusPoints} ponto(s) extra.`,
+      },
     };
   },
 };

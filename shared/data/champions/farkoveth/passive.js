@@ -53,7 +53,10 @@ export default {
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} knits +${appliedAmount} Defense back into himself.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} knits +${appliedAmount} Defense back into himself.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} tece +${appliedAmount} de Defesa de volta em si mesmo.`,
+      },
     };
   },
 };

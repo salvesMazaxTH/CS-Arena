@@ -52,7 +52,10 @@ const dorianSkills = [
       if (fromConcealment) {
         user.removeStatusEffect("concealed");
         context.registerDialog?.({
-          message: `${formatChampionName(user)} strikes from concealment!`,
+          message: {
+            en: `${formatChampionName(user)} strikes from concealment!`,
+            pt: `${formatChampionName(user)} ataca a partir da ocultação!`,
+          },
           sourceId: user.id,
           targetId: enemy.id,
         });
@@ -168,7 +171,10 @@ const dorianSkills = [
 
       if (landed && enchanterBonus > 0) {
         context.registerDialog?.({
-          message: `${formatChampionName(enemy)} is an enchanter — the wheels bite deeper.`,
+          message: {
+            en: `${formatChampionName(enemy)} is an enchanter — the wheels bite deeper.`,
+            pt: `${formatChampionName(enemy)} é um encantador — os discos mordem mais fundo.`,
+          },
           sourceId: user.id,
           targetId: enemy.id,
         });
@@ -189,7 +195,10 @@ const dorianSkills = [
           user.runtime.dorianGrudge = 0;
 
           context.registerDialog?.({
-            message: `${formatChampionName(user)} closes the account in blood — ${banked} point(s) to his team.`,
+            message: {
+              en: `${formatChampionName(user)} closes the account in blood — ${banked} point(s) to his team.`,
+              pt: `${formatChampionName(user)} fecha a conta em sangue — ${banked} ponto(s) para seu time.`,
+            },
             sourceId: user.id,
           });
         }

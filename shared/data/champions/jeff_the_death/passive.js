@@ -54,9 +54,14 @@ function scheduleRevival(champion, context, passiveName) {
     },
 
     dialog: {
-      message: `<b>[Passive — ${passiveName}]</b> you cannot kill Death itself — ${formatChampionName(
-        champion,
-      )} steps back onto the field.`,
+      message: {
+        en: `<b>[Passive — ${passiveName}]</b> you cannot kill Death itself — ${formatChampionName(
+          champion,
+        )} steps back onto the field.`,
+        pt: `<b>[Passiva — ${passiveName}]</b> você não pode matar a própria Morte — ${formatChampionName(
+          champion,
+        )} volta a pisar no campo.`,
+      },
       sourceId: null,
       targetId: null,
     },
@@ -118,9 +123,14 @@ export default {
   name: "The Jeff Does Not End",
 
   description(champion) {
-    return `Death does not attend its own funeral. Cut down, Jeff returns at the start of the next turn with ${REVIVE_HP_PERCENT}% of his Max HP and every buff and stack still on him. Every death the field sees — his own among them — settles into him as +${BUFFS_PER_DEATH[0].amount}% permanent Attack and +${BUFFS_PER_DEATH[1].amount}% permanent Defense.
+    return {
+      en: `Death does not attend its own funeral. Cut down, Jeff returns at the start of the next turn with <b>${REVIVE_HP_PERCENT}%</b> of his <b>Max HP</b> and every buff and stack still on him. Every death the field sees — his own among them — settles into him as <b>+${BUFFS_PER_DEATH[0].amount}%</b> permanent <b>Attack</b> and <b>+${BUFFS_PER_DEATH[1].amount}%</b> permanent <b>Defense</b>.
 
-    <b>Jeff's Death Count:</b> ${champion.runtime.deathCounter ?? 0}`;
+      <b>Jeff's Death Count:</b> ${champion.runtime.deathCounter ?? 0}`,
+      pt: `A Morte não comparece ao próprio funeral. Abatido, Jeff retorna no início do próximo turno com <b>${REVIVE_HP_PERCENT}%</b> de seu <b>HP Máximo</b> e todo buff e stacks que ainda tinha. Toda morte que o campo testemunha — a sua própria inclusive — se acumula nele como <b>+${BUFFS_PER_DEATH[0].amount}%</b> de <b>Ataque</b> permanente e <b>+${BUFFS_PER_DEATH[1].amount}%</b> de <b>Defesa</b> permanente.
+
+      <b>Contagem de Mortes de Jeff:</b> ${champion.runtime.deathCounter ?? 0}`,
+    };
   },
 
   hookScope: {

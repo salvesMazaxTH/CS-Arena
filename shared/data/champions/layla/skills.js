@@ -19,7 +19,10 @@ const laylaSkills = [
     priority: 0,
 
     description() {
-      return `Layla studies the chosen enemy until their next move is already hers to call. Deals magical damage and leaves them Paralyzed for ${this.paralyzeDuration} turn(s).`;
+      return {
+        en: `Layla studies the chosen enemy until their next move is already hers to call. Deals <b>magical damage</b> and leaves them <b>Paralyzed</b> for <b>${this.paralyzeDuration}</b> turn(s).`,
+        pt: `Layla estuda o inimigo escolhido até que o próximo movimento dele já seja dela para decidir. Causa <b>dano mágico</b> e o deixa <b>Paralisado</b> por <b>${this.paralyzeDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -61,7 +64,10 @@ const laylaSkills = [
     priority: 0,
 
     description() {
-      return `Layla always gets the last word. Three bolts in quick order; she has already worked out where the last one has to land, so it strikes as a guaranteed critical hit. Deals magical lightning damage.`;
+      return {
+        en: `Layla always gets the last word. <b>Three</b> bolts in quick order; she has already worked out where the last one has to land, so it strikes as a guaranteed <b>critical hit</b>. Deals <b>magical lightning damage</b>.`,
+        pt: `Layla sempre tem a última palavra. <b>Três</b> raios em rápida sucessão; ela já sabe exatamente onde o último precisa acertar, então ele chega como um <b>acerto crítico</b> garantido. Causa <b>dano mágico de raio</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -106,7 +112,10 @@ const laylaSkills = [
     priority: 0,
 
     description() {
-      return `Layla stops pretending the storm is an accident. She tears the seal off her magic and empties it into the chosen enemy: deals heavy magical damage and leave the target Paralyzed for ${this.paralyzeDuration} turn(s).`;
+      return {
+        en: `Layla stops pretending the storm is an accident. She tears the seal off her magic and empties it into the chosen enemy: deals heavy <b>magical damage</b> and leaves the target <b>Paralyzed</b> for <b>${this.paralyzeDuration}</b> turn(s).`,
+        pt: `Layla para de fingir que a tempestade é um acidente. Ela arranca o selo de sua magia e a despeja inteira no inimigo escolhido: causa pesado <b>dano mágico</b> e deixa o alvo <b>Paralisado</b> por <b>${this.paralyzeDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -131,7 +140,10 @@ const laylaSkills = [
       }
 
       context.registerDialog?.({
-        message: `The room goes white. ${formatChampionName(enemy)} does not get to answer.`,
+        message: {
+          en: `The room goes white. ${formatChampionName(enemy)} does not get to answer.`,
+          pt: `A sala fica branca. ${formatChampionName(enemy)} não tem chance de resposta.`,
+        },
         sourceId: user.id,
         targetId: enemy.id,
       });

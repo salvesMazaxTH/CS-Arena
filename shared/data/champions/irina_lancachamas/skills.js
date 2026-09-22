@@ -14,7 +14,10 @@ function applyWeaponOverheat({ user, baseDamage, recoilPercent, context }) {
   if (recoilDamage <= 0) return [];
 
   context.registerDialog({
-    message: `${formatChampionName(user)}'s flamethrower redlines and scorches her own hands!`,
+    message: {
+      en: `${formatChampionName(user)}'s flamethrower redlines and scorches her own hands!`,
+      pt: `O lança-chamas de ${formatChampionName(user)} entra na zona vermelha e queima as próprias mãos dela!`,
+    },
     sourceId: user.id,
     targetId: user.id,
   });
@@ -32,7 +35,10 @@ function applyWeaponOverheat({ user, baseDamage, recoilPercent, context }) {
   return [
     ...entries,
     {
-      log: `${userName} takes ${entries[0].totalDamage} Absolute recoil damage from <b>${redlineRapture.name}</b>.\nfinal HP of ${userName}: ${entries[0].finalHP}/${user.maxHP}`,
+      log: {
+        en: `${userName} takes ${entries[0].totalDamage} Absolute recoil damage from <b>${redlineRapture.name}</b>.\nfinal HP of ${userName}: ${entries[0].finalHP}/${user.maxHP}`,
+        pt: `${userName} sofre ${entries[0].totalDamage} de dano Absoluto de recuo de <b>${redlineRapture.name}</b>.\nHP final de ${userName}: ${entries[0].finalHP}/${user.maxHP}`,
+      },
     },
   ];
 }

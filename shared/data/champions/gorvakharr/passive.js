@@ -41,7 +41,10 @@ export default {
     if (restored <= 0) return;
 
     return {
-      log: `[PASSIVE — Ashen Feast] ${formatChampionName(owner)} restored ${restored} HP.`,
+      log: {
+        en: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} restored ${restored} HP.`,
+        pt: `[PASSIVA — ${this.name}] ${formatChampionName(owner)} restaurou ${restored} de HP.`,
+      },
     };
   },
 };

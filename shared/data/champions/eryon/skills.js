@@ -60,7 +60,10 @@ const eryonSkills = [
       }
 
       return {
-        log: `${user.name} equalized the team's energy flow.`,
+        log: {
+          en: `${user.name} equalized the team's energy flow.`,
+          pt: `${user.name} equalizou o fluxo de energia do time.`,
+        },
       };
     },
   },
@@ -118,7 +121,10 @@ const eryonSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} channeled ${drained + this.bonusMomentum} Momentum into ${formatChampionName(target)}.`,
+        log: {
+          en: `${formatChampionName(user)} channeled ${drained + this.bonusMomentum} Momentum into ${formatChampionName(target)}.`,
+          pt: `${formatChampionName(user)} canalizou ${drained + this.bonusMomentum} de Momentum para ${formatChampionName(target)}.`,
+        },
       };
     },
   },
@@ -227,7 +233,10 @@ const eryonSkills = [
       }
 
       results.push({
-        log: `${formatChampionName(user)} collapsed the Eidolic flow (${consumed} Momentum).`,
+        log: {
+          en: `${formatChampionName(user)} collapsed the Eidolic flow (${consumed} Momentum).`,
+          pt: `${formatChampionName(user)} colapsou o fluxo Eidólico (${consumed} de Momentum).`,
+        },
       });
 
       return results;

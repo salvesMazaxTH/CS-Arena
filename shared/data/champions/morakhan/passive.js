@@ -19,15 +19,26 @@ export default {
   description(champion) {
     const stacks = champion.runtime?.stabilityStacks || 0;
 
-    return `Morakhan takes ${this.standingReductionPercent}% less damage (except Absolute Damage) and reduces damage taken from physical attacks by an additional ${this.flatReductionVSPhysical}.
+    return {
+      en: `Morakhan takes <b>${this.standingReductionPercent}%</b> less damage (except <b>Absolute Damage</b>) and reduces damage taken from physical attacks by an additional <b>${this.flatReductionVSPhysical}</b>.
 
-    Whenever he takes Physical Damage, he gains 1 <b>Stability</b> stack (Max: ${this.stabilityStacksCap}). A CLAIM, taken in stillness, grants 1 stack as well.
+      Whenever he takes physical damage, he gains 1 <b>Stability</b> stack (Max: <b>${this.stabilityStacksCap}</b>). A <b>CLAIM</b>, taken in stillness, grants 1 stack as well.
 
-    When a hit would deal more than ${this.significantHitRatio * 100}% of his Max HP, he consumes all Stability stacks to reduce that damage by an additional ${this.reductionPerStack}% per stack, then doubles his damage dealt for the next ${this.dmgBuffAuraDuration} turns.
+      When a hit would deal more than <b>${this.significantHitRatio * 100}%</b> of his Max HP, he consumes all Stability stacks to reduce that damage by an additional <b>${this.reductionPerStack}%</b> per stack, then doubles his damage dealt for the next <b>${this.dmgBuffAuraDuration}</b> turns.
 
-    While already at maximum Stability, the next stack he would gain — whether from a Physical hit or a CLAIM — is spent immediately instead: no damage is reduced, but the doubling still triggers.
+      While already at maximum Stability, the next stack he would gain — whether from a physical hit or a <b>CLAIM</b> — is spent immediately instead: no damage is reduced, but the doubling still triggers.
 
-    <b>Current Stacks: ${stacks}</b>`;
+      <b>Current Stacks: ${stacks}</b>`,
+      pt: `Morakhan sofre <b>${this.standingReductionPercent}%</b> menos dano (exceto <b>dano Absoluto</b>) e reduz o dano de ataques físicos em mais <b>${this.flatReductionVSPhysical}</b> pontos fixos.
+
+      Sempre que sofre dano físico, ganha 1 stack de <b>Estabilidade</b> (Máximo: <b>${this.stabilityStacksCap}</b>). Um <b>CLAIM</b>, feito em quietude, também concede 1 stack.
+
+      Quando um golpe causaria mais de <b>${this.significantHitRatio * 100}%</b> de seu HP Máximo, ele consome todos os stacks de Estabilidade para reduzir esse dano em mais <b>${this.reductionPerStack}%</b> por stack, e então dobra seu dano causado pelos próximos <b>${this.dmgBuffAuraDuration}</b> turnos.
+
+      Já no máximo de Estabilidade, o próximo stack que ganharia — seja por um golpe físico ou por um <b>CLAIM</b> — é gasto na hora: nenhum dano é reduzido, mas a duplicação ainda é ativada.
+
+      <b>Stacks atuais: ${stacks}</b>`,
+    };
   },
 
   hookScope: {
@@ -74,20 +85,32 @@ export default {
 
           return {
             damage: damage * dmgMultiplier,
-            log: `<b>[Passive — ${passiveName}]</b> ${formatChampionName(
-              attacker,
-            )} doubles the damage dealt${
-              isOwnCounter ? " by the counterattack" : ""
-            }!`,
+            log: {
+              en: `<b>[Passive — ${passiveName}]</b> ${formatChampionName(
+                attacker,
+              )} doubles the damage dealt${
+                isOwnCounter ? " by the counterattack" : ""
+              }!`,
+              pt: `<b>[Passivo — ${passiveName}]</b> ${formatChampionName(
+                attacker,
+              )} dobra o dano causado${
+                isOwnCounter ? " pelo contra-ataque" : ""
+              }!`,
+            },
           };
         },
       },
       context,
     );
 
-    const msg = `<b>[Passive — ${this.name}]</b> ${formatChampionName(
-      owner,
-    )} consumed ${consumedStacks} Stability stack(s)!`;
+    const msg = {
+      en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
+        owner,
+      )} consumed <b>${consumedStacks}</b> Stability stack(s)!`,
+      pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(
+        owner,
+      )} consumiu <b>${consumedStacks}</b> stack(s) de Estabilidade!`,
+    };
 
     context.registerDialog({
       message: msg,
@@ -111,7 +134,10 @@ export default {
     runtime.stabilityStacks = stacks + 1;
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} recites a sutra through the CLAIM and gains 1 Stability stack (${runtime.stabilityStacks}/${this.stabilityStacksCap}).`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} recites a sutra through the <b>CLAIM</b> and gains 1 Stability stack (<b>${runtime.stabilityStacks}/${this.stabilityStacksCap}</b>).`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} recita um sutra através do <b>CLAIM</b> e ganha 1 stack de Estabilidade (<b>${runtime.stabilityStacks}/${this.stabilityStacksCap}</b>).`,
+      },
     };
   },
 
@@ -163,9 +189,14 @@ export default {
     runtime.stabilityStacks = stacks + 1;
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
-        owner,
-      )} gains 1 Stability stack (${runtime.stabilityStacks}/${this.stabilityStacksCap}).`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
+          owner,
+        )} gains 1 Stability stack (<b>${runtime.stabilityStacks}/${this.stabilityStacksCap}</b>).`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(
+          owner,
+        )} ganha 1 stack de Estabilidade (<b>${runtime.stabilityStacks}/${this.stabilityStacksCap}</b>).`,
+      },
     };
   },
 };

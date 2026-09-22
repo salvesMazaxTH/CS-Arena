@@ -6,14 +6,8 @@ import totalBlock from "../generic/totalBlock.js";
 import weightOfTheBolt from "./passive.js";
 
 const julianSkills = [
-  // ========================
-  // Total Block (global)
-  // ========================
   totalBlock,
 
-  // ========================
-  // H1 — Serpentbite Bolt
-  // ========================
   {
     key: "serpentbite_bolt",
     name: "Serpentbite Bolt",
@@ -30,7 +24,10 @@ const julianSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Julian rolls a bolt-head across a vial of his own making, unhurried, and admires the sheen on it before firing into the chosen target. Deals Piercing damage equal to ${this.maxHPPercent}% of their Max HP and leaves ${this.poisonedStacks} stack of Poisoned.`;
+      return {
+        en: `Julian rolls a bolt-head across a vial of his own making, unhurried, and admires the sheen on it before firing into the chosen target. Deals <b>Piercing damage</b> equal to <b>${this.maxHPPercent}%</b> of their Max HP and leaves <b>${this.poisonedStacks}</b> stack of <b>Poisoned</b>.`,
+        pt: `Julian passa a ponta do dardo por um de seus próprios frascos, sem pressa, admirando o brilho antes de disparar contra o alvo escolhido. Causa <b>dano Perfurante</b> igual a <b>${this.maxHPPercent}%</b> do HP Máximo dele e deixa <b>${this.poisonedStacks}</b> stack de <b>Veneno</b>.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -66,9 +63,6 @@ const julianSkills = [
     },
   },
 
-  // ========================
-  // H2 — Breaching Bolt
-  // ========================
   {
     key: "breaching_bolt",
     name: "Breaching Bolt",
@@ -88,7 +82,10 @@ const julianSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Julian shoulders the heavy crossbow he keeps for gates and for anything that calls itself unbreakable, and puts a quarrel through the chosen target. Deals Piercing damage equal to ${this.maxHPPercent}% of their Max HP, plus ${this.perStackPercent}% for every stack of Poisoned they carry. If they carry ${this.scoreStackThreshold} or more, Julian collects on the mark and his player scores ${this.scorePoints} point.`;
+      return {
+        en: `Julian shoulders the heavy crossbow he keeps for gates and for anything that calls itself unbreakable, and puts a quarrel through the chosen target. Deals <b>Piercing damage</b> equal to <b>${this.maxHPPercent}%</b> of their Max HP, plus <b>${this.perStackPercent}%</b> for every stack of <b>Poisoned</b> they carry. If they carry <b>${this.scoreStackThreshold}</b> or more, Julian collects on the mark and his player scores <b>${this.scorePoints}</b> point.`,
+        pt: `Julian ergue a besta pesada que reserva para portões e para tudo que se acha indestrutível, e crava um virote no alvo escolhido. Causa <b>dano Perfurante</b> igual a <b>${this.maxHPPercent}%</b> do HP Máximo dele, mais <b>${this.perStackPercent}%</b> por stack de <b>Veneno</b> que carregar. Se carregar <b>${this.scoreStackThreshold}</b> stacks ou mais, Julian cobra a marca e seu time pontua <b>${this.scorePoints}</b> ponto.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -125,7 +122,10 @@ const julianSkills = [
         });
 
         context.registerDialog({
-          message: `${formatChampionName(user)} collects on a well-poisoned mark — +${this.scorePoints} point.`,
+          message: {
+            en: `${formatChampionName(user)} collects on a well-poisoned mark — +${this.scorePoints} point.`,
+            pt: `${formatChampionName(user)} cobra a marca bem envenenada — +${this.scorePoints} ponto.`,
+          },
           sourceId: user.id,
           targetId: enemy.id,
         });
@@ -135,9 +135,6 @@ const julianSkills = [
     },
   },
 
-  // ========================
-  // Ultimate — Nonpareil
-  // ========================
   {
     key: "nonpareil",
     name: "Nonpareil",
@@ -168,7 +165,10 @@ const julianSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Julian takes his time, because the room is watching, and draws the siege lock all the way back for the one shot he holds worthy of his name. Deals physical damage to the chosen target, then Piercing damage equal to ${this.maxHPPercent}% of their Max HP — doubled if they are Poisoned.`;
+      return {
+        en: `Julian takes his time, because the room is watching, and draws the siege lock all the way back for the one shot he holds worthy of his name. Deals <b>physical damage</b> to the chosen target, then <b>Piercing damage</b> equal to <b>${this.maxHPPercent}%</b> of their Max HP — doubled if they are <b>Poisoned</b>.`,
+        pt: `Julian se demora, porque a plateia está olhando, e puxa a trava de cerco até o fim para o único tiro que considera digno do seu nome. Causa <b>dano físico</b> ao alvo escolhido, seguido de <b>dano Perfurante</b> igual a <b>${this.maxHPPercent}%</b> do HP Máximo dele — dobrado se estiver <b>Envenenado</b>.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {

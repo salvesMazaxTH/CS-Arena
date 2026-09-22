@@ -53,13 +53,19 @@ const farkovethSkills = [
       );
 
       context.registerDialog?.({
-        message: `${formatChampionName(user)} folds into the stone and stops being there.`,
+        message: {
+          en: `${formatChampionName(user)} folds into the stone and stops being there.`,
+          pt: `${formatChampionName(user)} se dobra na pedra e deixa de estar ali.`,
+        },
         sourceId: user.id,
       });
 
       return [
         {
-          log: `${formatChampionName(user)} perches, unseen, waiting for the drop.`,
+          log: {
+            en: `${formatChampionName(user)} perches, unseen, waiting for the drop.`,
+            pt: `${formatChampionName(user)} se empoleira, despercebido, esperando o momento de atacar.`,
+          },
         },
       ];
     },

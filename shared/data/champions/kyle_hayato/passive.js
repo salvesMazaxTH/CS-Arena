@@ -8,7 +8,10 @@ export default {
   markWindow: 2,
 
   description() {
-    return `Kyle can't stand watching someone else profit from what he wants for himself. Whenever an enemy uses CLAIM, he marks them for ${this.markWindow} turn(s) — his ultimate knows exactly what to do with a mark.`;
+    return {
+      en: `Kyle can't stand watching someone else profit from what he wants for himself. Whenever an enemy uses <b>CLAIM</b>, he marks them for <b>${this.markWindow}</b> turn(s) — his ultimate knows exactly what to do with a mark.`,
+      pt: `Kyle não suporta assistir outra pessoa lucrar com o que ele quer para si. Sempre que um inimigo usa <b>CLAIM</b>, ele o marca por <b>${this.markWindow}</b> turno(s) — seu ultimate sabe exatamente o que fazer com uma marca.`,
+    };
   },
 
   onActionResolved({ owner, actionSource, skill, context }) {
@@ -23,7 +26,10 @@ export default {
       Number(context.preActionClaimPoints) || 0;
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(actionSource)} claims something Kyle wanted — marked.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(actionSource)} claims something Kyle wanted — marked.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(actionSource)} reivindica algo que Kyle queria — marcado.`,
+      },
     };
   },
 

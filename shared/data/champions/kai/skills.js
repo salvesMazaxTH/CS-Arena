@@ -14,7 +14,10 @@ const kaiSkills = [
     damageMode: "standard",
     priority: 1,
     description() {
-      return `Kai snaps a short hook into the chosen target before they can set their guard, dealing physical damage.`;
+      return {
+        en: `Kai snaps a short hook into the chosen target before they can set their guard, dealing <b>Physical Damage</b>.`,
+        pt: `Kai desfere um gancho curto no alvo escolhido antes que consiga se defender, causando <b>Dano Físico</b>.`,
+      };
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -57,11 +60,18 @@ const kaiSkills = [
     ],
 
     description() {
-      return `Kai settles into a stance that glows from the inside out, taking ${this.damageReduction}% less damage during this turn and the next.
+      return {
+        en: `Kai settles into a stance that glows from the inside out, taking <b>${this.damageReduction}%</b> less damage during this turn and the next.
 
-      Anyone who strikes him in contact is answered on the spot with ${this.counterAtkDmg} absolute damage and left Burning.
+        Anyone who strikes him in contact is answered on the spot with <b>${this.counterAtkDmg}</b> <b>Absolute Damage</b> and left <b>Burning</b>.
 
-      The moment Kai deals damage, the stance catches: Living Ember burns for ${this.stanceDuration} turn(s), his attacks deal +${kindledFists.livingEmberBonusDamage} bonus damage and always apply Burning.`;
+        The moment Kai deals damage, the stance catches: <b>Living Ember</b> burns for <b>${this.stanceDuration}</b> turn(s), his attacks deal <b>+${kindledFists.livingEmberBonusDamage}</b> bonus damage and always apply <b>Burning</b>.`,
+        pt: `Kai assume uma postura que brilha por dentro, sofrendo <b>${this.damageReduction}%</b> menos dano neste turno e no próximo.
+
+        Quem o atinge em contato é respondido na hora com <b>${this.counterAtkDmg}</b> de <b>Dano Absoluto</b> e fica <b>Queimando</b>.
+
+        No momento em que Kai causa dano, a postura pega fogo: a <b>Brasa Viva</b> arde por <b>${this.stanceDuration}</b> turno(s), seus ataques causam <b>+${kindledFists.livingEmberBonusDamage}</b> de dano bônus e sempre aplicam <b>Queimando</b>.`,
+      };
     },
 
     targetSpec: ["self"],
@@ -126,7 +136,10 @@ const kaiSkills = [
             }),
 
             dialog: {
-              message: `${formatChampionName(owner)} answers with the Living Ember Stance!`,
+              message: {
+                en: `${formatChampionName(owner)} answers with the Living Ember Stance!`,
+                pt: `${formatChampionName(owner)} responde com a Postura da Brasa Viva!`,
+              },
               duration: 1000,
             },
           });
@@ -136,7 +149,10 @@ const kaiSkills = [
           });
 
           return {
-            log: `${formatChampionName(attacker)} is burned for striking ${formatChampionName(owner)} in contact!`,
+            log: {
+              en: `${formatChampionName(attacker)} is burned for striking ${formatChampionName(owner)} in contact!`,
+              pt: `${formatChampionName(attacker)} é queimado por atacar ${formatChampionName(owner)} em contato!`,
+            },
           };
         },
 
@@ -154,7 +170,10 @@ const kaiSkills = [
             this.expiresAtTurn = context.currentTurn + stanceDuration;
 
             return {
-              log: "🔥 Living Ember flares to life!",
+              log: {
+                en: "🔥 Living Ember flares to life!",
+                pt: "🔥 A Brasa Viva desperta!",
+              },
             };
           }
         },
@@ -179,7 +198,10 @@ const kaiSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} takes the Living Ember Stance!`,
+        log: {
+          en: `${formatChampionName(user)} takes the Living Ember Stance!`,
+          pt: `${formatChampionName(user)} assume a Postura da Brasa Viva!`,
+        },
       };
     },
   },
@@ -198,9 +220,14 @@ const kaiSkills = [
     isUltimate: true,
     momentumCost: 50,
     description() {
-      return `Kai throws himself forward and lets go of everything at once: ${this.punches} blazing punches scatter at random across all enemies, each one dealing ${this.damagePerHit} physical damage.
+      return {
+        en: `Kai throws himself forward and lets go of everything at once: <b>${this.punches}</b> blazing punches scatter at random across all enemies, each one dealing <b>${this.damagePerHit}</b> physical damage.
 
-      Targets already Burning take ${this.burningBonus} bonus damage per punch as the fire finds its way in.`;
+        Targets already <b>Burning</b> take <b>${this.burningBonus}</b> bonus damage per punch as the fire finds its way in.`,
+        pt: `Kai se lança para frente e solta tudo de uma vez: <b>${this.punches}</b> socos flamejantes se espalham aleatoriamente entre todos os inimigos, cada um causando <b>${this.damagePerHit}</b> de dano físico.
+
+        Alvos já <b>Queimando</b> sofrem <b>${this.burningBonus}</b> de dano bônus por soco conforme o fogo encontra caminho.`,
+      };
     },
     targetSpec: ["all:enemy"],
     resolve({ user, targets, context = {} }) {

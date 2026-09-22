@@ -72,15 +72,23 @@ const isarelisSkills = [
       });
 
       context.registerDialog({
-        message: `${formatChampionName(user)} disappears into the shadows.`,
+        message: {
+          en: `${formatChampionName(user)} disappears into the shadows.`,
+          pt: `${formatChampionName(user)} desaparece nas sombras.`,
+        },
         sourceId: user.id,
       });
 
       return [
         {
-          log: `${formatChampionName(
-            user,
-          )} disappears into the shadows and becomes <b>Invisible</b> for up to ${this.invisibleDuration} turns.`,
+          log: {
+            en: `${formatChampionName(
+              user,
+            )} disappears into the shadows and becomes <b>Invisible</b> for up to ${this.invisibleDuration} turns.`,
+            pt: `${formatChampionName(
+              user,
+            )} desaparece nas sombras e fica <b>Invisível</b> por até ${this.invisibleDuration} turnos.`,
+          },
         },
       ];
     },
@@ -140,7 +148,10 @@ const isarelisSkills = [
         baseDamage *= 1 + this.stealthBonus;
 
         context.registerDialog({
-          message: `${formatChampionName(user)} strikes from the shadows!`,
+          message: {
+            en: `${formatChampionName(user)} strikes from the shadows!`,
+            pt: `${formatChampionName(user)} golpeia a partir das sombras!`,
+          },
           sourceId: user.id,
           targetId: enemy.id,
         });

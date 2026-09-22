@@ -4,10 +4,7 @@ const ABSORB_PERCENT = 40;
 const UNREFINED_PER_MOMENTUM = 20;
 const MOMENTUM_CAP_PER_TURN = 5;
 
-// Strips a share of an incoming magical hit into raw arcane and pools it on the
-// defender. Returns the damage patch for the hook to hand back, or nothing when
-// there is nothing to strip. Shared with the Primordial form, which passes a
-// higher percent.
+// Shared with the Primordial form, which passes a higher percent.
 export function unrefineMagical(
   { owner, attacker, defender, damage, type },
   percent,
@@ -22,10 +19,8 @@ export function unrefineMagical(
   return { damage: Math.max(0, Number(damage) - absorbed) };
 }
 
-// Pays out the pooled essence as Momentum, once at the start of a turn. Whatever
-// the per-turn cap leaves behind stays pooled for the next turn. `perTurnCap` is
-// higher for the Primordial form. Bypasses applyResourceChange the same way
-// Silas' passive does, so the caller announces it with a dialog.
+// `perTurnCap` is higher for the Primordial form. Bypasses applyResourceChange
+// the same way Silas' passive does, so the caller announces it with a dialog.
 export function drainUnrefined(owner, { perTurnCap }) {
   const pool = owner.runtime.maliUnrefined ?? 0;
 
@@ -52,9 +47,14 @@ export default {
   description(champion) {
     const pool = champion.runtime?.maliUnrefined ?? 0;
 
-    return `Mali Magarc was king of magic's essence in the age before anyone had learned to shape it, and every spell still slackens in his grip. Magic that would wound him is pulled back to the raw arcane it was refined from: ${this.absorbPercent}% of incoming magical damage is unmade and pooled in him, and at the start of each turn every ${this.unrefinedPerMomentum} points pooled become 1 Momentum, up to ${this.momentumCapPerTurn}.
+    return {
+      en: `Mali Magarc was king of magic's essence in the age before anyone had learned to shape it, and every spell still slackens in his grip. Magic that would wound him is pulled back to the raw arcane it was refined from: <b>${this.absorbPercent}%</b> of incoming magical damage is unmade and pooled in him, and at the start of each turn every <b>${this.unrefinedPerMomentum}</b> points pooled become <b>1 Momentum</b>, up to <b>${this.momentumCapPerTurn}</b>.
 
-    <b>Unrefined essence pooled: ${pool}</b>`;
+    <b>Unrefined essence pooled: ${pool}</b>`,
+      pt: `Mali Magarc foi rei da essência mágica numa era anterior a qualquer refinamento, e todo feitiço ainda amolece em seu punho. A magia que o feriria é puxada de volta ao arcano bruto de onde foi refinada: <b>${this.absorbPercent}%</b> do dano mágico recebido é desfeito e armazenado nele, e no início de cada turno cada <b>${this.unrefinedPerMomentum}</b> pontos armazenados viram <b>1 Momentum</b>, até o limite de <b>${this.momentumCapPerTurn}</b>.
+
+    <b>Essência bruta armazenada: ${pool}</b>`,
+    };
   },
 
   hookScope: {
@@ -72,13 +72,19 @@ export default {
     if (!gained) return;
 
     context?.registerDialog?.({
-      message: `<b>[Passive — ${this.name}]</b> the unmade magic settles in ${formatChampionName(owner)} as ${gained} Momentum.`,
+      message: {
+        en: `<b>[Passive — ${this.name}]</b> the unmade magic settles in ${formatChampionName(owner)} as <b>${gained}</b> Momentum.`,
+        pt: `<b>[Passivo — ${this.name}]</b> a magia desfeita se assenta em ${formatChampionName(owner)} como <b>${gained}</b> de Momentum.`,
+      },
       sourceId: owner.id,
       targetId: owner.id,
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} draws ${gained} Momentum out of the pooled essence.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} draws <b>${gained}</b> Momentum out of the pooled essence.`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} extrai <b>${gained}</b> de Momentum da essência armazenada.`,
+      },
     };
   },
 };

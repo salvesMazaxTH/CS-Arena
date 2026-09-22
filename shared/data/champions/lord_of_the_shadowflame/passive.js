@@ -13,9 +13,14 @@ export default {
   description(champion) {
     const stacks = champion.runtime?.emberStacks || 0;
 
-    return `Every wound just feeds it. Whenever it takes damage, it gains 1 Ember stack (Max: ${this.maxStacks}), and each stack adds ${this.dmgPerStackPercent}% bonus damage to its own attacks. A blow that would put it out instead burns every Ember it holds and leaves it standing on up to ${this.survivalPercentPerEmber}% of its Max HP per Ember spent — but only from ${this.minEmbersToSurvive} Embers up, and never on the turn it took this shape.
+    return {
+      en: `Every wound just feeds it. Whenever it takes damage, it gains <b>1 Ember</b> stack (Max: <b>${this.maxStacks}</b>), and each stack adds <b>${this.dmgPerStackPercent}%</b> bonus damage to its own attacks. A blow that would put it out instead burns every Ember it holds and leaves it standing on up to <b>${this.survivalPercentPerEmber}%</b> of its Max HP per Ember spent — but only from <b>${this.minEmbersToSurvive}</b> Embers up, and never on the turn it took this shape.
 
-    <b>Current Embers: ${stacks}/${this.maxStacks}</b>`;
+    <b>Current Embers: ${stacks}/${this.maxStacks}</b>`,
+      pt: `Cada ferimento só o alimenta. Sempre que sofre dano, ganha <b>1 Brasa</b> em estoque (máx.: <b>${this.maxStacks}</b>), e cada Brasa acrescenta <b>${this.dmgPerStackPercent}%</b> de dano adicional aos próprios ataques. Um golpe que o apagaria, em vez disso, consome todas as Brasas acumuladas e o mantém de pé com até <b>${this.survivalPercentPerEmber}%</b> do seu HP Máximo por Brasa gasta — mas só a partir de <b>${this.minEmbersToSurvive}</b> Brasas, e nunca no turno em que assumiu essa forma.
+
+    <b>Brasas atuais: ${stacks}/${this.maxStacks}</b>`,
+    };
   },
 
   hookScope: {
@@ -48,7 +53,10 @@ export default {
     );
 
     context.registerDialog({
-      message: `The Flame spends every Ember at once — ${formatChampionName(owner)} will not be put out.`,
+      message: {
+        en: `The Flame spends every Ember at once — ${formatChampionName(owner)} will not be put out.`,
+        pt: `A Chama gasta todas as Brasas de uma vez — ${formatChampionName(owner)} não vai se apagar.`,
+      },
       sourceId: owner.id,
       targetId: owner.id,
     });
@@ -58,7 +66,10 @@ export default {
         owner.HP + regularShieldTotal(owner) - survivalHP,
         0,
       ),
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} burns ${stacks} Ember(s) to stay standing at ${survivalHP} HP.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} burns <b>${stacks}</b> Ember(s) to stay standing at <b>${survivalHP}</b> HP.`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} consome <b>${stacks}</b> Brasa(s) para continuar de pé com <b>${survivalHP}</b> HP.`,
+      },
     };
   },
 
@@ -72,7 +83,10 @@ export default {
     owner.runtime.emberStacks = stacks + 1;
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} gains 1 Ember (${owner.runtime.emberStacks}/${this.maxStacks}).`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} gains <b>1 Ember</b> (${owner.runtime.emberStacks}/${this.maxStacks}).`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} ganha <b>1 Brasa</b> (${owner.runtime.emberStacks}/${this.maxStacks}).`,
+      },
     };
   },
 

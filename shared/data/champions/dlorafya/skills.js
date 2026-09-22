@@ -165,9 +165,14 @@ const dlorafyaSkills = [
       });
 
       results.push({
-        log:
-          `${formatChampionName(user)}'s pyre rises: +${attackGain} Attack ` +
-          `and +${this.defenseBuff} Defense for ${this.buffDuration} turn(s).`,
+        log: {
+          en:
+            `${formatChampionName(user)}'s pyre rises: +${attackGain} Attack ` +
+            `and +${this.defenseBuff} Defense for ${this.buffDuration} turn(s).`,
+          pt:
+            `A pira de ${formatChampionName(user)} se eleva: +${attackGain} de Ataque ` +
+            `e +${this.defenseBuff} de Defesa por ${this.buffDuration} turno(s).`,
+        },
       });
 
       return results;

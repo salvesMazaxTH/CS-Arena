@@ -38,7 +38,10 @@ export function releaseStoredHeat(owner, context) {
   if (!enemies.length) return [];
 
   context.registerDialog({
-    message: `${formatChampionName(owner)} lets the aegis go, and everything it swallowed comes back out.`,
+    message: {
+      en: `${formatChampionName(owner)} lets the aegis go, and everything it swallowed comes back out.`,
+      pt: `${formatChampionName(owner)} deixa o égide se ir, e tudo o que ele havia engolido volta à tona.`,
+    },
     sourceId: owner.id,
   });
 
@@ -92,8 +95,8 @@ const victoriaSkills = [
 
     description() {
       return {
-        en:`Victoria drags a burning knuckle across the chosen target, dealing physical damage. If they are not Burning yet, the ember catches and leaves them Burning for <b>${this.burnDuration}</b> turn(s); if they already burn, the fire digs in instead and her next hit on them pierces <b>${flashpoint.brandPiercing}%</b> of their <b>Defense</b>. No taunt can pull the blow aside.`,
-        pt: `Victoria arrasta os nós de seus dedos em chamas pelo alvo escolhido, causando dano físico. Se ele não estiver <b>Queimando</b>, a brasa o alcança, deixando-o <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s); se ele já estiver queimando, a chama se aprofunda, e o próximo golpe dela contra esse alvo se torna <b>perfurante</b> (ignorando <b>${flashpoint.brandPiercing}%</b> da <b>Defesa</b>). Nenhuma provocação pode desviar o golpe.`
+        en: `Victoria drags a burning knuckle across the chosen target, dealing physical damage. If they are not Burning yet, the ember catches and leaves them Burning for <b>${this.burnDuration}</b> turn(s); if they already burn, the fire digs in instead and her next hit on them pierces <b>${flashpoint.brandPiercing}%</b> of their <b>Defense</b>. No taunt can pull the blow aside.`,
+        pt: `Victoria arrasta os nós de seus dedos em chamas pelo alvo escolhido, causando dano físico. Se ele não estiver <b>Queimando</b>, a brasa o alcança, deixando-o <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s); se ele já estiver queimando, a chama se aprofunda, e o próximo golpe dela contra esse alvo se torna <b>perfurante</b> (ignorando <b>${flashpoint.brandPiercing}%</b> da <b>Defesa</b>). Nenhuma provocação pode desviar o golpe.`,
       };
     },
 
@@ -125,7 +128,10 @@ const victoriaSkills = [
         return {
           ...result,
           targetId: enemy.id,
-          log: `${formatChampionName(enemy)} is branded — the fire on them is waiting for Victoria's next hit.`,
+          log: {
+            en: `${formatChampionName(enemy)} is branded — the fire on them is waiting for Victoria's next hit.`,
+            pt: `${formatChampionName(enemy)} é marcado — o fogo nele espera pelo próximo golpe de Victoria.`,
+          },
         };
       }
 
@@ -210,7 +216,10 @@ const victoriaSkills = [
           releaseStoredHeat(owner, context);
 
           return {
-            log: `<b>${skill.name}</b> shatters and burns everything it had been holding.`,
+            log: {
+              en: `<b>${skill.name}</b> shatters and burns everything it had been holding.`,
+              pt: `<b>${skill.name}</b> se despedaça e queima tudo o que tinha acumulado.`,
+            },
           };
         },
 
@@ -225,7 +234,10 @@ const victoriaSkills = [
       user.addHookEffect(effect, context);
 
       return {
-        log: `${formatChampionName(user)} raises the Phoenix Aegis!`,
+        log: {
+          en: `${formatChampionName(user)} raises the Phoenix Aegis!`,
+          pt: `${formatChampionName(user)} ergue o Égide da Fênix!`,
+        },
       };
     },
   },
@@ -274,7 +286,10 @@ const victoriaSkills = [
         ...result,
         targetId: enemy.id,
         log: consumes
-          ? `Victoria tears the fire off ${formatChampionName(enemy)} and drives it back into them!`
+          ? {
+              en: `Victoria tears the fire off ${formatChampionName(enemy)} and drives it back into them!`,
+              pt: `Victoria arranca o fogo de ${formatChampionName(enemy)} e o crava de volta neles!`,
+            }
           : undefined,
       };
     },

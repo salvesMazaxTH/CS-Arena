@@ -93,8 +93,14 @@ const gryskarchuSkills = [
 
       return {
         log: someoneHealed
-          ? `${formatChampionName(user)} invoked Vital Bloom.`
-          : `${formatChampionName(user)} invoked Vital Bloom, but no one needed HP restored.`,
+          ? {
+              en: `${formatChampionName(user)} invoked Vital Bloom.`,
+              pt: `${formatChampionName(user)} invocou Florescer Vital.`,
+            }
+          : {
+              en: `${formatChampionName(user)} invoked Vital Bloom, but no one needed HP restored.`,
+              pt: `${formatChampionName(user)} invocou Florescer Vital, mas ninguém precisava de HP restaurado.`,
+            },
       };
     },
   },
@@ -166,11 +172,18 @@ const gryskarchuSkills = [
       });
 
       return {
-        log:
-          `${formatChampionName(user)} grants ${formatChampionName(
-            ally,
-          )} ${healAmount} restored HP, +${this.defBuff}% Defense ` +
-          `and bonus damage for ${this.buffDuration} turn(s)!`,
+        log: {
+          en:
+            `${formatChampionName(user)} grants ${formatChampionName(
+              ally,
+            )} ${healAmount} restored HP, +${this.defBuff}% Defense ` +
+            `and bonus damage for ${this.buffDuration} turn(s)!`,
+          pt:
+            `${formatChampionName(user)} concede a ${formatChampionName(
+              ally,
+            )} ${healAmount} de HP restaurado, +${this.defBuff}% de Defesa ` +
+            `e dano bônus por ${this.buffDuration} turno(s)!`,
+        },
       };
     },
   },

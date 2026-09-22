@@ -9,7 +9,10 @@ export default {
   momentumCapPerTurn: 8,
 
   description() {
-    return `While Mali Magarc holds his true shape, nothing keeps its refinement near him. For as long as the form lasts, ${this.boostedAbsorbPercent}% of the magical damage aimed at him is stripped to raw arcane, returning up to ${this.momentumCapPerTurn} Momentum at the start of each turn.`;
+    return {
+      en: `While Mali Magarc holds his true shape, nothing keeps its refinement near him. For as long as the form lasts, <b>${this.boostedAbsorbPercent}%</b> of the magical damage aimed at him is stripped to raw arcane, returning up to <b>${this.momentumCapPerTurn}</b> Momentum at the start of each turn.`,
+      pt: `Enquanto Mali Magarc mantém sua verdadeira forma, nada preserva o refinamento perto dele. Enquanto a forma durar, <b>${this.boostedAbsorbPercent}%</b> do dano mágico direcionado a ele é despido até o arcano bruto, devolvendo até <b>${this.momentumCapPerTurn}</b> de Momentum no início de cada turno.`,
+    };
   },
 
   hookScope: {
@@ -26,12 +29,18 @@ export default {
     const gained = drainUnrefined(owner, { perTurnCap: this.momentumCapPerTurn });
     if (gained) {
       context?.registerDialog?.({
-        message: `<b>[Passive — ${this.name}]</b> the unmade magic pours into ${formatChampionName(owner)} as ${gained} Momentum.`,
+        message: {
+          en: `<b>[Passive — ${this.name}]</b> the unmade magic pours into ${formatChampionName(owner)} as <b>${gained}</b> Momentum.`,
+          pt: `<b>[Passivo — ${this.name}]</b> a magia desfeita jorra em ${formatChampionName(owner)} como <b>${gained}</b> de Momentum.`,
+        },
         sourceId: owner.id,
         targetId: owner.id,
       });
       results.push({
-        log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} draws ${gained} Momentum out of the pooled essence.`,
+        log: {
+          en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} draws <b>${gained}</b> Momentum out of the pooled essence.`,
+          pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} extrai <b>${gained}</b> de Momentum da essência armazenada.`,
+        },
       });
     }
 

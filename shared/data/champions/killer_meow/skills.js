@@ -24,7 +24,10 @@ const killerMeowSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Killer Meow drops off the ledge behind the chosen target and opens them on the way down, four lines drawn so cleanly they take a moment to start bleeding. Deals physical damage and leaves them Bleeding for ${this.bleedingStacks} stack(s).`;
+      return {
+        en: `Killer Meow drops off the ledge behind the chosen target and opens them on the way down, four lines drawn so cleanly they take a moment to start bleeding. Deals physical damage and leaves them <b>Bleeding</b> for <b>${this.bleedingStacks}</b> stack(s).`,
+        pt: `Killer Meow salta da beirada atrás do alvo escolhido e o abre na queda, quatro linhas traçadas com tamanha limpeza que demoram um instante para começar a sangrar. Causa dano físico e o deixa <b>Sangrando</b> por <b>${this.bleedingStacks}</b> stack(s).`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -71,7 +74,10 @@ const killerMeowSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Killer Meow offers the chosen target the shoulder they were expecting, lets them commit to it, and puts the claw in under the guard instead. Deals physical damage that ignores ${this.piercingPercentage}% of their Defense, and he keeps the low, sideways footing the feint left him in for +${this.evasionBuff}% Evasion for the rest of the turn.`;
+      return {
+        en: `Killer Meow offers the chosen target the shoulder they were expecting, lets them commit to it, and puts the claw in under the guard instead. Deals physical damage that ignores <b>${this.piercingPercentage}%</b> of their <b>Defense</b>, and he keeps the low, sideways footing the feint left him in for <b>+${this.evasionBuff}%</b> <b>Evasion</b> for the rest of the turn.`,
+        pt: `Killer Meow oferece ao alvo escolhido o ombro que ele esperava, deixa que se comprometa com o golpe, e enfia a garra sob a guarda em seu lugar. Causa dano físico que ignora <b>${this.piercingPercentage}%</b> da <b>Defesa</b> do alvo, e mantém a postura baixa e de lado que a finta lhe deu por <b>+${this.evasionBuff}%</b> de <b>Esquiva</b> pelo resto do turno.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -121,7 +127,10 @@ const killerMeowSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Killer Meow spends every life he has not spent yet in one fall, and whatever is left of the cat lands on the chosen target with all of it at once. Deals physical damage, striking ${this.bfPerLife}% of his Attack harder for every life he had to his name before paying for this one.`;
+      return {
+        en: `Killer Meow spends every life he has not spent yet in one fall, and whatever is left of the cat lands on the chosen target with all of it at once. Deals physical damage, striking <b>${this.bfPerLife}%</b> of his <b>Attack</b> harder for every life he had to his name before paying for this one.`,
+        pt: `Killer Meow gasta todas as vidas que ainda não gastou em uma única queda, e o que restar do gato cai sobre o alvo escolhido com tudo de uma vez. Causa dano físico, golpeando <b>${this.bfPerLife}%</b> do seu <b>Ataque</b> mais forte para cada vida que possuía em seu nome antes de pagar por esta.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -131,7 +140,10 @@ const killerMeowSkills = [
       const bf = this.bf + lives * this.bfPerLife;
 
       context.registerDialog({
-        message: `${formatChampionName(user)} comes down on ${formatChampionName(enemy)} with all ${lives} of the lives he came into this turn with.`,
+        message: {
+          en: `${formatChampionName(user)} comes down on ${formatChampionName(enemy)} with all ${lives} of the lives he came into this turn with.`,
+          pt: `${formatChampionName(user)} cai sobre ${formatChampionName(enemy)} com todas as ${lives} vidas com que entrou neste turno.`,
+        },
         sourceId: user.id,
         targetId: enemy.id,
       });

@@ -61,17 +61,25 @@ export default {
     const scaled = scorched
       ? { damage: Number(damage || 0) * (1 - this.heavyJudgmentPenalty) }
       : {};
-    const spent = scorched
+    const spentEn = scorched
       ? `, but spends itself doing so (-${Math.round(this.heavyJudgmentPenalty * 100)}% damage)`
+      : "";
+    const spentPt = scorched
+      ? `, mas se consome ao fazê-lo (-${Math.round(this.heavyJudgmentPenalty * 100)}% de dano)`
       : "";
 
     if (judged >= 100) {
       return {
         ...scaled,
         mode: "absolute",
-        log:
-          `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} passes final judgment on ` +
-          `${formatChampionName(defender)}: the flame ignores their Defense and all damage reduction entirely${spent}.`,
+        log: {
+          en:
+            `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} passes final judgment on ` +
+            `${formatChampionName(defender)}: the flame ignores their Defense and all damage reduction entirely${spentEn}.`,
+          pt:
+            `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} profere o julgamento final sobre ` +
+            `${formatChampionName(defender)}: a chama ignora completamente sua Defesa e toda redução de dano${spentPt}.`,
+        },
       };
     }
 
@@ -83,9 +91,14 @@ export default {
       ...scaled,
       mode: "piercing",
       piercingPercentage: judged,
-      log:
-        `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)}'s flame judges ` +
-        `${formatChampionName(defender)}'s armor, ignoring ${Math.round(judged)}% of their Defense${spent}.`,
+      log: {
+        en:
+          `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)}'s flame judges ` +
+          `${formatChampionName(defender)}'s armor, ignoring ${Math.round(judged)}% of their Defense${spentEn}.`,
+        pt:
+          `<b>[Passiva — ${this.name}]</b> a chama de ${formatChampionName(owner)} julga ` +
+          `a armadura de ${formatChampionName(defender)}, ignorando ${Math.round(judged)}% de sua Defesa${spentPt}.`,
+      },
     };
   },
 };

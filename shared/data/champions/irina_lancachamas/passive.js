@@ -51,7 +51,10 @@ export default {
     });
 
     return {
-      log: `<b>[Passive — Redline Rapture]</b> ${formatChampionName(owner)} keeps the redline lit through the CLAIM (+${amount} permanent Attack).`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} keeps the redline lit through the CLAIM (+${amount} permanent Attack).`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} mantém a linha vermelha acesa através do CLAIM (+${amount} de Ataque permanente).`,
+      },
     };
   },
 
@@ -75,7 +78,10 @@ export default {
     });
 
     return {
-      log: `<b>[Passive — Redline Rapture]</b> ${formatChampionName(owner)} laughs straight through the burn (+${this.attackPerRecoil} permanent Attack).`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} laughs straight through the burn (+${this.attackPerRecoil} permanent Attack).`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} ri direto através da queimadura (+${this.attackPerRecoil} de Ataque permanente).`,
+      },
     };
   },
 };

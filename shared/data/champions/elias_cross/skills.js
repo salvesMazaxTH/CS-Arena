@@ -1,5 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
+import { pushResultLog } from "../../../engine/combat/resultLog.js";
 import totalBlock from "../generic/totalBlock.js";
 
 const eliasCrossSkills = [
@@ -225,20 +226,13 @@ const eliasCrossSkills = [
         }
       }
 
-      const eliasUltLog = `${formatChampionName(
-        user,
-      )} took ${this.recoilDamage}% of his Max HP as Absolute Recoil Damage.`;
+      const eliasUltLog = {
+        en: `${formatChampionName(user)} took ${this.recoilDamage}% of his Max HP as Absolute Recoil Damage.`,
+        pt: `${formatChampionName(user)} sofreu ${this.recoilDamage}% do seu HP Máximo como Dano de Recuo Absoluto.`,
+      };
 
-      // Inject into a single result (the first valid one).
       if (results.length > 0) {
-        results[0].log =
-          (results[0].log ?? "") +
-          `\n${eliasUltLog}`;
-      } else {
-        // Optional fallback.
-        console.warn(
-          "Lightning Storm: no result available to append recoil log",
-        );
+        pushResultLog(results[0], eliasUltLog);
       }
 
       return results;

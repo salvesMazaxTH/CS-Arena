@@ -8,7 +8,10 @@ export default {
   lastLaughPoints: 1,
 
   description() {
-    return `Lorena's aim is less a skill than an inside joke only she finds funny — because she never misses. Once she's marked a target, her next hit against them is always a critical hit, landing at ${(1 + this.markedCritBonus / 100).toFixed(2)}x instead of the usual multiplier. If that hit is the one that puts them down, her player takes ${this.lastLaughPoints} point from the other side of the board — the last laugh.`;
+    return {
+      en: `Lorena's aim is less a skill than an inside joke only she finds funny — because she never misses. Once she's marked a target, her next hit against them is always a <b>critical hit</b>, landing at <b>${(1 + this.markedCritBonus / 100).toFixed(2)}x</b> instead of the usual multiplier. If that hit is the one that puts them down, her player takes <b>${this.lastLaughPoints}</b> point from the other side of the board — the last laugh.`,
+      pt: `A pontaria de Lorena é menos uma habilidade e mais uma piada interna que só ela acha graça — porque ela nunca erra. Depois de marcar um alvo, seu próximo golpe contra ele é sempre um <b>acerto crítico</b>, valendo <b>${(1 + this.markedCritBonus / 100).toFixed(2)}x</b> em vez do multiplicador normal. Se esse golpe for o que derruba o alvo, o time dela rouba <b>${this.lastLaughPoints}</b> ponto do adversário — a última risada.`,
+    };
   },
 
   hookScope: {
@@ -97,7 +100,10 @@ export default {
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} gets the last laugh on ${formatChampionName(defender)} — ${stolen} point(s) taken from the other side of the board.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} gets the last laugh on ${formatChampionName(defender)} — <b>${stolen}</b> point(s) taken from the other side of the board.`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} dá a última risada em cima de ${formatChampionName(defender)} — <b>${stolen}</b> ponto(s) roubado(s) do adversário.`,
+      },
     };
   },
 };

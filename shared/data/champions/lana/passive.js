@@ -25,11 +25,18 @@ export default {
   description() {
     const [light, medium, heavy] = this.absorptionTiers;
 
-    return `Tutu is always watching over Lana. While he is alive, she receives a Spell Shield at the start of every turn.
+    return {
+      en: `Tutu is always watching over Lana. While he is alive, she receives a <b>Spell Shield</b> at the start of every turn.
 
-    When Lana drops below ${this.hpThreshold * 100}% of her Max HP, Tutu takes her place on the field. When a blow would have killed her, he throws himself in front of it and enters already carrying it: his plush body soaks ${light.percent}% of a blow up to ${light.upTo}, ${medium.percent}% of one up to ${medium.upTo}, and ${heavy.percent}% of anything heavier — and however heavy it was, he holds on with at least 1 HP.
+      When Lana drops below <b>${this.hpThreshold * 100}%</b> of her <b>Max HP</b>, Tutu takes her place on the field. When a blow would have killed her, he throws himself in front of it and enters already carrying it: his plush body soaks <b>${light.percent}%</b> of a blow up to <b>${light.upTo}</b>, <b>${medium.percent}%</b> of one up to <b>${medium.upTo}</b>, and <b>${heavy.percent}%</b> of anything heavier — and however heavy it was, he holds on with at least <b>1 HP</b>.
 
-    When Tutu falls, Lana returns to the battle with the HP she left it with. This can only happen once per battle.`;
+      When Tutu falls, Lana returns to the battle with the <b>HP</b> she left it with. This can only happen once per battle.`,
+      pt: `Tutu sempre vela por Lana. Enquanto está vivo, ela recebe um <b>Escudo Mágico</b> no início de cada turno.
+
+      Quando Lana cai abaixo de <b>${this.hpThreshold * 100}%</b> de seu <b>HP Máximo</b>, Tutu toma o lugar dela em campo. Quando um golpe seria fatal, ele se joga na frente dele e já entra absorvendo o impacto: seu corpo de pelúcia absorve <b>${light.percent}%</b> de um golpe de até <b>${light.upTo}</b>, <b>${medium.percent}%</b> de um de até <b>${medium.upTo}</b>, e <b>${heavy.percent}%</b> de qualquer coisa mais pesada — e por mais pesado que tenha sido, ele resiste com pelo menos <b>1 HP</b>.
+
+      Quando Tutu cai, Lana retorna à batalha com o <b>HP</b> que tinha ao sair. Isso só pode acontecer uma vez por batalha.`,
+    };
   },
 
   hookScope: {
@@ -67,14 +74,20 @@ export default {
     });
 
     context.registerDialog({
-      message: `${formatChampionName(owner)}'s Plush Dinosaur throws himself in front of the blow!`,
+      message: {
+        en: `${formatChampionName(owner)}'s Plush Dinosaur throws himself in front of the blow!`,
+        pt: `O Dinossauro de Pelúcia de ${formatChampionName(owner)} se joga na frente do golpe!`,
+      },
       sourceId: owner.id,
       targetId: owner.id,
     });
 
     return {
       damage: 0,
-      log: `Tutu takes the blow meant for ${formatChampionName(owner)}!`,
+      log: {
+        en: `Tutu takes the blow meant for ${formatChampionName(owner)}!`,
+        pt: `Tutu recebe o golpe destinado a ${formatChampionName(owner)}!`,
+      },
     };
   },
 
@@ -108,7 +121,10 @@ export default {
     });
 
     return {
-      log: `${owner.name} lets her Plush Dinosaur loose!`,
+      log: {
+        en: `${owner.name} lets her Plush Dinosaur loose!`,
+        pt: `${owner.name} solta seu Dinossauro de Pelúcia!`,
+      },
     };
   },
 
@@ -124,7 +140,10 @@ export default {
     owner.addShield(1, 0, context, "spell");
 
     return {
-      log: `${formatChampionName(owner)} receives a Spell Shield.`,
+      log: {
+        en: `${formatChampionName(owner)} receives a <b>Spell Shield</b>.`,
+        pt: `${formatChampionName(owner)} recebe um <b>Escudo Mágico</b>.`,
+      },
     };
   },
 };

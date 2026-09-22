@@ -106,15 +106,24 @@ export default {
 
     context?.registerDialog?.({
       message: enteringOffense
-        ? `${formatChampionName(owner)}'s blood surges outward, hardening into claws as he turns to offense!`
-        : `${formatChampionName(owner)} draws his blood back inward, reforming his living armor in defense!`,
+        ? {
+            en: `${formatChampionName(owner)}'s blood surges outward, hardening into claws as he turns to offense!`,
+            pt: `O sangue de ${formatChampionName(owner)} jorra para fora, endurecendo em garras enquanto ele vira para ofensiva!`,
+          }
+        : {
+            en: `${formatChampionName(owner)} draws his blood back inward, reforming his living armor in defense!`,
+            pt: `${formatChampionName(owner)} recolhe o sangue de volta, reformando sua armadura viva em defesa!`,
+          },
       sourceId: owner.id,
       targetId: owner.id,
       duration: 1600,
     });
 
     return {
-      log: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} shifts into ${enteringOffense ? "offense" : "defense"}.`,
+      log: {
+        en: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} shifts into ${enteringOffense ? "offense" : "defense"}.`,
+        pt: `[PASSIVA — ${this.name}] ${formatChampionName(owner)} muda para ${enteringOffense ? "ofensiva" : "defensiva"}.`,
+      },
     };
   },
 };

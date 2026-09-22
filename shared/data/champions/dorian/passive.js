@@ -38,7 +38,10 @@ export default {
     owner.runtime.dorianGrudgeTurn = context.currentTurn;
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} marks ${formatChampionName(defender)} in the ledger — Grudge ${owner.runtime.dorianGrudge}/${this.maxGrudge}.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} marks ${formatChampionName(defender)} in the ledger — Grudge ${owner.runtime.dorianGrudge}/${this.maxGrudge}.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} marca ${formatChampionName(defender)} no livro — Mágoa ${owner.runtime.dorianGrudge}/${this.maxGrudge}.`,
+      },
     };
   },
 
@@ -59,7 +62,10 @@ export default {
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} cashes the ledger on his CLAIM — ${points} extra point(s), ${owner.runtime.dorianGrudge} Grudge left over.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} cashes the ledger on his CLAIM — ${points} extra point(s), ${owner.runtime.dorianGrudge} Grudge left over.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} resgata o livro no seu CLAIM — ${points} ponto(s) extra, ${owner.runtime.dorianGrudge} Mágoa(s) restante(s).`,
+      },
     };
   },
 };

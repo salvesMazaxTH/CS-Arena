@@ -18,7 +18,10 @@ const yukiSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Yuki is already past the chosen target before the moonlight catches his blade. Deals physical damage.`;
+      return {
+        en: `Yuki is already past the chosen target before the moonlight catches his blade. Deals physical damage.`,
+        pt: `Yuki já passou pelo alvo escolhido antes que o luar alcance sua lâmina. Causa dano físico.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -51,7 +54,10 @@ const yukiSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Yuki flings a shuriken shaped from raw water, and it lashes tight around the chosen target the instant it lands. Deals physical damage and applies Snared for ${this.snareDuration} turn(s).`;
+      return {
+        en: `Yuki flings a shuriken shaped from raw water, and it lashes tight around the chosen target the instant it lands. Deals physical damage and applies <b>Snared</b> for ${this.snareDuration} turn(s).`,
+        pt: `Yuki lança uma shuriken moldada em água pura, que se enrola com força ao redor do alvo escolhido no instante em que o atinge. Causa dano físico e o deixa <b>Enredado</b> por ${this.snareDuration} turno(s).`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -93,7 +99,10 @@ const yukiSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Yuki brings both hands together, and the water around the chosen target answers all at once. Deals physical damage and applies Snared for ${this.snareDuration} turn(s).`;
+      return {
+        en: `Yuki brings both hands together, and the water around the chosen target answers all at once. Deals physical damage and applies Snared for ${this.snareDuration} turn(s).`,
+        pt: `Yuki junta as duas mãos, e toda a água ao redor do alvo escolhido responde de uma só vez. Causa dano físico e o deixa <b>Enredado</b> por ${this.snareDuration} turno(s).`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {

@@ -3,6 +3,7 @@ import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
+import { pushResultLog } from "../../../engine/combat/resultLog.js";
 
 const raliaSkills = [
   // ========================
@@ -88,7 +89,10 @@ const raliaSkills = [
       // Immediate follow-up attack.
       const enemy = targets.find((t) => t.id !== user.id);
 
-      const selfLog = `${userName} swears the Iron Oath, giving up ${hpCost} HP and ${this.defLoss} Defense for +${this.atkBuff} Attack over ${this.buffDuration} turn(s).`;
+      const selfLog = {
+        en: `${userName} swears the Iron Oath, giving up ${hpCost} HP and ${this.defLoss} Defense for +${this.atkBuff} Attack over ${this.buffDuration} turn(s).`,
+        pt: `${userName} faz o Juramento de Ferro, abrindo mão de ${hpCost} de HP e ${this.defLoss} de Defesa por +${this.atkBuff} de Ataque durante ${this.buffDuration} turno(s).`,
+      };
 
       if (!enemy) {
         return { log: selfLog };
@@ -106,7 +110,7 @@ const raliaSkills = [
 
       const results = Array.isArray(result) ? result : [result];
 
-      results[0].log = selfLog + " " + results[0].log;
+      results[0].log = [selfLog, results[0].log].flat(Infinity).filter(Boolean);
 
       return results;
     },
@@ -165,7 +169,10 @@ const raliaSkills = [
         }).execute();
 
         if (healed > 0) {
-          mainResult.log += `\n${formatChampionName(user)} restores ${healed} HP.`;
+          pushResultLog(mainResult, {
+            en: `${formatChampionName(user)} restores ${healed} HP.`,
+            pt: `${formatChampionName(user)} recupera ${healed} de HP.`,
+          });
         }
       }
 

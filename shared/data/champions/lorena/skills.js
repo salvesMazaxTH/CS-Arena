@@ -2,18 +2,8 @@ import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import totalBlock from "../generic/totalBlock.js";
 
 const lorenaSkills = [
-  // ========================
-  // Total Block (global)
-  // ========================
   totalBlock,
 
-  // ========================
-  // Special Abilities
-  // ========================
-
-  // ========================
-  // H1 — Tag, You're It
-  // ========================
   {
     key: "tag_youre_it",
     name: "Tag, You're It",
@@ -27,7 +17,10 @@ const lorenaSkills = [
     priority: 0,
 
     description() {
-      return `Lorena blows the chosen target a mocking little kiss down the barrel before she even fires: deals physical damage and marks them for ${this.markWindow} turn(s), so her next hit against them is always a critical hit.`;
+      return {
+        en: `Lorena blows the chosen target a mocking little kiss down the barrel before she even fires: deals <b>physical damage</b> and marks them for <b>${this.markWindow}</b> turn(s), so her next hit against them is always a <b>critical hit</b>.`,
+        pt: `Lorena manda um beijo zombeteiro pelo cano antes mesmo de puxar o gatilho: causa <b>dano físico</b> e marca o alvo escolhido por <b>${this.markWindow}</b> turno(s), garantindo que seu próximo golpe contra ele seja sempre um <b>acerto crítico</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -58,9 +51,6 @@ const lorenaSkills = [
     },
   },
 
-  // ========================
-  // H2 — Double Tap
-  // ========================
   {
     key: "double_tap",
     name: "Double Tap",
@@ -73,7 +63,10 @@ const lorenaSkills = [
     priority: 0,
 
     description() {
-      return `Lorena squeezes both triggers before the recoil from the first shot even settles, putting two rounds into the chosen target — each one rolls for its own critical hit.`;
+      return {
+        en: `Lorena squeezes both triggers before the recoil from the first shot even settles, putting two rounds into the chosen target — each one rolls for its own <b>critical hit</b>.`,
+        pt: `Lorena aperta os dois gatilhos antes mesmo do recuo do primeiro tiro se dissipar, cravando duas balas no alvo escolhido — cada uma com sua própria chance de <b>acerto crítico</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -101,9 +94,6 @@ const lorenaSkills = [
     },
   },
 
-  // ========================
-  // Ultimate — Last Laugh
-  // ========================
   {
     key: "last_laugh",
     name: "Last Laugh",
@@ -120,7 +110,10 @@ const lorenaSkills = [
     priority: 0,
 
     description() {
-      return `Lorena decides the joke's over: she puts everything she's got into one shot, dealing heavy physical damage to the chosen target — and if they're already marked, the shot also ignores ${this.markedPiercingPercentage}% of their Defense.`;
+      return {
+        en: `Lorena decides the joke's over: she puts everything she's got into one shot, dealing heavy <b>physical damage</b> to the chosen target — and if they're already marked, the shot also ignores <b>${this.markedPiercingPercentage}%</b> of their <b>Defense</b>.`,
+        pt: `Lorena decide que a piada acabou: coloca tudo o que tem em um único tiro, causando pesado <b>dano físico</b> ao alvo escolhido — e, se ele já estiver marcado, o disparo também ignora <b>${this.markedPiercingPercentage}%</b> da <b>Defesa</b> dele.`,
+      };
     },
 
     targetSpec: ["enemy"],

@@ -267,7 +267,10 @@ const drexSkills = [
           });
 
           results.push({
-            log: `${formatChampionName(user)} converts the target's Bleeding into protection and gains a ${shieldAmount} HP shield.`,
+            log: {
+              en: `${formatChampionName(user)} converts the target's Bleeding into protection and gains a ${shieldAmount} HP shield.`,
+              pt: `${formatChampionName(user)} converte o Sangramento do alvo em proteção e ganha um escudo de ${shieldAmount} HP.`,
+            },
           });
         }
       }

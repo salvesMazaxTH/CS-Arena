@@ -32,12 +32,18 @@ function onResourceChanged({ owner, target, amount, context, resolver }) {
     }
   }
 
-  const summary = converted
+  const summaryEn = converted
     ? `converted Resonance. Remaining stacks: ${owner.runtime.resonanceStacks}`
     : `gained ${amount} Resonance. Current stacks: ${owner.runtime.resonanceStacks}`;
+  const summaryPt = converted
+    ? `converteu Ressonância. Cargas restantes: ${owner.runtime.resonanceStacks}`
+    : `ganhou ${amount} de Ressonância. Cargas atuais: ${owner.runtime.resonanceStacks}`;
 
   return {
-    log: `<b>[PASSIVE — Eryonic Resonance]</b> ${formatChampionName(owner)} ${summary}`,
+    log: {
+      en: `<b>[PASSIVE — ${this.name}]</b> ${formatChampionName(owner)} ${summaryEn}`,
+      pt: `<b>[PASSIVA — ${this.name}]</b> ${formatChampionName(owner)} ${summaryPt}`,
+    },
   };
 }
 

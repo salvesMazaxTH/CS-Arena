@@ -3,7 +3,10 @@ export default {
   name: "Wild Instinct",
 
   description() {
-    return `Tutu stands in front of Lana until there is nothing left of him. When he is defeated, Lana returns to the battle with the same HP she left it with.`;
+    return {
+      en: `Tutu stands in front of Lana until there is nothing left of him. When he is defeated, Lana returns to the battle with the same <b>HP</b> she left it with.`,
+      pt: `Tutu permanece na frente de Lana até que não sobre nada dele. Quando é derrotado, Lana retorna à batalha com o mesmo <b>HP</b> que tinha ao sair.`,
+    };
   },
 
   hookScope: {
@@ -34,7 +37,10 @@ export default {
     });
 
     return {
-      log: `${owner.name} falls! Lana returns to the battle!`,
+      log: {
+        en: `${owner.name} falls! Lana returns to the battle!`,
+        pt: `${owner.name} cai! Lana retorna à batalha!`,
+      },
     };
   },
 };

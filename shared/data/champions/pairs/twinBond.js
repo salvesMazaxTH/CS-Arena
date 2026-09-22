@@ -2,7 +2,10 @@ import { regularShieldTotal } from "../../../core/championCombat.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import { getDuoForCore } from "../../duos.js";
 
-export const TWIN_BOND_TEXT = `Laisaelis and Laiserisa are two halves of one existence, and neither half can stand alone: the moment one sister truly dies, the other ceases with her.`;
+export const TWIN_BOND_TEXT = {
+  en: `Laisaelis and Laiserisa are two halves of one existence, and neither half can stand alone: the moment one sister truly dies, the other ceases with her.`,
+  pt: `Laisaelis e Laiserisa são duas metades de uma única existência, e nenhuma das metades consegue se manter sozinha: no instante em que uma irmã morre de verdade, a outra cessa com ela.`,
+};
 
 function twinKeyOf(champion) {
   return getDuoForCore(champion.championKey)?.cores.find(
@@ -39,9 +42,10 @@ export function dieWithTwin({ owner, deadChampion, context }, passiveName) {
   owner.alive = false;
 
   context.registerDialog({
-    message: `[Passive - <b>${passiveName}</b>] With ${formatChampionName(
-      deadChampion,
-    )} gone, ${formatChampionName(owner)} has nothing left to remain for.`,
+    message: {
+      en: `[Passive - <b>${passiveName}</b>] With ${formatChampionName(deadChampion)} gone, ${formatChampionName(owner)} has nothing left to remain for.`,
+      pt: `[Passiva - <b>${passiveName}</b>] Com ${formatChampionName(deadChampion)} ausente, ${formatChampionName(owner)} não tem mais motivo para permanecer.`,
+    },
     sourceId: deadChampion.id,
     targetId: owner.id,
   });

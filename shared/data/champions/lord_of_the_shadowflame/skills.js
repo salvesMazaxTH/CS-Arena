@@ -4,14 +4,7 @@ import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import totalBlock from "../generic/totalBlock.js";
 
 const lordOfTheShadowflameSkills = [
-  // ========================
-  // Total Block (global)
-  // ========================
   totalBlock,
-
-  // ========================
-  // Special Abilities
-  // ========================
 
   {
     key: "ashen_grasp",
@@ -26,7 +19,10 @@ const lordOfTheShadowflameSkills = [
     priority: 0,
 
     description() {
-      return `It doesn't grip so much as ignite. Deals physical damage and always sets the target Burning for ${this.burnDuration} turn(s).`;
+      return {
+        en: `It doesn't grip so much as ignite. Deals <b>physical damage</b> and always sets the target <b>Burning</b> for <b>${this.burnDuration}</b> turn(s).`,
+        pt: `Não é bem uma garra, é um estopim. Causa <b>dano físico</b> e sempre deixa o alvo <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -83,7 +79,10 @@ const lordOfTheShadowflameSkills = [
     ],
 
     description() {
-      return `There was never anything left to hold back — the Flame spends this body like it's already spent. Deals physical damage, taking ${this.recoilPercentOfMaxHP}% of its Max HP as Absolute recoil damage whether the blow lands or not. No elemental resistance dims the Shadowflame.`;
+      return {
+        en: `There was never anything left to hold back — the Flame spends this body like it's already spent. Deals <b>physical damage</b>, taking <b>${this.recoilPercentOfMaxHP}%</b> of its Max HP as <b>Absolute</b> recoil damage whether the blow lands or not. No elemental resistance dims the Shadowflame.`,
+        pt: `Não sobra nada a ser poupado — a Chama consome este corpo como algo que já se entregou por inteiro. Causa <b>dano físico</b> e sofre <b>${this.recoilPercentOfMaxHP}%</b> do próprio HP Máximo como recuo de <b>dano Absoluto</b>, acerte ou não. Nenhuma resistência elemental ofusca a Chama Sombria.`,
+      };
     },
 
     targetSpec: ["enemy"],

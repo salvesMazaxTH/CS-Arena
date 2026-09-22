@@ -63,7 +63,10 @@ const cassianSkills = [
         });
 
         return {
-          log: `${formatChampionName(user)} sharpens his blood claws, gaining +${this.attackBuff} Attack and +${this.critBuff}% Critical for ${this.buffDuration} turn(s)!`,
+          log: {
+            en: `${formatChampionName(user)} sharpens his blood claws, gaining +${this.attackBuff} Attack and +${this.critBuff}% Critical for ${this.buffDuration} turn(s)!`,
+            pt: `${formatChampionName(user)} afia as garras de sangue, ganhando +${this.attackBuff} de Ataque e +${this.critBuff}% de Crítico por ${this.buffDuration} turno(s)!`,
+          },
         };
       }
 
@@ -81,7 +84,10 @@ const cassianSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} wraps himself in living blood armor, gaining a ${shieldAmount}-point shield and ${this.damageReduction}% damage reduction for ${this.damageReductionDuration} turn(s)!`,
+        log: {
+          en: `${formatChampionName(user)} wraps himself in living blood armor, gaining a ${shieldAmount}-point shield and ${this.damageReduction}% damage reduction for ${this.damageReductionDuration} turn(s)!`,
+          pt: `${formatChampionName(user)} se envolve em armadura de sangue vivo, ganhando ${shieldAmount} pontos de escudo e ${this.damageReduction}% de redução de dano por ${this.damageReductionDuration} turno(s)!`,
+        },
       };
     },
   },

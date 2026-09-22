@@ -18,7 +18,10 @@ const lanaSkills = [
     priority: 3,
 
     description() {
-      return `Lana shouts the chosen target down, and their next action simply refuses to happen. Fails if Don't You Dare! was already used on the previous turn.`;
+      return {
+        en: `Lana shouts the chosen target down, and their next action simply refuses to happen. Fails if <b>Don't You Dare!</b> was already used on the previous turn.`,
+        pt: `Lana grita para o alvo escolhido se calar, e a próxima ação dele simplesmente se recusa a acontecer. Falha se <b>Don't You Dare!</b> já tiver sido usada no turno anterior.`,
+      };
     },
     targetSpec: ["enemy"],
 
@@ -29,7 +32,10 @@ const lanaSkills = [
       const lastUsed = user.runtime.lastUsedDontYouDare ?? -Infinity;
 
       if (context.currentTurn - lastUsed <= 1) {
-        const failure = `${formatChampionName(user)} tries to shout again, but <b>Don't You Dare!</b> was already used last turn!`;
+        const failure = {
+          en: `${formatChampionName(user)} tries to shout again, but <b>Don't You Dare!</b> was already used last turn!`,
+          pt: `${formatChampionName(user)} tenta gritar de novo, mas <b>Don't You Dare!</b> já foi usada no turno anterior!`,
+        };
 
         context.registerDialog({
           message: failure,
@@ -64,13 +70,19 @@ const lanaSkills = [
 
           return {
             deny: true,
-            message: `${formatChampionName(actionSource)} freezes up! Their action is blocked!`,
+            message: {
+              en: `${formatChampionName(actionSource)} freezes up! Their action is blocked!`,
+              pt: `${formatChampionName(actionSource)} congela! A ação dele é bloqueada!`,
+            },
           };
         },
       }, context);
 
       return {
-        log: `${formatChampionName(enemy)} will not be able to act next!`,
+        log: {
+          en: `${formatChampionName(enemy)} will not be able to act next!`,
+          pt: `${formatChampionName(enemy)} não conseguirá agir na próxima vez!`,
+        },
       };
     },
   },
@@ -86,7 +98,10 @@ const lanaSkills = [
     snareDuration: 1,
 
     description() {
-      return `Lana closes her fist and the chosen target is torn off the ground and thrown, taking magical damage and left Snared for ${this.snareDuration} turn(s) as her grip keeps them off their feet.`;
+      return {
+        en: `Lana closes her fist and the chosen target is torn off the ground and thrown, taking magical damage and left <b>Snared</b> for <b>${this.snareDuration}</b> turn(s) as her grip keeps them off their feet.`,
+        pt: `Lana fecha o punho e o alvo escolhido é arrancado do chão e arremessado, sofrendo dano mágico e ficando <b>Enredado</b> por <b>${this.snareDuration}</b> turno(s) enquanto o aperto dela o mantém sem chão sob os pés.`,
+      };
     },
     targetSpec: ["enemy"],
 
@@ -128,9 +143,14 @@ const lanaSkills = [
 
     priority: 0,
     description() {
-      return `Everything Lana has been holding in comes out at once, striking all enemies with massive magical damage.
+      return {
+        en: `Everything Lana has been holding in comes out at once, striking all enemies with massive magical damage.
 
-      The damage grows with the HP she has already lost, and if Tutu has fallen, grief drives it ${this.griefBonusPercent}% higher.`;
+        The damage grows with the <b>HP</b> she has already lost, and if Tutu has fallen, grief drives it <b>${this.griefBonusPercent}%</b> higher.`,
+        pt: `Tudo o que Lana vinha segurando explode de uma vez, atingindo todos os inimigos com dano mágico massivo.
+
+        O dano cresce com o <b>HP</b> que ela já perdeu, e se Tutu tiver caído, o luto o eleva em mais <b>${this.griefBonusPercent}%</b>.`,
+      };
     },
     targetSpec: ["all:enemy"],
     resolve({ user, targets, context = {} }) {

@@ -39,7 +39,10 @@ export default {
     if (roll >= chance) return;
 
     context.registerDialog({
-      message: `<b>[Passive – "${this.name}"]</b>`,
+      message: {
+        en: `<b>[Passive – "${this.name}"]</b>`,
+        pt: `<b>[Passiva – "${this.name}"]</b>`,
+      },
       sourceId: owner.id,
     });
 

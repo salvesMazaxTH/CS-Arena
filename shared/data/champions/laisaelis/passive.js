@@ -13,9 +13,16 @@ export default {
   survivalHP: 1,
 
   description(champion) {
-    return `Laisaelis is the sister who looks at something about to stop being and simply answers that it is here. The first lethal effect that would end her does not: she stays on the field with ${this.survivalHP} HP, and every negative effect afflicting her slips away with the death she refused. Once per match. ${TWIN_BOND_TEXT}
+    const stillUnspent = champion.runtime?.remainSpent ? "no" : "yes";
 
-    <b>Still unspent:</b> ${champion.runtime?.remainSpent ? "no" : "yes"}`;
+    return {
+      en: `Laisaelis is the sister who looks at something about to stop being and simply answers that it is here. The first lethal effect that would end her does not: she stays on the field with <b>${this.survivalHP}</b> HP, and every negative effect afflicting her slips away with the death she refused. <b>Once per match</b>. ${TWIN_BOND_TEXT.en}
+
+      <b>Still unspent:</b> ${stillUnspent}`,
+      pt: `Laisaelis é a irmã que olha para algo prestes a deixar de ser e simplesmente responde que aquilo está aqui. O primeiro efeito letal que a atingiria não a atinge: ela permanece em campo com <b>${this.survivalHP}</b> HP, e todo efeito negativo que a aflige se desfaz junto com a morte que ela recusou. <b>Uma vez por partida</b>. ${TWIN_BOND_TEXT.pt}
+
+      <b>Ainda não usado:</b> ${stillUnspent === "yes" ? "sim" : "não"}`,
+    };
   },
 
   hookScope: {
@@ -38,7 +45,10 @@ export default {
 
     return {
       deny: true,
-      message: `${formatChampionName(actionSource)} reaches for her sister and finds nothing to hold.`,
+      message: {
+        en: `${formatChampionName(actionSource)} reaches for her sister and finds nothing to hold.`,
+        pt: `${formatChampionName(actionSource)} estende a mão para sua irmã e não encontra nada para segurar.`,
+      },
     };
   },
 
@@ -69,14 +79,20 @@ export default {
     const cleansed = shedStatuses.length + shedHooks.length > 0;
 
     context.registerDialog({
-      message: `[Passive - <b>${this.name}</b>] ${formatChampionName(owner)} should be gone, and remains anyway${cleansed ? ", every affliction sliding off her as she does" : ""}.`,
+      message: {
+        en: `[Passive - <b>${this.name}</b>] ${formatChampionName(owner)} should be gone, and remains anyway${cleansed ? ", every affliction sliding off her as she does" : ""}.`,
+        pt: `[Passiva - <b>${this.name}</b>] ${formatChampionName(owner)} deveria ter partido, e permanece mesmo assim${cleansed ? ", toda aflição se desfazendo enquanto isso acontece" : ""}.`,
+      },
       sourceId: owner.id,
       targetId: owner.id,
     });
 
     return {
       damageCap: survivalDamage(owner, this.survivalHP),
-      log: `${formatChampionName(owner)} holds on with ${this.survivalHP} HP${cleansed ? ", cleansed of all that afflicted her" : ""}.`,
+      log: {
+        en: `${formatChampionName(owner)} holds on with ${this.survivalHP} HP${cleansed ? ", cleansed of all that afflicted her" : ""}.`,
+        pt: `${formatChampionName(owner)} resiste com ${this.survivalHP} HP${cleansed ? ", purificada de tudo que a afligia" : ""}.`,
+      },
     };
   },
 

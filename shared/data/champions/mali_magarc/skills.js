@@ -20,7 +20,10 @@ const maliMagarcSkills = [
     priority: 0,
 
     description() {
-      return `Mali Magarc opens the star-charted hand and lets the hoarded essence go the way raw magic wants to, straight through the chosen target's guard — it ignores ${this.piercingPercentage}% of their Defense. When he can spend ${this.momentumSpend} Momentum the arc carries ${this.essenceBonus} bonus damage; when he cannot, it still lands without it. Deals magical damage.`;
+      return {
+        en: `Mali Magarc opens the star-charted hand and lets the hoarded essence go the way raw magic wants to, straight through the chosen target's guard — it ignores <b>${this.piercingPercentage}%</b> of their <b>Defense</b>. When he can spend <b>${this.momentumSpend}</b> Momentum the arc carries <b>${this.essenceBonus}</b> bonus damage; when he cannot, it still lands without it. Deals <b>magical damage</b>.`,
+        pt: `Mali Magarc abre a mão marcada pelas estrelas e deixa a essência acumulada seguir o caminho que a magia bruta sempre quis, direto através da guarda do alvo escolhido — ignorando <b>${this.piercingPercentage}%</b> da <b>Defesa</b> dele. Quando pode gastar <b>${this.momentumSpend}</b> de Momentum, o arco carrega <b>${this.essenceBonus}</b> de dano bônus; quando não pode, o golpe ainda assim acerta sem ele. Causa <b>dano mágico</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -68,7 +71,10 @@ const maliMagarcSkills = [
     priority: 0,
 
     description() {
-      return `Mali Magarc reads the borrowed magic wrapped around the chosen target, names it aloud, and lets it come apart. Unmakes one positive status effect on them, and if one falls its essence returns to him as ${this.momentumRefund} Momentum. Deals magical damage.`;
+      return {
+        en: `Mali Magarc reads the borrowed magic wrapped around the chosen target, names it aloud, and lets it come apart. Unmakes one positive status effect on them, and if one falls its essence returns to him as <b>${this.momentumRefund}</b> Momentum. Deals <b>magical damage</b>.`,
+        pt: `Mali Magarc lê a magia emprestada que envolve o alvo escolhido, a nomeia em voz alta, e a deixa se desfazer. Desfaz um efeito positivo do alvo, e se algum cair, sua essência retorna a ele como <b>${this.momentumRefund}</b> de Momentum. Causa <b>dano mágico</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -103,13 +109,19 @@ const maliMagarcSkills = [
       });
 
       context.registerDialog?.({
-        message: `${formatChampionName(user)} unwrites ${stripped.name ?? stripped.key} from ${formatChampionName(enemy)}.`,
+        message: {
+          en: `${formatChampionName(user)} unwrites ${stripped.name ?? stripped.key} from ${formatChampionName(enemy)}.`,
+          pt: `${formatChampionName(user)} desfaz ${stripped.name ?? stripped.key} de ${formatChampionName(enemy)}.`,
+        },
         sourceId: user.id,
         targetId: enemy.id,
       });
 
       results.push({
-        log: `${formatChampionName(user)} unmakes a positive effect on ${formatChampionName(enemy)} and takes back ${this.momentumRefund} Momentum.`,
+        log: {
+          en: `${formatChampionName(user)} unmakes a positive effect on ${formatChampionName(enemy)} and takes back <b>${this.momentumRefund}</b> Momentum.`,
+          pt: `${formatChampionName(user)} desfaz um efeito positivo de ${formatChampionName(enemy)} e recupera <b>${this.momentumRefund}</b> de Momentum.`,
+        },
       });
 
       return results;
@@ -133,7 +145,10 @@ const maliMagarcSkills = [
     transformDuration: 2,
 
     description() {
-      return `The shape Mali Magarc wears was always a courtesy to the arena, and he withdraws it. He strikes the chosen target once, then unfolds into the raw arcane he ruled before it had a name — his <b>Primordial Form</b> — for ${this.transformDuration} turn(s), replacing his skills, his passive and his stats. As he unfolds, one positive status effect is unmade on every enemy. Deals magical damage.`;
+      return {
+        en: `The shape Mali Magarc wears was always a courtesy to the arena, and he withdraws it. He strikes the chosen target once, then unfolds into the raw arcane he ruled before it had a name — his <b>Primordial Form</b> — for <b>${this.transformDuration}</b> turn(s), replacing his skills, his passive and his stats. As he unfolds, one positive status effect is unmade on every enemy. Deals <b>magical damage</b>.`,
+        pt: `A forma que Mali Magarc veste sempre foi uma cortesia à arena, e agora ele a retira. Golpeia o alvo escolhido uma vez, depois se desdobra no arcano bruto que governava antes de ter nome — sua <b>Forma Primordial</b> — por <b>${this.transformDuration}</b> turno(s), substituindo suas habilidades, sua passiva e seus atributos. Ao se desdobrar, um efeito positivo é desfeito em cada inimigo. Causa <b>dano mágico</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -163,7 +178,10 @@ const maliMagarcSkills = [
       });
 
       results.push({
-        log: `${formatChampionName(user)} withdraws his worn shape and unfolds into his <b>Primordial Form</b> for ${this.transformDuration} turn(s)!`,
+        log: {
+          en: `${formatChampionName(user)} withdraws his worn shape and unfolds into his <b>Primordial Form</b> for <b>${this.transformDuration}</b> turn(s)!`,
+          pt: `${formatChampionName(user)} retira a forma que vestia e se desdobra em sua <b>Forma Primordial</b> por <b>${this.transformDuration}</b> turno(s)!`,
+        },
       });
 
       let stripped = 0;
@@ -177,7 +195,10 @@ const maliMagarcSkills = [
         stripped++;
 
         context.registerDialog?.({
-          message: `The refinement peels off ${formatChampionName(champ)} before the dragon.`,
+          message: {
+            en: `The refinement peels off ${formatChampionName(champ)} before the dragon.`,
+            pt: `O refinamento se desprende de ${formatChampionName(champ)} diante do dragão.`,
+          },
           sourceId: user.id,
           targetId: champ.id,
         });
@@ -185,7 +206,10 @@ const maliMagarcSkills = [
 
       if (stripped) {
         results.push({
-          log: `${stripped} positive effect(s) are unmade as ${formatChampionName(user)} unfolds.`,
+          log: {
+            en: `<b>${stripped}</b> positive effect(s) are unmade as ${formatChampionName(user)} unfolds.`,
+            pt: `<b>${stripped}</b> efeito(s) positivo(s) são desfeitos enquanto ${formatChampionName(user)} se desdobra.`,
+          },
         });
       }
 

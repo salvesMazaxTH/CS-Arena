@@ -29,7 +29,7 @@ const gorvakharrSkills = [
     description() {
       return {
         en: `Gorvakharr's burning chain lashes out and wraps around the chosen target. Deals <b>physical damage</b> and applies <b>Snared</b> for <b>${this.snareDuration}</b> turn(s).`,
-        pt: `A corrente flamejante de Gorvakharr avança e se enrola no alvo escolhido. Causa <b>dano físico</b> e aplica <b>Enraizado</b> por <b>${this.snareDuration}</b> turno(s).`,
+        pt: `A corrente flamejante de Gorvakharr avança e se enrola no alvo escolhido. Causa <b>dano físico</b> e aplica <b>Enredado</b> por <b>${this.snareDuration}</b> turno(s).`,
       };
     },
 
@@ -75,8 +75,8 @@ const gorvakharrSkills = [
 
     description() {
       return {
-        en: `Gorvakharr drives his fire-wreathed blade into the chosen target, dealing <b>physical damage</b> and applying <b>Burning</b> for <b>${this.burnDuration}</b> turn(s). If the target is <b>Snared</b>, this attack instead strikes with <b>${this.bf + this.snaredBonusBf}</b> power.`,
-        pt: `Gorvakharr crava sua lâmina envolta em fogo no alvo escolhido, causando <b>dano físico</b> e aplicando <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s). Se o alvo estiver <b>Enraizado</b>, este ataque golpeia com <b>${this.bf + this.snaredBonusBf}</b> de poder.`,
+        en: `Gorvakharr drives his fire-wreathed blade into the chosen target, dealing <b>physical damage</b> and applying <b>Burning</b> for <b>${this.burnDuration}</b> turn(s). If the target is <b>Snared</b> or <b>Rooted</b>, this attack instead strikes with <b>${this.bf + this.snaredBonusBf}</b> power.`,
+        pt: `Gorvakharr crava sua lâmina envolta em fogo no alvo escolhido, causando <b>dano físico</b> e aplicando <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s). Se o alvo estiver <b>Enredado</b> ou <b>Enraizado</b>, este ataque golpeia com <b>${this.bf + this.snaredBonusBf}</b> de poder.`,
       };
     },
 
@@ -85,9 +85,10 @@ const gorvakharrSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
 
-      const effectiveBf = enemy.hasStatusEffect("snared")
-        ? this.bf + this.snaredBonusBf
-        : this.bf;
+      const effectiveBf =
+        enemy.hasStatusEffect("snared") || enemy.hasStatusEffect("rooted")
+          ? this.bf + this.snaredBonusBf
+          : this.bf;
       const baseDamage = (user.Attack * effectiveBf) / 100;
 
       const result = new DamageEvent({
