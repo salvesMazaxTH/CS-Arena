@@ -22,7 +22,10 @@ const baraoEstrondosoSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Deals damage to the chosen target.`;
+      return {
+        en: `The Barão hurls his full weight behind a single blow, driving it into the chosen target.`,
+        pt: `O Barão arremessa todo o seu peso atrás de um único golpe, cravando-o no alvo escolhido.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -51,7 +54,10 @@ const baraoEstrondosoSkills = [
     defBuffDuration: 2,
 
     description() {
-      return `Increases Defense by ${this.defenseBuff} for ${this.defBuffDuration} turn(s).`;
+      return {
+        en: `The Barão braces the core and thickens his hull, gaining <b>+${this.defenseBuff}</b> <b>Defense</b> for <b>${this.defBuffDuration}</b> turn(s).`,
+        pt: `O Barão reforça o núcleo e engrossa seu casco, ganhando <b>+${this.defenseBuff}</b> de <b>Defesa</b> por <b>${this.defBuffDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["self"],
@@ -77,7 +83,7 @@ const baraoEstrondosoSkills = [
     key: "super_hyper_ultra_mega_atomic_belly_flop",
     name: "Super Hyper Ultra Mega Atomic Belly Flop",
     bf: 730,
-    contact: false,
+    contact: true,
     damageMode: "standard",
     priority: -999,
 
@@ -85,7 +91,10 @@ const baraoEstrondosoSkills = [
     momentumCost: 90,
 
     description() {
-      return `Deals ABSURD damage to the chosen target plus all Stored Damage. This attack is always a Critical Hit. After the attack, Stored Damage is reset to 0.`;
+      return {
+        en: `Deals ABSURD damage to the chosen target plus all <b>Stored Damage</b>. This attack is always a <b>Critical Hit</b>. After the attack, <b>Stored Damage</b> is reset to <b>0</b>.`,
+        pt: `Causa dano ABSURDO ao alvo escolhido mais todo o <b>Dano Armazenado</b>. Este ataque é sempre um <b>Acerto Crítico</b>. Após o ataque, o <b>Dano Armazenado</b> é zerado.`,
+      };
     },
 
     targetSpec: ["enemy"],

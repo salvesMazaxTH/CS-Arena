@@ -20,7 +20,10 @@ const bergrisaSkills = [
     stunGapThreshold: 110,
 
     description() {
-      return `Bergrisa takes one step, and the whole line of them has to decide where it stands. She strikes every enemy at once; if she is holding ${this.stunSedimentCost} Sediment she spends it to Stun for ${this.stunDuration} turn the enemy whose Defense she most outweighs, and only if that gap is at least ${this.stunGapThreshold}. Deals physical damage.`;
+      return {
+        en: `Bergrisa takes one step, and the whole line of them has to decide where it stands. She strikes every enemy at once; if she is holding <b>${this.stunSedimentCost}</b> <b>Sediment</b> she spends it to <b>Stun</b> for <b>${this.stunDuration}</b> turn the enemy whose <b>Defense</b> she most outweighs, and only if that gap is at least <b>${this.stunGapThreshold}</b>. Deals physical damage.`,
+        pt: `Bergrisa dá um passo, e toda a linha inimiga precisa decidir onde se firmar. Ela atinge todos os inimigos de uma vez; se estiver com <b>${this.stunSedimentCost}</b> de <b>Sedimento</b>, ela o gasta para <b>Atordoar</b> por <b>${this.stunDuration}</b> turno o inimigo cuja <b>Defesa</b> ela mais supera, e apenas se essa diferença for de pelo menos <b>${this.stunGapThreshold}</b>. Causa dano físico.`,
+      };
     },
 
     targetSpec: ["all:enemy"],
@@ -82,7 +85,10 @@ const bergrisaSkills = [
     tauntDuration: 1,
 
     description() {
-      return `Bergrisa lowers an open hand over one enemy and the valley leans with her. The chosen target is Taunted for ${this.tauntDuration} turn, and until her next turn every blow her allies take is blunted by as much as Strata blunts her own, except Absolute damage, damage over time and piercing hits.`;
+      return {
+        en: `Bergrisa lowers an open hand over one enemy and the valley leans with her. The chosen target is <b>Taunted</b> for <b>${this.tauntDuration}</b> turn, and until her next turn every blow her allies take is blunted by as much as <b>Strata</b> blunts her own, except <b>Absolute Damage</b>, damage over time and piercing hits.`,
+        pt: `Bergrisa abaixa uma mão aberta sobre um inimigo e o vale se inclina com ela. O alvo escolhido fica <b>Provocado</b> por <b>${this.tauntDuration}</b> turno, e até o próximo turno dela todo golpe que seus aliados sofrerem é amortecido tanto quanto <b>Strata</b> amortece o dela, exceto <b>Dano Absoluto</b>, dano ao longo do tempo e acertos perfurantes.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -144,7 +150,10 @@ const bergrisaSkills = [
     sedimentGain: 4,
 
     description() {
-      return `Bergrisa takes the floor of the world in both hands and tips it, and everything standing on it goes down with the stone. She strikes every enemy carrying ${this.defenseGapRatio * 100}% of the Defense gap as bonus damage, up to ${this.maxGapBonus}, rather than Strata's usual share, and settles ${this.sedimentGain} Sediment into herself. Deals physical damage.`;
+      return {
+        en: `Bergrisa takes the floor of the world in both hands and tips it, and everything standing on it goes down with the stone. She strikes every enemy carrying <b>${this.defenseGapRatio * 100}%</b> of the <b>Defense</b> gap as bonus damage, up to <b>${this.maxGapBonus}</b>, rather than <b>Strata</b>'s usual share, and settles <b>${this.sedimentGain}</b> <b>Sediment</b> into herself. Deals physical damage.`,
+        pt: `Bergrisa toma o chão do mundo com as duas mãos e o vira, e tudo que estiver sobre ele desaba junto com a pedra. Ela atinge cada inimigo carregando <b>${this.defenseGapRatio * 100}%</b> da diferença de <b>Defesa</b> como dano bônus, até <b>${this.maxGapBonus}</b>, em vez da parcela usual de <b>Strata</b>, e acumula <b>${this.sedimentGain}</b> de <b>Sedimento</b> em si mesma. Causa dano físico.`,
+      };
     },
 
     targetSpec: ["all:enemy"],

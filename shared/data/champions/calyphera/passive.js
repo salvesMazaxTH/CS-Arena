@@ -65,13 +65,22 @@ export default {
     const facets = champion.runtime?.calypheraFacets || 0;
     const transfigured = champion.runtime?.calypheraTransfigured;
 
-    return `Calyphera was given a body of glass and told to carry it kneeling, and every blow of the long fight writes another line of light through her. Every ${this.damagePerFacet} damage she accumulates, dealt or suffered, cuts one more <b>Facet</b> into her (Max: ${this.maxFacets}). Each Facet she carries raises the damage she deals by ${this.bonusPerFacet}%.
+    return {
+      en: `Calyphera was given a body of glass and told to carry it kneeling, and every blow of the long fight writes another line of light through her. Every <b>${this.damagePerFacet}</b> damage she accumulates, dealt or suffered, cuts one more <b>Facet</b> into her (Max: <b>${this.maxFacets}</b>). Each <b>Facet</b> she carries raises the damage she deals by <b>${this.bonusPerFacet}%</b>.
 
-    Glass answers the fist more readily than the word: she takes ${this.physicalVulnerabilityPercent}% more physical damage.
+    Glass answers the fist more readily than the word: she takes <b>${this.physicalVulnerabilityPercent}%</b> more physical damage.
 
-    The ${this.maxFacets}th Facet finishes her, once per match and for good: every Facet is worth ${this.transfiguredBonusPerFacet}% instead, and there is no longer anything solid in her for a physical blow to find.
+    The <b>${this.maxFacets}th Facet</b> finishes her, once per match and for good: every <b>Facet</b> is worth <b>${this.transfiguredBonusPerFacet}%</b> instead, and there is no longer anything solid in her for a physical blow to find.
 
-    <b>Current Facets: ${facets}/${this.maxFacets}${transfigured ? " — Transfigured" : ""}</b>`;
+    <b>Current Facets: ${facets}/${this.maxFacets}${transfigured ? " — Transfigured" : ""}</b>`,
+      pt: `Calyphera recebeu um corpo de vidro e a ordem de carregá-lo ajoelhada, e cada golpe da longa luta grava outra linha de luz através dela. A cada <b>${this.damagePerFacet}</b> de dano acumulado, causado ou sofrido, mais uma <b>Faceta</b> se abre nela (Máx.: <b>${this.maxFacets}</b>). Cada <b>Faceta</b> que carrega eleva em <b>${this.bonusPerFacet}%</b> o dano que causa.
+
+    O vidro responde ao punho com mais facilidade do que à palavra: ela sofre <b>${this.physicalVulnerabilityPercent}%</b> a mais de dano físico.
+
+    A <b>${this.maxFacets}ª Faceta</b> a completa, uma vez por partida e para sempre: cada <b>Faceta</b> passa a valer <b>${this.transfiguredBonusPerFacet}%</b>, e não resta mais nada sólido nela para um golpe físico encontrar.
+
+    <b>Facetas Atuais: ${facets}/${this.maxFacets}${transfigured ? " — Transfigurada" : ""}</b>`,
+    };
   },
 
   hookScope: {

@@ -24,7 +24,10 @@ const calypheraSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `She opens the chosen target and lays a sheet of her own glass over the wound, the way the temple lays a pane over a saint. Deals physical damage and grants that target a ${this.shieldGranted} Shield that decays by ${this.shieldDecay} each turn — glass she has every intention of collecting back. The pane comes out of her own body, costing her ${this.recoilPercentOfMaxHp}% of her Max HP as Absolute Damage and cutting her ${this.facetsGranted} Facet.`;
+      return {
+        en: `She opens the chosen target and lays a sheet of her own glass over the wound, the way the temple lays a pane over a saint. Deals physical damage and grants that target a <b>${this.shieldGranted}</b> <b>Shield</b> that decays by <b>${this.shieldDecay}</b> each turn — glass she has every intention of collecting back. The pane comes out of her own body, costing her <b>${this.recoilPercentOfMaxHp}%</b> of her Max HP as <b>Absolute Damage</b> and cutting her <b>${this.facetsGranted}</b> <b>Facet</b>.`,
+        pt: `Ela abre o alvo escolhido e coloca uma placa de seu próprio vidro sobre o ferimento, do jeito que o templo coloca uma vitral sobre um santo. Causa dano físico e concede a esse alvo um <b>Escudo</b> de <b>${this.shieldGranted}</b> que decai <b>${this.shieldDecay}</b> a cada turno — vidro que ela pretende recolher de volta. A placa sai do próprio corpo dela, custando <b>${this.recoilPercentOfMaxHp}%</b> de seu HP Máximo como <b>Dano Absoluto</b> e cortando <b>${this.facetsGranted}</b> <b>Faceta</b> dela.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -87,7 +90,10 @@ const calypheraSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Calyphera calls, and every pane she ever set into another body remembers whose it was. Breaks up to ${this.shieldBroken} Shield off the chosen target, then deals physical damage plus bonus damage equal to ${this.brokenToDamagePercent}% of the Shield broken (Max: ${this.maxBonusDamage}). Every point she breaks this way is written straight into her Facets.`;
+      return {
+        en: `Calyphera calls, and every pane she ever set into another body remembers whose it was. Breaks up to <b>${this.shieldBroken}</b> <b>Shield</b> off the chosen target, then deals physical damage plus bonus damage equal to <b>${this.brokenToDamagePercent}%</b> of the <b>Shield</b> broken (Max: <b>${this.maxBonusDamage}</b>). Every point she breaks this way is written straight into her <b>Facets</b>.`,
+        pt: `Calyphera chama, e toda placa que já cravou em outro corpo se lembra de quem era. Rompe até <b>${this.shieldBroken}</b> de <b>Escudo</b> do alvo escolhido, e então causa dano físico mais dano bônus igual a <b>${this.brokenToDamagePercent}%</b> do <b>Escudo</b> rompido (Máx.: <b>${this.maxBonusDamage}</b>). Cada ponto que ela rompe assim é gravado direto em suas <b>Facetas</b>.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -141,7 +147,10 @@ const calypheraSkills = [
     targetSpec: ["all:enemy"],
 
     description() {
-      return `Every Facet she has cut opens at once and the hall goes white, and for that moment Calyphera is not a woman of glass but the window itself. Deals physical damage to all enemies, strips every Shield they still hold and writes all of it into her Facets.`;
+      return {
+        en: `Every <b>Facet</b> she has cut opens at once and the hall goes white, and for that moment Calyphera is not a woman of glass but the window itself. Deals physical damage to all enemies, strips every <b>Shield</b> they still hold and writes all of it into her <b>Facets</b>.`,
+        pt: `Toda <b>Faceta</b> que ela abriu se abre de uma vez e o salão fica branco, e por aquele instante Calyphera não é uma mulher de vidro, mas a própria janela. Causa dano físico a todos os inimigos, rompe todo <b>Escudo</b> que ainda tiverem e grava tudo isso em suas <b>Facetas</b>.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {

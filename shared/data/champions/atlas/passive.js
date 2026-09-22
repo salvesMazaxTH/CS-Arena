@@ -9,7 +9,10 @@ export default {
   claimShredAmount: 40,
 
   description() {
-    return `Atlas carries himself like a falling sky, and nothing raised against his mace stays whole for long. Every contact hit he lands breaks ${this.contactShredAmount} Shield off the target, Piercing damage against him is always turned back into standard damage, and every time he uses CLAIM the ground itself answers — every enemy loses ${this.claimShredAmount} Shield at once.`;
+    return {
+      en: `Atlas carries himself like a falling sky, and nothing raised against his mace stays whole for long. Every contact hit he lands breaks <b>${this.contactShredAmount}</b> <b>Shield</b> off the target, <b>Piercing</b> damage against him is always turned back into standard damage, and every time he uses <b>CLAIM</b> the ground itself answers — every enemy loses <b>${this.claimShredAmount}</b> <b>Shield</b> at once.`,
+      pt: `Atlas se carrega como um céu em queda, e nada erguido contra sua maça permanece inteiro por muito tempo. Todo golpe de contato que ele acerta quebra <b>${this.contactShredAmount}</b> de <b>Escudo</b> do alvo, dano <b>Perfurante</b> contra ele é sempre convertido em dano padrão, e toda vez que ele usa <b>CLAIM</b> o próprio chão responde — todo inimigo perde <b>${this.claimShredAmount}</b> de <b>Escudo</b> de uma vez.`,
+    };
   },
 
   hookScope: {

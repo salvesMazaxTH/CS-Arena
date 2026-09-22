@@ -19,11 +19,18 @@ export default {
   ],
 
   description(champion) {
-    return `Whenever Blyskartri or an ally gains Speed or Evasion, Blyskartri gains 1 stack of Impulse. Whenever Blyskartri evades an attack, he gains 1 additional stack. Max: ${this.stackCap}.
+    return {
+      en: `Whenever Blyskartri or an ally gains <b>Speed</b> or <b>Evasion</b>, Blyskartri gains <b>1</b> stack of <b>Impulse</b>. Whenever Blyskartri evades an attack, he gains <b>1</b> additional stack. Max: <b>${this.stackCap}</b>.
 
     Current Stacks: <b>${champion.runtime?.impulseStacks ?? 0}</b>
 
-    At ${this.stackCap} stacks, consume all stacks to immediately deal 50% Hybrid Damage equal to ${this.speedPercentAsDamage * 100}% of the fastest ally's Speed to the enemy with the lowest HP.`;
+    At <b>${this.stackCap}</b> stacks, consume all stacks to immediately deal <b>50%</b> <b>Hybrid Damage</b> equal to <b>${this.speedPercentAsDamage * 100}%</b> of the fastest ally's <b>Speed</b> to the enemy with the lowest HP.`,
+      pt: `Sempre que Blyskartri ou um aliado ganha <b>Velocidade</b> ou <b>Esquiva</b>, Blyskartri ganha <b>1</b> carga de <b>Impulso</b>. Sempre que Blyskartri evade um ataque, ele ganha <b>1</b> carga adicional. Máx.: <b>${this.stackCap}</b>.
+
+    Cargas Atuais: <b>${champion.runtime?.impulseStacks ?? 0}</b>
+
+    Ao atingir <b>${this.stackCap}</b> cargas, consome todas as cargas para causar imediatamente <b>50%</b> de <b>Dano Híbrido</b> igual a <b>${this.speedPercentAsDamage * 100}%</b> da <b>Velocidade</b> do aliado mais rápido ao inimigo com menos HP.`,
+    };
   },
 
   hookScope: {

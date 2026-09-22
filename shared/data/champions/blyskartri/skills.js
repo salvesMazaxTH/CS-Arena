@@ -15,7 +15,10 @@ const blyskartriSkills = [
     priority: 3,
 
     description() {
-      return `Blyskartri opens a current through the chosen ally and lets it run, granting +${this.speedBuff} Speed and +${this.evasionBuff} Evasion for ${this.buffsDuration} turn(s).`;
+      return {
+        en: `Blyskartri opens a current through the chosen ally and lets it run, granting <b>+${this.speedBuff}</b> <b>Speed</b> and <b>+${this.evasionBuff}</b> <b>Evasion</b> for <b>${this.buffsDuration}</b> turn(s).`,
+        pt: `Blyskartri abre uma corrente através do aliado escolhido e a deixa correr, concedendo <b>+${this.speedBuff}</b> de <b>Velocidade</b> e <b>+${this.evasionBuff}</b> de <b>Esquiva</b> por <b>${this.buffsDuration}</b> turno(s).`,
+      };
     },
     targetSpec: ["select:ally"],
     resolve({ user, targets, context = {} }) {
@@ -68,9 +71,14 @@ const blyskartriSkills = [
     ],
 
     description() {
-      return `Blyskartri turns the chosen ally into a living conductor for ${this.buffsDuration} turn(s), granting +${this.speedBuff} Speed and tripling their Evasion.
+      return {
+        en: `Blyskartri turns the chosen ally into a living conductor for <b>${this.buffsDuration}</b> turn(s), granting <b>+${this.speedBuff}</b> <b>Speed</b> and tripling their <b>Evasion</b>.
 
-      While the current holds, every attack the ally slips past is answered: the aggressor takes ${this.counterDamage} absolute damage.`;
+      While the current holds, every attack the ally slips past is answered: the aggressor takes <b>${this.counterDamage}</b> <b>Absolute Damage</b>.`,
+        pt: `Blyskartri transforma o aliado escolhido em um condutor vivo por <b>${this.buffsDuration}</b> turno(s), concedendo <b>+${this.speedBuff}</b> de <b>Velocidade</b> e triplicando sua <b>Esquiva</b>.
+
+      Enquanto a corrente durar, todo ataque que o aliado esquivar é respondido: o agressor sofre <b>${this.counterDamage}</b> de <b>Dano Absoluto</b>.`,
+      };
     },
 
     targetSpec: ["select:ally"],
@@ -176,9 +184,14 @@ const blyskartriSkills = [
     ],
 
     description() {
-      return `Blyskartri pushes the horizon out of reach for the chosen ally. For ${this.effectDuration} turn(s), everything they throw carries +${this.dmgBonus}% raw damage for every ${this.speedPerStack} points of their total Speed.
+      return {
+        en: `Blyskartri pushes the horizon out of reach for the chosen ally. For <b>${this.effectDuration}</b> turn(s), everything they throw carries <b>+${this.dmgBonus}%</b> raw damage for every <b>${this.speedPerStack}</b> points of their total <b>Speed</b>.
 
-      And whenever the ally moves before the target they strike, the blow arrives ahead of the defence: ${this.overtakeDamage} bonus Absolute Damage.`;
+      And whenever the ally moves before the target they strike, the blow arrives ahead of the defence: <b>${this.overtakeDamage}</b> bonus <b>Absolute Damage</b>.`,
+        pt: `Blyskartri empurra o horizonte para fora do alcance do aliado escolhido. Por <b>${this.effectDuration}</b> turno(s), tudo o que ele lançar carrega <b>+${this.dmgBonus}%</b> de dano bruto para cada <b>${this.speedPerStack}</b> pontos de sua <b>Velocidade</b> total.
+
+      E sempre que o aliado agir antes do alvo que atinge, o golpe chega antes da defesa: <b>${this.overtakeDamage}</b> de <b>Dano Absoluto</b> bônus.`,
+      };
     },
 
     targetSpec: ["select:ally"],

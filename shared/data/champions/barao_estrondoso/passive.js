@@ -14,21 +14,38 @@ export default {
   description(champion) {
     const stored = champion.runtime?.storedDamage || 0;
 
-    return `
+    return {
+      en: `
     The Barão converts damage taken into destructive energy.
 
-    He takes +${this.damageTakenBonusPercent}% bonus damage (does not apply to absolute damage and DoT).
+    He takes <b>+${this.damageTakenBonusPercent}%</b> bonus damage (does not apply to <b>Absolute Damage</b> and <b>DoT</b>).
 
-    ${this.storageBasePercent}% of the damage taken is stored (Max.: ${this.storageCap}). While Reinforced Plating holds, that rate rises to ${this.storageShieldPercent}%.
+    <b>${this.storageBasePercent}%</b> of the damage taken is stored (Max.: <b>${this.storageCap}</b>). While <b>Reinforced Plating</b> holds, that rate rises to <b>${this.storageShieldPercent}%</b>.
 
     Stored Damage: <b>${stored > 0 ? stored : 0}</b>
 
     Reactor Overload:
-    The core never vents what it has just unleashed. Whenever the Barão uses a skill, he is left Inert on the following turn.
-    His Basic Attack and his CLAIM demand nothing from the reactor, and never leave him Inert.
+    The core never vents what it has just unleashed. Whenever the Barão uses a skill, he is left <b>Inert</b> on the following turn.
+    His <b>Basic Attack</b> and his <b>CLAIM</b> demand nothing from the reactor, and never leave him <b>Inert</b>.
 
     Final Blast:
-    When the Barão uses his Ultimate, he deals bonus damage equal to his total Stored Damage and resets it to 0.`;
+    When the Barão uses his <b>Ultimate</b>, he deals bonus damage equal to his total <b>Stored Damage</b> and resets it to <b>0</b>.`,
+      pt: `
+    O Barão converte o dano sofrido em energia destrutiva.
+
+    Ele sofre <b>+${this.damageTakenBonusPercent}%</b> de dano bônus (não se aplica a <b>Dano Absoluto</b> e <b>DoT</b>).
+
+    <b>${this.storageBasePercent}%</b> do dano sofrido é armazenado (Máx.: <b>${this.storageCap}</b>). Enquanto <b>Blindagem Reforçada</b> estiver ativa, essa taxa sobe para <b>${this.storageShieldPercent}%</b>.
+
+    Dano Armazenado: <b>${stored > 0 ? stored : 0}</b>
+
+    Sobrecarga do Reator:
+    O núcleo nunca libera o que acabou de desencadear. Sempre que o Barão usa uma habilidade, ele fica <b>Inerte</b> no turno seguinte.
+    Seu <b>Ataque Básico</b> e seu <b>CLAIM</b> não exigem nada do reator, e nunca o deixam <b>Inerte</b>.
+
+    Explosão Final:
+    Quando o Barão usa seu <b>Ultimate</b>, ele causa dano bônus igual ao total de <b>Dano Armazenado</b> e o zera.`,
+    };
   },
 
   // 🔴 Takes 10% additional damage (minimum +10)

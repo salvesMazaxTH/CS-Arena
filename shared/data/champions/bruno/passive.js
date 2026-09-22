@@ -46,9 +46,14 @@ export default {
   },
 
   description() {
-    return `Bruno waits for the moment the cold has already done the work. Against targets at or below ${this.lowLifeThresholdRatio * 100}% of their Max HP, his attacks are always a critical hit.
+    return {
+      en: `Bruno waits for the moment the cold has already done the work. Against targets at or below <b>${this.lowLifeThresholdRatio * 100}%</b> of their Max HP, his attacks are always a <b>Critical Hit</b>.
 
-    And whenever an enemy champion becomes Frozen, the ice closes on them at his word for ${this.passiveDamage} Absolute Damage.`;
+    And whenever an enemy champion becomes <b>Frozen</b>, the ice closes on them at his word for <b>${this.passiveDamage}</b> <b>Absolute Damage</b>.`,
+      pt: `Bruno espera o momento em que o frio já fez o trabalho. Contra alvos com <b>${this.lowLifeThresholdRatio * 100}%</b> ou menos de seu HP Máximo, seus ataques são sempre um <b>Acerto Crítico</b>.
+
+    E sempre que um campeão inimigo fica <b>Congelado</b>, o gelo se fecha sobre ele à sua palavra por <b>${this.passiveDamage}</b> de <b>Dano Absoluto</b>.`,
+    };
   },
 
   onStatusEffectApplied({ target, statusEffect, context, owner }) {
