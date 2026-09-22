@@ -56,15 +56,27 @@ const claySkills = [
     bf: 45,
     missingHpScalingPercent: 70,
     bleedingStacks: 1,
+    recoilPercentOfMaxHP: 6.5,
 
     contact: true,
     damageMode: "standard",
     priority: 0,
 
+    hits: [
+      {
+        id: "recoil",
+        label: "Recoil (Reckless Fury)",
+        type: "physical",
+        contact: false,
+        damageMode: "absolute",
+        suppressLog: true,
+      },
+    ],
+
     description() {
       return {
-        en: `The worse off Clay already is, the less he holds back — the wound itself becomes a weapon. Deals physical damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost, and leaves the target Bleeding for ${this.bleedingStacks} stack(s).`,
-        pt: `Quanto mais ferido Clay estiver, menos ele se contém — a própria ferida se transforma em arma. Causa dano físico, acrescentando até ${this.missingHpScalingPercent}% de seu Ataque, escalado conforme a quantidade de Vida que já perdeu, e deixa o alvo Sangrando por ${this.bleedingStacks} stack(s).`,
+        en: `The worse off Clay already is, the less he holds back — the wound itself becomes a weapon. Deals physical damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost, leaves the target Bleeding for ${this.bleedingStacks} stack(s), and costs Clay Absolute recoil damage equal to ${this.recoilPercentOfMaxHP}% of his Max HP.`,
+        pt: `Quanto mais ferido Clay estiver, menos ele se contém — a própria ferida se transforma em arma. Causa dano físico, acrescentando até ${this.missingHpScalingPercent}% de seu Ataque, escalado conforme a quantidade de Vida que já perdeu, deixa o alvo Sangrando por ${this.bleedingStacks} stack(s), e custa a Clay dano de recuo Absoluto equivalente a ${this.recoilPercentOfMaxHP}% de sua Vida Máxima.`,
       };
     },
 
@@ -95,7 +107,27 @@ const claySkills = [
         });
       }
 
-      return arr;
+      const recoilDamage = Math.floor(
+        (user.maxHP * this.recoilPercentOfMaxHP) / 100,
+      );
+
+      const recoilResult = SkillHits.run(this, "recoil", {
+        user,
+        target: user,
+        baseDamage: recoilDamage,
+        context: { ...context, damageDepth: 1 },
+      });
+
+      const recoilEntries = Array.isArray(recoilResult)
+        ? recoilResult
+        : [recoilResult];
+
+      const userName = formatChampionName(user);
+      recoilEntries.push({
+        log: `${userName} takes ${recoilEntries[0].totalDamage} Absolute recoil damage from <b>${this.name}</b>.\nfinal HP of ${userName}: ${recoilEntries[0].finalHP}/${user.maxHP}`,
+      });
+
+      return [...arr, ...recoilEntries];
     },
   },
 
