@@ -51,11 +51,18 @@ export default {
   description(champion) {
     const stacks = champion.runtime.resonanceStacks || 0;
 
-    return `Whenever an ally gains or spends Momentum, Eryon gains Resonance.
+    return {
+      en: `Eryon was raised among magi who never asked when something would happen — only which instant already belonged to it, and every stir of momentum around him rings on that ledger. Whenever an ally gains or spends <b>Momentum</b>, Eryon gains <b>Resonance</b>.
 
-    <b>Current Stacks: ${stacks}</b>
+      <b>Current Stacks: ${stacks}</b>
 
-    At ${this.stacksCap} Resonance stacks, grants ${this.momentumGain} Momentum to the ally with the lowest Momentum.`;
+      At <b>${this.stacksCap}</b> Resonance stacks, grants <b>${this.momentumGain}</b> Momentum to the ally with the lowest Momentum.`,
+      pt: `Eryon foi criado entre magos que nunca perguntavam quando algo aconteceria — só a qual instante aquilo já pertencia, e cada oscilação de momentum ao seu redor ressoa nesse registro. Sempre que um aliado ganha ou gasta <b>Momentum</b>, Eryon ganha <b>Ressonância</b>.
+
+      <b>Cargas Atuais: ${stacks}</b>
+
+      Ao atingir <b>${this.stacksCap}</b> cargas de Ressonância, concede <b>${this.momentumGain}</b> de Momentum ao aliado com menos Momentum.`,
+    };
   },
 
   hookScope: {

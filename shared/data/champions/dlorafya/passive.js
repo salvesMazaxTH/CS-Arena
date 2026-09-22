@@ -15,13 +15,20 @@ export default {
   heavyJudgmentPenalty: 0.35,
 
   description(champion) {
-    return (
-      `<b>Judgment:</b> those who hide behind armor are judged by it. When D'Lorafya damages a target whose Defense is higher than his own, ` +
-      `the hit becomes Piercing, ignoring <b>${this.piercingPerExcessPoint}%</b> of the target's Defense per point of Defense above his ` +
-      `(max <b>${this.piercingCap}%</b>, or <b>${this.piercingCapVsBurning}%</b> against a <b>Burning</b> target, which makes the hit <b>Absolute</b>). ` +
-      `A judgment of <b>${this.heavyJudgmentThreshold}%</b> or more consumes the flame: the hit deals <b>${Math.round(this.heavyJudgmentPenalty * 100)}%</b> less damage.<br>` +
-      `<b>Divine Flame:</b> his Burning is no mortal flame: it sears for <b>${DLORAFYA_BURN_DAMAGE_MULTIPLIER}x</b> the damage of an ordinary Burn each turn.`
-    );
+    return {
+      en:
+        `<b>Judgment:</b> those who hide behind armor are judged by it. When D'Lorafya damages a target whose <b>Defense</b> is higher than his own, ` +
+        `the hit becomes <b>Piercing</b>, ignoring <b>${this.piercingPerExcessPoint}%</b> of the target's <b>Defense</b> per point of <b>Defense</b> above his ` +
+        `(max <b>${this.piercingCap}%</b>, or <b>${this.piercingCapVsBurning}%</b> against a <b>Burning</b> target, which makes the hit <b>Absolute</b>). ` +
+        `A judgment of <b>${this.heavyJudgmentThreshold}%</b> or more consumes the flame: the hit deals <b>${Math.round(this.heavyJudgmentPenalty * 100)}%</b> less damage.<br>` +
+        `<b>Divine Flame:</b> his <b>Burning</b> is no mortal flame: it sears for <b>${DLORAFYA_BURN_DAMAGE_MULTIPLIER}x</b> the damage of an ordinary <b>Burn</b> each turn.`,
+        pt:
+        `<b>Julgamento:</b> quem se esconde atrás da armadura é julgado por ela. Quando D'Lorafya causa dano a um alvo com <b>Defesa</b> maior que a sua, ` +
+        `o golpe se torna <b>Perfurante</b>, ignorando <b>${this.piercingPerExcessPoint}%</b> da <b>Defesa</b> do alvo para cada ponto de <b>Defesa</b> acima da sua ` +
+        `(máx. <b>${this.piercingCap}%</b>, ou <b>${this.piercingCapVsBurning}%</b> contra um alvo <b>Queimando</b>, o que torna o golpe <b>Absoluto</b>). ` +
+        `Um julgamento de <b>${this.heavyJudgmentThreshold}%</b> ou mais consome a chama: o golpe causa <b>${Math.round(this.heavyJudgmentPenalty * 100)}%</b> menos dano.<br>` +
+        `<b>Chama Divina:</b> sua <b>Queimadura</b> não é chama mortal: ela abrasa por <b>${DLORAFYA_BURN_DAMAGE_MULTIPLIER}x</b> o dano de uma <b>Queimadura</b> comum a cada turno.`,
+    };
   },
 
   hookScope: {

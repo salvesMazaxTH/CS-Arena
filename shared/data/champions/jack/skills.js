@@ -42,7 +42,10 @@ const jackSkills = [
     priority: 3,
 
     description() {
-      return `Jack worked out who was coming for him before the turn even started, and is already standing where the answer said to stand. Deals magical damage, but only if the chosen target was about to attack him this turn — the jolt lands first and Stuns them, so the attack never happens. If he read it wrong, nothing happens at all.`;
+      return {
+        en: `Jack worked out who was coming for him before the turn even started, and is already standing where the answer said to stand. Deals <b>magical damage</b>, but only if the chosen target was about to attack him this turn — the jolt lands first and <b>Stuns</b> them, so the attack never happens. If he read it wrong, nothing happens at all.`,
+        pt: `Jack já sabia quem viria atrás dele antes mesmo de o turno começar, e já está de pé onde a resposta disse que estaria. Causa <b>dano mágico</b>, mas só se o alvo escolhido estivesse prestes a atacá-lo neste turno — o choque chega primeiro e o deixa <b>Atordoado</b>, então o ataque nunca acontece. Se ele leu errado, nada acontece.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -99,7 +102,10 @@ const jackSkills = [
     priority: 0,
 
     description() {
-      return `Jack has been plotting the chosen target since the first hit, and the curve only ever points one way. Deals magical damage, plus up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP they have already lost.`;
+      return {
+        en: `Jack has been plotting the chosen target since the first hit, and the curve only ever points one way. Deals <b>magical damage</b>, plus up to an extra <b>${this.missingHpScalingPercent}%</b> of his <b>Attack</b> scaled by how much HP they have already lost.`,
+        pt: `Jack vem traçando o gráfico do alvo escolhido desde o primeiro golpe, e a curva só aponta para um lado. Causa <b>dano mágico</b>, mais até <b>${this.missingHpScalingPercent}%</b> extra do seu <b>Ataque</b>, escalando conforme o quanto de HP ele já perdeu.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -138,7 +144,10 @@ const jackSkills = [
     priority: 0,
 
     description() {
-      return `Jack underlines the last line of the working twice and turns the page around so the chosen target can read it. Deals magical damage, spending the figure he has solved on them to add ${this.solvedPercentAsBonus}% of it as bonus damage, and leaves them Paralyzed for ${this.paralysisDuration} turn(s).`;
+      return {
+        en: `Jack underlines the last line of the working twice and turns the page around so the chosen target can read it. Deals <b>magical damage</b>, spending the figure he has solved on them to add <b>${this.solvedPercentAsBonus}%</b> of it as bonus damage, and leaves them <b>Paralyzed</b> for <b>${this.paralysisDuration}</b> turn(s).`,
+        pt: `Jack sublinha duas vezes a última linha da resolução e vira a folha para que o alvo escolhido possa ler. Causa <b>dano mágico</b>, gastando o número que resolveu sobre ele para somar <b>${this.solvedPercentAsBonus}%</b> disso como dano bônus, e o deixa <b>Paralisado</b> por <b>${this.paralysisDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],

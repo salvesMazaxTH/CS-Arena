@@ -11,9 +11,14 @@ export default {
   description(champion) {
     const grudge = champion?.runtime?.dorianGrudge || 0;
 
-    return `Every enchanter Dorian has bled is a mark under his skin, sealed in the vials he carved into himself, and the account never closes on its own. Each turn he wounds an enemy enchanter he keeps one Grudge (max ${this.maxGrudge}); his next CLAIM cashes the whole ledger for 1 extra point per ${this.grudgePerPoint} Grudge spent, while a lone Grudge — or a wound torn from anyone who is not an enchanter — pays nothing.
+    return {
+      en: `Every enchanter Dorian has bled is a mark under his skin, sealed in the vials he carved into himself, and the account never closes on its own. Each turn he wounds an enemy <b>enchanter</b> he keeps one <b>Grudge</b> (max <b>${this.maxGrudge}</b>); his next <b>CLAIM</b> cashes the whole ledger for <b>1</b> extra point per <b>${this.grudgePerPoint}</b> Grudge spent, while a lone Grudge — or a wound torn from anyone who is not an enchanter — pays nothing.
 
-    Grudge: <b>${grudge}/${this.maxGrudge}</b>`;
+      Grudge: <b>${grudge}/${this.maxGrudge}</b>`,
+      pt: `Cada encantador que Dorian já feriu é uma marca sob sua pele, selada nos frascos que ele cravou no próprio corpo, e a conta nunca se fecha sozinha. A cada turno em que fere um <b>encantador</b> inimigo ele guarda uma <b>Mágoa</b> (máx. <b>${this.maxGrudge}</b>); seu próximo <b>CLAIM</b> resgata o livro inteiro por <b>1</b> ponto extra a cada <b>${this.grudgePerPoint}</b> Mágoas gastas, enquanto uma Mágoa isolada — ou um ferimento tirado de alguém que não seja encantador — não paga nada.
+
+      Mágoa: <b>${grudge}/${this.maxGrudge}</b>`,
+    };
   },
 
   hookScope: {

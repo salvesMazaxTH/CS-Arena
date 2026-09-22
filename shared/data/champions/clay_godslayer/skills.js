@@ -24,7 +24,10 @@ const clayGodslayerSkills = [
     priority: 0,
 
     description() {
-      return `Clay never came back from the brink — he just learned to fight from there. Deals physical damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost.`;
+      return {
+        en: `Clay never came back from the brink — he just learned to fight from there. Deals <b>physical damage</b>, adding up to an extra <b>${this.missingHpScalingPercent}%</b> of his <b>Attack</b> scaled by how much <b>HP</b> he has already lost.`,
+        pt: `Clay nunca voltou da beira do abismo — ele só aprendeu a lutar dali. Causa <b>dano físico</b>, somando até mais <b>${this.missingHpScalingPercent}%</b> de seu <b>Ataque</b> escalado pela quantidade de <b>HP</b> que já perdeu.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -61,7 +64,10 @@ const clayGodslayerSkills = [
     priority: 0,
 
     description() {
-      return `Clay puts everything he has left into one last swing at the throne. Deals massive physical damage to the chosen target; if it kills them, he scores points equal to his current CLAIM value.`;
+      return {
+        en: `Clay puts everything he has left into one last swing at the throne. Deals massive <b>physical damage</b> to the chosen target; if it kills them, he scores points equal to his current <b>CLAIM</b> value.`,
+        pt: `Clay coloca tudo o que lhe resta num último golpe contra o trono. Causa dano <b>físico</b> massivo ao alvo escolhido; se o golpe o matar, ele marca pontos iguais ao seu valor atual de <b>CLAIM</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],

@@ -9,7 +9,10 @@ export default {
   healPercent: 8.5,
 
   description() {
-    return `Gorvakharr feeds on what he burns. Every hit he lands against a Burning enemy deals ${this.bonusDamagePercent}% bonus damage and heals him for ${this.healPercent}% of the damage dealt.`;
+    return {
+      en: `Gorvakharr feeds on what he burns. Every hit he lands against a <b>Burning</b> enemy deals <b>${this.bonusDamagePercent}%</b> bonus damage and heals him for <b>${this.healPercent}%</b> of the damage dealt.`,
+      pt: `Gorvakharr se alimenta do que queima. Todo golpe que acerta contra um inimigo <b>Queimando</b> causa <b>${this.bonusDamagePercent}%</b> de dano bônus e o cura em <b>${this.healPercent}%</b> do dano causado.`,
+    };
   },
 
   hookScope: {

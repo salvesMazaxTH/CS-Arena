@@ -24,7 +24,10 @@ const eliasCrossSkills = [
     element: "lightning",
 
     description() {
-      return `If the target has Conductor, deals ${this.damageBonus} bonus damage. This attack cannot be evaded.`;
+      return {
+        en: `Elias Cross doesn't aim so much as complete a circuit. If the target has <b>Conductor</b>, deals <b>${this.damageBonus}</b> bonus damage. This attack <b>cannot be evaded</b>.`,
+        pt: `Elias Cross não mira tanto quanto completa um circuito. Se o alvo tiver <b>Condutor</b>, causa <b>${this.damageBonus}</b> de dano bônus. Este ataque <b>não pode ser esquivado</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -61,7 +64,10 @@ const eliasCrossSkills = [
     conductorDuration: 2,
 
     description() {
-      return `Elias Cross gains +${this.passiveChanceBonus}% Passive chance this turn and the next. If the target has Conductor, deals ${this.damageBonus} bonus damage. Marks the target as a Conductor for ${this.conductorDuration} turn(s).`;
+      return {
+        en: `He lets the current build under his skin before letting it go, marking whatever it touches to carry the next one further. Elias Cross gains <b>+${this.passiveChanceBonus}%</b> Passive chance this turn and the next. If the target has <b>Conductor</b>, deals <b>${this.damageBonus}</b> bonus damage. Marks the target as a <b>Conductor</b> for <b>${this.conductorDuration}</b> turn(s).`,
+        pt: `Ele deixa a corrente se acumular sob a própria pele antes de soltá-la, marcando o que ela tocar para levar a próxima ainda mais longe. Elias Cross ganha <b>+${this.passiveChanceBonus}%</b> de chance da Passiva neste turno e no próximo. Se o alvo tiver <b>Condutor</b>, causa <b>${this.damageBonus}</b> de dano bônus. Marca o alvo como <b>Condutor</b> por <b>${this.conductorDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -134,7 +140,10 @@ const eliasCrossSkills = [
     element: "lightning",
 
     description() {
-      return `Deals damage to ALL characters except Elias Cross. Characters with Lightning or Earth Affinity take only ${this.reducedDamagePercent}% damage. However, Elias Cross takes Absolute Recoil Damage equal to ${this.recoilDamage}% of his Max HP. Targets below 17% HP are obliterated, or below 25% HP if they have Conductor. This attack cannot be evaded.`;
+      return {
+        en: `There is no controlling what pours out of an empty vessel — only surviving what it takes on the way through. Elias Cross opens completely, and the storm answers. Deals damage to <b>ALL</b> characters except Elias Cross. Characters with <b>Lightning</b> or <b>Earth Affinity</b> take only <b>${this.reducedDamagePercent}%</b> damage. However, Elias Cross takes <b>Absolute Recoil Damage</b> equal to <b>${this.recoilDamage}%</b> of his <b>Max HP</b>. Targets below <b>17%</b> HP are <b>obliterated</b>, or below <b>25%</b> HP if they have <b>Conductor</b>. This attack <b>cannot be evaded</b>.`,
+        pt: `Não há como controlar o que transborda de um recipiente vazio — só sobreviver ao que ele leva pelo caminho. Elias Cross se abre por completo, e a tempestade responde. Causa dano a <b>TODOS</b> os personagens, exceto Elias Cross. Personagens com <b>Afinidade de Raio</b> ou <b>Terra</b> sofrem apenas <b>${this.reducedDamagePercent}%</b> do dano. Porém, Elias Cross sofre <b>Dano de Recuo Absoluto</b> igual a <b>${this.recoilDamage}%</b> do seu <b>HP Máximo</b>. Alvos abaixo de <b>17%</b> de HP são <b>obliterados</b>, ou abaixo de <b>25%</b> de HP se tiverem <b>Condutor</b>. Este ataque <b>não pode ser esquivado</b>.`,
+      };
     },
 
     finishingType: "obliterate",

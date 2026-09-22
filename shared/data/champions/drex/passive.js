@@ -29,14 +29,24 @@ export default {
     const damageReduction = activeTiers * this.dmgReductPerTier;
     const healingAmp = activeTiers * this.lsHealAmpPerTier;
 
-    return `Drex gains +${this.lsPerProc}% permanent LifeSteal whenever an ally applies Bleeding or whenever an enemy takes Bleeding damage.
+    return {
+      en: `Drex gains <b>+${this.lsPerProc}%</b> permanent <b>LifeSteal</b> whenever an ally applies <b>Bleeding</b> or whenever an enemy takes <b>Bleeding</b> damage.
 
-    The first time Drex reaches ${this.awakenThreshold}% LifeSteal, he enters permanent Crimson Frenzy.
+      The first time Drex reaches <b>${this.awakenThreshold}%</b> LifeSteal, he enters permanent <b>Crimson Frenzy</b>.
 
-    For every ${this.lsTierSize}% LifeSteal, Drex gains +${this.dmgAmpPerTier}% bonus damage, converts Standard Damage into Piercing Damage with ${this.piercingRatioPerTier}% Defense piercing, gains ${this.dmgReductPerTier}% Damage Reduction, and restores ${this.lsHealAmpPerTier}% more HP from LifeSteal.
+      For every <b>${this.lsTierSize}%</b> LifeSteal, Drex gains <b>+${this.dmgAmpPerTier}%</b> bonus damage, converts <b>Standard Damage</b> into <b>Piercing Damage</b> with <b>${this.piercingRatioPerTier}%</b> Defense piercing, gains <b>${this.dmgReductPerTier}%</b> <b>Damage Reduction</b>, and restores <b>${this.lsHealAmpPerTier}%</b> more HP from LifeSteal.
 
-    Current Bloodthirst: <b>${lifesteal}% LifeSteal</b> (${activeTiers} tier${activeTiers === 1 ? "" : "s"}).
-    Current Crimson Frenzy bonuses: <b>+${damageAmp}% damage</b>, <b>${damageReduction}% Damage Reduction</b>, <b>+${healingAmp}% LifeSteal healing</b>, and <b>${piercing}% Defense piercing</b>.`;
+      Current Bloodthirst: <b>${lifesteal}% LifeSteal</b> (${activeTiers} tier${activeTiers === 1 ? "" : "s"}).
+      Current Crimson Frenzy bonuses: <b>+${damageAmp}% damage</b>, <b>${damageReduction}% Damage Reduction</b>, <b>+${healingAmp}% LifeSteal healing</b>, and <b>${piercing}% Defense piercing</b>.`,
+      pt: `Drex ganha <b>+${this.lsPerProc}%</b> de <b>Roubo de Vida</b> permanente sempre que um aliado aplica <b>Sangramento</b> ou sempre que um inimigo sofre dano de <b>Sangramento</b>.
+
+      Na primeira vez que Drex atinge <b>${this.awakenThreshold}%</b> de Roubo de Vida, ele entra em <b>Frenesi Carmesim</b> permanente.
+
+      A cada <b>${this.lsTierSize}%</b> de Roubo de Vida, Drex ganha <b>+${this.dmgAmpPerTier}%</b> de dano bônus, converte <b>Dano Padrão</b> em <b>Dano Perfurante</b> com <b>${this.piercingRatioPerTier}%</b> de perfuração de Defesa, ganha <b>${this.dmgReductPerTier}%</b> de <b>Redução de Dano</b>, e restaura <b>${this.lsHealAmpPerTier}%</b> a mais de HP com o Roubo de Vida.
+
+      Sede de Sangue atual: <b>${lifesteal}% de Roubo de Vida</b> (${activeTiers} ${activeTiers === 1 ? "nível" : "níveis"}).
+      Bônus atuais de Frenesi Carmesim: <b>+${damageAmp}% de dano</b>, <b>${damageReduction}% de Redução de Dano</b>, <b>+${healingAmp}% de cura por Roubo de Vida</b>, e <b>${piercing}% de perfuração de Defesa</b>.`,
+    };
   },
 
   hookScope: {

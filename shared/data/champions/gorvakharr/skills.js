@@ -27,7 +27,10 @@ const gorvakharrSkills = [
     priority: 0,
 
     description() {
-      return `Gorvakharr's burning chain lashes out and wraps around the chosen target. Deals physical damage and applies Snared for ${this.snareDuration} turn(s).`;
+      return {
+        en: `Gorvakharr's burning chain lashes out and wraps around the chosen target. Deals <b>physical damage</b> and applies <b>Snared</b> for <b>${this.snareDuration}</b> turn(s).`,
+        pt: `A corrente flamejante de Gorvakharr avança e se enrola no alvo escolhido. Causa <b>dano físico</b> e aplica <b>Enraizado</b> por <b>${this.snareDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -71,7 +74,10 @@ const gorvakharrSkills = [
     priority: 0,
 
     description() {
-      return `Gorvakharr drives his fire-wreathed blade into the chosen target, dealing physical damage and applying Burning for ${this.burnDuration} turn(s). If the target is <b>Snared</b>, this attack instead strikes with ${this.bf + this.snaredBonusBf} power.`;
+      return {
+        en: `Gorvakharr drives his fire-wreathed blade into the chosen target, dealing <b>physical damage</b> and applying <b>Burning</b> for <b>${this.burnDuration}</b> turn(s). If the target is <b>Snared</b>, this attack instead strikes with <b>${this.bf + this.snaredBonusBf}</b> power.`,
+        pt: `Gorvakharr crava sua lâmina envolta em fogo no alvo escolhido, causando <b>dano físico</b> e aplicando <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s). Se o alvo estiver <b>Enraizado</b>, este ataque golpeia com <b>${this.bf + this.snaredBonusBf}</b> de poder.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -126,7 +132,10 @@ const gorvakharrSkills = [
     description() {
       const percent = this.executeThreshold * 100;
 
-      return `Gorvakharr drops on the chosen target under a crimson moon, chain and blade together. Deals heavy physical damage. Executes the target if they are critically wounded (≤ ${percent}% of their Max HP and ≤ ${this.executeFlatThreshold} HP).`;
+      return {
+        en: `Gorvakharr drops on the chosen target under a crimson moon, chain and blade together. Deals heavy <b>physical damage</b>. <b>Executes</b> the target if they are critically wounded (≤ <b>${percent}%</b> of their Max HP and ≤ <b>${this.executeFlatThreshold}</b> HP).`,
+        pt: `Gorvakharr desaba sobre o alvo escolhido sob uma lua carmesim, corrente e lâmina juntas. Causa <b>dano físico</b> pesado. <b>Executa</b> o alvo se estiver criticamente ferido (≤ <b>${percent}%</b> do HP Máximo e ≤ <b>${this.executeFlatThreshold}</b> de HP).`,
+      };
     },
 
     finishingRule({ defender }) {

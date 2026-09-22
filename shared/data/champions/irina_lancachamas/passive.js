@@ -21,7 +21,10 @@ export default {
   ],
 
   description() {
-    return `Irina's own fire was always a weak, useless little thing that burned her more than it ever helped anyone else — until the flamethrower gave it teeth, at the cost of running hot enough to bite back at her too. She doesn't mind. Every time the gun kicks back, she laughs harder and hits harder: +${this.attackPerRecoil} permanent Attack. Even a CLAIM keeps the redline lit: +${this.attackPerClaim} permanent Attack, up to +${this.claimAttackCap} from CLAIMs.`;
+    return {
+      en: `Irina's own fire was always a weak, useless little thing that burned her more than it ever helped anyone else — until the flamethrower gave it teeth, at the cost of running hot enough to bite back at her too. She doesn't mind. Every time the gun kicks back, she laughs harder and hits harder: <b>+${this.attackPerRecoil}</b> permanent <b>Attack</b>. Even a <b>CLAIM</b> keeps the redline lit: <b>+${this.attackPerClaim}</b> permanent <b>Attack</b>, up to <b>+${this.claimAttackCap}</b> from CLAIMs.`,
+      pt: `O próprio fogo de Irina sempre foi uma coisinha fraca e inútil, que a queimava mais do que jamais ajudou alguém — até o lança-chamas lhe dar dentes, ao custo de esquentar o bastante para morder de volta. Ela não se importa. Toda vez que a arma dá coice, ela ri mais alto e bate mais forte: <b>+${this.attackPerRecoil}</b> de <b>Ataque</b> permanente. Até um <b>CLAIM</b> mantém a linha vermelha acesa: <b>+${this.attackPerClaim}</b> de <b>Ataque</b> permanente, até <b>+${this.claimAttackCap}</b> vindo de CLAIMs.`,
+    };
   },
 
   hookScope: {

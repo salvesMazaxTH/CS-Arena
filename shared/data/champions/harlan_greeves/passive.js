@@ -13,7 +13,10 @@ export default {
   wantedBonusPoints: 2,
 
   description() {
-    return `Harlan never pulls the trigger on a fight he isn't sure he already won the draw on. Whenever he fires on someone slower to the trigger than he is, the shot cannot be evaded and lands for ${this.quickdrawBonusDmgPercent}% bonus damage — and whatever they've still got left to fire back comes out ${this.halfStepReductionPercent}% weaker, just this once.`;
+    return {
+      en: `Harlan never pulls the trigger on a fight he isn't sure he already won the draw on. Whenever he fires on someone slower to the trigger than he is, the shot <b>cannot be evaded</b> and lands for <b>${this.quickdrawBonusDmgPercent}%</b> bonus damage — and whatever they've still got left to fire back comes out <b>${this.halfStepReductionPercent}%</b> weaker, just this once.`,
+      pt: `Harlan nunca puxa o gatilho numa briga que não tem certeza de já ter vencido no saque. Sempre que atira em alguém mais lento no gatilho do que ele, o tiro <b>não pode ser esquivado</b> e causa <b>${this.quickdrawBonusDmgPercent}%</b> de dano bônus — e o que ainda sobrar para o outro revidar sai <b>${this.halfStepReductionPercent}%</b> mais fraco, só dessa vez.`,
+    };
   },
 
   hookScope: {

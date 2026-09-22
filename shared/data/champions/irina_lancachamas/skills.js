@@ -64,7 +64,10 @@ const irinaSkills = [
     element: "fire",
 
     description() {
-      return `Irina holds the trigger steady for once, which for her counts as remarkable self-control: deals Fire physical damage to the chosen target, with a ${this.burnChance * 100}% chance to set them Burning for ${this.burnDuration} turn(s).`;
+      return {
+        en: `Irina holds the trigger steady for once, which for her counts as remarkable self-control: deals <b>Fire physical damage</b> to the chosen target, with a <b>${this.burnChance * 100}%</b> chance to set them <b>Burning</b> for <b>${this.burnDuration}</b> turn(s).`,
+        pt: `Irina segura o gatilho firme por uma vez, o que para ela já conta como autocontrole notável: causa <b>dano físico de Fogo</b> ao alvo escolhido, com <b>${this.burnChance * 100}%</b> de chance de deixá-lo <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -110,7 +113,10 @@ const irinaSkills = [
     element: "fire",
 
     description() {
-      return `Irina throws the safety valve away and just doesn't stop: the flamethrower redlines and scorches her own hands right back, but she's too busy cackling to care. Deals heavy Fire physical damage to the chosen target and sets them Burning for ${this.burnDuration} turn(s).`;
+      return {
+        en: `Irina throws the safety valve away and just doesn't stop: the flamethrower redlines and scorches her own hands right back, but she's too busy cackling to care. Deals heavy <b>Fire physical damage</b> to the chosen target and sets them <b>Burning</b> for <b>${this.burnDuration}</b> turn(s).`,
+        pt: `Irina joga a válvula de segurança fora e simplesmente não para: o lança-chamas entra na zona vermelha e queima suas próprias mãos de volta, mas ela está ocupada demais gargalhando para se importar. Causa <b>dano físico de Fogo</b> pesado ao alvo escolhido e o deixa <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -169,7 +175,10 @@ const irinaSkills = [
     element: "fire",
 
     description() {
-      return `Irina opens the tank all the way and holds on, screaming with laughter as the whole weapon goes up with the shot: unleashes devastating Fire physical damage on the chosen target and sets them Burning for ${this.burnDuration} turn(s), while the overheating gun scorches her right back.`;
+      return {
+        en: `Irina opens the tank all the way and holds on, screaming with laughter as the whole weapon goes up with the shot: unleashes devastating <b>Fire physical damage</b> on the chosen target and sets them <b>Burning</b> for <b>${this.burnDuration}</b> turn(s), while the overheating gun scorches her right back.`,
+        pt: `Irina abre o tanque por completo e se segura, gritando de tanto rir enquanto a arma inteira dispara junto com o tiro: desfere <b>dano físico de Fogo</b> devastador no alvo escolhido e o deixa <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s), enquanto a arma superaquecida a queima de volta.`,
+      };
     },
 
     targetSpec: ["enemy"],

@@ -28,7 +28,10 @@ const gryskarchuSkills = [
     priority: 0,
 
     description() {
-      return `Gryskarchu calls the roots up through the ground beneath the chosen target, dealing Earth magical damage and holding them Rooted for ${this.rootDuration} turn(s).`;
+      return {
+        en: `Gryskarchu calls the roots up through the ground beneath the chosen target, dealing <b>Earth magical damage</b> and holding them <b>Rooted</b> for <b>${this.rootDuration}</b> turn(s).`,
+        pt: `Gryskarchu convoca as raízes através do solo sob o alvo escolhido, causando <b>dano mágico de Terra</b> e mantendo-o <b>Enraizado</b> por <b>${this.rootDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -64,7 +67,10 @@ const gryskarchuSkills = [
     priority: 0,
 
     description() {
-      return `Green light opens across the field like something in bloom, restoring ${this.healAmount} HP to Gryskarchu and every active ally.`;
+      return {
+        en: `Green light opens across the field like something in bloom, restoring <b>${this.healAmount}</b> HP to Gryskarchu and every active ally.`,
+        pt: `Uma luz verde se abre pelo campo como algo desabrochando, restaurando <b>${this.healAmount}</b> de HP a Gryskarchu e a todos os aliados ativos.`,
+      };
     },
 
     targetSpec: ["all:ally"],
@@ -108,9 +114,14 @@ const gryskarchuSkills = [
     priority: 5,
 
     description() {
-      return `Gryskarchu lays Mother Earth's own protection over the chosen ally, restoring ${this.healPercent}% of their Max HP.
+      return {
+        en: `Gryskarchu lays Mother Earth's own protection over the chosen ally, restoring <b>${this.healPercent}%</b> of their <b>Max HP</b>.
 
-      For ${this.buffDuration} turn(s), they gain +${this.defBuff}% Defense, and the ground itself carries their blows: their attacks deal bonus damage equal to ${this.defDamageBonus}% of their Defense.`;
+        For <b>${this.buffDuration}</b> turn(s), they gain <b>+${this.defBuff}%</b> <b>Defense</b>, and the ground itself carries their blows: their attacks deal <b>bonus damage</b> equal to <b>${this.defDamageBonus}%</b> of their <b>Defense</b>.`,
+        pt: `Gryskarchu envolve o aliado escolhido na própria proteção da Mãe Terra, restaurando <b>${this.healPercent}%</b> de seu <b>HP Máximo</b>.
+
+        Por <b>${this.buffDuration}</b> turno(s), ele ganha <b>+${this.defBuff}%</b> de <b>Defesa</b>, e o próprio solo carrega seus golpes: seus ataques causam <b>dano bônus</b> igual a <b>${this.defDamageBonus}%</b> de sua <b>Defesa</b>.`,
+      };
     },
 
     targetSpec: ["select:ally"],

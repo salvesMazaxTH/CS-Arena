@@ -7,7 +7,10 @@ export default {
   chanceIncreasePerTurn: 5,
 
   description(champion) {
-    return `Elias Cross's damaging abilities have a <b>${champion.runtime.passiveChance ?? this.initialChance}%</b> chance to repeat. Each turn, he gains <b>+${this.chanceIncreasePerTurn}%</b> chance.`;
+    return {
+      en: `Something in Elias Cross never fully earths — the charge lingers under that hollow skin, and given a fraction of a heartbeat, it discharges again on its own. His damaging abilities have a <b>${champion.runtime.passiveChance ?? this.initialChance}%</b> chance to repeat. Each turn, he gains <b>+${this.chanceIncreasePerTurn}%</b> chance.`,
+      pt: `Algo em Elias Cross nunca se aterra por completo — a carga permanece sob aquela pele oca, e, numa fração de segundo, se descarrega de novo por conta própria. Suas habilidades de dano têm <b>${champion.runtime.passiveChance ?? this.initialChance}%</b> de chance de repetir. A cada turno, ele ganha <b>+${this.chanceIncreasePerTurn}%</b> de chance.`,
+    };
   },
 
   hookScope: {

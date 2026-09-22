@@ -19,7 +19,10 @@ const dorianSkills = [
     priority: 0,
 
     description() {
-      return `Dorian folds both hollow wheels around the chosen target and draws them shut — a cut only his own hands make without losing themselves to the edge. Deals Absolute Damage equal to ${this.bf}% of his Attack plus ${this.maxHPPercent}% of the target's Max HP. Struck from concealment the wheels close harder — ${this.concealedBf}% of Attack plus ${this.concealedMaxHPPercent}% of Max HP — and stepping out of cover ends it.`;
+      return {
+        en: `Dorian folds both hollow wheels around the chosen target and draws them shut — a cut only his own hands make without losing themselves to the edge. Deals <b>Absolute Damage</b> equal to <b>${this.bf}%</b> of his <b>Attack</b> plus <b>${this.maxHPPercent}%</b> of the target's <b>Max HP</b>. Struck from <b>concealment</b> the wheels close harder — <b>${this.concealedBf}%</b> of Attack plus <b>${this.concealedMaxHPPercent}%</b> of Max HP — and stepping out of cover ends it.`,
+        pt: `Dorian fecha os dois discos ocos ao redor do alvo escolhido e as trava — um corte que só suas próprias mãos fazem sem se perder no fio. Causa <b>Dano Absoluto</b> igual a <b>${this.bf}%</b> de seu <b>Ataque</b> mais <b>${this.maxHPPercent}%</b> do <b>HP Máximo</b> do alvo. Golpear se estivesse <b>oculto</b> faz os discos fecharem mais forte — <b>${this.concealedBf}%</b> de Ataque mais <b>${this.concealedMaxHPPercent}%</b> de HP Máximo — e sair da cobertura encerra o efeito.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -70,7 +73,10 @@ const dorianSkills = [
     priority: 0,
 
     description() {
-      return `Dorian sends both wheels wide on their wires, four hissing passes that open the chosen target before the wires reel him back out of sight. Deals ranged physical damage, afflicts the target with Heal Block for ${this.healBlockDuration} turns, and leaves Dorian Concealed until he next acts.`;
+      return {
+        en: `Dorian sends both wheels wide on their wires, four hissing passes that open the chosen target before the wires reel him back out of sight. Deals ranged <b>physical damage</b>, afflicts the target with <b>Heal Block</b> for <b>${this.healBlockDuration}</b> turns, and leaves Dorian <b>Concealed</b> until he next acts.`,
+        pt: `Dorian solta os dois discos em fios longos, quatro passagens sibilantes que abrem o alvo escolhido antes dos fios o puxarem de volta para fora de vista. Causa <b>dano físico</b> à distância, aflige o alvo com <b>Bloqueio de Cura</b> por <b>${this.healBlockDuration}</b> turnos, e deixa Dorian <b>Oculto</b> até sua próxima ação.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -122,7 +128,10 @@ const dorianSkills = [
     priority: 0,
 
     description() {
-      return `The wires snap taut and every wheel comes round at once, the whole account brought down on the chosen target. Deals heavy ranged physical damage and leaves the target with Heal Block for ${this.healBlockDuration} turns. Against an enchanter it also bites for bonus damage equal to ${this.enchanterMaxHPPercent}% of their Max HP. If the strike kills, Dorian's team scores points equal to his current Grudge, up to ${this.killBankCap}, and the ledger empties.`;
+      return {
+        en: `The wires snap taut and every wheel comes round at once, the whole account brought down on the chosen target. Deals heavy ranged <b>physical damage</b> and leaves the target with <b>Heal Block</b> for <b>${this.healBlockDuration}</b> turns. Against an <b>enchanter</b> it also bites for bonus damage equal to <b>${this.enchanterMaxHPPercent}%</b> of their <b>Max HP</b>. If the strike kills, Dorian's team scores points equal to his current <b>Grudge</b>, up to <b>${this.killBankCap}</b>, and the ledger empties.`,
+        pt: `Os fios se retesam e todos os discos giram de uma vez, a conta inteira caindo sobre o alvo escolhido. Causa <b>dano físico</b> pesado à distância e deixa o alvo com <b>Bloqueio de Cura</b> por <b>${this.healBlockDuration}</b> turnos. Contra um <b>encantador</b> também morde por dano bônus igual a <b>${this.enchanterMaxHPPercent}%</b> de seu <b>HP Máximo</b>. Se o golpe matar, o time de Dorian marca pontos iguais à sua <b>Mágoa</b> atual, até <b>${this.killBankCap}</b>, e o livro se esvazia.`,
+      };
     },
 
     targetSpec: ["enemy"],

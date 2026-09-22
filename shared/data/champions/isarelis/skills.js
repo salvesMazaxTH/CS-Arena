@@ -23,7 +23,10 @@ const isarelisSkills = [
     priority: 0,
 
     description() {
-      return "Isarelis closes on the chosen target with both daggers reversed and opens them up in a handful of strokes, short blades finding the gaps a longer edge would never reach, dealing physical damage.";
+      return {
+        en: "Isarelis closes on the chosen target with both daggers reversed and opens them up in a handful of strokes, short blades finding the gaps a longer edge would never reach, dealing <b>physical damage</b>.",
+        pt: "Isarelis avança sobre o alvo escolhido com as duas adagas invertidas e o abre em um punhado de golpes, lâminas curtas encontrando as brechas que uma arma mais longa jamais alcançaria, causando <b>dano físico</b>.",
+      };
     },
 
     targetSpec: ["enemy"],
@@ -53,7 +56,10 @@ const isarelisSkills = [
     invisibleDuration: 3,
 
     description() {
-      return `Becomes Invisible for up to ${this.invisibleDuration} turns, ending early the moment she acts again. Cannot be targeted by enemies while it holds.`;
+      return {
+        en: `Isarelis melts into the shadows between one heartbeat and the next. Becomes <b>Invisible</b> for up to <b>${this.invisibleDuration}</b> turns, ending early the moment she acts again. Cannot be targeted by enemies while it holds.`,
+        pt: `Isarelis se dissolve nas sombras entre uma batida de coração e a outra. Fica <b>Invisível</b> por até <b>${this.invisibleDuration}</b> turnos, encerrando antes no momento em que agir de novo. Não pode ser alvo de inimigos enquanto durar.`,
+      };
     },
 
     targetSpec: ["self"],
@@ -100,7 +106,10 @@ const isarelisSkills = [
     description() {
       const percent = this.executeThreshold * 100;
 
-      return `Deals heavy damage to the chosen target. Executes the target only if they are critically wounded (≤ ${percent}% of their Max HP and ≤ ${this.executeFlatThreshold} HP). Deals ${this.stealthBonus * 100}% bonus damage while Invisible.`;
+      return {
+        en: `Isarelis puts the final stroke where it counts, no wasted motion, no witnesses. Deals heavy damage to the chosen target. <b>Executes</b> the target only if they are critically wounded (≤ <b>${percent}%</b> of their Max HP and ≤ <b>${this.executeFlatThreshold}</b> HP). Deals <b>${this.stealthBonus * 100}%</b> bonus damage while <b>Invisible</b>.`,
+        pt: `Isarelis desfere o golpe final onde importa, sem movimento desperdiçado, sem testemunhas. Causa dano pesado ao alvo escolhido. <b>Executa</b> o alvo apenas se estiver criticamente ferido (≤ <b>${percent}%</b> do HP Máximo e ≤ <b>${this.executeFlatThreshold}</b> de HP). Causa <b>${this.stealthBonus * 100}%</b> de dano bônus enquanto <b>Invisível</b>.`,
+      };
     },
 
     finishingRule({ defender }) {

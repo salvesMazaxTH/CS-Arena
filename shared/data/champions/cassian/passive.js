@@ -22,7 +22,10 @@ export default {
       champion?.runtime?.cassianForm === "offense" ? "offense" : "defense";
     const meter = champion?.runtime?.cassianBloodMeter ?? 0;
 
-    return `Cassian is a hemomage: every hit he lands or takes fills his blood tide (currently ${meter}/${this.meterThreshold}). Once it is full, his blood surges and flips his form, hardening into claws for a bout of offense or drawing back into a living, protective armor for defense — and the tide resets to turn him back once it fills again. He is currently in his ${form} form.`;
+    return {
+      en: `Cassian is a hemomage: every hit he lands or takes fills his blood tide (currently <b>${meter}/${this.meterThreshold}</b>). Once it is full, his blood surges and flips his form, hardening into claws for a bout of <b>offense</b> or drawing back into a living, protective armor for <b>defense</b> — and the tide resets to turn him back once it fills again. He is currently in his <b>${form}</b> form.`,
+      pt: `Cassian é um hemomago: cada golpe que dá ou recebe enche sua maré de sangue (atualmente <b>${meter}/${this.meterThreshold}</b>). Quando ela enche, seu sangue transborda e inverte sua forma, endurecendo em garras para um período de <b>ofensiva</b> ou recolhendo-se numa armadura viva e protetora de <b>defesa</b> — e a maré reseta para trazê-lo de volta quando enche de novo. Ele está atualmente em sua forma de <b>${form === "offense" ? "ofensiva" : "defesa"}</b>.`,
+    };
   },
 
   hookScope: {

@@ -27,9 +27,10 @@ export default {
   ],
 
   description() {
-    return `Jack keeps the working, and the best figure he has ever got out of an enemy stays written beside their name — refined ${this.refinementPercent}% upward every time he hits them again, up to ${this.maxSolvedPercentOfAttack}% of his Attack. His damage against them can never come out below ${this.floorPercent}% of that figure, however they have shored themselves up since.
-
-    And the moment an enemy champion is Paralyzed, he has already solved for it: ${this.paralysisDamage} Absolute Damage, delivered with an apology he does not mean.`;
+    return {
+      en: `Jack keeps the working, and the best figure he has ever got out of an enemy stays written beside their name — refined <b>${this.refinementPercent}%</b> upward every time he hits them again, up to <b>${this.maxSolvedPercentOfAttack}%</b> of his <b>Attack</b>. His damage against them can never come out below <b>${this.floorPercent}%</b> of that figure, however they have shored themselves up since.<br><br>And the moment an enemy champion is <b>Paralyzed</b>, he has already solved for it: <b>${this.paralysisDamage}</b> <b>Absolute Damage</b>, delivered with an apology he does not mean.`,
+      pt: `Jack guarda a resolução, e o melhor número que já arrancou de um inimigo fica escrito ao lado do nome dele — refinado em <b>${this.refinementPercent}%</b> a cada vez que o acerta de novo, até <b>${this.maxSolvedPercentOfAttack}%</b> do seu <b>Ataque</b>. Seu dano contra esse alvo nunca sai abaixo de <b>${this.floorPercent}%</b> desse número, não importa o quanto ele tenha se reforçado desde então.<br><br>E no instante em que um campeão inimigo fica <b>Paralisado</b>, Jack já resolveu para ele: <b>${this.paralysisDamage}</b> de <b>Dano Absoluto</b>, entregue com um pedido de desculpas que ele não sente.`,
+    };
   },
 
   hookScope: {

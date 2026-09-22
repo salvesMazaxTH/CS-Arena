@@ -18,7 +18,10 @@ const farkovethSkills = [
     targetSpec: ["self"],
 
     description() {
-      return `Four metres of hooded stone settle onto whatever will hold them and stop being a thing anyone thinks to look at. Farkoveth spends his action to become Invisible for ${this.effectDuration} turn(s), acting through it without breaking cover, and the next damaging skill he uses deals +${this.nextSkillBonus}% damage.`;
+      return {
+        en: `Four metres of hooded stone settle onto whatever will hold them and stop being a thing anyone thinks to look at. Farkoveth spends his action to become <b>Invisible</b> for <b>${this.effectDuration}</b> turn(s), acting through it without breaking cover, and the next damaging skill he uses deals <b>+${this.nextSkillBonus}%</b> damage.`,
+        pt: `Quatro metros de pedra encapuzada se acomodam sobre o que quer que os sustente e deixam de ser algo em que alguém pensa em reparar. Farkoveth gasta sua ação para ficar <b>Invisível</b> por <b>${this.effectDuration}</b> turno(s), agindo através disso sem quebrar o disfarce, e a próxima habilidade de dano que usar causa <b>+${this.nextSkillBonus}%</b> de dano.`,
+      };
     },
 
     resolve({ user, context = {} }) {
@@ -79,7 +82,10 @@ const farkovethSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `He breaks a shard off his own forearm, sets it against the kunai and lets the edge carry the weight of the piece he just lost. Farkoveth spends ${this.defenseCost} of his Defense to deal physical damage plus bonus damage equal to ${this.bonusPerDefense}x the Defense actually spent.`;
+      return {
+        en: `He breaks a shard off his own forearm, sets it against the kunai and lets the edge carry the weight of the piece he just lost. Farkoveth spends <b>${this.defenseCost}</b> of his <b>Defense</b> to deal <b>physical damage</b> plus bonus damage equal to <b>${this.bonusPerDefense}x</b> the Defense actually spent.`,
+        pt: `Ele quebra um estilhaço do próprio antebraço, encosta-o na kunai e deixa que a lâmina carregue o peso do pedaço que acabou de perder. Farkoveth gasta <b>${this.defenseCost}</b> de sua <b>Defesa</b> para causar <b>dano físico</b> mais dano bônus igual a <b>${this.bonusPerDefense}x</b> a Defesa realmente gasta.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -119,7 +125,10 @@ const farkovethSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Farkoveth stops holding himself together and drops the whole four metres of it onto the chosen target at once. He spends every point of Defense he still has to deal physical damage plus bonus damage equal to ${this.bonusPerDefense}x the Defense spent, and is left with none of it.`;
+      return {
+        en: `Farkoveth stops holding himself together and drops the whole four metres of it onto the chosen target at once. He spends every point of <b>Defense</b> he still has to deal <b>physical damage</b> plus bonus damage equal to <b>${this.bonusPerDefense}x</b> the Defense spent, and is left with none of it.`,
+        pt: `Farkoveth para de se manter unido e derruba os quatro metros inteiros sobre o alvo escolhido de uma vez. Ele gasta cada ponto de <b>Defesa</b> que ainda tem para causar <b>dano físico</b> mais dano bônus igual a <b>${this.bonusPerDefense}x</b> a Defesa gasta, ficando sem nenhuma.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {

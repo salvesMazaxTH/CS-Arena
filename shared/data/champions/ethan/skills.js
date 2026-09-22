@@ -26,7 +26,10 @@ const ethanSkills = [
     priority: 0,
 
     description() {
-      return `Ethan doesn't waste a cut he hasn't already placed in his head. Deals physical damage, reducing the target's Evasion by ${this.evasionDebuff} for ${this.debuffDuration} turn(s) and leaving them Bleeding for ${this.bleedingStacks} stack(s).`;
+      return {
+        en: `Ethan doesn't waste a cut he hasn't already placed in his head. Deals <b>physical damage</b>, reducing the target's <b>Evasion</b> by <b>${this.evasionDebuff}</b> for <b>${this.debuffDuration}</b> turn(s) and leaving them <b>Bleeding</b> for <b>${this.bleedingStacks}</b> stack(s).`,
+        pt: `Ethan não desperdiça um corte que ele já não tenha planejado na cabeça. Causa <b>dano físico</b>, reduzindo a <b>Esquiva</b> do alvo em <b>${this.evasionDebuff}</b> por <b>${this.debuffDuration}</b> turno(s) e deixando-o <b>Sangrando</b> por <b>${this.bleedingStacks}</b> carga(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -79,7 +82,10 @@ const ethanSkills = [
     priority: 1,
 
     description() {
-      return `He doesn't need the blade for this part — just leverage and patience. Deals physical damage, Snaring the target for ${this.snareDuration} turn(s).`;
+      return {
+        en: `He doesn't need the blade for this part — just leverage and patience. Deals <b>physical damage</b>, <b>Snaring</b> the target for <b>${this.snareDuration}</b> turn(s).`,
+        pt: `Ele não precisa da lâmina para essa parte — só de alavancagem e paciência. Causa <b>dano físico</b>, <b>Enraizando</b> o alvo por <b>${this.snareDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -124,7 +130,10 @@ const ethanSkills = [
     priority: 0,
 
     description() {
-      return `Every debt gets collected eventually — Ethan just keeps the books. Deals physical damage, striking with an extra ${this.clayBonusPercent}% force if Clay is fighting at his side.`;
+      return {
+        en: `Every debt gets collected eventually — Ethan just keeps the books. Deals <b>physical damage</b>, striking with an extra <b>${this.clayBonusPercent}%</b> force if <b>Clay</b> is fighting at his side.`,
+        pt: `Toda dívida acaba sendo cobrada — Ethan só mantém os registros. Causa <b>dano físico</b>, golpeando com <b>${this.clayBonusPercent}%</b> de força extra se <b>Clay</b> estiver lutando ao seu lado.`,
+      };
     },
 
     targetSpec: ["enemy"],

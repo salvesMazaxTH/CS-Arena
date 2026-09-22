@@ -18,7 +18,10 @@ const harlanGreevesSkills = [
     priority: 0,
 
     description() {
-      return `No flourish, no drama — Harlan just puts the shot where he already decided it goes. Deals physical damage.`;
+      return {
+        en: `No flourish, no drama — Harlan just puts the shot where he already decided it goes. Deals <b>physical damage</b>.`,
+        pt: `Sem floreio, sem drama — Harlan só põe o tiro onde já decidiu que ele vai. Causa <b>dano físico</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -55,7 +58,10 @@ const harlanGreevesSkills = [
     priority: 0,
 
     description() {
-      return `Harlan doesn't aim to kill this one — just to make sure it can't outrun what's coming next. Deals physical damage, reducing the target's Speed by ${this.speedDebuff} for ${this.debuffDuration} turn(s).`;
+      return {
+        en: `Harlan doesn't aim to kill this one — just to make sure it can't outrun what's coming next. Deals <b>physical damage</b>, reducing the target's <b>Speed</b> by <b>${this.speedDebuff}</b> for <b>${this.debuffDuration}</b> turn(s).`,
+        pt: `Harlan não mira para matar este — só para garantir que não vai conseguir fugir do que vem a seguir. Causa <b>dano físico</b>, reduzindo a <b>Velocidade</b> do alvo em <b>${this.speedDebuff}</b> por <b>${this.debuffDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -106,7 +112,10 @@ const harlanGreevesSkills = [
     priority: 0,
 
     description() {
-      return `Harlan slaps a name on the fight and means to collect either way. Deals physical damage and puts the target Wanted — for as long as they're still standing, his CLAIM cashes in on it.`;
+      return {
+        en: `Harlan slaps a name on the fight and means to collect either way. Deals <b>physical damage</b> and puts the target <b>Wanted</b> — for as long as they're still standing, his <b>CLAIM</b> cashes in on it.`,
+        pt: `Harlan cola um nome na briga com intenção de cobrar de qualquer jeito. Causa <b>dano físico</b> e deixa o alvo <b>Procurado</b> — enquanto ele estiver de pé, seu <b>CLAIM</b> cobra a dívida.`,
+      };
     },
 
     targetSpec: ["enemy"],

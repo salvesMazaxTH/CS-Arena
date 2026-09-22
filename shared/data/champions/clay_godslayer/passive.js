@@ -6,7 +6,10 @@ export default {
   piercingPercentage: 50,
 
   description() {
-    return `Everything the divine bloodline took from Clay, it now pays back with interest. He deals ${this.bonusDmgPercent}% bonus damage against enemies of divine or demigod blood, and ${this.piercingPercentage}% of that damage goes straight past their Defense.`;
+    return {
+      en: `Everything the divine bloodline took from Clay, it now pays back with interest. He deals <b>${this.bonusDmgPercent}%</b> bonus damage against enemies of <b>divine</b> or <b>demigod</b> blood, and <b>${this.piercingPercentage}%</b> of that damage goes straight past their <b>Defense</b>.`,
+      pt: `Tudo que a linhagem divina tirou de Clay, ele agora cobra de volta com juros. Ele causa <b>${this.bonusDmgPercent}%</b> de dano bônus contra inimigos de sangue <b>divino</b> ou <b>semideus</b>, e <b>${this.piercingPercentage}%</b> desse dano passa direto pela <b>Defesa</b> deles.`,
+    };
   },
 
   hookScope: {

@@ -21,7 +21,10 @@ const eryonSkills = [
     priority: -1,
 
     description() {
-      return `Sets the Momentum of all allies to their current average +6.`;
+      return {
+        en: `Eryon reads the instant already written for balance and simply enforces it early. Sets the <b>Momentum</b> of all allies to their current average <b>+6</b>.`,
+        pt: `Eryon lê o instante já destinado ao equilíbrio e apenas o antecipa. Define o <b>Momentum</b> de todos os aliados como a média atual do time <b>+6</b>.`,
+      };
     },
 
     targetSpec: ["self"],
@@ -76,7 +79,10 @@ const eryonSkills = [
     bonusMomentum: 7,
 
     description() {
-      return `Drains all Momentum from allies and transfers it to a chosen ally, granting +${this.bonusMomentum} bonus Momentum.`;
+      return {
+        en: `Eryon collapses every ally's instant of momentum into one, and hands the whole ledger to a single name. Drains all <b>Momentum</b> from allies and transfers it to a chosen ally, granting <b>+${this.bonusMomentum}</b> bonus Momentum.`,
+        pt: `Eryon colapsa o instante de momentum de cada aliado em um só, e entrega o registro inteiro a um único nome. Drena todo o <b>Momentum</b> dos aliados e o transfere para um aliado escolhido, concedendo <b>+${this.bonusMomentum}</b> de Momentum bônus.`,
+      };
     },
 
     targetSpec: ["select:ally"],
@@ -136,7 +142,10 @@ const eryonSkills = [
     maxConsume: 84,
 
     description() {
-      return `Consumes all Momentum from the team (max. ${this.maxConsume}) and converts each point into ${this.damagePerUnit} damage, distributed randomly among an enemy and their adjacent allies.`;
+      return {
+        en: `Eryon calls in every instant the team has been owed and lets it detonate exactly where the calculation says it must land. Consumes all <b>Momentum</b> from the team (max. <b>${this.maxConsume}</b>) and converts each point into <b>${this.damagePerUnit}</b> damage, distributed randomly between a random enemy and one enemy adjacent to them (never more than <b>2</b> targets).`,
+        pt: `Eryon cobra cada instante que o time já tinha a receber e o deixa detonar exatamente onde o cálculo diz que deve cair. Consome todo o <b>Momentum</b> do time (máx. <b>${this.maxConsume}</b>) e converte cada ponto em <b>${this.damagePerUnit}</b> de dano, distribuído aleatoriamente entre um inimigo aleatório e um inimigo adjacente a ele (nunca mais que <b>2</b> alvos).`,
+      };
     },
 
     resolve({ user, context, resolver }) {
@@ -182,10 +191,11 @@ const eryonSkills = [
       const primary =
         enemies[Math.floor(Math.random() * enemies.length)];
 
-      const targets = [
-        primary,
-        ...context.getAdjacentChampions(primary),
-      ];
+      const adjacent = context.getAdjacentChampions(primary);
+      const chosenAdjacent =
+        adjacent[Math.floor(Math.random() * adjacent.length)];
+
+      const targets = chosenAdjacent ? [primary, chosenAdjacent] : [primary];
 
       const damageMap = new Map(targets.map((t) => [t.id, 0]));
 

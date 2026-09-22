@@ -33,7 +33,10 @@ const dlorafyaSkills = [
     element: "fire",
 
     description() {
-      return `Brands an enemy with divine fire, dealing Fire magical damage and applying Burning for ${this.burnDuration} turn(s). If the target is <b>already Burning</b>, this attack instead strikes with ${this.bf + this.burningBonusBf} power and refreshes their Burning. As the god of fire, his Burning takes even when the strike deals no damage.`;
+      return {
+        en: `Brands an enemy with divine fire, dealing <b>Fire magical damage</b> and applying <b>Burning</b> for <b>${this.burnDuration}</b> turn(s). If the target is <b>already Burning</b>, this attack instead strikes with <b>${this.bf + this.burningBonusBf}</b> power and refreshes their <b>Burning</b>. As the god of fire, his <b>Burning</b> takes even when the strike deals no damage.`,
+        pt: `Marca um inimigo com fogo divino, causando <b>dano mágico de Fogo</b> e aplicando <b>Queimadura</b> por <b>${this.burnDuration}</b> turno(s). Se o alvo <b>já estiver Queimando</b>, este ataque golpeia com <b>${this.bf + this.burningBonusBf}</b> de poder e renova a <b>Queimadura</b> dele. Como deus do fogo, sua <b>Queimadura</b> pega mesmo quando o golpe não causa dano.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -91,7 +94,10 @@ const dlorafyaSkills = [
     element: "fire",
 
     description() {
-      return `D'Lorafya kindles his own pyre: he deals Fire magical damage to an enemy, applies Burning for ${this.burnDuration} turn(s), then gains <b>+${this.attackBuff} Attack</b> and <b>+${this.defenseBuff} Defense</b> for ${this.buffDuration} turn(s). He gains an additional <b>+${this.attackBuffPerBurning} Attack</b> for each enemy currently Burning. As the god of fire, his Burning takes even when the strike deals no damage.`;
+      return {
+        en: `D'Lorafya kindles his own pyre: he deals <b>Fire magical damage</b> to an enemy, applies <b>Burning</b> for <b>${this.burnDuration}</b> turn(s), then gains <b>+${this.attackBuff} Attack</b> and <b>+${this.defenseBuff} Defense</b> for <b>${this.buffDuration}</b> turn(s). He gains an additional <b>+${this.attackBuffPerBurning} Attack</b> for each enemy currently <b>Burning</b>. As the god of fire, his <b>Burning</b> takes even when the strike deals no damage.`,
+        pt: `D'Lorafya acende a própria pira: causa <b>dano mágico de Fogo</b> a um inimigo, aplica <b>Queimadura</b> por <b>${this.burnDuration}</b> turno(s), e então ganha <b>+${this.attackBuff} de Ataque</b> e <b>+${this.defenseBuff} de Defesa</b> por <b>${this.buffDuration}</b> turno(s). Ele ganha mais <b>+${this.attackBuffPerBurning} de Ataque</b> para cada inimigo <b>Queimando</b> no momento. Como deus do fogo, sua <b>Queimadura</b> pega mesmo quando o golpe não causa dano.`,
+      };
     },
 
     targetSpec: ["enemy", "self"],
@@ -189,7 +195,10 @@ const dlorafyaSkills = [
     element: "fire",
 
     description() {
-      return `A hurricane of divine fire engulfs the arena, dealing Fire magical damage to <b>ALL</b> characters except D'Lorafya himself, who is untouched by it. His <b>allies with Fire Affinity</b> are recognized by the flame and take only ${this.reductedDamagePercent}% damage. Every enemy struck is left Burning for ${this.burnDuration} turn(s), which takes even when the strike deals no damage. This attack cannot be evaded, and no elemental resistance dims the divine fire.`;
+      return {
+        en: `A hurricane of divine fire engulfs the arena, dealing <b>Fire magical damage</b> to <b>ALL</b> characters except D'Lorafya himself, who is untouched by it. His <b>allies with Fire Affinity</b> are recognized by the flame and take only <b>${this.reductedDamagePercent}%</b> damage. Every enemy struck is left <b>Burning</b> for <b>${this.burnDuration}</b> turn(s), which takes even when the strike deals no damage. This attack <b>cannot be evaded</b>, and no elemental resistance dims the divine fire.`,
+        pt: `Um furacão de fogo divino engolfa a arena, causando <b>dano mágico de Fogo</b> a <b>TODOS</b> os personagens, exceto o próprio D'Lorafya, que não é atingido. Seus <b>aliados com Afinidade de Fogo</b> são reconhecidos pela chama e sofrem apenas <b>${this.reductedDamagePercent}%</b> do dano. Todo inimigo atingido fica <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s), o que pega mesmo quando o golpe não causa dano. Este ataque <b>não pode ser esquivado</b>, e nenhuma resistência elemental diminui o fogo divino.`,
+      };
     },
 
     targetSpec: ["all"],
