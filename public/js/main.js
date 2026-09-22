@@ -3,6 +3,8 @@ import {
   CLAIM_DESCRIPTION,
 } from "../../shared/engine/combat/claim.js";
 import { getChampionClassKeys } from "../../shared/data/championClasses.js";
+import { resolveText } from "../../shared/i18n/locale.js";
+import { getLocale, setLocale } from "./i18n/clientLocale.js";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -184,6 +186,7 @@ const musicToggle = document.getElementById("music-toggle");
 const musicVolumeSlider = document.getElementById("music-volume");
 const sfxToggle = document.getElementById("sfx-toggle");
 const sfxVolumeSlider = document.getElementById("sfx-volume");
+const localeSelect = document.getElementById("locale-select");
 
 // ============================================================
 //  GLOBAL EXPORTS (used by AnimsAndLogManager and others)
@@ -282,6 +285,11 @@ sfxToggle.addEventListener("change", (e) => {
 
 sfxVolumeSlider.addEventListener("input", (e) => {
   audioManager.setSFXVolume(parseFloat(e.target.value));
+});
+
+localeSelect.value = getLocale();
+localeSelect.addEventListener("change", (e) => {
+  setLocale(e.target.value);
 });
 
 // ============================================================
@@ -874,7 +882,7 @@ function showEmblemTooltip(target, emblem, requirementStatus = { checks: [] }) {
   tooltip.className = "emblem-tooltip";
   tooltip.innerHTML = `
     <div class="emblem-tooltip-title">${escapeHtml(emblem.name || emblem.key)}</div>
-    <div class="emblem-tooltip-copy">${escapeHtml(typeof emblem.description === "function" ? emblem.description() : emblem.description || "")}</div>
+    <div class="emblem-tooltip-copy">${escapeHtml(resolveText(typeof emblem.description === "function" ? emblem.description() : emblem.description || "", getLocale()))}</div>
     <div class="emblem-tooltip-meta">
       <span class="emblem-tooltip-meta-label">Requirements</span>
       <strong>${renderRequirementCountsMarkup(requirementStatus.checks ?? [])}</strong>

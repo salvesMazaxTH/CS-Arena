@@ -3846,6 +3846,46 @@ body.perspective-team2 .combat-dialog-bubble .team-2 {
   font-weight: 500;
 }
 
+#locale-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background:
+    linear-gradient(135deg, rgba(0, 200, 255, 0.08), rgba(0, 0, 0, 0)),
+    linear-gradient(180deg, #1e232c 0%, #12151b 100%);
+  background-repeat: no-repeat;
+  color: #d6ebff;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid rgba(0, 200, 255, 0.25);
+  border-radius: 8px;
+  padding: 6px 30px 6px 12px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2300c8ff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position:
+    right 12px center,
+    0 0;
+  background-size: 10px 6px, auto;
+}
+
+#locale-select:hover {
+  border-color: rgba(0, 200, 255, 0.45);
+}
+
+#locale-select:focus-visible {
+  outline: none;
+  border-color: rgba(0, 200, 255, 0.6);
+  box-shadow: 0 0 0 3px rgba(0, 200, 255, 0.15);
+}
+
+#locale-select option {
+  background: #12151b;
+  color: #d6ebff;
+}
+
 /* Custom Toggle Switch */
 .switch {
   position: relative;

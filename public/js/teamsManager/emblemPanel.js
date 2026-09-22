@@ -6,6 +6,8 @@ import {
   renderIdentityIconMarkup,
 } from "/shared/ui/identityPalette.js";
 import { MAX_TEAM_EMBLEMS } from "/shared/data/teams/index.js";
+import { resolveText } from "/shared/i18n/locale.js";
+import { getLocale } from "../i18n/clientLocale.js";
 import {
   escapeHtml,
   normalizeChampionClassKeys,
@@ -160,7 +162,7 @@ function showEmblemTooltip(target, emblem, requirementStatus = { checks: [] }) {
   tooltip.className = "emblem-tooltip";
   tooltip.innerHTML = `
     <div class="emblem-tooltip-title">${escapeHtml(emblem.name || emblem.key)}</div>
-    <div class="emblem-tooltip-copy">${escapeHtml(typeof emblem.description === "function" ? emblem.description() : emblem.description || "")}</div>
+    <div class="emblem-tooltip-copy">${escapeHtml(resolveText(typeof emblem.description === "function" ? emblem.description() : emblem.description || "", getLocale()))}</div>
     <div class="emblem-tooltip-meta">
       <span class="emblem-tooltip-meta-label">Requirements</span>
       <strong>${renderRequirementCountsMarkup(requirementStatus.checks ?? [])}</strong>

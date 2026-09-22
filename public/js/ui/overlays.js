@@ -7,6 +7,8 @@ import {
   getClaimPoints,
 } from "../../../shared/engine/combat/claim.js";
 import { GAME_GLOSSARY } from "../gameGlossary.js";
+import { resolveText } from "../../../shared/i18n/locale.js";
+import { getLocale } from "../i18n/clientLocale.js";
 
 /**
  * Hover/touch overlays: skill tooltips (with glossary), the champion portrait
@@ -125,10 +127,12 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
     // rapid flicker loop.
     overlay.style.pointerEvents = "none";
 
-    const rawDesc =
+    const rawDesc = resolveText(
       typeof skill.description === "function"
         ? skill.description(champion)
-        : skill.description || "";
+        : skill.description || "",
+      getLocale(),
+    );
 
     const parsedDesc = renderGlossaryStatusEffects(rawDesc);
     const glossaryKeys = extractGlossaryKeys(rawDesc);
@@ -332,12 +336,12 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
     const passive = champion?.passive;
     const passiveName = passive?.name ? `PASSIVE — ${passive.name}` : "PASSIVE";
 
-    const rawPassiveDesc =
+    const rawPassiveDesc = resolveText(
       typeof passive?.description === "function"
         ? passive.description(champion)
-        : typeof passive?.description === "string"
-          ? passive.description
-          : "";
+        : passive?.description || "",
+      getLocale(),
+    );
 
     const parsedPassiveDesc = renderGlossaryStatusEffects(rawPassiveDesc);
     const passiveGlossaryKeys = extractGlossaryKeys(rawPassiveDesc);
