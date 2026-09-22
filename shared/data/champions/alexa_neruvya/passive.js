@@ -9,9 +9,14 @@ export default {
   allyCritDuration: 2,
 
   description() {
-    return `Alexa Neruvya was celestial once, and was condemned for a crime immortality could not absolve. What was taken from her was never extinguished, only turned around: the edge that made her blows divine now refuses to land, and any critical hit she would deal is unmade before it arrives.
+    return {
+      en: `Alexa Neruvya was celestial once, and was condemned for a crime immortality could not absolve. What was taken from her was never extinguished, only turned around: the edge that made her blows divine now refuses to land, and any critical hit she would deal is unmade before it arrives.
 
-    Whenever she restores HP, her Critical is rolled as the chance for that mending to be a critical hit, restoring ${this.healCritBonus}% bonus HP and sharpening the ally with the highest Critical by +${this.allyCritBuff} Critical for ${this.allyCritDuration} turn(s).`;
+    Whenever she restores <b>HP</b>, her <b>Critical</b> is rolled as the chance for that mending to be a critical hit, restoring <b>${this.healCritBonus}%</b> bonus <b>HP</b> and sharpening the ally with the highest <b>Critical</b> by <b>+${this.allyCritBuff}</b> <b>Critical</b> for <b>${this.allyCritDuration}</b> turn(s).`,
+      pt: `Alexa Neruvya já foi celestial, e foi condenada por um crime que nem a imortalidade poderia absolver. O que lhe foi tirado nunca se extinguiu, apenas se inverteu: o fio que tornava seus golpes divinos agora se recusa a acertar, e qualquer crítico que ela causaria se desfaz antes de chegar.
+
+    Sempre que restaura <b>HP</b>, seu <b>Crítico</b> é sorteado como a chance daquele cuidado ser um acerto crítico, restaurando <b>${this.healCritBonus}%</b> de <b>HP</b> bônus e afiando o aliado com o maior <b>Crítico</b> em <b>+${this.allyCritBuff}</b> de <b>Crítico</b> por <b>${this.allyCritDuration}</b> turno(s).`,
+    };
   },
 
   hookScope: {

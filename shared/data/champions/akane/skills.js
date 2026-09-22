@@ -21,7 +21,10 @@ const akaneSkills = [
     priority: 0,
 
     description() {
-      return `Akane unsheathes a single katana and draws it across the chosen target in one clean violet arc, the blade back at her hip before the cut is even felt, dealing damage and leaving them Bleeding for ${this.bleedingStacks} stack(s).`;
+      return {
+        en: `Akane unsheathes a single katana and draws it across the chosen target in one clean violet arc, the blade back at her hip before the cut is even felt, dealing damage and leaving them <b>Bleeding</b> for <b>${this.bleedingStacks}</b> stack(s).`,
+        pt: `Akane desembainha uma única katana e a arrasta pelo alvo escolhido num único arco violeta limpo, a lâmina de volta ao quadril antes mesmo de o corte ser sentido, causando dano e deixando-o <b>Sangrando</b> por <b>${this.bleedingStacks}</b> stack(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -63,7 +66,10 @@ const akaneSkills = [
     priority: 0,
 
     description() {
-      return `The demon beneath Akane's calm surfaces to feed. For ${this.buffDuration} turn(s) she gains +${this.lifeStealBuff}% Life Steal, every cut she lands flowing back into her as HP. The first blow she lands while the fury lasts is driven home with an extra ${this.edgeDamagePercent}% of her Attack.`;
+      return {
+        en: `The demon beneath Akane's calm surfaces to feed. For <b>${this.buffDuration}</b> turn(s) she gains <b>+${this.lifeStealBuff}%</b> <b>Life Steal</b>, every cut she lands flowing back into her as <b>HP</b>. The first blow she lands while the fury lasts is driven home with an extra <b>${this.edgeDamagePercent}%</b> of her <b>Attack</b>.`,
+        pt: `O demônio sob a calma de Akane emerge para se alimentar. Por <b>${this.buffDuration}</b> turno(s) ela ganha <b>+${this.lifeStealBuff}%</b> de <b>Roubo de Vida</b>, todo corte que ela acerta fluindo de volta como <b>HP</b>. O primeiro golpe que ela acertar enquanto o furor durar é cravado com um extra de <b>${this.edgeDamagePercent}%</b> de seu <b>Ataque</b>.`,
+      };
     },
 
     targetSpec: ["self"],
@@ -124,7 +130,10 @@ const akaneSkills = [
     priority: 0,
 
     description() {
-      return `Akane draws both katanas and falls upon the chosen target in a furious, perfectly synchronized cadence, every cut and thrust flowing into the next like steps of a dance too fast to follow, dealing heavy damage.`;
+      return {
+        en: `Akane draws both katanas and falls upon the chosen target in a furious, perfectly synchronized cadence, every cut and thrust flowing into the next like steps of a dance too fast to follow, dealing heavy damage.`,
+        pt: `Akane saca as duas katanas e desce sobre o alvo escolhido numa cadência furiosa e perfeitamente sincronizada, cada corte e estocada fluindo para o próximo como passos de uma dança rápida demais para acompanhar, causando dano pesado.`,
+      };
     },
 
     targetSpec: ["enemy"],

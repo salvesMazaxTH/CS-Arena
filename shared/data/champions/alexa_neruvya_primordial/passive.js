@@ -8,7 +8,10 @@ export default {
   stunDuration: 2,
 
   description() {
-    return `The moment Alexa Neruvya's draconic shape rises over the arena, the weight of it lands on everyone still standing. Any enemy whose Attack and current HP together do not reach ${this.powerThreshold} is caught in a strange mix of dread and awe, and is left Stunned for ${this.stunDuration} turn(s).`;
+    return {
+      en: `The moment Alexa Neruvya's draconic shape rises over the arena, the weight of it lands on everyone still standing. Any enemy whose <b>Attack</b> and current <b>HP</b> together do not reach <b>${this.powerThreshold}</b> is caught in a strange mix of dread and awe, and is left <b>Stunned</b> for <b>${this.stunDuration}</b> turn(s).`,
+      pt: `No momento em que a forma draconiana de Alexa Neruvya se ergue sobre a arena, o peso dela recai sobre todos que ainda estão de pé. Todo inimigo cujo <b>Ataque</b> e <b>HP</b> atual somados não alcançarem <b>${this.powerThreshold}</b> é tomado por uma estranha mistura de pavor e assombro, ficando <b>Atordoado</b> por <b>${this.stunDuration}</b> turno(s).`,
+    };
   },
 
   // No hookScope here on purpose: onTurnStart is dispatched once per champion

@@ -18,13 +18,22 @@ export default {
   edictDamage: EDICT_DAMAGE,
 
   description() {
-    return `Avarik drives his stone-scaled fist into the ground and decrees what a body is worth: flesh too thin to hold ${this.threshold} HP is too thin to wound anything.
+    return {
+      en: `Avarik drives his stone-scaled fist into the ground and decrees what a body is worth: flesh too thin to hold <b>${this.threshold}</b> <b>HP</b> is too thin to wound anything.
 
-    Every champion on the field whose current HP is below ${this.threshold} deals only ${this.edictDamage} damage per instance of damage, and Avarik answers to his own Edict the moment his HP falls that low.
+    Every champion on the field whose current <b>HP</b> is below <b>${this.threshold}</b> deals only <b>${this.edictDamage}</b> damage per instance of damage, and Avarik answers to his own Edict the moment his <b>HP</b> falls that low.
 
-    What never passes through the Edict's hands is untouched by it: damage over time, damage that echoes from another source, and Absolute Damage all land in full.
+    What never passes through the Edict's hands is untouched by it: damage over time, damage that echoes from another source, and <b>Absolute Damage</b> all land in full.
 
-    The Edict falls silent while his elder brother ${AVARION_NAME} stands on the field, on either side.`;
+    The Edict falls silent while his elder brother ${AVARION_NAME} stands on the field, on either side.`,
+      pt: `Avarik crava seu punho de escamas de pedra no chão e decreta o que um corpo vale: carne fina demais para segurar <b>${this.threshold}</b> de <b>HP</b> é fina demais para ferir qualquer coisa.
+
+    Todo campeão em campo cujo <b>HP</b> atual estiver abaixo de <b>${this.threshold}</b> causa apenas <b>${this.edictDamage}</b> de dano por instância de dano, e Avarik responde ao próprio Édito no instante em que seu <b>HP</b> cai tão baixo.
+
+    O que nunca passa pelas mãos do Édito permanece intocado por ele: dano ao longo do tempo, dano que ecoa de outra fonte, e <b>Dano Absoluto</b> acertam por inteiro.
+
+    O Édito silencia enquanto seu irmão mais velho ${AVARION_NAME} estiver em campo, de qualquer lado.`,
+    };
   },
 
   // Deliberately unscoped: the Edict judges every hit on the field, not only

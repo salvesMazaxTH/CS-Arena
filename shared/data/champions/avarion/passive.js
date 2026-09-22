@@ -18,13 +18,22 @@ export default {
   edictDamage: EDICT_DAMAGE,
 
   description() {
-    return `Avarion lifts his crystal staff, reads the field like a ledger and decrees what a hand is worth: might too poor to reach ${this.threshold} Attack is too poor to be charged for anything.
+    return {
+      en: `Avarion lifts his crystal staff, reads the field like a ledger and decrees what a hand is worth: might too poor to reach <b>${this.threshold}</b> <b>Attack</b> is too poor to be charged for anything.
 
-    Every champion on the field whose current Attack is below ${this.threshold} deals only ${this.edictDamage} damage per instance of damage, and Avarion answers to his own Edict the moment his Attack falls that low.
+    Every champion on the field whose current <b>Attack</b> is below <b>${this.threshold}</b> deals only <b>${this.edictDamage}</b> damage per instance of damage, and Avarion answers to his own Edict the moment his <b>Attack</b> falls that low.
 
-    What never passes through the Edict's hands is untouched by it: damage over time, damage that echoes from another source, and Absolute Damage all land in full.
+    What never passes through the Edict's hands is untouched by it: damage over time, damage that echoes from another source, and <b>Absolute Damage</b> all land in full.
 
-    The Edict falls silent while his younger brother ${AVARIK_NAME} stands on the field, on either side.`;
+    The Edict falls silent while his younger brother ${AVARIK_NAME} stands on the field, on either side.`,
+      pt: `Avarion ergue seu cajado de cristal, lê o campo como um livro-razão e decreta o que uma mão vale: poder pobre demais para alcançar <b>${this.threshold}</b> de <b>Ataque</b> é pobre demais para ser cobrado por qualquer coisa.
+
+    Todo campeão em campo cujo <b>Ataque</b> atual estiver abaixo de <b>${this.threshold}</b> causa apenas <b>${this.edictDamage}</b> de dano por instância de dano, e Avarion responde ao próprio Édito no instante em que seu <b>Ataque</b> cai tão baixo.
+
+    O que nunca passa pelas mãos do Édito permanece intocado por ele: dano ao longo do tempo, dano que ecoa de outra fonte, e <b>Dano Absoluto</b> acertam por inteiro.
+
+    O Édito silencia enquanto seu irmão mais novo ${AVARIK_NAME} estiver em campo, de qualquer lado.`,
+    };
   },
 
   // Deliberately unscoped: the Edict judges every hit on the field, not only

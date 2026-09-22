@@ -10,9 +10,14 @@ export default {
   nextAttackBonusFlat: 20,
 
   description(champion) {
-    return `When Marevóth falls below ${this.hpThreshold * 100}% HP, he removes 1 negative status effect from himself and restores ${this.healPercent * 100}% of his Max HP. This can only occur once per turn.
+    return {
+      en: `When Marevóth falls below <b>${this.hpThreshold * 100}%</b> <b>HP</b>, he removes <b>1</b> negative status effect from himself and restores <b>${this.healPercent * 100}%</b> of his <b>Max HP</b>. This can only occur once per turn.
 
-    When a negative status effect is removed this way, Marevóth's next attack lands whole as Absolute Damage, carrying a further ${this.nextAttackBonusFlat} bonus damage on top.`;
+    When a negative status effect is removed this way, Marevóth's next attack lands whole as <b>Absolute Damage</b>, carrying a further <b>${this.nextAttackBonusFlat}</b> bonus damage on top.`,
+      pt: `Quando Marevóth cai abaixo de <b>${this.hpThreshold * 100}%</b> de <b>HP</b>, ele remove <b>1</b> efeito de status negativo de si mesmo e restaura <b>${this.healPercent * 100}%</b> de seu <b>HP Máximo</b>. Isso só pode ocorrer uma vez por turno.
+
+    Quando um efeito de status negativo é removido dessa forma, o próximo ataque de Marevóth acerta inteiro como <b>Dano Absoluto</b>, carregando ainda um bônus de <b>${this.nextAttackBonusFlat}</b> de dano.`,
+    };
   },
 
   hookScope: {

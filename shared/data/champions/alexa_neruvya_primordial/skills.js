@@ -24,7 +24,10 @@ const alexaNeruvyaPrimordialSkills = [
     element: "water",
 
     description() {
-      return `Alexa Neruvya's draconic jaw closes on the chosen target like the last thing a current ever carries, dealing Water physical damage. What the bite tears away does not knit back together: the target's Defense is reduced by ${this.defenseShred} for ${this.shredDuration} turn(s).`;
+      return {
+        en: `Alexa Neruvya's draconic jaw closes on the chosen target like the last thing a current ever carries, dealing <b>Water</b> physical damage. What the bite tears away does not knit back together: the target's <b>Defense</b> is reduced by <b>${this.defenseShred}</b> for <b>${this.shredDuration}</b> turn(s).`,
+        pt: `A mandíbula draconiana de Alexa Neruvya se fecha sobre o alvo escolhido como a última coisa que uma correnteza ainda carrega, causando dano físico de <b>Água</b>. O que a mordida arranca não se refaz: a <b>Defesa</b> do alvo é reduzida em <b>${this.defenseShred}</b> por <b>${this.shredDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -82,7 +85,10 @@ const alexaNeruvyaPrimordialSkills = [
     priority: 0,
 
     description() {
-      return `Alexa Neruvya calls down the full judgment of the drowned age on the chosen target, dealing devastating Water magical damage that ignores ${this.piercingPercentage}% of their Defense. No elemental resistance holds the drowned age back.`;
+      return {
+        en: `Alexa Neruvya calls down the full judgment of the drowned age on the chosen target, dealing devastating <b>Water</b> magical damage that ignores <b>${this.piercingPercentage}%</b> of their <b>Defense</b>. No elemental resistance holds the drowned age back.`,
+        pt: `Alexa Neruvya convoca o julgamento pleno da era afogada sobre o alvo escolhido, causando devastador dano mágico de <b>Água</b> que ignora <b>${this.piercingPercentage}%</b> da <b>Defesa</b> dele. Nenhuma resistência elemental detém a era afogada.`,
+      };
     },
 
     targetSpec: ["enemy"],

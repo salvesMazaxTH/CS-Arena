@@ -48,7 +48,10 @@ const arenMarevothSkills = [
     positiveEffectsStripped: 2,
 
     description() {
-      return `Deals magical damage to the chosen target and applies Tide to them. When it hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} bonus damage and strip up to ${this.positiveEffectsStripped} positive status effects or stat buffs from them.`;
+      return {
+        en: `Deals magical damage to the chosen target and applies <b>Tide</b> to them. When it hits a target with <b>${this.tideThreshold}</b> or more <b>Tide</b>, consume all <b>Tide</b> on that target to deal <b>${this.tideBonusDamage}</b> bonus damage and strip up to <b>${this.positiveEffectsStripped}</b> positive status effects or stat buffs from them.`,
+        pt: `Causa dano mágico ao alvo escolhido e aplica <b>Maré</b> nele. Quando acerta um alvo com <b>${this.tideThreshold}</b> ou mais de <b>Maré</b>, consome toda a <b>Maré</b> daquele alvo para causar <b>${this.tideBonusDamage}</b> de dano bônus e remover até <b>${this.positiveEffectsStripped}</b> efeitos de status positivos ou bônus de atributo dele.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -109,7 +112,10 @@ const arenMarevothSkills = [
     bonusClaimPoints: 1,
 
     description() {
-      return `Gain Spellshield. The next time this champion uses CLAIM, restore ${this.healPercent}% of his Max HP and gain ${this.bonusClaimPoints} additional point.`;
+      return {
+        en: `Gain <b>Spellshield</b>. The next time this champion uses <b>CLAIM</b>, restore <b>${this.healPercent}%</b> of his <b>Max HP</b> and gain <b>${this.bonusClaimPoints}</b> additional point.`,
+        pt: `Ganha <b>Escudo Mágico</b>. Na próxima vez que este campeão usar <b>CLAIM</b>, restaura <b>${this.healPercent}%</b> de seu <b>HP Máximo</b> e ganha <b>${this.bonusClaimPoints}</b> ponto adicional.`,
+      };
     },
 
     targetSpec: ["self"],
@@ -188,7 +194,10 @@ const arenMarevothSkills = [
     element: "water",
 
     description() {
-      return `Deals physical damage to the chosen target. When this ability hits a target with ${this.tideThreshold} or more Tide, consume all Tide on that target to deal ${this.tideBonusDamage} bonus damage and strip up to ${this.positiveEffectsStripped} positive status effects or stat buffs from them.\n\nThe next time this champion uses CLAIM while possessing ${this.claimPointsRequired} or more Value Points, increase his Max HP by ${this.maxHPBonusPercent}% permanently. Max: +${this.maxHPBonusPercent * this.maxHPBonusStacks}%.`;
+      return {
+        en: `Deals physical damage to the chosen target. When this ability hits a target with <b>${this.tideThreshold}</b> or more <b>Tide</b>, consume all <b>Tide</b> on that target to deal <b>${this.tideBonusDamage}</b> bonus damage and strip up to <b>${this.positiveEffectsStripped}</b> positive status effects or stat buffs from them.\n\nThe next time this champion uses <b>CLAIM</b> while possessing <b>${this.claimPointsRequired}</b> or more Value Points, increase his <b>Max HP</b> by <b>${this.maxHPBonusPercent}%</b> permanently. Max: <b>+${this.maxHPBonusPercent * this.maxHPBonusStacks}%</b>.`,
+        pt: `Causa dano físico ao alvo escolhido. Quando esta habilidade acerta um alvo com <b>${this.tideThreshold}</b> ou mais de <b>Maré</b>, consome toda a <b>Maré</b> daquele alvo para causar <b>${this.tideBonusDamage}</b> de dano bônus e remover até <b>${this.positiveEffectsStripped}</b> efeitos de status positivos ou bônus de atributo dele.\n\nNa próxima vez que este campeão usar <b>CLAIM</b> possuindo <b>${this.claimPointsRequired}</b> ou mais Pontos de Valor, aumenta seu <b>HP Máximo</b> em <b>${this.maxHPBonusPercent}%</b> permanentemente. Máximo: <b>+${this.maxHPBonusPercent * this.maxHPBonusStacks}%</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],

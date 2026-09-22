@@ -22,7 +22,10 @@ const alexaNeruvyaSkills = [
     element: "water",
 
     description() {
-      return `The Exiled One lifts two fingers and the sea lifts with them, because it has never once been asked twice. The water comes up around the chosen ally in slow coils and closes over everything it finds open, restoring ${this.healAmount} HP.`;
+      return {
+        en: `The Exiled One lifts two fingers and the sea lifts with them, because it has never once been asked twice. The water comes up around the chosen ally in slow coils and closes over everything it finds open, restoring <b>${this.healAmount}</b> <b>HP</b>.`,
+        pt: `A Exilada ergue dois dedos e o mar se ergue com eles, pois nunca precisou ser pedido duas vezes. A água sobe em espirais lentas ao redor do aliado escolhido e se fecha sobre tudo o que encontra aberto, restaurando <b>${this.healAmount}</b> de <b>HP</b>.`,
+      };
     },
 
     targetSpec: ["select:ally"],
@@ -58,7 +61,10 @@ const alexaNeruvyaSkills = [
     element: "water",
 
     description() {
-      return `The Sovereign of every water outside the body speaks over the chosen ally, and what does not belong to them is named aloud and dismissed. The tide runs through and comes out carrying it, restoring ${this.healAmount} HP and lifting away every negative status effect they are under.`;
+      return {
+        en: `The Sovereign of every water outside the body speaks over the chosen ally, and what does not belong to them is named aloud and dismissed. The tide runs through and comes out carrying it, restoring <b>${this.healAmount}</b> <b>HP</b> and lifting away every negative status effect they are under.`,
+        pt: `A Soberana de toda água fora do corpo fala sobre o aliado escolhido, e o que não lhe pertence é nomeado em voz alta e dispensado. A maré atravessa e retorna carregando aquilo, restaurando <b>${this.healAmount}</b> de <b>HP</b> e removendo todo efeito de status negativo sob o qual ele estiver.`,
+      };
     },
 
     targetSpec: ["select:ally"],
@@ -114,9 +120,14 @@ const alexaNeruvyaSkills = [
     transformDuration: 2,
 
     description() {
-      return `Alexa Neruvya answers one foe first, calling home through them every drop she has ever spent mending an ally, dealing Water magical damage that ignores ${this.piercingPercentage}% of their Defense. The tide that returns from that strike does not disperse: it carries ${this.healPercentOfDamage}% of the damage dealt — never less than ${this.minHealPerAlly} — back to her and every active ally, restoring HP, and leaves ${this.momentumGainPercentOfDamage}% of it behind in her as Momentum.
+      return {
+        en: `Alexa Neruvya answers one foe first, calling home through them every drop she has ever spent mending an ally, dealing <b>Water</b> magical damage that ignores <b>${this.piercingPercentage}%</b> of their <b>Defense</b>. The tide that returns from that strike does not disperse: it carries <b>${this.healPercentOfDamage}%</b> of the damage dealt — never less than <b>${this.minHealPerAlly}</b> — back to her and every active ally, restoring <b>HP</b>, and leaves <b>${this.momentumGainPercentOfDamage}%</b> of it behind in her as <b>Momentum</b>.
 
-      Only then does she stop holding the shape she has been wearing. What surfaces is a blue dragon with the whole ocean hanging off it, her <b>Primordial Form</b>, for ${this.transformDuration} turn(s), replacing her skills, her passive and her stats.`;
+      Only then does she stop holding the shape she has been wearing. What surfaces is a blue dragon with the whole ocean hanging off it, her <b>Primordial Form</b>, for <b>${this.transformDuration}</b> turn(s), replacing her skills, her passive and her stats.`,
+        pt: `Alexa Neruvya responde primeiro a um inimigo, chamando de volta por meio dele cada gota que já gastou curando um aliado, causando dano mágico de <b>Água</b> que ignora <b>${this.piercingPercentage}%</b> da <b>Defesa</b> dele. A maré que retorna daquele golpe não se dispersa: ela carrega <b>${this.healPercentOfDamage}%</b> do dano causado — nunca menos que <b>${this.minHealPerAlly}</b> — de volta para ela e todo aliado ativo, restaurando <b>HP</b>, e deixa <b>${this.momentumGainPercentOfDamage}%</b> disso nela mesma como <b>Momentum</b>.
+
+      Só então ela para de segurar a forma que vinha usando. O que emerge é um dragão azul com o oceano inteiro pendurado nele, sua <b>Forma Primordial</b>, por <b>${this.transformDuration}</b> turno(s), substituindo suas habilidades, sua passiva e seus atributos.`,
+      };
     },
 
     targetSpec: ["enemy"],

@@ -25,7 +25,10 @@ const avarikSkills = [
     element: "earth",
 
     description() {
-      return `Avarik closes one stone-scaled fist around the chosen target and weighs them against the whole mountain he carries, dealing ${this.maxHPPercent}% of his Max HP as Absolute Damage.`;
+      return {
+        en: `Avarik closes one stone-scaled fist around the chosen target and weighs them against the whole mountain he carries, dealing <b>${this.maxHPPercent}%</b> of his <b>Max HP</b> as <b>Absolute Damage</b>.`,
+        pt: `Avarik fecha um punho de escamas de pedra ao redor do alvo escolhido e o pesa contra a montanha inteira que carrega, causando <b>${this.maxHPPercent}%</b> de seu <b>HP Máximo</b> como <b>Dano Absoluto</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -60,9 +63,14 @@ const avarikSkills = [
     element: "earth",
 
     description() {
-      return `Avarik tears a slab of bedrock loose and swallows it whole, restoring ${this.healPercent}% of his Max HP.
+      return {
+        en: `Avarik tears a slab of bedrock loose and swallows it whole, restoring <b>${this.healPercent}%</b> of his <b>Max HP</b>.
 
-      His appetite then carries over to the ledger: the next time this champion uses CLAIM, he seizes ${this.bonusClaimPoints} additional points.`;
+      His appetite then carries over to the ledger: the next time this champion uses <b>CLAIM</b>, he seizes <b>${this.bonusClaimPoints}</b> additional points.`,
+        pt: `Avarik arranca uma laje de rocha e a engole inteira, restaurando <b>${this.healPercent}%</b> de seu <b>HP Máximo</b>.
+
+      Seu apetite então se estende ao registro: na próxima vez que este campeão usar <b>CLAIM</b>, ele arrebata <b>${this.bonusClaimPoints}</b> pontos adicionais.`,
+      };
     },
 
     targetSpec: ["self"],
@@ -134,9 +142,14 @@ const avarikSkills = [
     element: "earth",
 
     description() {
-      return `Avarik hurls everything he has hoarded — the plates of his own body and the mountain buried under them — at the chosen target, dealing heavy Earth physical damage.
+      return {
+        en: `Avarik hurls everything he has hoarded — the plates of his own body and the mountain buried under them — at the chosen target, dealing heavy <b>Earth</b> physical damage.
 
-      The hoard lands with him: the target also takes bonus Absolute Damage equal to ${this.currentHPPercent}% of Avarik's current HP.`;
+      The hoard lands with him: the target also takes bonus <b>Absolute Damage</b> equal to <b>${this.currentHPPercent}%</b> of Avarik's current <b>HP</b>.`,
+        pt: `Avarik arremessa tudo o que acumulou — as placas do próprio corpo e a montanha soterrada sob elas — contra o alvo escolhido, causando pesado dano físico de <b>Terra</b>.
+
+      O acúmulo cai junto com ele: o alvo também sofre <b>Dano Absoluto</b> bônus igual a <b>${this.currentHPPercent}%</b> do <b>HP</b> atual de Avarik.`,
+      };
     },
 
     targetSpec: ["enemy"],
