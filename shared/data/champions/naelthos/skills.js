@@ -200,10 +200,10 @@ const naelthosSkills = [
       return {
         en: `Naelthos opens the depths of the Primordial Sea and lets them rise through him: his <b>Max HP</b> swells by up to <b>${this.hpFactor}%</b> of his base HP, and the same surge floods his current HP. Each invocation swells him less than the last.
 
-      For <b>${this.effectDuration}</b> turn(s), the Rising Sea carries every blow he lands: his attacks gain +<b>${this.bonusPerStack}</b> bonus damage for every <b>${this.hpPerStack}</b> current HP, up to <b>${this.maxBonus}</b>.`,
+        For <b>${this.effectDuration}</b> turn(s), the Rising Sea carries every blow he lands: his attacks gain +<b>${this.bonusPerStack}</b> bonus damage for every <b>${this.hpPerStack}</b> current HP, up to <b>${this.maxBonus}</b>.`,
         pt: `Naelthos abre as profundezas do Mar Primordial e as deixa subir através dele: seu <b>HP Máximo</b> aumenta em até <b>${this.hpFactor}%</b> de seu HP base, e a mesma torrente inunda seu HP atual. Cada invocação o incha menos que a anterior.
 
-      Por <b>${this.effectDuration}</b> turno(s), o Mar Crescente carrega todo golpe que ele desfere: seus ataques ganham +<b>${this.bonusPerStack}</b> de dano bônus para cada <b>${this.hpPerStack}</b> de HP atual, até um máximo de <b>${this.maxBonus}</b>.`,
+        Por <b>${this.effectDuration}</b> turno(s), o Mar Crescente carrega todo golpe que ele desfere: seus ataques ganham +<b>${this.bonusPerStack}</b> de dano bônus para cada <b>${this.hpPerStack}</b> de HP atual, até um máximo de <b>${this.maxBonus}</b>.`,
       };
     },
     targetSpec: ["self"],

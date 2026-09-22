@@ -93,7 +93,7 @@ const victoriaSkills = [
     description() {
       return {
         en:`Victoria drags a burning knuckle across the chosen target, dealing physical damage. If they are not Burning yet, the ember catches and leaves them Burning for <b>${this.burnDuration}</b> turn(s); if they already burn, the fire digs in instead and her next hit on them pierces <b>${flashpoint.brandPiercing}%</b> of their <b>Defense</b>. No taunt can pull the blow aside.`,
-        pt: `Victoria arrasta os nós de seus dedos em chamas pelo alvo escolhido, causando dano físico. Se ele não estiver <b>Queimando</b>, a brasa o alcança, deixando-o <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s); se ele já estiver queimando, a chama cava mais fundo em vez disso e o próximo golpe dela no alvo se torna <b>perfurante</b> (<b>${flashpoint.brandPiercing}%</b> de <b>perfuração</b> da <b>Defesa</b>). Nenhuma provocação pode desviar o golpe.`
+        pt: `Victoria arrasta os nós de seus dedos em chamas pelo alvo escolhido, causando dano físico. Se ele não estiver <b>Queimando</b>, a brasa o alcança, deixando-o <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s); se ele já estiver queimando, a chama se aprofunda, e o próximo golpe dela contra esse alvo se torna <b>perfurante</b> (ignorando <b>${flashpoint.brandPiercing}%</b> da <b>Defesa</b>). Nenhuma provocação pode desviar o golpe.`
       };
     },
 

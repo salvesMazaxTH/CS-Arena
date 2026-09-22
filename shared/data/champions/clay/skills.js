@@ -25,7 +25,10 @@ const claySkills = [
     priority: 0,
 
     description() {
-      return `Clay swings his whole weight into a single blow, no finesse, just force. Deals physical damage.`;
+      return {
+        en: `Clay swings his whole weight into a single blow, no finesse, just force. Deals physical damage.`,
+        pt: `Clay lança todo o peso do corpo em um único golpe — sem sutileza, sem técnica, apenas força bruta. Causa dano físico.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -59,7 +62,10 @@ const claySkills = [
     priority: 0,
 
     description() {
-      return `The worse off Clay already is, the less he holds back — the wound itself becomes a weapon. Deals physical damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost, and leaves the target Bleeding for ${this.bleedingStacks} stack(s).`;
+      return {
+        en: `The worse off Clay already is, the less he holds back — the wound itself becomes a weapon. Deals physical damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost, and leaves the target Bleeding for ${this.bleedingStacks} stack(s).`,
+        pt: `Quanto mais ferido Clay estiver, menos ele se contém — a própria ferida se transforma em arma. Causa dano físico, acrescentando até ${this.missingHpScalingPercent}% de seu Ataque, escalado conforme a quantidade de Vida que já perdeu, e deixa o alvo Sangrando por ${this.bleedingStacks} stack(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -118,7 +124,10 @@ const claySkills = [
     ],
 
     description() {
-      return `Clay throws everything he has at the chosen target and pays for it out of his own body. Deals physical damage, plus Absolute recoil damage equal to ${this.recoilPercentOfMaxHP}% of his Max HP whether the blow lands or not — which may be exactly what drives him over the edge.`;
+      return {
+        en: `Clay throws everything he has at the chosen target and pays for it out of his own body. Deals physical damage, plus Absolute recoil damage equal to ${this.recoilPercentOfMaxHP}% of his Max HP whether the blow lands or not — which may be exactly what drives him over the edge.`,
+        pt: `Clay despeja tudo o que tem sobre o alvo escolhido e paga o preço com o próprio corpo. Causa dano físico, além de dano de recuo Absoluto equivalente a ${this.recoilPercentOfMaxHP}% de sua Vida Máxima, acerte o golpe ou não — o que talvez seja justamente o bastante para empurrá-lo para além do limite.`,
+      };
     },
 
     targetSpec: ["enemy"],

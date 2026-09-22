@@ -6,7 +6,7 @@ export default {
   name: "Old Grudge",
 
   bonusDmgPercent: 25,
-  ascensionThreshold: 0.30,
+  ascensionThreshold: 0.3,
   grudgeChance: 51,
   divineBloodBonus: 15,
   absolutePenalty: 15,
@@ -14,7 +14,14 @@ export default {
   corruptsInto: "lord_of_the_shadowflame",
 
   description() {
-    return `Clay doesn't care how the bloodline is dressed up — the whip felt the same either way. Every hit he lands deals ${this.bonusDmgPercent}% bonus damage against enemies of divine or demigod blood. The first time he is driven to ${this.ascensionThreshold * 100}% HP or below, what he becomes depends on how he got there: his own hand finally opening the wound makes him rise as <b>Clay, Godslayer</b>; an enemy forcing it out of him instead answers with something older and hungrier. A blow that would put him down before any of that happens finds the grudge in the way: his own hand always drags him back to the brink, an enemy's only ${this.grudgeChance}% of the time — ${this.divineBloodBonus}% likelier if divine or demigod blood swung it, ${this.absolutePenalty}% less if the damage was Absolute, and only once.`;
+    return {
+      en: `Clay doesn't care how the bloodline is dressed up — the whip felt the same either way. Every hit he lands deals ${this.bonusDmgPercent}% bonus damage against enemies of divine or demigod blood. The first time he is driven to ${this.ascensionThreshold * 100}% <b>HP</b> or below, what he becomes depends on how he got there: his own hand finally opening the wound makes him rise as <b>Clay, Godslayer</b>; an enemy forcing it out of him instead answers with something older and hungrier. A blow that would put him down before any of that happens finds the grudge in the way: his own hand always drags him back to the brink, an enemy's only ${this.grudgeChance}% of the time — ${this.divineBloodBonus}% likelier if divine or demigod blood swung it, ${this.absolutePenalty}% less if the damage was <b>Absolute</b>, and only once.`,
+      pt: `Clay não se importa com a forma que a linhagem se veste — o chicote sempre teve o mesmo peso. Cada golpe que desfere causa ${this.bonusDmgPercent}% de dano adicional contra inimigos de sangue divino ou semidivino.
+
+      A primeira vez que for levado a ${this.ascensionThreshold * 100}% de <b>HP</b> ou menos, aquilo em que se tornará dependerá de como chegou até ali: se for sua própria mão a finalmente abrir a ferida, ele se erguerá como <b>Clay, Godslayer</b>; se for um inimigo a arrancar-lhe esse sangue, a resposta será algo mais antigo — e mais faminto.
+
+      Um golpe que o derrubaria antes que qualquer uma dessas coisas aconteça encontra o rancor no caminho: sua própria mão sempre o arrasta de volta à beira do abismo; a de um inimigo, apenas ${this.grudgeChance}% das vezes — ${this.divineBloodBonus}% mais provável se tiver sido desferido por sangue divino ou semidivino, ${this.absolutePenalty}% menos se o dano for <b>Absoluto</b>, e apenas uma vez.`,
+    };
   },
 
   hookScope: {
@@ -64,10 +71,7 @@ export default {
     });
 
     return {
-      damageCap: Math.max(
-        owner.HP + regularShieldTotal(owner) - survivalHP,
-        0,
-      ),
+      damageCap: Math.max(owner.HP + regularShieldTotal(owner) - survivalHP, 0),
       log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} refuses to go down with the debt unpaid.`,
     };
   },
