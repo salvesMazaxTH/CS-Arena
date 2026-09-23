@@ -237,7 +237,7 @@ function createContext({ allChampions, turn, sourceId }) {
   return {
     currentTurn: turn,
     statModifierSrcId: sourceId ?? null,
-    healSourceId: sourceId ?? null,
+    actionSourceId: sourceId ?? null,
     isDot: false,
     aliveChampions: allChampions,
     logs: [],

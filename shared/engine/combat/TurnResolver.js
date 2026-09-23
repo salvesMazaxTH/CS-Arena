@@ -1182,8 +1182,9 @@ export class TurnResolver {
       repeatActionRequest: null,
       flags: {},
 
-      healSourceId: sourceId,
       statModifierSrcId: sourceId,
+      // Rebound to the hook's owner while a reactive hook runs.
+      actionSourceId: sourceId,
 
       requestChampionMutation(request) {
         if (!request || typeof request !== "object") return null;
@@ -1362,7 +1363,7 @@ export class TurnResolver {
 
         const sourceChamp =
           combat.activeChampions.get(sourceId) ||
-          combat.activeChampions.get(this.healSourceId) ||
+          combat.activeChampions.get(this.actionSourceId) ||
           target;
 
         target?.addHealingReceived?.(value);
@@ -1396,7 +1397,7 @@ export class TurnResolver {
 
         const sourceChamp =
           combat.activeChampions.get(sourceId) ||
-          combat.activeChampions.get(this.healSourceId) ||
+          combat.activeChampions.get(this.actionSourceId) ||
           target;
 
         target?.addHealingReceived?.(value);
@@ -1478,7 +1479,7 @@ export class TurnResolver {
           type: "shield",
           shieldType: type,
           targetId: target.id,
-          sourceId: sourceId || this.healSourceId || target.id,
+          sourceId: sourceId || this.actionSourceId || target.id,
           amount: value,
           targetState: target.serializeVisualState(),
           preDialogs: [],
@@ -1499,7 +1500,7 @@ export class TurnResolver {
           seq: this.visual.seq++,
           type: eventType,
           targetId: target.id,
-          sourceId: sourceId || this.healSourceId || target.id,
+          sourceId: sourceId || this.actionSourceId || target.id,
           amount: Math.abs(value),
           resourceType: "momentum",
           phase,

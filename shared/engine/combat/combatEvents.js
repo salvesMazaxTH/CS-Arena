@@ -53,38 +53,45 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
       hookSources.push(...champ.runtime.hookEffects);
     }
 
-    for (const source of hookSources) {
-      const hook = source[eventName];
-      if (typeof hook !== "function") continue;
+    const ctx = payload?.context;
+    const rebindsActionSource = ctx != null && "actionSourceId" in ctx;
+    const previousActionSourceId = rebindsActionSource
+      ? ctx.actionSourceId
+      : null;
 
-      if (debugMode) {
-        // console.log(`➡️ Triggering ${champ.name} (${source.key || "passive"})`);
-      }
+    if (rebindsActionSource) ctx.actionSourceId = champ.id;
 
-      const scope = source.hookScope?.[eventName];
+    try {
+      for (const source of hookSources) {
+        const hook = source[eventName];
+        if (typeof hook !== "function") continue;
 
-      if (scope && payload[scope] !== champ) continue;
-      if (typeof canRun === "function" && !canRun(eventName, champ, source)) {
-        continue;
-      }
+        const scope = source.hookScope?.[eventName];
 
-      try {
-        // console.log(`[HOOK CALL] ${champ.name} → ${source.key}.${eventName}`);
-        const res = hook.call(source, {
-          ...payload,
-          owner: champ,
-          emitter: emitCombatEvent,
-        });
-
-        if (res) {
-          results.push(res);
+        if (scope && payload[scope] !== champ) continue;
+        if (typeof canRun === "function" && !canRun(eventName, champ, source)) {
+          continue;
         }
-      } catch (err) {
-        console.error(
-          `[HOOK ERROR] ${champ.name} → ${source.key || "passive"}.${eventName}`,
-          err,
-        );
+
+        try {
+          const res = hook.call(source, {
+            ...payload,
+            owner: champ,
+            emitter: emitCombatEvent,
+          });
+
+          if (res) {
+            results.push(res);
+          }
+        } catch (err) {
+          console.error(
+            `[HOOK ERROR] ${champ.name} → ${source.key || "passive"}.${eventName}`,
+            err,
+          );
+        }
       }
+    } finally {
+      if (rebindsActionSource) ctx.actionSourceId = previousActionSourceId;
     }
   }
 

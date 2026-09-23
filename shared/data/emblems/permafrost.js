@@ -61,7 +61,9 @@ export const permafrost = {
     const shield = Math.floor(actualDmg * (this.iceHitShieldPercent / 100));
     if (shield <= 0) return;
 
-    defender.addShield(shield, 0, context, "regular");
+    defender.addShield(shield, 0, context, "regular", {
+      sourceId: defender.id,
+    });
 
     return {
       log: `<b>[Emblem — Permafrost]</b> the Ice that struck ${defender.name} freezes into a ${shield} HP Shield.`,
