@@ -7,9 +7,14 @@ export default {
   chillDuration: 2,
   freezeDuration: 2,
   description() {
-    return `The cold around Nythera answers for her. Whenever she is struck by a contact source (Absolute Damage excluded), the aggressor is left ❄️ Chilled for ${this.chillDuration} turn(s).
+    return {
+      en: `The cold around Nythera answers for her. Whenever she is struck by a <b>contact</b> source (<b>Absolute Damage</b> excluded), the aggressor is left ❄️ <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).
 
-    If they are already Chilled, the frost closes in and they become Frozen for ${this.freezeDuration} turn(s) instead.`;
+      If they are already <b>Chilled</b>, the frost closes in and they become <b>Frozen</b> for <b>${this.freezeDuration}</b> turn(s) instead.`,
+      pt: `O frio ao redor de Nythera responde por ela. Sempre que é atingida por uma fonte de <b>contato</b> (<b>dano Absoluto</b> excluído), o agressor fica ❄️ <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).
+
+      Se já estiver <b>Gelado</b>, o gelo se fecha sobre ele e passa a ficar <b>Congelado</b> por <b>${this.freezeDuration}</b> turno(s) em vez disso.`,
+    };
   },
 
   hookScope: {

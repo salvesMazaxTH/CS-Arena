@@ -28,9 +28,14 @@ const reyskaroneSkills = [
 
     priority: 1,
     description() {
-      return `Reyskarone spills ${this.hpSacrificePercent}% of his own Max HP — never falling below 1 HP — then strikes the chosen target for magical damage. A strike that connects brands them with the Tithe and locks their wounds shut with Heal Block for ${this.titheDuration} turn(s).
+      return {
+        en: `Reyskarone spills <b>${this.hpSacrificePercent}%</b> of his own Max HP — never falling below 1 HP — then strikes the chosen target for magical damage. A strike that connects brands them with the <b>Tithe</b> and locks their wounds shut with <b>Heal Block</b> for <b>${this.titheDuration}</b> turn(s).
 
-      While the brand holds, every ally who strikes the marked target restores ${this.titheHeal} HP and deals +${this.titheBonusDamage} bonus damage.`;
+        While the brand holds, every ally who strikes the marked target restores <b>${this.titheHeal}</b> HP and deals <b>+${this.titheBonusDamage}</b> bonus damage.`,
+        pt: `Reyskarone derrama <b>${this.hpSacrificePercent}%</b> de seu próprio HP Máximo — nunca caindo abaixo de 1 HP — e então golpeia o alvo escolhido com dano mágico. Um golpe que acerta o marca com o <b>Tributo</b> e trava suas feridas com <b>Bloqueio de Cura</b> por <b>${this.titheDuration}</b> turno(s).
+
+        Enquanto a marca se mantém, todo aliado que golpear o alvo marcado restaura <b>${this.titheHeal}</b> HP e causa <b>+${this.titheBonusDamage}</b> de dano bônus.`,
+      };
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -46,13 +51,19 @@ const reyskaroneSkills = [
 
       if (hpSacrifice <= 0) {
         context.registerDialog({
-          message: `But it failed.`,
+          message: {
+            en: `But it failed.`,
+            pt: `Mas falhou.`,
+          },
           sourceId: user.id,
           targetId: user.id,
         });
 
         return {
-          log: `${formatChampionName(user)} had no blood left to spill. <b>Blood Tithe</b> failed.`,
+          log: {
+            en: `${formatChampionName(user)} had no blood left to spill. <b>Blood Tithe</b> failed.`,
+            pt: `${formatChampionName(user)} não tinha mais sangue para derramar. <b>Tributo de Sangue</b> falhou.`,
+          },
         };
       }
 
@@ -70,7 +81,10 @@ const reyskaroneSkills = [
       });
 
       context.registerDialog({
-        message: `${formatChampionName(user)} spills his own blood for the <b>Tithe</b>!`,
+        message: {
+          en: `${formatChampionName(user)} spills his own blood for the <b>Tithe</b>!`,
+          pt: `${formatChampionName(user)} derrama seu próprio sangue pelo <b>Tributo</b>!`,
+        },
         sourceId: user.id,
         targetId: user.id,
         duration: 1000,
@@ -141,7 +155,10 @@ const reyskaroneSkills = [
 
         if (branded) {
           context.registerDialog({
-            message: `${formatChampionName(enemy)} is branded with the <b>Tithe</b>!`,
+            message: {
+              en: `${formatChampionName(enemy)} is branded with the <b>Tithe</b>!`,
+              pt: `${formatChampionName(enemy)} é marcado com o <b>Tributo</b>!`,
+            },
             sourceId: user.id,
             targetId: enemy.id,
             duration: 1000,
@@ -173,7 +190,10 @@ const reyskaroneSkills = [
 
     priority: 4,
     description() {
-      return `Reyskarone pours his own blood into the chosen ally, granting them +${this.atkBuff} Attack and +${this.lifeStealBuff}% LifeSteal for ${this.buffDuration} turn(s).`;
+      return {
+        en: `Reyskarone pours his own blood into the chosen ally, granting them <b>+${this.atkBuff}</b> Attack and <b>+${this.lifeStealBuff}%</b> LifeSteal for <b>${this.buffDuration}</b> turn(s).`,
+        pt: `Reyskarone verte seu próprio sangue no aliado escolhido, concedendo <b>+${this.atkBuff}</b> de Ataque e <b>+${this.lifeStealBuff}%</b> de Roubo de Vida por <b>${this.buffDuration}</b> turno(s).`,
+      };
     },
     targetSpec: ["select:ally"],
     resolve({ user, targets, context = {} }) {
@@ -198,8 +218,14 @@ const reyskaroneSkills = [
       return {
         log:
           user === ally
-            ? `${formatChampionName(user)} strengthens himself with Martial Transfusion.`
-            : `${formatChampionName(user)} strengthens ${formatChampionName(ally)} with Martial Transfusion.`,
+            ? {
+                en: `${formatChampionName(user)} strengthens himself with Martial Transfusion.`,
+                pt: `${formatChampionName(user)} se fortalece com a Transfusão Marcial.`,
+              }
+            : {
+                en: `${formatChampionName(user)} strengthens ${formatChampionName(ally)} with Martial Transfusion.`,
+                pt: `${formatChampionName(user)} fortalece ${formatChampionName(ally)} com a Transfusão Marcial.`,
+              },
       };
     },
   },
@@ -219,7 +245,10 @@ const reyskaroneSkills = [
 
     priority: 5,
     description() {
-      return `Reyskarone seals a pact in blood with the chosen ally: for ${this.buffDuration} turn(s), they gain +${this.atkBuffPercent}% Attack and +${this.lifeStealBuff}% LifeSteal.`;
+      return {
+        en: `Reyskarone seals a pact in blood with the chosen ally: for <b>${this.buffDuration}</b> turn(s), they gain <b>+${this.atkBuffPercent}%</b> Attack and <b>+${this.lifeStealBuff}%</b> LifeSteal.`,
+        pt: `Reyskarone sela um pacto de sangue com o aliado escolhido: por <b>${this.buffDuration}</b> turno(s), ele ganha <b>+${this.atkBuffPercent}%</b> de Ataque e <b>+${this.lifeStealBuff}%</b> de Roubo de Vida.`,
+      };
     },
     targetSpec: ["select:ally"],
     resolve({ user, targets, context = {} }) {
@@ -245,8 +274,14 @@ const reyskaroneSkills = [
       return {
         log:
           user === ally
-            ? `${formatChampionName(user)} seals a Crimson Pact in his own blood.`
-            : `${formatChampionName(user)} seals a Crimson Pact with ${formatChampionName(ally)}.`,
+            ? {
+                en: `${formatChampionName(user)} seals a Crimson Pact in his own blood.`,
+                pt: `${formatChampionName(user)} sela um Pacto Carmesim com seu próprio sangue.`,
+              }
+            : {
+                en: `${formatChampionName(user)} seals a Crimson Pact with ${formatChampionName(ally)}.`,
+                pt: `${formatChampionName(user)} sela um Pacto Carmesim com ${formatChampionName(ally)}.`,
+              },
       };
     },
   },

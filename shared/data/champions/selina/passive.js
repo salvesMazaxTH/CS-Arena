@@ -19,7 +19,10 @@ export default {
   riposteDamage: 30,
 
   description() {
-    return `Selina was raised in gilded halls, but her light bends first toward whoever is closest to breaking. Whenever an ally uses CLAIM, herself included, her light answers on its own — granting ${this.claimShieldAmount} Shield that decays by ${this.claimShieldDecay} per turn. Whenever an ally still carrying one of her Shields is struck, Selina answers the attacker with ${this.riposteDamage} <b>Absolute Damage</b>, once per turn.`;
+    return {
+      en: `Selina was raised in gilded halls, but her light bends first toward whoever is closest to breaking. Whenever an ally uses <b>CLAIM</b>, herself included, her light answers on its own — granting <b>${this.claimShieldAmount}</b> Shield that decays by <b>${this.claimShieldDecay}</b> per turn. Whenever an ally still carrying one of her Shields is struck, Selina answers the attacker with <b>${this.riposteDamage}</b> <b>Absolute Damage</b>, once per turn.`,
+      pt: `Selina cresceu em salões dourados, mas sua luz se volta primeiro a quem está mais perto de quebrar. Sempre que um aliado usa <b>CLAIM</b>, ela incluída, sua luz responde sozinha — concedendo <b>${this.claimShieldAmount}</b> de Escudo que decai <b>${this.claimShieldDecay}</b> por turno. Sempre que um aliado ainda carregando um de seus Escudos é atingido, Selina responde ao atacante com <b>${this.riposteDamage}</b> de <b>Dano Absoluto</b>, uma vez por turno.`,
+    };
   },
 
   onActionResolved({ owner, actionSource, skill, context }) {
@@ -35,7 +38,10 @@ export default {
     );
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(actionSource)}'s CLAIM draws Selina's light — ${this.claimShieldAmount} Shield granted.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(actionSource)}'s <b>CLAIM</b> draws Selina's light — <b>${this.claimShieldAmount}</b> Shield granted.`,
+        pt: `<b>[Passivo — ${this.name}]</b> O <b>CLAIM</b> de ${formatChampionName(actionSource)} atrai a luz de Selina — <b>${this.claimShieldAmount}</b> de Escudo concedido.`,
+      },
     };
   },
 
@@ -64,7 +70,10 @@ export default {
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} answers for ${formatChampionName(defender)} — her blade opens ${formatChampionName(attacker)} for ${this.riposteDamage}.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} answers for ${formatChampionName(defender)} — her blade opens ${formatChampionName(attacker)} for <b>${this.riposteDamage}</b>.`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} responde por ${formatChampionName(defender)} — sua lâmina fere ${formatChampionName(attacker)} em <b>${this.riposteDamage}</b>.`,
+      },
     };
   },
 };

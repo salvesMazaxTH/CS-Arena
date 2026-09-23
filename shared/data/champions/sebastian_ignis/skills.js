@@ -28,7 +28,10 @@ const sebastianIgnisSkills = [
     priority: 1,
 
     description() {
-      return `Sebastian barely raises the blade, a flick of flame that costs him nothing he wasn't already carrying. Deals physical damage, plus ${this.apathyBonusFlat} bonus damage per Apathy stack spent, and always sets the chosen enemy Burning for ${this.burnDuration} turn(s).`;
+      return {
+        en: `Sebastian barely raises the blade, a flick of flame that costs him nothing he wasn't already carrying. Deals <b>physical damage</b>, plus <b>${this.apathyBonusFlat}</b> bonus damage per <b>Apathy</b> stack spent, and always sets the chosen enemy <b>Burning</b> for <b>${this.burnDuration}</b> turn(s).`,
+        pt: `Sebastian mal ergue a lâmina, um lampejo de chama que não lhe custa nada que ele já não estivesse carregando. Causa <b>dano físico</b>, mais <b>${this.apathyBonusFlat}</b> de dano bônus por carga de <b>Apatia</b> gasta, e sempre deixa o inimigo escolhido <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -61,13 +64,19 @@ const sebastianIgnisSkills = [
 
       if (stacks > 0) {
         context.registerDialog({
-          message: `${formatChampionName(user)} finally moves, and everything he saved goes into the swing.`,
+          message: {
+            en: `${formatChampionName(user)} finally moves, and everything he saved goes into the swing.`,
+            pt: `${formatChampionName(user)} finalmente se move, e tudo o que economizou vai para o golpe.`,
+          },
           sourceId: user.id,
           targetId: user.id,
         });
 
         arr.push({
-          log: `${formatChampionName(user)} finally moves — ${stacks} Apathy stack(s) spent.`,
+          log: {
+            en: `${formatChampionName(user)} finally moves — ${stacks} Apathy stack(s) spent.`,
+            pt: `${formatChampionName(user)} finalmente se move — ${stacks} carga(s) de Apatia gasta(s).`,
+          },
         });
       }
 
@@ -87,7 +96,10 @@ const sebastianIgnisSkills = [
     priority: 3,
 
     description() {
-      return `Sebastian plays a few bars on the harp, the same ones he always plays, and doesn't bother learning a new one for the occasion — it works anyway. Every ally takes ${this.damageReductionPercent}% less damage for ${this.duration} turn(s), plus ${this.perStackPercent}% for every Apathy stack spent.`;
+      return {
+        en: `Sebastian plays a few bars on the harp, the same ones he always plays, and doesn't bother learning a new one for the occasion — it works anyway. Every ally takes <b>${this.damageReductionPercent}%</b> less damage for <b>${this.duration}</b> turn(s), plus <b>${this.perStackPercent}%</b> for every <b>Apathy</b> stack spent.`,
+        pt: `Sebastian toca alguns compassos na harpa, os mesmos de sempre, e nem se dá ao trabalho de aprender um novo para a ocasião — funciona do mesmo jeito. Todo aliado recebe <b>${this.damageReductionPercent}%</b> menos dano por <b>${this.duration}</b> turno(s), mais <b>${this.perStackPercent}%</b> para cada carga de <b>Apatia</b> gasta.`,
+      };
     },
 
     targetSpec: ["self"],
@@ -114,14 +126,20 @@ const sebastianIgnisSkills = [
 
       if (stacks > 0) {
         context.registerDialog({
-          message: `${formatChampionName(user)} lets the whole bank go into the harp.`,
+          message: {
+            en: `${formatChampionName(user)} lets the whole bank go into the harp.`,
+            pt: `${formatChampionName(user)} deixa todo o banco ir para a harpa.`,
+          },
           sourceId: user.id,
           targetId: user.id,
         });
       }
 
       return {
-        log: `${formatChampionName(user)} plays <b>A Song He Already Knows</b> — the whole team takes ${reduction}% less damage for a while.`,
+        log: {
+          en: `${formatChampionName(user)} plays <b>A Song He Already Knows</b> — the whole team takes ${reduction}% less damage for a while.`,
+          pt: `${formatChampionName(user)} toca <b>Uma Canção Que Ele Já Conhece</b> — o time inteiro recebe ${reduction}% menos dano por um tempo.`,
+        },
       };
     },
   },
@@ -142,7 +160,10 @@ const sebastianIgnisSkills = [
     priority: 0,
 
     description() {
-      return `Every stack of neglect Sebastian's been banking comes due at once, and for a moment he commits completely — the ground around the chosen enemy goes up with them. Deals physical damage, plus ${this.apathyBonusPercent}% more per Apathy stack spent, to them and whoever stands beside them, always setting each one Burning for ${this.burnDuration} turn(s).`;
+      return {
+        en: `Every stack of neglect Sebastian's been banking comes due at once, and for a moment he commits completely — the ground around the chosen enemy goes up with them. Deals <b>physical damage</b>, plus <b>${this.apathyBonusPercent}%</b> more per <b>Apathy</b> stack spent, to them and whoever stands beside them, always setting each one <b>Burning</b> for <b>${this.burnDuration}</b> turn(s).`,
+        pt: `Toda carga de descaso que Sebastian vinha acumulando cobra sua conta de uma vez, e por um instante ele se entrega por completo — o chão ao redor do inimigo escolhido explode junto com ele. Causa <b>dano físico</b>, mais <b>${this.apathyBonusPercent}%</b> a mais por carga de <b>Apatia</b> gasta, nele e em quem estiver ao seu lado, sempre deixando cada um <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -183,13 +204,19 @@ const sebastianIgnisSkills = [
 
       if (stacks > 0) {
         context.registerDialog({
-          message: `${formatChampionName(user)} finally commits — everything he banked comes due at once.`,
+          message: {
+            en: `${formatChampionName(user)} finally commits — everything he banked comes due at once.`,
+            pt: `${formatChampionName(user)} finalmente se entrega — tudo o que acumulou cobra sua conta de uma vez.`,
+          },
           sourceId: user.id,
           targetId: user.id,
         });
 
         results.push({
-          log: `${formatChampionName(user)} finally commits — ${stacks} Apathy stack(s) spent.`,
+          log: {
+            en: `${formatChampionName(user)} finally commits — ${stacks} Apathy stack(s) spent.`,
+            pt: `${formatChampionName(user)} finalmente se entrega — ${stacks} carga(s) de Apatia gasta(s).`,
+          },
         });
       }
 

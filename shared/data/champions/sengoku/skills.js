@@ -18,7 +18,10 @@ const sengokuSkills = [
     contact: true,
     priority: 0,
     description() {
-      return `Sengoku brings down a blow heavy with old fury, dealing physical damage to the chosen target.`;
+      return {
+        en: `Sengoku brings down a blow heavy with old fury, dealing <b>physical damage</b> to the chosen target.`,
+        pt: `Sengoku desfere um golpe carregado de fúria antiga, causando <b>dano físico</b> no alvo escolhido.`,
+      };
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context }) {
@@ -47,7 +50,10 @@ const sengokuSkills = [
     element: "fire",
 
     description() {
-      return `Sengoku fires from his hand a bolt of dragonfire that burns straight through armor, dealing Fire magical damage to the chosen target with ${this.piercingPercentage}% piercing.`;
+      return {
+        en: `Sengoku fires from his hand a bolt of dragonfire that burns straight through armor, dealing <b>Fire magical damage</b> to the chosen target with <b>${this.piercingPercentage}%</b> piercing.`,
+        pt: `Sengoku dispara da mão um raio de fogo dracônico que queima direto através da armadura, causando <b>dano mágico de Fogo</b> no alvo escolhido com <b>${this.piercingPercentage}%</b> de perfuração.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -77,7 +83,10 @@ const sengokuSkills = [
     momentumCost: 55,
     priority: 0,
     description() {
-      return `Sengoku sheds the centuries and unfolds into his primordial draconic shape for ${this.duration} turn(s), replacing his skills, his passive and his stats.`;
+      return {
+        en: `Sengoku sheds the centuries and unfolds into his primordial draconic shape for <b>${this.duration}</b> turn(s), replacing his skills, his passive and his stats.`,
+        pt: `Sengoku se desfaz dos séculos e se revela em sua forma draconiana primordial por <b>${this.duration}</b> turno(s), substituindo suas habilidades, sua passiva e seus atributos.`,
+      };
     },
     targetSpec: ["self"],
     resolve({ user, context = {} }) {
@@ -91,7 +100,10 @@ const sengokuSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} awakens his <b>Primordial Form</b> for ${this.duration} turn(s)!`,
+        log: {
+          en: `${formatChampionName(user)} awakens his <b>Primordial Form</b> for ${this.duration} turn(s)!`,
+          pt: `${formatChampionName(user)} desperta sua <b>Forma Primordial</b> por ${this.duration} turno(s)!`,
+        },
       };
     },
   },

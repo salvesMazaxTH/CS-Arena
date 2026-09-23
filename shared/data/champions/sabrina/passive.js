@@ -19,7 +19,10 @@ export default {
   ],
 
   description() {
-    return `Whenever Sabrina deals Water damage to a Chilled enemy, the water crystallizes into Ice, dealing an additional Ice hit equal to ${this.iceBonusRatio * 100}% of the Water damage dealt.`;
+    return {
+      en: `Whenever Sabrina deals <b>Water damage</b> to a <b>Chilled</b> enemy, the water crystallizes into <b>Ice</b>, dealing an additional Ice hit equal to <b>${this.iceBonusRatio * 100}%</b> of the Water damage dealt.`,
+      pt: `Sempre que Sabrina causa <b>dano de Água</b> em um inimigo <b>Gelado</b>, a água se cristaliza em <b>Gelo</b>, causando um golpe adicional de Gelo igual a <b>${this.iceBonusRatio * 100}%</b> do dano de Água causado.`,
+    };
   },
 
   hookScope: {
@@ -36,7 +39,10 @@ export default {
     const iceDamage = damage * this.iceBonusRatio;
 
     context?.registerDialog?.({
-      message: `<b>[Passive — ${this.name}]</b> The water around ${formatChampionName(defender)} crystallizes into Ice!`,
+      message: {
+        en: `<b>[Passive — ${this.name}]</b> The water around ${formatChampionName(defender)} crystallizes into Ice!`,
+        pt: `<b>[Passivo — ${this.name}]</b> A água ao redor de ${formatChampionName(defender)} se cristaliza em Gelo!`,
+      },
       sourceId: owner.id,
       targetId: defender.id,
     });

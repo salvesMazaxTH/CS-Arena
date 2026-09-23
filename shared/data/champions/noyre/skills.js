@@ -20,9 +20,14 @@ const noyreSkills = [
     momentumDrain: 8,
     highMomentumThreshold: 50,
     description() {
-      return `Noyre reaches into the energy the chosen target has been hoarding and bends it out of shape, dealing magical damage and stripping ${this.momentumDrain} units of Momentum.
+      return {
+        en: `Noyre reaches into the energy the chosen target has been hoarding and bends it out of shape, dealing <b>magical damage</b> and stripping <b>${this.momentumDrain}</b> units of <b>Momentum</b>.
 
-      The fuller the reserve, the worse the distortion: against a target holding ${this.highMomentumThreshold} Momentum or more, the damage is increased by ${this.dmgBonus}%.`;
+        The fuller the reserve, the worse the distortion: against a target holding <b>${this.highMomentumThreshold}</b> Momentum or more, the damage is increased by <b>${this.dmgBonus}%</b>.`,
+        pt: `Noyre agarra a energia que o alvo escolhido vem acumulando e a retorce até deformá-la, causando <b>dano mágico</b> e removendo <b>${this.momentumDrain}</b> unidades de <b>Momentum</b>.
+
+        Quanto mais cheia a reserva, pior a distorção: contra um alvo com <b>${this.highMomentumThreshold}</b> ou mais de Momentum, o dano é aumentado em <b>${this.dmgBonus}%</b>.`,
+      };
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context, resolver }) {
@@ -56,8 +61,14 @@ const noyreSkills = [
 
       return {
         log: hasHighMomentum
-          ? `${user.name} distorts the energy of ${target.name} (damage amplified).`
-          : `${user.name} distorts the energy of ${target.name}.`,
+          ? {
+              en: `${user.name} distorts the energy of ${target.name} (damage amplified).`,
+              pt: `${user.name} distorce a energia de ${target.name} (dano amplificado).`,
+            }
+          : {
+              en: `${user.name} distorts the energy of ${target.name}.`,
+              pt: `${user.name} distorce a energia de ${target.name}.`,
+            },
       };
     },
   },
@@ -68,9 +79,14 @@ const noyreSkills = [
     duration: 2,
     allyShieldPercent: 10,
     description() {
-      return `Noyre spreads the silence he carries across the field. For ${this.duration} turn(s), no other champion can gain Momentum at all — every gain is unmade the instant it happens.
+      return {
+        en: `Noyre spreads the silence he carries across the field. For <b>${this.duration}</b> turn(s), no other champion can gain <b>Momentum</b> at all — every gain is unmade the instant it happens.
 
-      His allies are given something back for what the silence takes: each time one of them has a Momentum gain nullified, they receive a Shield equal to ${this.allyShieldPercent}% of their Max HP.`;
+        His allies are given something back for what the silence takes: each time one of them has a Momentum gain nullified, they receive a <b>Shield</b> equal to <b>${this.allyShieldPercent}%</b> of their Max HP.`,
+        pt: `Noyre espalha o silêncio que carrega pelo campo. Por <b>${this.duration}</b> turno(s), nenhum outro campeão pode ganhar <b>Momentum</b> — todo ganho é desfeito no instante em que acontece.
+
+        Seus aliados recebem algo em troca do que o silêncio toma: cada vez que um deles tem um ganho de Momentum anulado, recebe um <b>Escudo</b> igual a <b>${this.allyShieldPercent}%</b> do seu HP Máximo.`,
+      };
     },
     targetSpec: ["all"],
     resolve({ user, targets, context }) {
@@ -115,19 +131,28 @@ const noyreSkills = [
               owner.addShield(shieldAmount, 0, context);
 
               return {
-                log: `${formatChampionName(owner)} had their Momentum gain nullified and received ${shieldAmount} Shield!`,
+                log: {
+                  en: `${formatChampionName(owner)} had their Momentum gain nullified and received <b>${shieldAmount}</b> Shield!`,
+                  pt: `${formatChampionName(owner)} teve seu ganho de Momentum anulado e recebeu <b>${shieldAmount}</b> de Escudo!`,
+                },
               };
             }
 
             return {
-              log: `${formatChampionName(owner)} had their Momentum gain nullified!`,
+              log: {
+                en: `${formatChampionName(owner)} had their Momentum gain nullified!`,
+                pt: `${formatChampionName(owner)} teve seu ganho de Momentum anulado!`,
+              },
             };
           },
         }, context);
       }
 
       return {
-        log: `${user.name} nullified the Momentum gain of every other champion for ${this.duration} turn(s)!`,
+        log: {
+          en: `${user.name} nullified the Momentum gain of every other champion for <b>${this.duration}</b> turn(s)!`,
+          pt: `${user.name} anulou o ganho de Momentum de todo outro campeão por <b>${this.duration}</b> turno(s)!`,
+        },
       };
     },
   },
@@ -144,9 +169,14 @@ const noyreSkills = [
     priority: 0,
 
     description() {
-      return `Noyre lets every reserve on the field fall in on itself. All enemies take piercing magical damage (${this.piercingPercentage}% piercing) equal to ${this.damageRatioPerMomentum * 100}% of their Max HP for each unit of Momentum they currently hold, up to ${this.damageCapPercent}% of their Max HP.
+      return {
+        en: `Noyre lets every reserve on the field fall in on itself. All enemies take <b>piercing magical damage</b> (<b>${this.piercingPercentage}%</b> piercing) equal to <b>${this.damageRatioPerMomentum * 100}%</b> of their Max HP for each unit of <b>Momentum</b> they currently hold, up to <b>${this.damageCapPercent}%</b> of their Max HP.
 
-      What is left of the collapse drains away: each target loses two thirds of their Momentum, never less than ${this.minMomentumDrain} units — or everything they still have, if it is less than that.`;
+        What is left of the collapse drains away: each target loses two thirds of their <b>Momentum</b>, never less than <b>${this.minMomentumDrain}</b> units — or everything they still have, if it is less than that.`,
+        pt: `Noyre faz cada reserva do campo desabar sobre si mesma. Todos os inimigos sofrem <b>dano mágico perfurante</b> (<b>${this.piercingPercentage}%</b> de perfuração) igual a <b>${this.damageRatioPerMomentum * 100}%</b> do seu HP Máximo para cada unidade de <b>Momentum</b> que possuem no momento, até um teto de <b>${this.damageCapPercent}%</b> do HP Máximo.
+
+        O que resta do colapso escoa embora: cada alvo perde dois terços do seu <b>Momentum</b>, nunca menos que <b>${this.minMomentumDrain}</b> unidades — ou tudo o que ainda tiver, se for menos que isso.`,
+      };
     },
 
     targetSpec: ["all:enemy"],
@@ -208,7 +238,10 @@ const noyreSkills = [
       }
 
       context.registerDialog({
-        message: `<b>[Entropic Collapse]</b> The gathered energy falls violently in on itself.`,
+        message: {
+          en: `<b>[Entropic Collapse]</b> The gathered energy falls violently in on itself.`,
+          pt: `<b>[Colapso Entrópico]</b> A energia acumulada desaba violentamente sobre si mesma.`,
+        },
         sourceId: user.id,
       });
 

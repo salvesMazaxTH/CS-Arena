@@ -27,7 +27,10 @@ const naelysSkills = [
     snareDuration: 1,
 
     description() {
-      return `Naelys restores ${this.selfHealAmount} HP to herself and ${this.allyHealAmount} HP to an ally, dealing damage to the enemy and dragging them under, Snared for ${this.snareDuration} turn(s).`;
+      return {
+        en: `Naelys restores <b>${this.selfHealAmount}</b> HP to herself and <b>${this.allyHealAmount}</b> HP to an ally, dealing damage to the enemy and dragging them under, <b>Snared</b> for <b>${this.snareDuration}</b> turn(s).`,
+        pt: `Naelys restaura <b>${this.selfHealAmount}</b> HP para si mesma e <b>${this.allyHealAmount}</b> HP para um aliado, causando dano ao inimigo e puxando-o para o fundo, deixando-o <b>Enredado</b> por <b>${this.snareDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy", { type: "select:ally", excludesSelf: true }],
@@ -75,7 +78,10 @@ const naelysSkills = [
       }).execute();
 
       results.push({
-        log: `${formatChampionName(user)} restores ${selfHealed} HP.`,
+        log: {
+          en: `${formatChampionName(user)} restores <b>${selfHealed}</b> HP.`,
+          pt: `${formatChampionName(user)} restaura <b>${selfHealed}</b> de HP.`,
+        },
       });
 
       if (ally) {
@@ -87,7 +93,10 @@ const naelysSkills = [
         }).execute();
 
         results.push({
-          log: `${formatChampionName(ally)} restores ${allyHealed} HP.`,
+          log: {
+            en: `${formatChampionName(ally)} restores <b>${allyHealed}</b> HP.`,
+            pt: `${formatChampionName(ally)} restaura <b>${allyHealed}</b> de HP.`,
+          },
         });
       }
 
@@ -117,7 +126,10 @@ const naelysSkills = [
     ],
 
     description() {
-      return `Naelys assumes a maritime stance until the end of the next turn, gaining ${this.damageReduction}% damage reduction. The first time she is hit each turn, she counterattacks the attacker for ${this.counterDamage} Absolute Damage.`;
+      return {
+        en: `Naelys assumes a maritime stance until the end of the next turn, gaining <b>${this.damageReduction}%</b> damage reduction. The first time she is hit each turn, she counterattacks the attacker for <b>${this.counterDamage}</b> <b>Absolute Damage</b>.`,
+        pt: `Naelys se fecha como as marés até o fim do próximo turno, ganhando <b>${this.damageReduction}%</b> de redução de dano. Na primeira vez em que é atingida a cada turno, contra-ataca o agressor causando <b>${this.counterDamage}</b> de <b>dano Absoluto</b>.`,
+      };
     },
 
     targetSpec: ["self"],
@@ -156,17 +168,27 @@ const naelysSkills = [
             }),
 
             dialog: {
-              message: `${formatChampionName(
-                owner,
-              )} counterattacked with the force of the Raging Sea!`,
+              message: {
+                en: `${formatChampionName(
+                  owner,
+                )} counterattacked with the force of the Raging Sea!`,
+                pt: `${formatChampionName(
+                  owner,
+                )} contra-atacou com a força do Mar Bravio!`,
+              },
               duration: 1000,
             },
           });
 
           return {
-            log: `🌊 ${formatChampionName(
-              owner,
-            )} counterattacks with the force of the sea!`,
+            log: {
+              en: `🌊 ${formatChampionName(
+                owner,
+              )} counterattacks with the force of the sea!`,
+              pt: `🌊 ${formatChampionName(
+                owner,
+              )} contra-ataca com a força do mar!`,
+            },
           };
         },
       };
@@ -181,9 +203,14 @@ const naelysSkills = [
       });
 
       return {
-        log: `${formatChampionName(
-          user,
-        )} assumes the stance of the Raging Sea!`,
+        log: {
+          en: `${formatChampionName(
+            user,
+          )} assumes the stance of the Raging Sea!`,
+          pt: `${formatChampionName(
+            user,
+          )} assume a postura do Mar Bravio!`,
+        },
       };
     },
   },
@@ -204,7 +231,10 @@ const naelysSkills = [
     momentumCost: 40,
 
     description() {
-      return `For ${this.duration} turns, Naelys deals bonus damage based on her lost HP (up to +${this.maxBonus}).`;
+      return {
+        en: `For <b>${this.duration}</b> turns, Naelys deals bonus damage based on her lost HP (up to <b>+${this.maxBonus}</b>).`,
+        pt: `Por <b>${this.duration}</b> turnos, Naelys causa dano bônus com base no HP que perdeu (até <b>+${this.maxBonus}</b>).`,
+      };
     },
 
     targetSpec: ["self"],
@@ -228,7 +258,10 @@ const naelysSkills = [
       });
 
       return {
-        log: `🌊 ${formatChampionName(user)} unleashes Overflow!`,
+        log: {
+          en: `🌊 ${formatChampionName(user)} unleashes <b>${this.name}</b>!`,
+          pt: `🌊 ${formatChampionName(user)} desencadeia <b>${this.name}</b>!`,
+        },
       };
     },
   },

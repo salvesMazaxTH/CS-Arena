@@ -32,7 +32,10 @@ const neraqaSkills = [
     element: "water",
 
     description() {
-      return `Neraqa lifts the sea and drops it on the enemy line at once, dealing Water magical damage to every enemy.`;
+      return {
+        en: `Neraqa lifts the sea and drops it on the enemy line at once, dealing <b>Water magical damage</b> to <b>every enemy</b>.`,
+        pt: `Neraqa ergue o mar e o derruba sobre a linha inimiga de uma vez, causando <b>dano mágico de Água</b> a <b>todos os inimigos</b>.`,
+      };
     },
 
     targetSpec: ["all:enemy"],
@@ -74,7 +77,10 @@ const neraqaSkills = [
     element: "water",
 
     description() {
-      return `Neraqa lets the water rise cold around every enemy's feet, dealing Water magical damage to all of them and dragging their Speed down by ${this.speedReductionPercent}% for ${this.speedReductionDuration} turn(s).`;
+      return {
+        en: `Neraqa lets the water rise cold around every enemy's feet, dealing <b>Water magical damage</b> to all of them and dragging their <b>Speed</b> down by <b>${this.speedReductionPercent}%</b> for <b>${this.speedReductionDuration}</b> turn(s).`,
+        pt: `Neraqa deixa a água subir fria ao redor dos pés de cada inimigo, causando <b>dano mágico de Água</b> a todos eles e reduzindo sua <b>Velocidade</b> em <b>${this.speedReductionPercent}%</b> por <b>${this.speedReductionDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["all:enemy"],
@@ -130,7 +136,10 @@ const neraqaSkills = [
     hitVfx: "undertow",
 
     description() {
-      return `Neraqa draws the whole sea back from the field. Nothing happens where the enemies stand — not this turn, not the next — but at the close of that next turn the water she pulled away comes down on every enemy it left, dealing Water magical damage equal to ${this.bf}% of her Attack and ignoring ${this.piercingPercentage}% of their Defense: the weight of the sea does not care about armour, and it is the heaviest blow she can land. An enemy who dies or leaves before then is not there when it falls, and if Neraqa herself is gone the wave never returns.`;
+      return {
+        en: `Neraqa draws the whole sea back from the field. Nothing happens where the enemies stand — not this turn, not the next — but at the close of that next turn the water she pulled away comes down on every enemy it left, dealing <b>Water magical damage</b> equal to <b>${this.bf}%</b> of her Attack and ignoring <b>${this.piercingPercentage}%</b> of their Defense: the weight of the sea does not care about armour, and it is the heaviest blow she can land. An enemy who dies or leaves before then is not there when it falls, and if Neraqa herself is gone the wave never returns.`,
+        pt: `Neraqa retira o mar inteiro do campo. Nada acontece onde os inimigos estão — nem neste turno, nem no próximo — mas ao fim daquele próximo turno a água que ela retirou desaba sobre todo inimigo que ali ficou, causando <b>dano mágico de Água</b> igual a <b>${this.bf}%</b> do seu Ataque e ignorando <b>${this.piercingPercentage}%</b> da Defesa deles: o peso do mar não se importa com armadura, e é o golpe mais pesado que ela pode desferir. Um inimigo que morre ou sai antes disso não está lá quando o golpe cai, e se a própria Neraqa estiver fora de combate a onda nunca retorna.`,
+      };
     },
 
     targetSpec: ["all:enemy"],
@@ -187,15 +196,19 @@ const neraqaSkills = [
               const targetName = formatChampionName(owner);
 
               context.registerDialog?.({
-                message: `🌊 The Undertow falls on ${targetName}!`,
+                message: {
+                  en: `🌊 The Undertow falls on ${targetName}!`,
+                  pt: `🌊 O Refluxo cai sobre ${targetName}!`,
+                },
                 sourceId: neraqa.id,
                 targetId: owner.id,
               });
 
               return {
-                log: main?.log
-                  ? `<b>The Undertow</b> falls on ${targetName}.\n${main.log}`
-                  : `<b>The Undertow</b> falls on ${targetName}.`,
+                log: {
+                  en: `<b>The Undertow</b> falls on ${targetName}.`,
+                  pt: `<b>O Refluxo</b> cai sobre ${targetName}.`,
+                },
               };
             },
           },
@@ -206,13 +219,19 @@ const neraqaSkills = [
       }
 
       context.registerDialog?.({
-        message: `🌊 Neraqa pulls the whole sea back — The Undertow is set on ${marked.length} enem${marked.length === 1 ? "y" : "ies"}.`,
+        message: {
+          en: `🌊 Neraqa pulls the whole sea back — The Undertow is set on ${marked.length} enem${marked.length === 1 ? "y" : "ies"}.`,
+          pt: `🌊 Neraqa retira o mar inteiro — O Refluxo é fixado em ${marked.length} inimigo${marked.length === 1 ? "" : "s"}.`,
+        },
         sourceId: user.id,
         targetId: user.id,
       });
 
       return {
-        log: `${formatChampionName(user)} pulls the sea back from ${marked.join(", ")} — <b>The Undertow</b> is set.`,
+        log: {
+          en: `${formatChampionName(user)} pulls the sea back from ${marked.join(", ")} — <b>The Undertow</b> is set.`,
+          pt: `${formatChampionName(user)} retira o mar de ${marked.join(", ")} — <b>O Refluxo</b> é fixado.`,
+        },
       };
     },
   },

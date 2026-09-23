@@ -28,7 +28,7 @@ const brunoSkills = [
     description() {
       return {
         en: `Bruno hurls a shard of hard frost at the chosen target, dealing <b>Ice</b> magical damage and leaving them <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).`,
-        pt: `Bruno arremessa um caco de gelo duro no alvo escolhido, causando dano mágico de <b>Gelo</b> e deixando-o <b>Resfriado</b> por <b>${this.chillDuration}</b> turno(s).`,
+        pt: `Bruno arremessa um caco de gelo duro no alvo escolhido, causando dano mágico de <b>Gelo</b> e deixando-o <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).`,
       };
     },
 
@@ -111,7 +111,7 @@ const brunoSkills = [
     description() {
       return {
         en: `Bruno pulls the whole winter down onto the chosen target, dealing devastating <b>Ice</b> magical damage and leaving them <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).`,
-        pt: `Bruno traz todo o inverno sobre o alvo escolhido, causando devastador dano mágico de <b>Gelo</b> e deixando-o <b>Resfriado</b> por <b>${this.chillDuration}</b> turno(s).`,
+        pt: `Bruno traz todo o inverno sobre o alvo escolhido, causando devastador dano mágico de <b>Gelo</b> e deixando-o <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).`,
       };
     },
 

@@ -8,7 +8,10 @@ export default {
   name: "The Calm She Returns To",
 
   description() {
-    return `Neraqa is the stillness the sea is always falling back toward. At the end of any turn in which she acted, every negative status effect on her is washed off — but a wound that hooked deeper than the surface (a curse, a mark, a lingering punishment) is not. What the tide takes it carries out: at the start of the next turn each washed-off effect is laid on an enemy instead, at half its remaining duration, and never on a foe its element could never have touched.`;
+    return {
+      en: `Neraqa is the stillness the sea is always falling back toward. At the end of any turn in which she acted, every negative status effect on her is washed off — but a wound that hooked deeper than the surface (a curse, a mark, a lingering punishment) is not. What the tide takes it carries out: at the start of the next turn each washed-off effect is laid on an enemy instead, at half its remaining duration, and never on a foe its element could never have touched.`,
+      pt: `Neraqa é a calmaria para a qual o mar sempre retorna. Ao fim de qualquer turno em que agiu, todo efeito de status negativo nela é lavado — mas um ferimento que se prendeu mais fundo que a superfície (uma maldição, uma marca, um castigo persistente) não é. O que a maré leva, ela devolve: no início do próximo turno, cada efeito lavado é aplicado em um inimigo no lugar, pela metade de sua duração restante, e nunca em um alvo cujo elemento jamais poderia tê-lo alcançado.`,
+    };
   },
 
   hookScope: {
@@ -97,7 +100,10 @@ export default {
     if (!laid.length) return;
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> the ebb carries it out — ${laid.join(", ")}.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> the ebb carries it out — ${laid.join(", ")}.`,
+        pt: `<b>[Passivo — ${this.name}]</b> a vazante leva embora — ${laid.join(", ")}.`,
+      },
     };
   },
 };

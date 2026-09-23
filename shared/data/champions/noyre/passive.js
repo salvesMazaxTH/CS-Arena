@@ -35,7 +35,10 @@ function _processEntropy(owner, context, resolver, passive) {
 
       if (drained > 0 && context?.registerDialog) {
         context.registerDialog({
-          message: `<b>[Passive — Entropy]</b> ${formatChampionName(owner)} drained the Momentum of ${formatChampionName(enemy)}!`,
+          message: {
+            en: `<b>[Passive — Entropy]</b> ${formatChampionName(owner)} drained the <b>Momentum</b> of ${formatChampionName(enemy)}!`,
+            pt: `<b>[Passivo — Entropia]</b> ${formatChampionName(owner)} drenou o <b>Momentum</b> de ${formatChampionName(enemy)}!`,
+          },
           sourceId: owner.id,
           targetId: enemy.id,
         });
@@ -79,7 +82,10 @@ function onResourceChanged({ owner, target, amount, context, resolver }) {
   if (procs > 0) {
     return [
       {
-        log: `<b>[PASSIVE — Entropy]</b> ${formatChampionName(owner)} unleashed Entropy ${procs}x.`,
+        log: {
+          en: `<b>[Passive — Entropy]</b> ${formatChampionName(owner)} unleashed <b>Entropy</b> <b>${procs}x</b>.`,
+          pt: `<b>[Passivo — Entropia]</b> ${formatChampionName(owner)} desencadeou <b>Entropia</b> <b>${procs}x</b>.`,
+        },
       },
       ...results,
     ];
@@ -106,11 +112,18 @@ export default {
   description(champion) {
     const stacks = champion.runtime.entropyStacks || 0;
 
-    return `Nothing gathered near Noyre stays gathered. Whenever an enemy gains or spends Momentum, he accumulates 1 Entropy.
+    return {
+      en: `Nothing gathered near Noyre stays gathered. Whenever an enemy gains or spends <b>Momentum</b>, he accumulates <b>1</b> <b>Entropy</b>.
 
-    <b>Current stacks: ${stacks}</b>
+      <b>Current stacks: ${stacks}</b>
 
-    Every ${this.stacksCap} stacks, the accumulation comes undone: 1 unit of Momentum is stripped from every enemy, and those who held enough to unleash their ultimate are punished for it, taking ${this.drainPunishPercent}% of their Max HP as piercing damage.`;
+      Every <b>${this.stacksCap}</b> stacks, the accumulation comes undone: <b>1</b> unit of <b>Momentum</b> is stripped from every enemy, and those who held enough to unleash their ultimate are punished for it, taking <b>${this.drainPunishPercent}%</b> of their Max HP as <b>piercing damage</b>.`,
+      pt: `Nada que se acumula perto de Noyre permanece acumulado. Sempre que um inimigo ganha ou gasta <b>Momentum</b>, ele acumula <b>1</b> de <b>Entropia</b>.
+
+      <b>Stacks atuais: ${stacks}</b>
+
+      A cada <b>${this.stacksCap}</b> stacks, o acúmulo se desfaz: <b>1</b> unidade de <b>Momentum</b> é removida de cada inimigo, e quem tinha o suficiente para desencadear seu ultimate é punido por isso, sofrendo <b>${this.drainPunishPercent}%</b> do seu HP Máximo como <b>dano perfurante</b>.`,
+    };
   },
 
   hookScope: {

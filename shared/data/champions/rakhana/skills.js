@@ -27,11 +27,18 @@ const rakhanaSkills = [
     priority: 0,
 
     description() {
-      return `Strikes the chosen target with a powerful iron-infused palm, dealing physical damage.
+      return {
+        en: `Strikes the chosen target with a powerful iron-infused palm, dealing <b>physical damage</b>.
 
-      If any Shield is on her when this ability hits, she consumes it to stun the target for ${this.stunDuration} turn and restores HP equal to ${this.shieldPercent}% of her Max HP.
+        If any <b>Shield</b> is on her when this ability hits, she consumes it to <b>stun</b> the target for <b>${this.stunDuration}</b> turn and restores HP equal to <b>${this.shieldPercent}%</b> of her Max HP.
 
-      Otherwise, she gains a Shield equal to ${this.shieldPercent}% of her Max HP after dealing damage.`;
+        Otherwise, she gains a <b>Shield</b> equal to <b>${this.shieldPercent}%</b> of her Max HP after dealing damage.`,
+        pt: `Golpeia o alvo escolhido com uma poderosa palma revestida de ferro, causando <b>dano físico</b>.
+
+        Se ela tiver algum <b>Escudo</b> ativo quando essa habilidade acertar, ela o consome para <b>atordoar</b> o alvo por <b>${this.stunDuration}</b> turno e restaurar HP igual a <b>${this.shieldPercent}%</b> de seu HP Máximo.
+
+        Caso contrário, ela ganha um <b>Escudo</b> igual a <b>${this.shieldPercent}%</b> de seu HP Máximo após causar dano.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -84,11 +91,18 @@ const rakhanaSkills = [
         }
 
         context.registerDialog?.({
-          message: `${formatChampionName(
-            user,
-          )} consumes her Iron Lotus shield, stunning ${formatChampionName(
-            enemy,
-          )} and restoring ${value} HP!`,
+          message: {
+            en: `${formatChampionName(
+              user,
+            )} consumes her Iron Lotus shield, stunning ${formatChampionName(
+              enemy,
+            )} and restoring ${value} HP!`,
+            pt: `${formatChampionName(
+              user,
+            )} consome o escudo de Lótus de Ferro, atordoando ${formatChampionName(
+              enemy,
+            )} e restaurando ${value} de HP!`,
+          },
           sourceId: user.id,
           targetId: enemy.id,
         });
@@ -96,9 +110,10 @@ const rakhanaSkills = [
         user.addShield(value, 0, context);
 
         context.registerDialog?.({
-          message: `${formatChampionName(
-            user,
-          )} forms an Iron Lotus shield!`,
+          message: {
+            en: `${formatChampionName(user)} forms an Iron Lotus shield!`,
+            pt: `${formatChampionName(user)} forma um escudo de Lótus de Ferro!`,
+          },
           sourceId: user.id,
         });
       }
@@ -131,11 +146,18 @@ const rakhanaSkills = [
     ],
 
     description() {
-      return `Rakhana enters a defensive stance and gains a Shield equal to ${this.shieldPercent}% of her Max HP, half of it fading with each turn that passes.
+      return {
+        en: `Rakhana enters a defensive stance and gains a <b>Shield</b> equal to <b>${this.shieldPercent}%</b> of her Max HP, half of it fading with each turn that passes.
 
-      The first time she is struck while the Shield is active, she reduces that damage by ${this.reflectPercent}% and reflects the prevented damage back to the attacker as physical damage.
+        The first time she is struck while the Shield is active, she reduces that damage by <b>${this.reflectPercent}%</b> and reflects the prevented damage back to the attacker as physical damage.
 
-      If the incoming attack is Contact, she also stuns the attacker for 1 turn.`;
+        If the incoming attack is <b>Contact</b>, she also stuns the attacker for <b>1</b> turn.`,
+        pt: `Rakhana assume uma postura defensiva e ganha um <b>Escudo</b> igual a <b>${this.shieldPercent}%</b> de seu HP Máximo, com metade dele se dissipando a cada turno que passa.
+
+        Na primeira vez que é atingida com o Escudo ativo, ela reduz esse dano em <b>${this.reflectPercent}%</b> e reflete o dano evitado de volta ao atacante como dano físico.
+
+        Se o ataque recebido for de <b>Contato</b>, ela também atordoa o atacante por <b>1</b> turno.`,
+      };
     },
 
     targetSpec: ["self"],
@@ -190,11 +212,18 @@ const rakhanaSkills = [
           const reducedDamage = damage - reflectedDamage;
 
           context.registerDialog?.({
-            message: `<b>[${this.name}]</b> ${formatChampionName(
-              defender,
-            )} reflects ${reflectedDamage} damage back to ${formatChampionName(
-              attacker,
-            )}!`,
+            message: {
+              en: `<b>[${this.name}]</b> ${formatChampionName(
+                defender,
+              )} reflects ${reflectedDamage} damage back to ${formatChampionName(
+                attacker,
+              )}!`,
+              pt: `<b>[${this.name}]</b> ${formatChampionName(
+                defender,
+              )} reflete ${reflectedDamage} de dano de volta em ${formatChampionName(
+                attacker,
+              )}!`,
+            },
             sourceId: defender.id,
             targetId: attacker.id,
           });
@@ -208,9 +237,10 @@ const rakhanaSkills = [
             }),
 
             dialog: {
-              message: `${formatChampionName(
-                defender,
-              )} reflects damage with ${this.name}!`,
+              message: {
+                en: `${formatChampionName(defender)} reflects damage with ${this.name}!`,
+                pt: `${formatChampionName(defender)} reflete dano com ${this.name}!`,
+              },
               duration: 1000,
             },
           });
@@ -220,11 +250,18 @@ const rakhanaSkills = [
             attacker.applyStatusEffect("stunned", 1, context);
 
             context.registerDialog?.({
-              message: `${formatChampionName(
-                defender,
-              )} stuns ${formatChampionName(
-                attacker,
-              )} with the mirror's reflection!`,
+              message: {
+                en: `${formatChampionName(
+                  defender,
+                )} stuns ${formatChampionName(
+                  attacker,
+                )} with the mirror's reflection!`,
+                pt: `${formatChampionName(
+                  defender,
+                )} atordoa ${formatChampionName(
+                  attacker,
+                )} com o reflexo do espelho!`,
+              },
               sourceId: defender.id,
               targetId: attacker.id,
             });
@@ -232,25 +269,36 @@ const rakhanaSkills = [
 
           return {
             damage: reducedDamage,
-            log: `<b>[${this.name}]</b> ${formatChampionName(
-              defender,
-            )} reduces incoming damage by ${reflectPercent}% and reflects ${reflectedDamage} damage!`,
+            log: {
+              en: `<b>[${this.name}]</b> ${formatChampionName(
+                defender,
+              )} reduces incoming damage by ${reflectPercent}% and reflects ${reflectedDamage} damage!`,
+              pt: `<b>[${this.name}]</b> ${formatChampionName(
+                defender,
+              )} reduz o dano recebido em ${reflectPercent}% e reflete ${reflectedDamage} de dano!`,
+            },
           };
         },
       }, context);
 
       context.registerDialog?.({
-        message: `${formatChampionName(
-          user,
-        )} enters a defensive stance with the Silver Mirror!`,
+        message: {
+          en: `${formatChampionName(user)} enters a defensive stance with the Silver Mirror!`,
+          pt: `${formatChampionName(user)} assume uma postura defensiva com o Espelho de Prata!`,
+        },
         sourceId: user.id,
       });
 
       return [
         {
-          log: `<b>${formatChampionName(
-            user,
-          )}</b> activates <b>${this.name}</b>, gaining a ${shieldValue} HP shield!`,
+          log: {
+            en: `<b>${formatChampionName(
+              user,
+            )}</b> activates <b>${this.name}</b>, gaining a ${shieldValue} HP shield!`,
+            pt: `<b>${formatChampionName(
+              user,
+            )}</b> ativa <b>${this.name}</b>, ganhando um escudo de ${shieldValue} de HP!`,
+          },
         },
       ];
     },
@@ -274,9 +322,14 @@ const rakhanaSkills = [
     threshold: 0.35,
 
     description() {
-      return `Rakhana descends upon the chosen target with overwhelming force, dealing physical damage and ignoring ${this.piercingPercentage}% of their Defense.
+      return {
+        en: `Rakhana descends upon the chosen target with overwhelming force, dealing <b>physical damage</b> and ignoring <b>${this.piercingPercentage}%</b> of their Defense.
 
-      If the target is below ${this.threshold * 100}% HP, deals bonus damage equal to ${this.missingHpPercent * 100}% of their missing HP.`;
+        If the target is below <b>${this.threshold * 100}%</b> HP, deals bonus damage equal to <b>${this.missingHpPercent * 100}%</b> of their missing HP.`,
+        pt: `Rakhana desce sobre o alvo escolhido com força avassaladora, causando <b>dano físico</b> e ignorando <b>${this.piercingPercentage}%</b> de sua Defesa.
+
+        Se o alvo estiver abaixo de <b>${this.threshold * 100}%</b> de HP, causa dano bônus igual a <b>${this.missingHpPercent * 100}%</b> de seu HP faltante.`,
+      };
     },
 
     targetSpec: ["enemy"],

@@ -27,7 +27,10 @@ const sabrinaSkills = [
     element: "water",
     hitVfx: "tidal_lance",
     description() {
-      return `Fires a concentrated lance of water at an enemy, dealing Water magical damage and applying Chilled for ${this.chillDuration} turn(s).`;
+      return {
+        en: `Fires a concentrated lance of water at an enemy, dealing <b>Water magical damage</b> and applying <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).`,
+        pt: `Dispara uma lança concentrada de água contra um inimigo, causando <b>dano mágico de Água</b> e aplicando <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -68,7 +71,10 @@ const sabrinaSkills = [
     damageMode: "standard",
     element: "ice",
     description() {
-      return `Conjures a mass of hardened ice around an enemy, dealing Ice magical damage. If the target is already Chilled, this deals ${this.chilledBonusPercent}% increased damage and the Chilled effect is consumed and replaced by Frozen for ${this.freezeDuration} turn(s).`;
+      return {
+        en: `Conjures a mass of hardened ice around an enemy, dealing <b>Ice magical damage</b>. If the target is already <b>Chilled</b>, this deals <b>${this.chilledBonusPercent}%</b> increased damage and the Chilled effect is consumed and replaced by <b>Frozen</b> for <b>${this.freezeDuration}</b> turn(s).`,
+        pt: `Conjura uma massa de gelo endurecido ao redor de um inimigo, causando <b>dano mágico de Gelo</b>. Se o alvo já estiver <b>Gelado</b>, isso causa <b>${this.chilledBonusPercent}%</b> de dano aumentado e o efeito Gelado é consumido e substituído por <b>Congelado</b> por <b>${this.freezeDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -123,7 +129,10 @@ const sabrinaSkills = [
     ],
 
     description() {
-      return `Unleashes a massive wave that crashes into the target, dealing Water magical damage and applying Chilled for ${this.chillDuration} turn(s) (if not already Chilled). The wave then immediately freezes around the target, dealing Ice magical damage. If the target was already Chilled when the wave struck, the Ice hit consumes the Chilled effect and Freezes them for ${this.freezeDuration} turn(s) instead.`;
+      return {
+        en: `Unleashes a massive wave that crashes into the target, dealing <b>Water magical damage</b> and applying <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s) (if not already Chilled). The wave then immediately freezes around the target, dealing <b>Ice magical damage</b>. If the target was already <b>Chilled</b> when the wave struck, the Ice hit consumes the Chilled effect and <b>Freezes</b> them for <b>${this.freezeDuration}</b> turn(s) instead.`,
+        pt: `Desencadeia uma onda massiva que se choca contra o alvo, causando <b>dano mágico de Água</b> e aplicando <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s) (se ainda não estiver Gelado). A onda então congela imediatamente ao redor do alvo, causando <b>dano mágico de Gelo</b>. Se o alvo já estava <b>Gelado</b> quando a onda o atingiu, o golpe de Gelo consome o efeito Gelado e o <b>Congela</b> por <b>${this.freezeDuration}</b> turno(s) em vez disso.`,
+      };
     },
 
     targetSpec: ["enemy"],

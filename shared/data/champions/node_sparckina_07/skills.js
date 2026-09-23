@@ -19,7 +19,10 @@ const nodeSparckina07Skills = [
     priority: 0,
     element: "lightning",
     description() {
-      return `Node-SPARCKINA-07 carves a live arc through the chosen target, dealing Lightning magical damage.`;
+      return {
+        en: `Node-SPARCKINA-07 carves a live arc through the chosen target, dealing <b>Lightning magical damage</b>.`,
+        pt: `Node-SPARCKINA-07 corta um arco vivo através do alvo escolhido, causando <b>dano mágico de Relâmpago</b>.`,
+      };
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -47,7 +50,10 @@ const nodeSparckina07Skills = [
     priority: 3,
     element: "lightning",
     description() {
-      return `Node-SPARCKINA-07 overclocks its drive and blurs into motion, gaining +${this.speedBuff} Speed and Evasion equal to ${this.evasionPercent}% of its Speed.`;
+      return {
+        en: `Node-SPARCKINA-07 overclocks its drive and blurs into motion, gaining <b>+${this.speedBuff}</b> <b>Speed</b> and <b>Evasion</b> equal to <b>${this.evasionPercent}%</b> of its Speed.`,
+        pt: `Node-SPARCKINA-07 sobrecarrega seu motor e dispara em alta velocidade, ganhando <b>+${this.speedBuff}</b> de <b>Velocidade</b> e <b>Esquiva</b> igual a <b>${this.evasionPercent}%</b> da sua Velocidade.`,
+      };
     },
     targetSpec: ["self"],
     resolve({ user, context = {} }) {
@@ -69,7 +75,10 @@ const nodeSparckina07Skills = [
       });
 
       return {
-        log: `${formatChampionName(user)} surges into a radiant rush (+${this.speedBuff} Speed, +${evasionBuff} Evasion).`,
+        log: {
+          en: `${formatChampionName(user)} surges into a radiant rush (<b>+${this.speedBuff}</b> Speed, <b>+${evasionBuff}</b> Evasion).`,
+          pt: `${formatChampionName(user)} dispara em uma investida radiante (<b>+${this.speedBuff}</b> de Velocidade, <b>+${evasionBuff}</b> de Esquiva).`,
+        },
       };
     },
   },
@@ -90,7 +99,10 @@ const nodeSparckina07Skills = [
     momentumCost: 55,
 
     description() {
-      return `Node-SPARCKINA-07 dumps its whole charge at once, blasting the chosen target with heavy Lightning magical damage and leaving them Paralyzed for ${this.paralyzeDuration} turn(s).`;
+      return {
+        en: `Node-SPARCKINA-07 dumps its whole charge at once, blasting the chosen target with heavy <b>Lightning magical damage</b> and leaving them <b>Paralyzed</b> for <b>${this.paralyzeDuration}</b> turn(s).`,
+        pt: `Node-SPARCKINA-07 descarrega toda a sua carga de uma vez, atingindo o alvo escolhido com pesado <b>dano mágico de Relâmpago</b> e deixando-o <b>Paralisado</b> por <b>${this.paralyzeDuration}</b> turno(s).`,
+      };
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {

@@ -14,7 +14,10 @@ const myrraSkills = [
     priority: 0,
 
     description() {
-      return `Myrra slips her blade past the guard of the chosen target, dealing physical damage that ignores their damage reduction entirely.`;
+      return {
+        en: `Myrra slips her blade past the guard of the chosen target, dealing <b>physical damage</b> that ignores their <b>damage reduction</b> entirely.`,
+        pt: `Myrra desliza a lâmina pela guarda do alvo escolhido, causando <b>dano físico</b> que ignora completamente a <b>redução de dano</b> dele.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -46,7 +49,10 @@ const myrraSkills = [
     priority: 0,
 
     description() {
-      return `Myrra spins through the chosen target in two flowing cuts, dealing physical damage with each. Every hit feeds her passive.`;
+      return {
+        en: `Myrra spins through the chosen target in <b>${this.hits}</b> flowing cuts, dealing <b>physical damage</b> with each. Every hit feeds her passive.`,
+        pt: `Myrra gira através do alvo escolhido em <b>${this.hits}</b> cortes fluidos, causando <b>dano físico</b> em cada um. Todo acerto alimenta seu passivo.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -86,7 +92,10 @@ const myrraSkills = [
     priority: 0,
 
     description() {
-      return `Myrra steps in without a sound and finishes what the battle started, dealing physical damage to the chosen target that grows with the HP they have already lost. Ignores damage reduction.`;
+      return {
+        en: `Myrra steps in without a sound and finishes what the battle started, dealing <b>physical damage</b> to the chosen target that grows by <b>${this.missingHpScaling * 100}%</b> of the HP they have already lost. Ignores <b>damage reduction</b>.`,
+        pt: `Myrra se aproxima sem fazer ruído e termina o que a batalha começou, causando <b>dano físico</b> ao alvo escolhido que cresce em <b>${this.missingHpScaling * 100}%</b> do HP que ele já perdeu. Ignora <b>redução de dano</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],

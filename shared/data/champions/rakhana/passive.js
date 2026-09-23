@@ -10,11 +10,18 @@ export default {
   description(champion) {
     const stacks = champion.runtime?.silverFlowStacks || 0;
 
-    return `Whenever Rakhana deals damage to an enemy, she gains 1 <b>Flow</b> stack (Max: ${this.maxStacks}).
+    return {
+      en: `Whenever Rakhana deals damage to an enemy, she gains 1 <b>Flow</b> stack (Max: <b>${this.maxStacks}</b>).
 
-    At ${this.maxStacks} stacks, her next attack consumes all Flow: it lands as <b>Absolute Damage</b> for ${this.absoluteBonusPercent}% more than the hit would otherwise deal through the target's defenses.
+      At <b>${this.maxStacks}</b> stacks, her next attack consumes all Flow: it lands as <b>Absolute Damage</b> for <b>${this.absoluteBonusPercent}%</b> more than the hit would otherwise deal through the target's defenses.
 
-    <b>Current Flow: ${stacks}/${this.maxStacks}</b>`;
+      <b>Current Flow: ${stacks}/${this.maxStacks}</b>`,
+      pt: `Sempre que Rakhana causa dano a um inimigo, ela ganha 1 carga de <b>Fluxo</b> (máx.: <b>${this.maxStacks}</b>).
+
+      Com <b>${this.maxStacks}</b> cargas, seu próximo ataque consome todo o Fluxo: ele acerta como <b>dano Absoluto</b>, <b>${this.absoluteBonusPercent}%</b> maior do que o golpe causaria atravessando as defesas do alvo.
+
+      <b>Fluxo atual: ${stacks}/${this.maxStacks}</b>`,
+    };
   },
 
   hookScope: {
@@ -34,9 +41,14 @@ export default {
     owner.runtime.silverFlowStacks = stacks + 1;
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
-        owner,
-      )} gains 1 Flow (${owner.runtime.silverFlowStacks}/${this.maxStacks}).`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
+          owner,
+        )} gains 1 Flow (<b>${owner.runtime.silverFlowStacks}/${this.maxStacks}</b>).`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(
+          owner,
+        )} ganha 1 Fluxo (<b>${owner.runtime.silverFlowStacks}/${this.maxStacks}</b>).`,
+      },
     };
   },
 
@@ -58,9 +70,14 @@ export default {
       mode: "absolute",
       baseDamage: amplified,
       preMitigationDamage: amplified,
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
-        owner,
-      )} releases her accumulated Flow — the blow lands whole, ${this.absoluteBonusPercent}% past what the target's defenses would have spared.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
+          owner,
+        )} releases her accumulated Flow — the blow lands whole, <b>${this.absoluteBonusPercent}%</b> past what the target's defenses would have spared.`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(
+          owner,
+        )} libera todo o Fluxo acumulado — o golpe acerta por inteiro, <b>${this.absoluteBonusPercent}%</b> além do que as defesas do alvo teriam poupado.`,
+      },
     };
   },
 };

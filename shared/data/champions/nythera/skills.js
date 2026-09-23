@@ -21,9 +21,14 @@ const nytheraSkills = [
     element: "ice",
     hitVfx: "boreal_edge",
     description() {
-      return `Nythera draws an edge of northern wind across the chosen target, dealing Ice magical damage and leaving them Chilled for ${this.chillDuration} turn(s).
+      return {
+        en: `Nythera draws an edge of northern wind across the chosen target, dealing <b>Ice magical damage</b> and leaving them <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).
 
-      If the cold already holds them, the edge bites for +${this.bonusIfCold}% bonus damage, and a Chilled target is seized outright: Frozen for ${this.freezeDuration} turn(s).`;
+        If the cold already holds them, the edge bites for <b>+${this.bonusIfCold}%</b> bonus damage, and a <b>Chilled</b> target is seized outright: <b>Frozen</b> for <b>${this.freezeDuration}</b> turn(s).`,
+        pt: `Nythera traça uma lâmina de vento nórdico sobre o alvo escolhido, causando <b>dano mágico de Gelo</b> e deixando-o <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).
+
+        Se o frio já o dominar, a lâmina corta com <b>+${this.bonusIfCold}%</b> de dano bônus, e um alvo <b>Gelado</b> é dominado de vez: fica <b>Congelado</b> por <b>${this.freezeDuration}</b> turno(s).`,
+      };
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {
@@ -70,9 +75,14 @@ const nytheraSkills = [
     priority: 3,
     element: "ice",
     description() {
-      return `Nythera seals herself inside a chamber of standing ice for ${this.effectDuration} turn(s), gaining ${this.dmgReduct}% damage reduction.
+      return {
+        en: `Nythera seals herself inside a chamber of standing ice for <b>${this.effectDuration}</b> turn(s), gaining <b>${this.dmgReduct}%</b> damage reduction.
 
-      Anyone who deals damage to her while the chamber holds is caught by the stillness and becomes Frozen for ${this.freezeDuration} turn(s).`;
+        Anyone who deals damage to her while the chamber holds is caught by the stillness and becomes <b>Frozen</b> for <b>${this.freezeDuration}</b> turn(s).`,
+        pt: `Nythera se sela dentro de uma câmara de gelo imóvel por <b>${this.effectDuration}</b> turno(s), ganhando <b>${this.dmgReduct}%</b> de redução de dano.
+
+        Quem quer que a atinja enquanto a câmara se mantém é capturado pela quietude e fica <b>Congelado</b> por <b>${this.freezeDuration}</b> turno(s).`,
+      };
     },
     targetSpec: ["self"],
 
@@ -104,14 +114,20 @@ const nytheraSkills = [
           attacker.applyStatusEffect("frozen", freezeDuration, context);
 
           return {
-            log: `${formatChampionName(attacker)} is caught by the stillness of the <b>Stasis Chamber</b>!`,
+            log: {
+              en: `${formatChampionName(attacker)} is caught by the stillness of the <b>Stasis Chamber</b>!`,
+              pt: `${formatChampionName(attacker)} é capturado pela quietude da <b>Câmara de Estase</b>!`,
+            },
           };
         },
       };
 
       user.addHookEffect(effect, context);
 
-      const sealed = `${formatChampionName(user)} seals herself inside a chamber of standing ice.`;
+      const sealed = {
+        en: `${formatChampionName(user)} seals herself inside a chamber of standing ice.`,
+        pt: `${formatChampionName(user)} se sela dentro de uma câmara de gelo imóvel.`,
+      };
 
       context.registerDialog({
         message: sealed,
@@ -142,9 +158,14 @@ const nytheraSkills = [
     damageMode: "standard",
     element: "ice",
     description() {
-      return `Nythera takes her throne and the white night falls over the chosen target, dealing Ice magical damage and leaving them Chilled for ${this.chillDuration} turn(s).
+      return {
+        en: `Nythera takes her throne and the white night falls over the chosen target, dealing <b>Ice magical damage</b> and leaving them <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).
 
-      Against a target already touched by the cold, the throne answers in full: base force rises to ${this.bfIfCold} and the target is Frozen for ${this.freezeDuration} turn(s). If they were already Frozen, the ice also splits them for ${this.bonusIfFrozen} bonus damage.`;
+        Against a target already touched by the cold, the throne answers in full: base force rises to <b>${this.bfIfCold}</b> and the target is <b>Frozen</b> for <b>${this.freezeDuration}</b> turn(s). If they were already <b>Frozen</b>, the ice also splits them for <b>${this.bonusIfFrozen}</b> bonus damage.`,
+        pt: `Nythera toma seu trono e a noite branca cai sobre o alvo escolhido, causando <b>dano mágico de Gelo</b> e deixando-o <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).
+
+        Contra um alvo já tocado pelo frio, o trono responde por inteiro: a força base sobe para <b>${this.bfIfCold}</b> e o alvo fica <b>Congelado</b> por <b>${this.freezeDuration}</b> turno(s). Se já estava <b>Congelado</b>, o gelo ainda o rasga por <b>${this.bonusIfFrozen}</b> de dano bônus.`,
+      };
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context = {} }) {

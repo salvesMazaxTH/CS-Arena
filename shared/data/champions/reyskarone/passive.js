@@ -6,7 +6,10 @@ export default {
   name: "Echoes of Vitality",
   lifeStealHealPercent: 35,
   description() {
-    return `Every drop of life an ally steals rings back through Reyskarone. Whenever an ally restores HP through LifeSteal, he restores ${this.lifeStealHealPercent}% of that amount.`;
+    return {
+      en: `Every drop of life an ally steals rings back through Reyskarone. Whenever an ally restores HP through <b>LifeSteal</b>, he restores <b>${this.lifeStealHealPercent}%</b> of that amount.`,
+      pt: `Cada gota de vida que um aliado rouba ecoa de volta em Reyskarone. Sempre que um aliado restaura HP por meio de <b>Roubo de Vida</b>, ele restaura <b>${this.lifeStealHealPercent}%</b> dessa quantia.`,
+    };
   },
 
   hookScope: {
@@ -36,13 +39,13 @@ export default {
     if (restored <= 0) return;
 
     return {
-      log: `↳ [PASSIVE — ${this.name}] ${formatChampionName(owner)} drinks in the vital echo of ${formatChampionName(healSrc)} (+${restored} HP).`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} drinks in the vital echo of ${formatChampionName(healSrc)} (+${restored} HP).`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} absorve o eco vital de ${formatChampionName(healSrc)} (+${restored} HP).`,
+      },
     };
   },
 
-  /* ------------------
-  // TESTING ONLY //
-  * -------------------*/
   onAfterDmgTaking({ owner }) {
     owner.portrait = "/assets/portraits/reyskarone_bombado.webp";
   },

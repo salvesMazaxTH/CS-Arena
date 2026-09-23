@@ -12,12 +12,20 @@ export default {
   description(champion) {
     const stacks = champion?.runtime?.mareStacks || 0;
 
-    return `Whenever she deals damage, she restores ${this.healPerHit} HP. Each time she restores HP this way, she gains 1 Tides stack.
+    return {
+      en: `Whenever she deals damage, she restores <b>${this.healPerHit}</b> HP. Each time she restores HP this way, she gains 1 <b>Tides</b> stack.
 
-    Each stack grants +${this.dmgPerStack} flat damage. Max ${this.maxStacks} stacks. Stacks are permanent.
+      Each stack grants <b>+${this.dmgPerStack}</b> flat damage. Max <b>${this.maxStacks}</b> stacks. Stacks are permanent.
 
-    Current stacks: ${stacks}/${this.maxStacks}
-    Maximum total bonus: +${this.dmgPerStack * this.maxStacks} damage.`;
+      <b>Current stacks: ${stacks}/${this.maxStacks}</b>
+      <b>Maximum total bonus: +${this.dmgPerStack * this.maxStacks}</b> damage.`,
+      pt: `Sempre que causa dano, restaura <b>${this.healPerHit}</b> HP. A cada vez que restaura HP assim, ganha 1 stack de <b>Marés</b>.
+
+      Cada stack concede <b>+${this.dmgPerStack}</b> de dano fixo. Máximo de <b>${this.maxStacks}</b> stacks. Os stacks são permanentes.
+
+      <b>Stacks atuais: ${stacks}/${this.maxStacks}</b>
+      <b>Bônus total máximo: +${this.dmgPerStack * this.maxStacks}</b> de dano.`,
+    };
   },
 
   hookScope: {
@@ -41,9 +49,14 @@ export default {
 
     if (owner.runtime.mareStacks >= this.maxStacks) {
       return {
-        log: `[Heart of the Tides] ${formatChampionName(
-          owner,
-        )} restored ${restored} HP.`,
+        log: {
+          en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
+            owner,
+          )} restored <b>${restored}</b> HP.`,
+          pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(
+            owner,
+          )} restaurou <b>${restored}</b> de HP.`,
+        },
       };
     }
 
@@ -70,9 +83,14 @@ export default {
     }
 
     return {
-      log: `[Heart of the Tides] ${formatChampionName(
-        owner,
-      )} restored ${restored} HP and gained 1 Tides stack (${owner.runtime.mareStacks}/${this.maxStacks}).`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
+          owner,
+        )} restored <b>${restored}</b> HP and gained 1 <b>Tides</b> stack (<b>${owner.runtime.mareStacks}/${this.maxStacks}</b>).`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(
+          owner,
+        )} restaurou <b>${restored}</b> de HP e ganhou 1 stack de <b>Marés</b> (<b>${owner.runtime.mareStacks}/${this.maxStacks}</b>).`,
+      },
     };
   },
 };

@@ -17,7 +17,10 @@ const ronanSkills = [
     priority: 0,
 
     description() {
-      return `Ronan throws a plain right hand and the air around it catches, because it always does. Deals Fire physical damage.`;
+      return {
+        en: `Ronan throws a plain right hand and the air around it catches, because it always does. Deals <b>Fire physical damage</b>.`,
+        pt: `Ronan desfere um direto simples e o ar ao redor pega fogo, como sempre acontece. Causa <b>dano físico de Fogo</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -51,7 +54,10 @@ const ronanSkills = [
     priority: 0,
 
     description() {
-      return `Ronan picks the fight he wants instead of the one he was handed, and makes very sure the other one wants it too. Deals Fire physical damage and locks the two of them onto each other for ${this.tauntDuration} turn(s): he can aim this even while another grudge holds him, any grudge of his own he was already carrying is dropped, he Taunts himself onto this target instead, and they are left Taunted onto him. Nothing he suffers in the meantime moves his attention off them.`;
+      return {
+        en: `Ronan picks the fight he wants instead of the one he was handed, and makes very sure the other one wants it too. Deals <b>Fire physical damage</b> and locks the two of them onto each other for <b>${this.tauntDuration}</b> turn(s): he can aim this even while another grudge holds him, any grudge of his own he was already carrying is dropped, he <b>Taunts</b> himself onto this target instead, and they are left <b>Taunted</b> onto him. Nothing he suffers in the meantime moves his attention off them.`,
+        pt: `Ronan escolhe a briga que quer em vez da que lhe deram, e faz questão de que o outro também a queira. Causa <b>dano físico de Fogo</b> e prende os dois um no outro por <b>${this.tauntDuration}</b> turno(s): ele pode mirar isso mesmo enquanto outra rixa o segura, qualquer rixa própria que já carregava é descartada, ele se <b>Provoca</b> contra esse alvo, e o alvo fica <b>Provocado</b> contra ele. Nada que sofra enquanto isso desvia sua atenção deles.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -93,7 +99,10 @@ const ronanSkills = [
     priority: 0,
 
     description() {
-      return `For as long as it takes to land one punch, Ronan stops being a man with dragon blood and is only the dragon. Deals Fire physical damage, plus bonus damage equal to ${this.ragePercentAsBonus}% of the Attack his temper has built up so far.`;
+      return {
+        en: `For as long as it takes to land one punch, Ronan stops being a man with dragon blood and is only the dragon. Deals <b>Fire physical damage</b>, plus bonus damage equal to <b>${this.ragePercentAsBonus}%</b> of the Attack his temper has built up so far.`,
+        pt: `Pelo tempo que leva para desferir um soco, Ronan deixa de ser um homem com sangue de dragão e passa a ser só o dragão. Causa <b>dano físico de Fogo</b>, mais dano bônus igual a <b>${this.ragePercentAsBonus}%</b> do Ataque que sua fúria acumulou até agora.`,
+      };
     },
 
     targetSpec: ["enemy"],

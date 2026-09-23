@@ -57,9 +57,14 @@ export default {
   fixationBonusPercent: 35,
 
   description() {
-    return `Ronan carries Ignisar's blood and none of Ignisar's patience. Every time he is wounded he gains +${this.attackPerHitTaken} Attack, and every ${this.hitsDealtPerGain} blows he lands give him +${this.attackPerHitsDealt} more, up to +${this.maxAttackBonus} in total — but being healed cools him down, costing him ${this.attackLostOnHeal} of it.
+    return {
+      en: `Ronan carries Ignisar's blood and none of Ignisar's patience. Every time he is wounded he gains <b>+${this.attackPerHitTaken}</b> Attack, and every <b>${this.hitsDealtPerGain}</b> blows he lands give him <b>+${this.attackPerHitsDealt}</b> more, up to <b>+${this.maxAttackBonus}</b> in total — but being healed cools him down, costing him <b>${this.attackLostOnHeal}</b> of it.
 
-    He also cannot let a hit go. Whoever wounds him last has his whole attention for ${FIXATION_DURATION} turn(s): he Taunts himself onto them and can answer nobody else, and he deals +${this.fixationBonusPercent}% damage to them for as long as it lasts — unless he has picked a fight of his own, which nothing rewrites until it runs out.`;
+      He also cannot let a hit go. Whoever wounds him last has his whole attention for <b>${FIXATION_DURATION}</b> turn(s): he <b>Taunts</b> himself onto them and can answer nobody else, and he deals <b>+${this.fixationBonusPercent}%</b> damage to them for as long as it lasts — unless he has picked a fight of his own, which nothing rewrites until it runs out.`,
+      pt: `Ronan tem o sangue de Ignisar nas veias — a paciência, essa ele nunca herdou. Toda vez que é ferido, ganha <b>+${this.attackPerHitTaken}</b> de Ataque, e a cada <b>${this.hitsDealtPerGain}</b> golpes que desfere ganha mais <b>+${this.attackPerHitsDealt}</b>, até um total de <b>+${this.maxAttackBonus}</b> — mas ser curado o esfria, custando <b>${this.attackLostOnHeal}</b> desse bônus.
+
+      Ele também não consegue deixar um golpe passar em branco. Quem quer que o fira por último tem toda a sua atenção por <b>${FIXATION_DURATION}</b> turno(s): ele se <b>Provoca</b> contra esse alvo e não consegue responder a mais ninguém, causando <b>+${this.fixationBonusPercent}%</b> de dano contra ele enquanto durar — a menos que já tenha escolhido sua própria briga, o que nada muda até se esgotar.`,
+    };
   },
 
   hookScope: {
@@ -98,9 +103,10 @@ export default {
 
     const gained = this.stokeRage(owner, this.attackPerHitTaken, context);
     if (gained) {
-      logs.push(
-        `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} takes it personally and gains +${gained} Attack.`,
-      );
+      logs.push({
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} takes it personally and gains +${gained} Attack.`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} leva para o lado pessoal e ganha +${gained} de Ataque.`,
+      });
     }
 
     return logs.length ? { logs } : undefined;
@@ -116,7 +122,10 @@ export default {
     if (!gained) return;
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} is getting into it and gains +${gained} Attack.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} is getting into it and gains +${gained} Attack.`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} entra no ritmo da briga e ganha +${gained} de Ataque.`,
+      },
     };
   },
 
@@ -148,7 +157,10 @@ export default {
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> Being looked after cools ${formatChampionName(owner)} down, costing him ${lost} Attack.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> Being looked after cools ${formatChampionName(owner)} down, costing him ${lost} Attack.`,
+        pt: `<b>[Passivo — ${this.name}]</b> Ser cuidado esfria ${formatChampionName(owner)}, custando ${lost} de Ataque.`,
+      },
     };
   },
 };

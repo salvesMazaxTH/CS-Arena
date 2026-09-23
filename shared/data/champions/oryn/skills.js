@@ -29,7 +29,10 @@ const orynSkills = [
     element: "lightning",
 
     description() {
-      return `Oryn lifts the pins in his forearms and the air leans toward him. He Taunts the chosen enemy for ${this.tauntDuration} turn(s), releasing any enemy he was already Taunting, and braces for the answer, gaining ${this.damageReductionPercent}% Damage Reduction for ${this.damageReductionDuration} turn(s).`;
+      return {
+        en: `Oryn lifts the pins in his forearms and the air leans toward him. He <b>Taunts</b> the chosen enemy for <b>${this.tauntDuration}</b> turn(s), releasing any enemy he was already Taunting, and braces for the answer, gaining <b>${this.damageReductionPercent}%</b> Damage Reduction for <b>${this.damageReductionDuration}</b> turn(s).`,
+        pt: `Oryn levanta os pinos em seus antebraços e o ar se inclina em sua direção. Ele <b>Provoca</b> o inimigo escolhido por <b>${this.tauntDuration}</b> turno(s), liberando qualquer inimigo que já estivesse Provocando, e se prepara para a resposta, ganhando <b>${this.damageReductionPercent}%</b> de Redução de Dano por <b>${this.damageReductionDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -62,7 +65,10 @@ const orynSkills = [
       }
 
       logs.unshift({
-        log: `${formatChampionName(user)} uses <b>Draw the Sky Down</b> and braces, gaining ${this.damageReductionPercent}% Damage Reduction.`,
+        log: {
+          en: `${formatChampionName(user)} uses <b>Draw the Sky Down</b> and braces, gaining <b>${this.damageReductionPercent}%</b> Damage Reduction.`,
+          pt: `${formatChampionName(user)} usa <b>Draw the Sky Down</b> e se prepara, ganhando <b>${this.damageReductionPercent}%</b> de Redução de Dano.`,
+        },
       });
       return logs;
     },
@@ -82,7 +88,10 @@ const orynSkills = [
     hitVfx: "grounded_charge",
 
     description() {
-      return `Oryn drives a pin into the chosen enemy and lets the charge he has been carrying run down it, dealing Lightning magical damage equal to ${this.defenseScaling}% of his Defense and leaving them Paralyzed for ${this.paralyzeDuration} turn(s).`;
+      return {
+        en: `Oryn drives a pin into the chosen enemy and lets the charge he has been carrying run down it, dealing <b>Lightning magical damage</b> equal to <b>${this.defenseScaling}%</b> of his Defense and leaving them <b>Paralyzed</b> for <b>${this.paralyzeDuration}</b> turn(s).`,
+        pt: `Oryn crava um pino no inimigo escolhido e deixa a carga que vinha carregando correr por ele, causando <b>dano mágico de Raio</b> igual a <b>${this.defenseScaling}%</b> da sua Defesa e deixando-o <b>Paralisado</b> por <b>${this.paralyzeDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -141,7 +150,10 @@ const orynSkills = [
     ],
 
     description() {
-      return `The pins in Oryn's body finish their work and the sky-courts hand down their sentence on the whole enemy line — a sentence, not a blow. For ${this.indictDuration} turns, the first time each Indicted enemy deals damage the charge grounds through them for Lightning magical damage equal to ${this.dischargePercent}% of that blow, following the path of least resistance past ${this.dischargePiercing}% of their Defense, leaving them Paralyzed for ${this.paralyzeDuration} turn(s) and banking Oryn's team 1 point; at most once per turn and ${this.maxDischarges} times each, and nothing if Oryn has fallen. He stands under a ${this.shieldAmount} Shield that thins as the courts sit.`;
+      return {
+        en: `The pins in Oryn's body finish their work and the sky-courts hand down their sentence on the whole enemy line — a sentence, not a blow. For <b>${this.indictDuration}</b> turns, the first time each <b>Indicted</b> enemy deals damage the charge grounds through them for <b>Lightning magical damage</b> equal to <b>${this.dischargePercent}%</b> of that blow, piercing <b>${this.dischargePiercing}%</b> of their Defense, leaving them <b>Paralyzed</b> for <b>${this.paralyzeDuration}</b> turn(s) and banking Oryn's team <b>1</b> point; at most once per turn and <b>${this.maxDischarges}</b> times each, and nothing if Oryn has fallen. He stands under a <b>${this.shieldAmount}</b> Shield that thins as the courts sit.`,
+        pt: `Os pinos no corpo de Oryn terminam seu trabalho e os tribunais do céu proferem sua sentença sobre toda a linha inimiga — uma sentença, não um golpe. Por <b>${this.indictDuration}</b> turnos, na primeira vez que cada inimigo <b>Indiciado</b> causar dano, a carga se descarrega através dele em <b>dano mágico de Raio</b> igual a <b>${this.dischargePercent}%</b> daquele golpe, perfurando <b>${this.dischargePiercing}%</b> de sua Defesa, deixando-o <b>Paralisado</b> por <b>${this.paralyzeDuration}</b> turno(s) e rendendo <b>1</b> ponto ao time de Oryn; no máximo uma vez por turno e <b>${this.maxDischarges}</b> vezes por alvo, e nada se Oryn tiver caído. Ele fica sob um Escudo de <b>${this.shieldAmount}</b> que se afina enquanto os tribunais permanecem reunidos.`,
+      };
     },
 
     targetSpec: ["all:enemy"],
@@ -220,7 +232,10 @@ const orynSkills = [
 
               const targetName = formatChampionName(owner);
               context.registerDialog?.({
-                message: `⚡ The sky-courts ground their sentence through ${targetName}!`,
+                message: {
+                  en: `⚡ The sky-courts ground their sentence through ${targetName}!`,
+                  pt: `⚡ Os tribunais do céu descarregam sua sentença através de ${targetName}!`,
+                },
                 sourceId: oryn.id,
                 targetId: owner.id,
               });
@@ -244,13 +259,19 @@ const orynSkills = [
       user.addShield(this.shieldAmount, this.shieldDecayPerTurn, context);
 
       context.registerDialog?.({
-        message: `⚖️ The sky-courts sit — ${marked.length} enem${marked.length === 1 ? "y is" : "ies are"} Indicted.`,
+        message: {
+          en: `⚖️ The sky-courts sit — ${marked.length} enem${marked.length === 1 ? "y is" : "ies are"} Indicted.`,
+          pt: `⚖️ Os tribunais do céu se reúnem — ${marked.length} inimigo${marked.length === 1 ? " é Indiciado" : "s são Indiciados"}.`,
+        },
         sourceId: user.id,
         targetId: user.id,
       });
 
       return {
-        log: `${formatChampionName(user)} hands down <b>Sentence of the Sky-Courts</b> on ${marked.join(", ")} and stands under a ${this.shieldAmount} Shield.`,
+        log: {
+          en: `${formatChampionName(user)} hands down <b>Sentence of the Sky-Courts</b> on ${marked.join(", ")} and stands under a <b>${this.shieldAmount}</b> Shield.`,
+          pt: `${formatChampionName(user)} profere <b>Sentence of the Sky-Courts</b> sobre ${marked.join(", ")} e fica sob um Escudo de <b>${this.shieldAmount}</b>.`,
+        },
       };
     },
   },
