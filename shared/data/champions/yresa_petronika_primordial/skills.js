@@ -13,6 +13,7 @@ const yresaPetronikaPrimordialSkills = [
     contact: false,
     damageMode: "standard",
     element: "earth",
+    hitVfx: "earth_slam",
     priority: 0,
 
     description() {
@@ -88,6 +89,7 @@ const yresaPetronikaPrimordialSkills = [
     contact: false,
     damageMode: "standard",
     element: "earth",
+    hitVfx: "earth_slam_big",
     isUltimate: true,
     momentumCost: 55,
     priority: 0,

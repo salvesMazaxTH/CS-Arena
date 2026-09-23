@@ -201,6 +201,7 @@ const yresaPetronikaSkills = [
     contact: false,
     damageMode: "standard",
     element: "earth",
+    hitVfx: "earth_slam",
     isUltimate: true,
     momentumCost: 50,
     priority: 0,
