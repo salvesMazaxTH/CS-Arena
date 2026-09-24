@@ -5,6 +5,9 @@
 //  stroke: a hairline is traced across the target almost too fast
 //  to see, holds, then tears open into a wide diagonal fissure.
 //  Skills that are genuinely several strokes use "multislash".
+//
+//  Some elements also leave visible detail around the cut, chosen by
+//  the element alone (see ELEMENT_DETAILS).
 // ============================================================
 
 import {
@@ -71,12 +74,23 @@ const FADE_DURATION = 0.3;
 const LIFETIME =
   TRACE_DURATION + HOLD_DURATION + OPEN_DURATION + FADE_DURATION;
 
-// Arcs are rebuilt every few frames rather than every one: the flicker is what
-// sells them, and recomputing them 60x a second buys nothing.
-const ARC_FRAMES = 4;
+// Detail is rebuilt every few frames rather than every one: the flicker is
+// what sells it, and recomputing it 60x a second buys nothing.
+const DETAIL_FRAMES = 4;
+
+// What the cut leaves behind besides the fissure itself, keyed by element:
+// lightning throws jagged arcs off the wound and its sparks fall, fire grows
+// tongues along it and its embers climb instead. Any skill carrying one of
+// these elements picks the detail up on its own — the motif knows the
+// categories, the kit only declares what it is made of.
+const ELEMENT_DETAILS = Object.freeze({
+  lightning: { style: "arcs", sparkGravity: 620 },
+  fire: { style: "flames", sparkGravity: -300 },
+});
+const PLAIN_DETAIL = Object.freeze({ style: "none", sparkGravity: 620 });
 
 export class SlashEffect {
-  constructor(ctx, center, size, baseAngle, paletteKey, arcing) {
+  constructor(ctx, center, size, baseAngle, paletteKey, detail) {
     this.ctx = ctx;
     this.center = center;
     this.age = 0;
@@ -96,9 +110,9 @@ export class SlashEffect {
     this.maxWidth = size * 0.15;
     this.particleScale = getParticleScale();
 
-    this.arcing = arcing;
-    this.arcs = [];
-    this.arcFrame = 0;
+    this.detail = detail ?? PLAIN_DETAIL;
+    this.detailShapes = [];
+    this.detailFrame = 0;
   }
 
   buildArcs() {
@@ -106,7 +120,7 @@ export class SlashEffect {
     const perpY = this.dirX;
     const count = Math.max(1, Math.round(3 * this.particleScale));
 
-    this.arcs = Array.from({ length: count }, () => {
+    this.detailShapes = Array.from({ length: count }, () => {
       const from = (Math.random() - 0.5) * this.length * 0.75;
       const reach = this.maxWidth * (2 + Math.random() * 3.5);
       const side = Math.random() < 0.5 ? 1 : -1;
@@ -134,7 +148,7 @@ export class SlashEffect {
     ctx.strokeStyle = this.colors.mid;
     ctx.lineWidth = 1.4;
 
-    for (const points of this.arcs) {
+    for (const points of this.detailShapes) {
       ctx.globalAlpha = fade * (0.45 + Math.random() * 0.45);
       ctx.beginPath();
       ctx.moveTo(points[0][0], points[0][1]);
@@ -145,6 +159,79 @@ export class SlashEffect {
     }
 
     ctx.globalAlpha = 1;
+  }
+
+  // Tongues of flame standing along the cut: each one climbs away from the
+  // fissure, narrowing and leaning as it goes, so the wound reads as still
+  // burning rather than merely orange.
+  buildFlames() {
+    const perpX = -this.dirY;
+    const perpY = this.dirX;
+    const count = Math.max(2, Math.round(5 * this.particleScale));
+
+    this.detailShapes = Array.from({ length: count }, () => {
+      const along = (Math.random() - 0.5) * this.length * 0.8;
+      const side = Math.random() < 0.5 ? 1 : -1;
+      const height = this.maxWidth * (2.5 + Math.random() * 4);
+      const lean = (Math.random() - 0.5) * height * 0.9;
+      const segments = 4;
+      const points = [];
+
+      for (let i = 0; i <= segments; i += 1) {
+        const t = i / segments;
+        // Climb away from the cut, with the lean and a wobble growing at the
+        // tip, where a flame is least attached to what feeds it.
+        const off = side * height * t;
+        const drift = lean * t * t + (Math.random() - 0.5) * height * 0.3 * t;
+        points.push([
+          this.center.x + this.dirX * (along + drift) + perpX * off,
+          this.center.y + this.dirY * (along + drift) + perpY * off,
+        ]);
+      }
+
+      return points;
+    });
+  }
+
+  drawFlames(fade) {
+    const { ctx } = this;
+
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    for (const points of this.detailShapes) {
+      for (const [color, width, alpha] of [
+        [this.colors.deep, 6, 0.3],
+        [this.colors.mid, 2.6, 0.6],
+        [this.colors.core, 1, 0.85],
+      ]) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.globalAlpha = fade * alpha * (0.6 + Math.random() * 0.4);
+        ctx.beginPath();
+        ctx.moveTo(points[0][0], points[0][1]);
+        for (let i = 1; i < points.length; i += 1) {
+          ctx.lineTo(points[i][0], points[i][1]);
+        }
+        ctx.stroke();
+      }
+    }
+
+    ctx.globalAlpha = 1;
+  }
+
+  drawDetail(fade) {
+    if (this.detail.style === "none") return;
+
+    if (this.detailFrame <= 0) {
+      if (this.detail.style === "arcs") this.buildArcs();
+      else this.buildFlames();
+      this.detailFrame = DETAIL_FRAMES;
+    }
+    this.detailFrame -= 1;
+
+    if (this.detail.style === "arcs") this.drawArcs(fade);
+    else this.drawFlames(fade);
   }
 
   spawnSparks() {
@@ -194,14 +281,7 @@ export class SlashEffect {
         // Ease-out so the tear snaps open and then settles.
         this.drawFissure(1 - Math.pow(1 - open, 3), Math.max(fade, 0));
 
-        if (this.arcing) {
-          if (this.arcFrame <= 0) {
-            this.buildArcs();
-            this.arcFrame = ARC_FRAMES;
-          }
-          this.arcFrame -= 1;
-          this.drawArcs(Math.max(fade, 0));
-        }
+        this.drawDetail(Math.max(fade, 0));
       }
     }
     this.drawSparks(dt);
@@ -322,7 +402,7 @@ export class SlashEffect {
         continue;
       }
       p.vx *= 0.93;
-      p.vy = p.vy * 0.93 + 620 * dt;
+      p.vy = p.vy * 0.93 + this.detail.sparkGravity * dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
 
@@ -375,7 +455,7 @@ export async function playSlash({
       size,
       baseAngle,
       paletteKey,
-      (hit?.element ?? skill?.element) === "lightning",
+      ELEMENT_DETAILS[hit?.element ?? skill?.element],
     );
   const padding = size * PADDING_SCALE + PADDING_FLOOR;
 

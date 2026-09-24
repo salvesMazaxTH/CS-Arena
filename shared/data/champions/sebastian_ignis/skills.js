@@ -22,9 +22,10 @@ const sebastianIgnisSkills = [
     apathyBonusFlat: 15,
     burnDuration: 2,
 
-    contact: true,
+    contact: false,
     damageMode: "standard",
     element: "fire",
+    hitVfx: "ember_flick",
     priority: 1,
 
     description() {
@@ -155,6 +156,7 @@ const sebastianIgnisSkills = [
     contact: true,
     damageMode: "standard",
     element: "fire",
+    hitVfx: "slash",
     isUltimate: true,
     momentumCost: 55,
     priority: 0,
