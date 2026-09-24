@@ -168,10 +168,47 @@ th:hover {
   color: var(--text);
 }
 
+th[data-sort] {
+  position: relative;
+}
+
+th.sorted-asc,
+th.sorted-desc {
+  color: var(--accent);
+  background: var(--panel-alt);
+}
+
+th.sorted-asc::after,
+th.sorted-desc::after {
+  content: "";
+  display: inline-block;
+  margin-left: 6px;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  vertical-align: middle;
+}
+
+th.sorted-desc::after {
+  border-top: 5px solid var(--accent);
+}
+
+th.sorted-asc::after {
+  border-bottom: 5px solid var(--accent);
+}
+
+th.rank-col {
+  cursor: default;
+  width: 1%;
+}
+
 td {
   padding: 8px 12px;
   border-top: 1px solid var(--border);
   white-space: nowrap;
+}
+
+td.rank-col {
+  color: var(--text-dim);
 }
 
 tbody tr:hover {

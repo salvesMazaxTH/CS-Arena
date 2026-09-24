@@ -241,6 +241,7 @@ const silasSkills = [
               return;
             }
 
+            mirage.runtime.arrivalVfx = "mirage_split";
             mirage.runtime.silasMirageOwnerId = user.id;
             mirage.runtime.silasMirageSpawnTurn = spawnContext.currentTurn;
 

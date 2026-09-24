@@ -36,7 +36,7 @@ function makeGlowSprite(color) {
 
 // Brighter than the identity palette: additive blending washes the muted
 // badge tones out.
-const PALETTES = Object.freeze({
+export const CHAIN_LASH_PALETTES = Object.freeze({
   steel: { core: "#ffffff", mid: "#d6f0ff", deep: "#78beff" },
   fire: { core: "#fff6df", mid: "#ffb347", deep: "#ff4d12" },
   water: { core: "#f0feff", mid: "#7fd4ff", deep: "#2e92f6" },
@@ -45,6 +45,7 @@ const PALETTES = Object.freeze({
   earth: { core: "#fff4e2", mid: "#d2a878", deep: "#8a5a2b" },
   poison: { core: "#f7ecff", mid: "#c08bff", deep: "#6a1fa8" },
   plant: { core: "#f2fff2", mid: "#8fe6a0", deep: "#2c8a4a" },
+  verdant: { core: "#f6fff0", mid: "#a8f07a", deep: "#3f9c28" },
   violet: { core: "#fbf0ff", mid: "#c98bff", deep: "#7b2fd6" },
   crimson: { core: "#fff0f0", mid: "#ff6b6b", deep: "#b3121b" },
   azure: { core: "#f2ffff", mid: "#7df9ff", deep: "#12a7d6" },
@@ -54,7 +55,7 @@ const spriteCache = new Map();
 
 function getSprites(paletteKey) {
   if (!spriteCache.has(paletteKey)) {
-    const { core, mid, deep } = PALETTES[paletteKey];
+    const { core, mid, deep } = CHAIN_LASH_PALETTES[paletteKey];
     spriteCache.set(paletteKey, [
       makeGlowSprite(core),
       makeGlowSprite(mid),
@@ -86,8 +87,9 @@ const PADDING = 220;
 
 // Motif variants (vines, tendrils) reuse this effect through `options`:
 // `dash` null draws the core pass as one continuous line instead of a glint,
-// `loopCount` how many coils tighten around the target, and `slackScale`
-// how heavily the line bows on its way out.
+// `loopCount` how many coils tighten around the target, `slackScale` how
+// heavily the line bows on its way out, and `sprouts` how many small blades
+// unfurl along it once it has passed — the only decoration the line can carry.
 export class ChainLashEffect {
   constructor(ctx, from, to, size, paletteKey, options = {}) {
     this.ctx = ctx;
@@ -100,8 +102,9 @@ export class ChainLashEffect {
 
     this.dash = options.dash === undefined ? GLINT_DASH : options.dash;
     this.loopCount = options.loopCount ?? LOOP_COUNT;
+    this.sproutCount = options.sprouts ?? 0;
 
-    this.colors = PALETTES[paletteKey];
+    this.colors = CHAIN_LASH_PALETTES[paletteKey];
     this.sprites = getSprites(paletteKey);
     this.particleScale = getParticleScale();
 
@@ -115,6 +118,13 @@ export class ChainLashEffect {
     this.slackReach =
       Math.min(distance * 0.32, 150) * (options.slackScale ?? 1);
     this.bowSign = this.dirX >= 0 ? -1 : 1;
+
+    this.sprouts = Array.from({ length: this.sproutCount }, (_, i) => ({
+      t: 0.16 + (i / Math.max(this.sproutCount, 1)) * 0.78,
+      side: i % 2 === 0 ? 1 : -1,
+      length: size * (0.08 + Math.random() * 0.05),
+      tilt: 0.5 + Math.random() * 0.5,
+    }));
 
     this.loops = Array.from({ length: this.loopCount }, (_, i) => ({
       offsetY: (i - (this.loopCount - 1) / 2) * size * 0.2,
@@ -191,9 +201,49 @@ export class ChainLashEffect {
       if (dashed && this.dash) ctx.setLineDash([]);
     }
 
+    if (this.sproutCount > 0) this.drawSprouts(points, progress, alpha);
+
     ctx.globalAlpha = 1;
 
     return head;
+  }
+
+  // Each blade is a thin stroke that unfurls after the line has swept past it,
+  // so nothing solid is ever drawn ahead of the head.
+  drawSprouts(points, progress, alpha) {
+    const { ctx } = this;
+
+    ctx.strokeStyle = this.colors.mid;
+    ctx.lineCap = "round";
+
+    for (const sprout of this.sprouts) {
+      if (sprout.t > progress) continue;
+
+      const grown = Math.min((progress - sprout.t) / 0.22, 1);
+      if (grown <= 0) continue;
+
+      const index = Math.min(
+        points.length - 2,
+        Math.floor((sprout.t / progress) * (points.length - 1)),
+      );
+      const at = points[index];
+      const next = points[index + 1];
+      const angle =
+        Math.atan2(next.y - at.y, next.x - at.x) + sprout.side * sprout.tilt;
+      const reach = sprout.length * grown;
+
+      ctx.globalAlpha = alpha * 0.75 * grown;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(at.x, at.y);
+      ctx.quadraticCurveTo(
+        at.x + Math.cos(angle - sprout.side * 0.5) * reach * 0.6,
+        at.y + Math.sin(angle - sprout.side * 0.5) * reach * 0.6,
+        at.x + Math.cos(angle) * reach,
+        at.y + Math.sin(angle) * reach,
+      );
+      ctx.stroke();
+    }
   }
 
   drawWindup(progress) {
@@ -392,7 +442,7 @@ export async function playChainLash({
 
   const requested =
     hit?.hitVfxPalette || skill?.hitVfxPalette || hit?.element || skill?.element;
-  const paletteKey = requested in PALETTES ? requested : "steel";
+  const paletteKey = requested in CHAIN_LASH_PALETTES ? requested : "steel";
 
   const rect = targetEl.getBoundingClientRect();
   const target = {

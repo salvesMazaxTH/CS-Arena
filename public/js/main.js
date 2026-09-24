@@ -1384,6 +1384,10 @@ socket.on("firstChampionChoicesFinalized", () => {
 //  CHAMPION MANAGEMENT
 // ============================================================
 
+socket.on("championArrived", (payload) => {
+  combatAnimations.handleChampionArrived(payload);
+});
+
 socket.on("championRemoved", (payload) => {
   combatAnimations.handleChampionRemoved(payload);
   // After removal, re-sort DOM to match logical slot order
@@ -1423,6 +1427,10 @@ function createNewChampion(championData) {
     removeSkillOverlay: removeSkillOverlay,
     editMode: editMode,
   });
+
+  // Held out of sight until its own entrance plays: the state that draws the
+  // portrait always reaches the client before the animation queue gets here.
+  if (championData.runtime?.arrivalVfx) champion.el?.classList.add("arriving");
 
   // Adds listeners for hover/touch on the portrait
   setTimeout(() => {

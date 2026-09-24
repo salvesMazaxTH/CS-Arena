@@ -49,14 +49,10 @@ export default {
     );
 
     if (shieldAmount > 0) {
-      // Magical damage creates a Spellshield.
-      // All other damage uses the regular Shield fallback.
       if (type === "magical") {
-        owner.addShield(1, 0, context, "spell", { sourceId: owner.id });
+        owner.addShield(1, 0, context, "spell");
       } else {
-        owner.addShield(shieldAmount, 0, context, "regular", {
-          sourceId: owner.id,
-        });
+        owner.addShield(shieldAmount, 0, context, "regular");
       }
     }
 

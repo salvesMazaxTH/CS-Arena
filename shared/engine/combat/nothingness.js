@@ -72,6 +72,7 @@ export class Nothingness {
     }
 
     SpawnProtection.grant(champion);
+    champion.runtime.arrivalVfx = "nothingness_return";
     if (context) champion.runtime.currentContext = context;
 
     return {

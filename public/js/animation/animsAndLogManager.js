@@ -18,6 +18,10 @@ import { getLocale } from "../i18n/clientLocale.js";
 import { audioManager } from "../utils/AudioManager.js";
 import { animateSkill } from "./skillAnimations.js";
 import { playUnmakingEffect } from "./effects/unmakingAnimation.js";
+import {
+  getArrivalReveal,
+  playArrivalEffect,
+} from "./effects/arrivalAnimation.js";
 import { EffectCanvasBatch } from "./core/effectCanvasBatch.js";
 import { createMatchStatsPanel } from "../ui/matchStats.js";
 import { createScoreboard } from "../ui/scoreboard.js";
@@ -294,6 +298,10 @@ export function createCombatAnimationManager(deps) {
 
       case "championRemoved":
         await processChampionRemoved(item.data);
+        break;
+
+      case "championArrived":
+        await processChampionArrived(item.data);
         break;
 
       case "combatLog":
@@ -1622,6 +1630,35 @@ export function createCombatAnimationManager(deps) {
   }
 
   // ============================================================
+  //  CHAMPION ARRIVED (entrance animation)
+  //
+  //  The state update draws the portrait already wearing .arriving,
+  //  which holds it out of sight however long the queue takes to
+  //  reach here; only now does the figure take hold.
+  // ============================================================
+
+  async function processChampionArrived({ championId, arrivalVfx }) {
+    const el = deps.activeChampions.get(championId)?.el;
+    if (!el) return;
+
+    const reveal = getArrivalReveal(arrivalVfx);
+
+    if (reveal) {
+      el.style.setProperty("--arrival-duration", `${reveal.durationMs}ms`);
+      el.dataset.arrival = reveal.edge;
+      el.classList.add("materializing");
+    }
+
+    el.classList.remove("arriving");
+
+    await playArrivalEffect(el, arrivalVfx);
+
+    el.classList.remove("materializing");
+    delete el.dataset.arrival;
+    el.style.removeProperty("--arrival-duration");
+  }
+
+  // ============================================================
   //  COMBAT LOG APPENDING
   //
   //  Manages the text-based combat log panel, including
@@ -1790,6 +1827,9 @@ export function createCombatAnimationManager(deps) {
     },
     handleChampionRemoved(payload) {
       enqueue("championRemoved", payload);
+    },
+    handleChampionArrived(payload) {
+      enqueue("championArrived", payload);
     },
     handleGameOver(data) {
       enqueue("gameOver", data);

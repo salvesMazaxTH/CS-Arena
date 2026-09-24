@@ -1,7 +1,6 @@
 export default {
   name: "Rootward Colossus",
-  unreleased: true,
-  releaseDate: "2026-10-04",
+  releaseDate: "2026-09-23",
   portrait: "/assets/portraits/yresa_colossus.webp",
 
   // Every stat is scaled at spawn by the number of Rootwards fused into it.

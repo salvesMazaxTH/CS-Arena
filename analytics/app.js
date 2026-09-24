@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 import { championDB } from "../shared/data/championDB.js";
 import { EMBLEMS } from "../shared/data/emblems/index.js";
+import { PREBUILT_TEAMS } from "../shared/data/teams/index.js";
 
 const REFRESH_INTERVAL_MS = 30_000;
 
@@ -11,11 +12,44 @@ function championName(key) {
   return championDB[key]?.name || key;
 }
 
+// A comp is the same comp no matter what order its champions were picked
+// in, so every grouping/lookup key goes through this canonical form.
+function canonicalCompKey(compKey) {
+  return compKey.split("|").filter(Boolean).sort().join("|");
+}
+
+const prebuiltNameByCompKey = new Map(
+  PREBUILT_TEAMS.map((team) => [canonicalCompKey(team.champions.join("|")), team.name]),
+);
+
 function compLabel(compKey) {
-  return compKey
+  const canonical = canonicalCompKey(compKey);
+  const prebuiltName = prebuiltNameByCompKey.get(canonical);
+  if (prebuiltName) return prebuiltName;
+  return canonical
     .split("|")
     .map(championName)
     .join(", ");
+}
+
+// Historical rows may have been stored before comp_key was normalized
+// order-independently, so merge duplicates here rather than trust the DB grouping.
+function mergeComps(rows) {
+  const merged = new Map();
+  for (const row of rows) {
+    const key = canonicalCompKey(row.comp_key);
+    const existing = merged.get(key);
+    if (!existing) {
+      merged.set(key, { comp_key: key, matches_played: 0, wins: 0 });
+    }
+    const entry = merged.get(key);
+    entry.matches_played += Number(row.matches_played) || 0;
+    entry.wins += Number(row.wins) || 0;
+  }
+  return Array.from(merged.values()).map((entry) => ({
+    ...entry,
+    win_rate: entry.matches_played > 0 ? entry.wins / entry.matches_played : null,
+  }));
 }
 
 function pct(ratio) {
@@ -78,8 +112,21 @@ function attachSorting(tableId, renderFn) {
       const current = sortState.get(tableId) || {};
       const dir = current.key === key && current.dir === "desc" ? "asc" : "desc";
       sortState.set(tableId, { key, dir });
+      updateSortIndicators(tableId);
       renderFn();
     });
+  });
+  updateSortIndicators(tableId);
+}
+
+function updateSortIndicators(tableId) {
+  const table = document.getElementById(tableId);
+  const state = sortState.get(tableId);
+  table.querySelectorAll("th[data-sort]").forEach((th) => {
+    th.classList.remove("sorted-asc", "sorted-desc");
+    if (state && th.dataset.sort === state.key) {
+      th.classList.add(state.dir === "asc" ? "sorted-asc" : "sorted-desc");
+    }
   });
 }
 
@@ -131,7 +178,8 @@ function renderChampionTable() {
 
   document.getElementById("championTableBody").innerHTML = sorted
     .map(
-      (r) => `<tr>
+      (r, i) => `<tr>
+        <td class="rank-col">${i + 1}</td>
         <td>${r.name}</td>
         <td>${num(r.matches_in_roster)}</td>
         <td class="win-rate ${winRateClass(r.roster_win_rate)}">${pct(r.roster_win_rate)}</td>
@@ -158,7 +206,8 @@ function renderEmblemTable() {
   const sorted = sortRows("emblemTable", enriched);
   document.getElementById("emblemTableBody").innerHTML = sorted
     .map(
-      (r) => `<tr>
+      (r, i) => `<tr>
+        <td class="rank-col">${i + 1}</td>
         <td>${r.name}</td>
         <td>${num(r.matches_played)}</td>
         <td>${num(r.wins)}</td>
@@ -174,7 +223,8 @@ function renderCompTable() {
   const sorted = sortRows("compTable", rows);
   document.getElementById("compTableBody").innerHTML = sorted
     .map(
-      (r) => `<tr>
+      (r, i) => `<tr>
+        <td class="rank-col">${i + 1}</td>
         <td>${compLabel(r.comp_key)}</td>
         <td>${num(r.matches_played)}</td>
         <td>${num(r.wins)}</td>
@@ -190,7 +240,8 @@ function renderPlayerTable() {
   const sorted = sortRows("playerTable", rows);
   document.getElementById("playerTableBody").innerHTML = sorted
     .map(
-      (r) => `<tr>
+      (r, i) => `<tr>
+        <td class="rank-col">${i + 1}</td>
         <td>${r.username}</td>
         <td>${num(r.matches_played)}</td>
         <td>${num(r.wins)}</td>
@@ -231,7 +282,7 @@ async function loadAll() {
 
     rowsByTable.set("championTable", champions.data || []);
     rowsByTable.set("emblemTable", emblems.data || []);
-    rowsByTable.set("compTable", comps.data || []);
+    rowsByTable.set("compTable", mergeComps(comps.data || []));
     rowsByTable.set("playerTable", players.data || []);
 
     renderChampionTable();

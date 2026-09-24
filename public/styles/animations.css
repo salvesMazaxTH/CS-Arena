@@ -1040,6 +1040,99 @@
   }
 }
 
+/* The counterpart of the unmaking. The card is drawn already wearing .arriving
+   and stays out of sight however long the queue takes to reach its entrance;
+   only then does it take hold, along the same edge its motes gather on. */
+.champion.arriving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.champion.materializing {
+  animation: materializeFade var(--arrival-duration, 800ms) linear forwards;
+  pointer-events: none;
+}
+
+/* Raised out of the ground, so it is written in from the hem upward. */
+.champion.materializing[data-arrival="hem"] {
+  animation-name: materializeUpward;
+}
+
+/* Written back in from the top down, the way the unmaking erased it. */
+.champion.materializing[data-arrival="down"] {
+  animation-name: materializeDownward;
+}
+
+@keyframes materializeFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes materializeUpward {
+  from {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 100%,
+      #000 106%,
+      #000 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 100%,
+      #000 106%,
+      #000 100%
+    );
+  }
+
+  to {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      #000 6%,
+      #000 100%
+    );
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 6%, #000 100%);
+  }
+}
+
+@keyframes materializeDownward {
+  from {
+    -webkit-mask-image: linear-gradient(
+      to top,
+      transparent 100%,
+      #000 106%,
+      #000 100%
+    );
+    mask-image: linear-gradient(
+      to top,
+      transparent 100%,
+      #000 106%,
+      #000 100%
+    );
+  }
+
+  to {
+    -webkit-mask-image: linear-gradient(
+      to top,
+      transparent 0%,
+      #000 6%,
+      #000 100%
+    );
+    mask-image: linear-gradient(to top, transparent 0%, #000 6%, #000 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .champion.materializing {
+    animation-name: materializeFade;
+  }
+}
+
 .champion.dying {
   opacity: 0.8;
   animation: collapse 950ms ease-out forwards;

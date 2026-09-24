@@ -1,7 +1,6 @@
 export default {
   name: "Yrêsa Petroníka, Primordial Form",
-  unreleased: true,
-  releaseDate: "2026-10-04",
+  releaseDate: "2026-09-23",
   portrait: "/assets/portraits/yresa_petronika_transformed.webp",
   selectable: false,
 

@@ -42,6 +42,23 @@ create index if not exists idx_match_players_emblem_keys on match_players using 
 create index if not exists idx_match_champion_stats_match_id on match_champion_stats(match_id);
 create index if not exists idx_match_champion_stats_champion_key on match_champion_stats(champion_key);
 
+-- One-time normalization: comp_key used to be built from champion_keys in
+-- whatever order they were picked, so rows written before that was fixed can
+-- carry a comp_key that isn't alphabetically sorted, even though every
+-- insert now sorts first. Re-deriving it here makes every row
+-- order-independent, so v_comp_winrate groups picks of the same lineup
+-- together no matter which order the champions were picked in. Safe to
+-- re-run: already-sorted rows are a no-op.
+update match_players
+set comp_key = (
+  select string_agg(key, '|' order by key)
+  from unnest(champion_keys) as key
+)
+where comp_key <> (
+  select string_agg(key, '|' order by key)
+  from unnest(champion_keys) as key
+);
+
 -- Superseded by v_champion_overall below; drop so re-running this file after
 -- an earlier version stays clean.
 drop view if exists v_champion_winrate;

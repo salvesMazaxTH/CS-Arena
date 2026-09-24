@@ -87,6 +87,7 @@ const laisaelisSkills = [
               return;
             }
 
+            echo.runtime.arrivalVfx = "echo_answer";
             echo.name = `Echo of ${source.name}`;
             echo.momentum = source.momentum;
 

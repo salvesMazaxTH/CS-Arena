@@ -37,6 +37,7 @@ function scheduleRevival(champion, context, passiveName) {
       reviveFrom: champion, // Passes the previous Jeff's state.
       onSpawn: (revived, spawnContext, reviveFrom) => {
         restoreRevivedState(revived, reviveFrom);
+        revived.runtime.arrivalVfx = "death_revival";
 
         revived.HP = Math.floor(revived.maxHP * (REVIVE_HP_PERCENT / 100));
 

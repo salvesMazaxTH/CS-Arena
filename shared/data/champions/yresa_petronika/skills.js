@@ -120,6 +120,7 @@ const yresaPetronikaSkills = [
           onSpawn: (sentinel, spawnContext) => {
             sentinel.runtime.summonerId = user.id;
             sentinel.runtime.leavesNoDeath = true;
+            sentinel.runtime.arrivalVfx = "earth_summon";
 
             user.runtime.sentinelIds = [
               ...(user.runtime.sentinelIds ?? []),
@@ -288,6 +289,7 @@ const yresaPetronikaSkills = [
           onSpawn: (colossus, spawnContext) => {
             colossus.runtime.summonerId = user.id;
             colossus.runtime.leavesNoDeath = true;
+            colossus.runtime.arrivalVfx = "earth_summon";
             colossus.runtime.fusedRootwards = fused;
             user.runtime.colossusId = colossus.id;
 

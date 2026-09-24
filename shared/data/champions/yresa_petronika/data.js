@@ -1,7 +1,6 @@
 export default {
   name: "Yrêsa Petroníka",
-  unreleased: true,
-  releaseDate: "2026-10-04",
+  releaseDate: "2026-09-23",
   portrait: "/assets/portraits/yresa_petronika.webp",
 
   HP: 300,

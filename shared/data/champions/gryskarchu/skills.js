@@ -22,7 +22,8 @@ const gryskarchuSkills = [
     damageMode: "standard",
     snareDuration: 2,
     contact: false,
-    hitVfx: "vine_lash",
+    hitVfx: "ribbon_lash",
+    hitVfxPalette: "verdant",
 
     priority: 0,
 

@@ -454,7 +454,10 @@ function spawnChampion({ emitState = true, ...spawnOpts } = {}) {
   if (!champion) return null;
 
   applyCosmeticSkin(champion);
-  if (emitState) broadcastGameState();
+  if (emitState) {
+    broadcastGameState();
+    flushFieldArrivals();
+  }
 
   return champion;
 }
@@ -503,6 +506,34 @@ function emitChampionDeath(deathResult) {
 // Held until the envelopes are out, or a champion leaves the DOM before the
 // animation of the blow that took it away gets to play.
 const pendingFieldDepartures = [];
+
+// Held until the state that draws their portrait has reached the client: an
+// entrance cannot be animated on an element that does not exist yet.
+const pendingFieldArrivals = [];
+
+/**
+ * Collects the entrance of everyone that reached the field naming one. Whoever
+ * puts a champion there writes runtime.arrivalVfx, which is consumed here so
+ * the entrance plays once however the champion got in.
+ */
+function collectFieldArrivals() {
+  match.combat.activeChampions.forEach((champion) => {
+    const arrivalVfx = champion.runtime?.arrivalVfx;
+    if (!arrivalVfx) return;
+
+    delete champion.runtime.arrivalVfx;
+    pendingFieldArrivals.push({ championId: champion.id, arrivalVfx });
+  });
+}
+
+/** Emits the queued entrances. Only ever call it after a state broadcast. */
+function flushFieldArrivals() {
+  collectFieldArrivals();
+
+  while (pendingFieldArrivals.length) {
+    io.emit("championArrived", pendingFieldArrivals.shift());
+  }
+}
 
 /** Applies a champion mutation, queueing the field exit of anyone it takes away. */
 function applyChampionMutation(request, options = {}) {
@@ -739,6 +770,7 @@ function handleEndTurn() {
 
     flushFieldDepartures();
     broadcastGameState();
+    flushFieldArrivals();
   }
 
   const context = {
@@ -779,6 +811,9 @@ function handleScheduledEffect(effect, context) {
       const spawned = spawnChampion({
         ...effect.payload,
         combatSlot: effect.payload.combatSlot ?? null,
+        // onSpawn is what names the entrance, so the state that draws the
+        // portrait can only go out after it has run.
+        emitState: false,
       });
 
       if (!spawned) {
@@ -815,6 +850,9 @@ function handleScheduledEffect(effect, context) {
           effect.payload.reviveFrom || null,
         );
       }
+
+      broadcastGameState();
+      flushFieldArrivals();
       break;
     }
 
@@ -1058,6 +1096,7 @@ function handleStartTurn() {
   // A finished match must never reopen its planning window.
   match.combat.phase = match.isGameEnded() ? "ended" : "planning";
   broadcastGameState();
+  flushFieldArrivals();
 }
 
 // ============================================================
@@ -1075,6 +1114,7 @@ function resetGameState() {
 function resetCombatState() {
   revealConcealedSummons();
   pendingFieldDepartures.length = 0;
+  pendingFieldArrivals.length = 0;
   match.combat.reset();
   match.combat.start();
 

@@ -1,10 +1,11 @@
 // ============================================================
-//  Vine Lash Animation
+//  Ribbon Lash Animation
 //
-//  Living variant of the chain lash, opted into with `hitVfx: "vine_lash"`.
-//  The line bows far more on the way out, coils tighter around the target
-//  and unfurls small blades along its length once it has swept past — the
-//  only thing that separates it from the ribbon is what grows on it.
+//  Soft variant of the chain lash, opted into with `hitVfx: "ribbon_lash"`.
+//  Same snap-and-coil motion, but the line reads as one continuous ribbon
+//  instead of glinting like articulated metal: it bows more heavily on the
+//  way out and settles into an extra coil. Nothing organic is drawn, so the
+//  palette alone decides what the ribbon is made of.
 // ============================================================
 
 import { ChainLashEffect, CHAIN_LASH_PALETTES } from "./chainLashAnimation.js";
@@ -16,14 +17,13 @@ import {
 
 const PADDING = 220;
 
-const VINE_OPTIONS = Object.freeze({
+const RIBBON_OPTIONS = Object.freeze({
   dash: null,
-  loopCount: 5,
-  slackScale: 1.7,
-  sprouts: 7,
+  loopCount: 4,
+  slackScale: 1.45,
 });
 
-export async function playVineLash({
+export async function playRibbonLash({
   userEl,
   targetEl,
   skill,
@@ -31,10 +31,6 @@ export async function playVineLash({
   canvasBatch,
 }) {
   if (!targetEl) return;
-
-  const requested =
-    hit?.hitVfxPalette || skill?.hitVfxPalette || hit?.element || skill?.element;
-  const paletteKey = requested in CHAIN_LASH_PALETTES ? requested : "plant";
 
   const rect = targetEl.getBoundingClientRect();
   const target = {
@@ -46,8 +42,19 @@ export async function playVineLash({
     ? getElementCenter(userEl)
     : { x: target.x - 280, y: target.y - 60 };
 
+  const requested =
+    hit?.hitVfxPalette || skill?.hitVfxPalette || hit?.element || skill?.element;
+  const paletteKey = requested in CHAIN_LASH_PALETTES ? requested : "steel";
+
   const buildEffect = (ctx) =>
-    new ChainLashEffect(ctx, start, target, size, paletteKey, VINE_OPTIONS);
+    new ChainLashEffect(
+      ctx,
+      start,
+      target,
+      size,
+      paletteKey,
+      RIBBON_OPTIONS
+    );
 
   let flashed = false;
   const onFrame = (effect) => {

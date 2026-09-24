@@ -97,9 +97,63 @@ const MOTIFS = Object.freeze({
       };
     },
   },
+
+  // Laisaelis's Echo: the answer arrives from above, warm and already spoken.
+  echo_answer: {
+    palette: { core: "#ffffff", mid: "#fff2c9", deep: "#ffcf72" },
+    duration: 0.8,
+    budget: 40,
+    edge: null,
+    spawn(rect) {
+      const tx = rect.left + Math.random() * rect.width;
+      return {
+        sx: tx + (Math.random() - 0.5) * rect.width * 0.3,
+        sy: rect.top - 10 - Math.random() * 40,
+        tx,
+        ty: rect.top + Math.random() * rect.height,
+        maxLife: 0.36 + Math.random() * 0.24,
+        size: 7 + Math.random() * 9,
+      };
+    },
+  },
+
+  // Silas's mirage: it peels off him sideways, the copy stepping out of the man.
+  mirage_split: {
+    palette: { core: "#efe4ff", mid: "#9a63e8", deep: "#3d1a6b" },
+    duration: 0.72,
+    budget: 38,
+    edge: null,
+    spawn(rect) {
+      const side = Math.random() < 0.5 ? -1 : 1;
+      const ty = rect.top + Math.random() * rect.height;
+      return {
+        sx: rect.left + rect.width / 2 + side * (rect.width * 0.7 + Math.random() * 30),
+        sy: ty + (Math.random() - 0.5) * 14,
+        tx: rect.left + rect.width * (0.2 + Math.random() * 0.6),
+        ty,
+        maxLife: 0.3 + Math.random() * 0.2,
+        size: 7 + Math.random() * 9,
+      };
+    },
+  },
 });
 
 export const ARRIVAL_MOTIF_KEYS = Object.keys(MOTIFS);
+
+/**
+ * How the card itself should be revealed under the motes: along the same edge
+ * they gather on, and slightly ahead of them so the figure is whole by the
+ * time the last one lands.
+ */
+export function getArrivalReveal(motifKey) {
+  const motif = MOTIFS[motifKey];
+  if (!motif) return null;
+
+  return {
+    durationMs: Math.round(motif.duration * 850),
+    edge: motif.edge ?? "fade",
+  };
+}
 
 // Pre-rendered once per motif and reused from then on.
 const spriteCache = new Map();
