@@ -9,8 +9,8 @@ export default {
 
   description() {
     return {
-      en: `While Rootward stands, the ground around it holds: every ally other than the one who raised it takes <b>${this.auraDmgReductionPercent}%</b> less damage from every source (except Absolute Damage).`,
-      pt: `Enquanto o Rootward estiver de pé, o chão ao redor dele aguenta: todo aliado que não seja quem o ergueu sofre <b>${this.auraDmgReductionPercent}%</b> menos dano de qualquer fonte (exceto Dano Absoluto).`,
+      en: `While Stoneward stands, the ground around it holds: every ally other than the one who raised it takes <b>${this.auraDmgReductionPercent}%</b> less damage from every source (except Absolute Damage).`,
+      pt: `Enquanto o Stoneward estiver de pé, o chão ao redor dele aguenta: todo aliado que não seja quem o ergueu sofre <b>${this.auraDmgReductionPercent}%</b> menos dano de qualquer fonte (exceto Dano Absoluto).`,
     };
   },
 

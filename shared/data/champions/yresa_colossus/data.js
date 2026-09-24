@@ -1,9 +1,9 @@
 export default {
-  name: "Rootward Colossus",
+  name: "Stoneward Colossus",
   releaseDate: "2026-09-23",
   portrait: "/assets/portraits/yresa_colossus.webp",
 
-  // Every stat is scaled at spawn by the number of Rootwards fused into it.
+  // Every stat is scaled at spawn by the number of Stonewards fused into it.
   HP: 50,
   Attack: 50,
   Defense: 80,
