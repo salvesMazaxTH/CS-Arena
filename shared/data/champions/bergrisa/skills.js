@@ -5,6 +5,29 @@ import { formatChampionName } from "../../../ui/formatters.js";
 import passive from "./passive.js";
 import totalBlock from "../generic/totalBlock.js";
 
+function strikeAll(skill, user, targets, context) {
+  const baseDamage = (user.Attack * skill.bf) / 100;
+  const results = [];
+
+  for (const enemy of targets) {
+    const damageResult = new DamageEvent({
+      baseDamage,
+      attacker: user,
+      defender: enemy,
+      skill,
+      type: "physical",
+      context,
+      allChampions: context?.allChampions,
+    }).execute();
+
+    results.push(
+      ...(Array.isArray(damageResult) ? damageResult : [damageResult]),
+    );
+  }
+
+  return results;
+}
+
 const bergrisaSkills = [
   totalBlock,
 
@@ -29,24 +52,7 @@ const bergrisaSkills = [
     targetSpec: ["all:enemy"],
 
     resolve({ user, targets, context = {} }) {
-      const baseDamage = (user.Attack * this.bf) / 100;
-      const results = [];
-
-      for (const enemy of targets) {
-        const damageResult = new DamageEvent({
-          baseDamage,
-          attacker: user,
-          defender: enemy,
-          skill: this,
-          type: "physical",
-          context,
-          allChampions: context?.allChampions,
-        }).execute();
-
-        results.push(
-          ...(Array.isArray(damageResult) ? damageResult : [damageResult]),
-        );
-      }
+      const results = strikeAll(this, user, targets, context);
 
       const sediment = user.runtime?.bergrisaSediment || 0;
       if (sediment < this.stunSedimentCost) return results;
@@ -63,14 +69,17 @@ const bergrisaSkills = [
       const hit = results.find((r) => r?.defender?.id === outweighed.id);
       if (!effectConnected(hit, "stunned")) return results;
 
-      passive.setSediment(user, sediment - this.stunSedimentCost);
+      passive.setSediment(user, sediment - this.stunSedimentCost, context);
 
       outweighed.applyStatusEffect("stunned", this.stunDuration, context, {
-        source: { type: "skill", skill: this, champion: user },
+        sourceId: user.id,
       });
 
       results.push({
-        log: `<b>[${this.name}]</b> ${formatChampionName(user)} spent ${this.stunSedimentCost} Sediment and pinned ${formatChampionName(outweighed)} to the ground.`,
+        log: {
+          en: `<b>[${this.name}]</b> ${formatChampionName(user)} spent ${this.stunSedimentCost} Sediment and pinned ${formatChampionName(outweighed)} to the ground.`,
+          pt: `<b>[${this.name}]</b> ${formatChampionName(user)} gastou ${this.stunSedimentCost} de Sedimento e cravou ${formatChampionName(outweighed)} no chão.`,
+        },
       });
 
       return results;
@@ -86,8 +95,8 @@ const bergrisaSkills = [
 
     description() {
       return {
-        en: `Bergrisa lowers an open hand over one enemy and the valley leans with her. The chosen target is <b>Taunted</b> for <b>${this.tauntDuration}</b> turn, and until her next turn every blow her allies take is blunted by as much as <b>Strata</b> blunts her own, except <b>Absolute Damage</b>, damage over time and piercing hits.`,
-        pt: `Bergrisa abaixa uma mão aberta sobre um inimigo e o vale se inclina com ela. O alvo escolhido fica <b>Provocado</b> por <b>${this.tauntDuration}</b> turno, e até o próximo turno dela todo golpe que seus aliados sofrerem é amortecido tanto quanto <b>Strata</b> amortece o dela, exceto <b>Dano Absoluto</b>, dano ao longo do tempo e acertos perfurantes.`,
+        en: `Bergrisa lowers an open hand over one enemy and the valley leans with her. The chosen target is <b>Taunted</b> for <b>${this.tauntDuration}</b> turn, and until her next turn every blow her other allies take is blunted by exactly what <b>Strata</b> blunts from hers at the moment she casts this, a value that stays fixed even as her <b>Sediment</b> changes, except <b>Absolute Damage</b>, damage over time and piercing hits.`,
+        pt: `Bergrisa abaixa uma mão aberta sobre um inimigo e o vale se inclina com ela. O alvo escolhido fica <b>Provocado</b> por <b>${this.tauntDuration}</b> turno, e até o próximo turno dela todo golpe que os demais aliados sofrerem é amortecido exatamente no quanto <b>Strata</b> amortece os dela no momento em que ela usa esta habilidade, exceto <b>Dano Absoluto</b>, dano ao longo do tempo e acertos perfurantes.`,
       };
     },
 
@@ -106,21 +115,21 @@ const bergrisaSkills = [
         "ally",
         user,
         context.aliveChampions ?? [],
-      );
+      ).filter((ally) => ally !== user);
 
       for (const ally of allies) {
         ally.addHookEffect(
           {
             type: "buff",
-            key: "under-the-palm",
+            key: "under_the_palm",
             name: "Under the Palm",
             expiresAtTurn,
             hookScope: { onBeforeDmgTaking: "defender" },
-            onBeforeDmgTaking({ damage, mode, piercingPercentage }) {
-              if (!(damage > 0)) return;
-              if (mode === "piercing" || (piercingPercentage || 0) > 0) return;
+            onBeforeDmgTaking(payload) {
+              const damage = passive.bluntHit(payload, subtraction);
+              if (damage === undefined) return;
 
-              return { damage: passive.blunt(damage, subtraction) };
+              return { damage };
             },
           },
           context,
@@ -128,7 +137,10 @@ const bergrisaSkills = [
       }
 
       logs.push({
-        log: `<b>[${this.name}]</b> ${formatChampionName(user)} set her hand over the field; every ally now subtracts ${subtraction} from each blow.`,
+        log: {
+          en: `<b>[${this.name}]</b> ${formatChampionName(user)} set her hand over the field; every other ally now subtracts ${subtraction} from each blow.`,
+          pt: `<b>[${this.name}]</b> ${formatChampionName(user)} estendeu a mão sobre o campo; cada um dos demais aliados agora subtrai ${subtraction} de cada golpe.`,
+        },
       });
 
       return logs;
@@ -159,28 +171,12 @@ const bergrisaSkills = [
     targetSpec: ["all:enemy"],
 
     resolve({ user, targets, context = {} }) {
-      const baseDamage = (user.Attack * this.bf) / 100;
-      const results = [];
-
-      for (const enemy of targets) {
-        const damageResult = new DamageEvent({
-          baseDamage,
-          attacker: user,
-          defender: enemy,
-          skill: this,
-          type: "physical",
-          context,
-          allChampions: context?.allChampions,
-        }).execute();
-
-        results.push(
-          ...(Array.isArray(damageResult) ? damageResult : [damageResult]),
-        );
-      }
+      const results = strikeAll(this, user, targets, context);
 
       passive.setSediment(
         user,
         (user.runtime?.bergrisaSediment || 0) + this.sedimentGain,
+        context,
       );
 
       return results;

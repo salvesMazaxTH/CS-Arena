@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
+import { roundToFive } from "../../../core/championCombat.js";
 
 export default {
   key: "strata",
@@ -42,22 +43,59 @@ export default {
     );
   },
 
-  setSediment(owner, value) {
+  // Returns the blunted damage, or undefined for hits Strata never touches.
+  bluntHit({ damage, mode, piercingPercentage }, subtraction) {
+    if (!(damage > 0)) return;
+    if (mode === "piercing" || (piercingPercentage || 0) > 0) return;
+
+    return this.blunt(damage, subtraction);
+  },
+
+  setSediment(owner, value, context) {
     owner.runtime ??= {};
     owner.runtime.bergrisaSediment = Math.max(
       0,
       Math.min(this.maxSediment, value),
     );
 
-    const granted = owner.runtime.bergrisaDefenseGranted || 0;
     const target = Math.min(
       this.maxDefenseGain,
-      Math.round(this.defensePerSediment * owner.runtime.bergrisaSediment),
+      roundToFive(this.defensePerSediment * owner.runtime.bergrisaSediment),
     );
+    const held = (owner.runtime.bergrisaDefenseModifiers ?? []).filter((mod) =>
+      owner.statModifiers.includes(mod),
+    );
+    const granted = held.reduce((sum, mod) => sum + mod.amount, 0);
     if (target === granted) return;
 
-    owner.Defense = Math.max(0, (owner.Defense || 0) + (target - granted));
-    owner.runtime.bergrisaDefenseGranted = target;
+    // Rising Defense adds only the gap; shedding Sediment rebuilds silently.
+    const from = owner.statModifiers.length;
+    if (target > granted) {
+      owner.buffStat({
+        statName: "Defense",
+        amount: target - granted,
+        isPermanent: true,
+        context,
+      });
+      owner.runtime.bergrisaDefenseModifiers = [
+        ...held,
+        ...owner.statModifiers.slice(from),
+      ];
+      return;
+    }
+
+    owner.removeStatModifiers(held);
+    const rebuildFrom = owner.statModifiers.length;
+    if (target > 0) {
+      owner.buffStat({
+        statName: "Defense",
+        amount: target,
+        isPermanent: true,
+        context: { ...context, registerBuff: null },
+      });
+    }
+    owner.runtime.bergrisaDefenseModifiers =
+      owner.statModifiers.slice(rebuildFrom);
   },
 
   onBeforeDmgDealing({ attacker, defender, skill }) {
@@ -72,11 +110,11 @@ export default {
     return { bonusDamage: Math.min(cap, Math.round(gap * ratio)) };
   },
 
-  onBeforeDmgTaking({ owner, damage, mode, piercingPercentage }) {
-    if (!(damage > 0)) return;
-    if (mode === "piercing" || (piercingPercentage || 0) > 0) return;
+  onBeforeDmgTaking(payload) {
+    const damage = this.bluntHit(payload, this.subtractionFor(payload.owner));
+    if (damage === undefined) return;
 
-    return { damage: this.blunt(damage, this.subtractionFor(owner)) };
+    return { damage };
   },
 
   onTurnStart({ owner, context }) {
@@ -98,19 +136,27 @@ export default {
       context,
     }).execute();
 
-    this.setSediment(owner, (owner.runtime.bergrisaSediment || 0) - spent);
+    this.setSediment(
+      owner,
+      (owner.runtime.bergrisaSediment || 0) - spent,
+      context,
+    );
 
     return {
-      log: `<b>[Passive - Strata]</b> ${formatChampionName(owner)} burned ${spent} Sediment and restored ${healed} HP.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} burned ${spent} Sediment and restored ${healed} HP.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} queimou ${spent} de Sedimento e recuperou ${healed} de HP.`,
+      },
     };
   },
 
-  onTurnEnd({ owner }) {
+  onTurnEnd({ owner, context }) {
     if (!owner.alive) return;
 
     this.setSediment(
       owner,
       (owner.runtime?.bergrisaSediment || 0) + this.sedimentPerTurn,
+      context,
     );
   },
 };
