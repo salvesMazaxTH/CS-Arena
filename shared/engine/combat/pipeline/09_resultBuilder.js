@@ -45,6 +45,7 @@ export function buildFinalResult(event) {
     contact: event.contact,
     hitVfx: event.hitVfx,
     hitId: event.hitId,
+    shieldBroken: event.shieldBroken,
     // Entries stay unjoined so bilingual { en, pt } logs survive to the client.
     log: [finalLog, ...allLogs].flat(Infinity).filter(Boolean),
     crit: event.crit,

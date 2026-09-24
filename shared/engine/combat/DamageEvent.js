@@ -82,6 +82,16 @@ export class DamageEvent {
       );
     }
 
+    // Shields torn off only once the hit reaches the target; `bonusRatio`% of
+    // what breaks (up to `bonusCap`) joins bonusDamage. Amount lands in result.shieldBroken.
+    this.shieldBreak = params.shieldBreak ?? null;
+    if (this.shieldBreak && !(this.shieldBreak.amount > 0)) {
+      throw new Error(
+        `[DamageEvent] invalid shieldBreak amount: ${this.shieldBreak.amount}`,
+      );
+    }
+    this.shieldBroken = 0;
+
     // piercingPercentage: % of the defender's defense to ignore (0-100).
     // Only used when mode === PIERCING. Defaults to 100 (full pierce).
     if (this.mode === DamageEvent.Modes.PIERCING) {
@@ -170,6 +180,8 @@ export class DamageEvent {
     const earlyExit = preChecks(this);
     if (earlyExit) return stampLanded(earlyExit);
 
+    this.applyShieldBreak();
+
     prepareDamage(this);
 
     composeDamage(this);
@@ -200,6 +212,19 @@ export class DamageEvent {
     }
 
     return stampLanded(buildFinalResult(this));
+  }
+
+  applyShieldBreak() {
+    if (!this.shieldBreak) return;
+
+    const { amount, types, bonusRatio = 0, bonusCap = Infinity } =
+      this.shieldBreak;
+
+    this.shieldBroken = this.defender.breakShields(amount, { types });
+    this.bonusDamage += Math.min(
+      (this.shieldBroken * bonusRatio) / 100,
+      bonusCap,
+    );
   }
 
   canRunHook(eventName, champ, source) {

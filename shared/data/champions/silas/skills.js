@@ -117,28 +117,15 @@ const silasSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Silas has never once believed a barrier was anything but glass somebody paid too much for, and he collects on that opinion. Every regular or spell shield on the chosen target shatters before the blade arrives; the strike then deals physical damage and takes the cost out of their player's score — ${this.shieldedToll} points if there was glass to break, ${this.barefacedToll} if there was not, and never more than that player actually has.`;
+      return `Silas has never once believed a barrier was anything but glass somebody paid too much for, and he collects on that opinion. When the strike connects, every regular or spell shield on the chosen target shatters before the blade bites; the strike then deals physical damage and takes the cost out of their player's score — ${this.shieldedToll} points if there was glass to break, ${this.barefacedToll} if there was not, and never more than that player actually has.`;
     },
 
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
 
-      const hadShield = (enemy.runtime?.shields ?? []).some(
-        (shield) => (Number(shield?.amount) || 0) > 0,
-      );
-
-      if (hadShield) {
-        enemy.breakShields(Infinity, { types: ["regular", "spell"] });
-
-        context.registerDialog?.({
-          message: `${formatChampionName(user)} shatters every shield on ${formatChampionName(enemy)} before the blade even moves.`,
-          sourceId: user.id,
-          targetId: enemy.id,
-        });
-      }
-
       const result = new DamageEvent({
         baseDamage: (user.Attack * this.bf) / 100,
+        shieldBreak: { amount: Infinity, types: ["regular", "spell"] },
         attacker: user,
         defender: enemy,
         skill: this,
@@ -151,7 +138,17 @@ const silasSkills = [
       const mainHit = results.find((entry) => entry?.targetId === enemy.id);
 
       if (mainHit?.landed) {
-        const toll = hadShield ? this.shieldedToll : this.barefacedToll;
+        const broken = mainHit.shieldBroken || 0;
+
+        if (broken) {
+          context.registerDialog?.({
+            message: `${formatChampionName(user)} shatters every shield on ${formatChampionName(enemy)} before the blade bites.`,
+            sourceId: user.id,
+            targetId: enemy.id,
+          });
+        }
+
+        const toll = broken ? this.shieldedToll : this.barefacedToll;
         const victimSlot = enemy.team - 1;
         const taken = Math.min(toll, context.getScore(victimSlot));
 
