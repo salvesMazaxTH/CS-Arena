@@ -26,7 +26,7 @@ const thalvaressaSkills = [
     contact: false,
     element: "plant",
     hitVfx: "vine_lash",
-    hitVfxPalette: "plant",
+    hitVfxPalette: "verdant",
 
     priority: 0,
 
@@ -85,7 +85,8 @@ const thalvaressaSkills = [
     targetSpec: ["select:ally"],
 
     resolve({ user, targets, context }) {
-      const [ally = user] = targets;
+      const [ally] = targets;
+      if (!ally) return;
 
       const [cleansed] = ally.getStatusEffects({ type: "debuff" });
       if (cleansed) ally.removeStatusEffect(cleansed.key);
@@ -121,19 +122,21 @@ const thalvaressaSkills = [
 
     healPerTurn: 45,
     auraDuration: 3,
+    cleanseCount: 2,
+    damageReduction: 8,
 
     contact: false,
     element: "plant",
     hitVfx: "roots",
     isUltimate: true,
-    momentumCost: 60,
+    momentumCost: 55,
 
     priority: 5,
 
     description() {
       return {
-        en: `Thálvaressa spreads her canopy over the whole field. For <b>${this.auraDuration}</b> turn(s), every ally under it restores <b>${this.healPerTurn}</b> HP at the start of each turn. Nothing of it reaches Thálvaressa herself.`,
-        pt: `Thálvaressa estende sua copa sobre todo o campo. Por <b>${this.auraDuration}</b> turno(s), cada aliado sob ela restaura <b>${this.healPerTurn}</b> de HP no início de cada turno. Nada disso alcança a própria Thálvaressa.`,
+        en: `Thálvaressa spreads her canopy over her whole team, herself included, tearing up to <b>${this.cleanseCount}</b> <b>negative status effects</b> off each of them. For <b>${this.auraDuration}</b> turn(s), everyone under it takes <b>${this.damageReduction}%</b> less damage and restores <b>${this.healPerTurn}</b> HP at the start of each turn — the healing alone never reaches Thálvaressa.`,
+        pt: `Thálvaressa estende sua copa sobre todo o seu time, ela inclusa, arrancando de cada um até <b>${this.cleanseCount}</b> <b>efeitos de status negativos</b>. Por <b>${this.auraDuration}</b> turno(s), todos sob ela recebem <b>${this.damageReduction}%</b> menos dano e restauram <b>${this.healPerTurn}</b> de HP no início de cada turno — só a cura é que nunca alcança Thálvaressa.`,
       };
     },
 
@@ -146,6 +149,20 @@ const thalvaressaSkills = [
       for (const ally of targets) {
         if (!ally.alive) continue;
         if (ally.team !== user.team) continue;
+
+        for (const debuff of ally
+          .getStatusEffects({ type: "debuff" })
+          .slice(0, this.cleanseCount)) {
+          ally.removeStatusEffect(debuff.key);
+        }
+
+        ally.applyDamageReduction({
+          amount: this.damageReduction,
+          duration: this.auraDuration,
+          type: "percent",
+          source: key,
+          context,
+        });
 
         ally.runtime.hookEffects ??= [];
         ally.runtime.hookEffects = ally.runtime.hookEffects.filter(
@@ -184,8 +201,8 @@ const thalvaressaSkills = [
 
       return {
         log: {
-          en: `${formatChampionName(user)} raises the <b>Canopy</b>: her allies restore <b>${this.healPerTurn}</b> HP at the start of each turn for <b>${this.auraDuration}</b> turn(s).`,
-          pt: `${formatChampionName(user)} ergue a <b>Copa</b>: seus aliados restauram <b>${this.healPerTurn}</b> de HP no início de cada turno por <b>${this.auraDuration}</b> turno(s).`,
+          en: `${formatChampionName(user)} raises the <b>Canopy</b>: her team is cleansed of up to <b>${this.cleanseCount}</b> <b>negative status effects</b> each, takes <b>${this.damageReduction}%</b> less damage and restores <b>${this.healPerTurn}</b> HP at the start of each turn for <b>${this.auraDuration}</b> turn(s).`,
+          pt: `${formatChampionName(user)} ergue a <b>Copa</b>: seu time é limpo de até <b>${this.cleanseCount}</b> <b>efeitos de status negativos</b> cada, recebe <b>${this.damageReduction}%</b> menos dano e restaura <b>${this.healPerTurn}</b> de HP no início de cada turno por <b>${this.auraDuration}</b> turno(s).`,
         },
       };
     },

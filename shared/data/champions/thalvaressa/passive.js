@@ -5,7 +5,7 @@ export default {
   name: "Regrowth",
 
   growthRate: 90,
-  maxHPCap: 250,
+  maxHPCap: 215,
 
   description() {
     return {

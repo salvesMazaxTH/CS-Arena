@@ -34,7 +34,7 @@ export async function playVineLash({
 
   const requested =
     hit?.hitVfxPalette || skill?.hitVfxPalette || hit?.element || skill?.element;
-  const paletteKey = requested in CHAIN_LASH_PALETTES ? requested : "plant";
+  const paletteKey = requested in CHAIN_LASH_PALETTES ? requested : "verdant";
 
   const rect = targetEl.getBoundingClientRect();
   const target = {
