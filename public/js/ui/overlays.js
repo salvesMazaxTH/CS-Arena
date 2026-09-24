@@ -9,13 +9,21 @@ import {
 import { GAME_GLOSSARY } from "../gameGlossary.js";
 import { resolveText } from "../../../shared/i18n/locale.js";
 import { getLocale } from "../i18n/clientLocale.js";
+import { StatusEffectsRegistry } from "../../../shared/data/statusEffects/effectsRegistry.js";
+import { EMBLEMS } from "../../../shared/data/emblems/index.js";
+import { championDB } from "../../../shared/data/championDB.js";
 
 /**
  * Hover/touch overlays: skill tooltips (with glossary), the champion portrait
  * overlay and the quick-stats popover. Owns its own DOM element references.
- * Depends on the live turn and the local player's team, injected as getters.
+ * Depends on the live turn, the local player's team and the live champions,
+ * injected as getters.
  */
-export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
+export function createOverlays({
+  getCurrentTurn,
+  getPlayerTeam,
+  getActiveChampions,
+}) {
   let skillOverlay = null;
   let portraitOverlay = null;
   let quickStatsOverlay = null;
@@ -305,6 +313,354 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
       .forEach((el) => el.remove());
   }
 
+  // --- Modifier ledger (portrait overlay) ---
+
+  // Critical, Evasion and Life Steal are percentages already, so their
+  // modifiers read as points and have no "of base" comparison.
+  const STAT_CATEGORIES = [
+    { stat: "Attack", label: "Attack", base: "baseAttack" },
+    { stat: "Defense", label: "Defense", base: "baseDefense" },
+    { stat: "Speed", label: "Speed", base: "baseSpeed" },
+    { stat: "maxHP", label: "Max HP", base: "baseHP" },
+    { stat: "Critical", label: "Critical", points: true },
+    { stat: "Evasion", label: "Evasion", points: true },
+    { stat: "LifeSteal", label: "Life Steal", points: true },
+  ];
+
+  const humanizeKey = (key) =>
+    String(key ?? "")
+      .replace(/[-_]hook$/i, "")
+      .replace(/[-_]+/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+      .trim();
+
+  const localized = (value) => resolveText(value ?? "", getLocale());
+
+  /** A live champion by id, or its roster entry when it has left the field. */
+  function findChampion(id) {
+    if (!id) return null;
+    return (
+      getActiveChampions()?.get(id) ??
+      championDB[String(id).split("-")[0]] ??
+      null
+    );
+  }
+
+  /** Player-facing name of whatever created a modifier. */
+  function originLabel(origin, holder) {
+    if (!origin?.key) return null;
+    const owner = findChampion(origin.ownerId);
+    const byOther = owner && origin.ownerId !== holder.id;
+    const withOwner = (name) =>
+      byOther ? `${name} (${localized(owner.name)})` : name;
+
+    switch (origin.kind) {
+      case "skill": {
+        const skill = owner?.skills?.find((s) => s.key === origin.key);
+        return withOwner(
+          skill ? localized(skill.name) : humanizeKey(origin.key),
+        );
+      }
+      case "passive":
+        return withOwner(
+          owner?.passive?.name
+            ? localized(owner.passive.name)
+            : humanizeKey(origin.key),
+        );
+      case "status":
+        return (
+          StatusEffectsRegistry[origin.key]?.name ?? humanizeKey(origin.key)
+        );
+      case "emblem":
+        return (
+          EMBLEMS.find((e) => e.key === origin.key)?.name ??
+          humanizeKey(origin.key)
+        );
+      default:
+        return humanizeKey(origin.key);
+    }
+  }
+
+  const signed = (n, suffix = "") =>
+    `${n > 0 ? "+" : n < 0 ? "−" : "±"}${Math.abs(n)}${suffix}`;
+
+  /** "+30% +15", dropping whichever half is zero. */
+  const percentAndFlat = (percent, flat) =>
+    [percent ? signed(percent, "%") : null, flat ? signed(flat) : null]
+      .filter(Boolean)
+      .join(" ") || "±0";
+
+  const tone = (n) => (n > 0 ? "up" : n < 0 ? "down" : "flat");
+
+  function turnsLeft(expiresAtTurn, permanent) {
+    if (permanent || !Number.isFinite(expiresAtTurn)) return null;
+    const left = expiresAtTurn - (getCurrentTurn() ?? 0);
+    return left > 0 ? left : null;
+  }
+
+  /** Sums entries sharing a label, so ten stacks read as one line ×10. */
+  function mergeByLabel(entries) {
+    const merged = new Map();
+    for (const entry of entries) {
+      const prev = merged.get(entry.label);
+      if (!prev) {
+        merged.set(entry.label, { ...entry, count: 1 });
+        continue;
+      }
+      prev.count++;
+      prev.values = prev.values.map((v, i) =>
+        v === null || entry.values[i] === null ? null : v + entry.values[i],
+      );
+      prev.turns =
+        prev.turns === null || entry.turns === null
+          ? null
+          : Math.max(prev.turns, entry.turns);
+    }
+    return [...merged.values()];
+  }
+
+  /** Share of positive vs negative weight, for a column's balance bar. */
+  function balanceOf(values) {
+    const up = values.filter((v) => v > 0).reduce((s, v) => s + v, 0);
+    const down = values.filter((v) => v < 0).reduce((s, v) => s - v, 0);
+    const whole = up + down || 1;
+    return { up: up / whole, down: down / whole };
+  }
+
+  function statColumns(champion) {
+    const mods = champion.statModifiers ?? [];
+    return STAT_CATEGORIES.flatMap(({ stat, label, base, points }) => {
+      const own = mods.filter((m) => m.statName === stat && m.amount !== 0);
+      if (!own.length) return [];
+
+      const total = own.reduce((sum, m) => sum + m.amount, 0);
+      const baseValue = base ? champion[base] : null;
+      const unit = points ? "%" : "";
+      const relative =
+        baseValue > 0 ? Math.round((total / baseValue) * 100) : null;
+
+      const rows = mergeByLabel(
+        own.map((m) => ({
+          label:
+            originLabel(m.origin, champion) ??
+            (m.statusKey
+              ? StatusEffectsRegistry[m.statusKey]?.name ??
+                humanizeKey(m.statusKey)
+              : "Unknown source"),
+          values: [m.amount],
+          turns: turnsLeft(m.expiresAtTurn, m.isPermanent),
+        })),
+      ).map((row) => ({
+        ...row,
+        display: signed(row.values[0], unit),
+        sign: row.values[0],
+      }));
+
+      return [
+        {
+          label,
+          total: signed(total, unit),
+          sub:
+            relative !== null
+              ? `${signed(relative, "%")} over base ${baseValue}`
+              : null,
+          sign: total,
+          balance: balanceOf(own.map((m) => m.amount)),
+          rows,
+        },
+      ];
+    });
+  }
+
+  function damageDealtColumn(champion) {
+    const mods = champion.damageModifiers ?? [];
+    if (!mods.length) return [];
+
+    // Modifiers apply one after another in array order, so composing their
+    // "x * factor + flat" maps gives the exact combined effect.
+    let factor = 1;
+    let flat = 0;
+    for (const m of mods) {
+      // Target-dependent modifiers have no fixed value to fold in.
+      if (m.percent === null || m.flat === null) continue;
+      const f = 1 + m.percent / 100;
+      factor *= f;
+      flat = flat * f + m.flat;
+    }
+    const percent = Math.round((factor - 1) * 100);
+
+    const rows = mergeByLabel(
+      mods.map((m) => ({
+        label: originLabel(m.origin, champion) ?? m.name ?? humanizeKey(m.id),
+        values: [m.percent, m.flat],
+        turns: turnsLeft(m.expiresAtTurn, m.permanent),
+      })),
+    ).map((row) => {
+      const [p, f] = row.values;
+      if (p === null || f === null) {
+        return { ...row, display: "varies", sign: 0 };
+      }
+      return { ...row, display: percentAndFlat(p, f), sign: p || f };
+    });
+
+    return [
+      {
+        label: "Damage dealt",
+        total: percentAndFlat(percent, Math.round(flat)),
+        sign: percent || flat,
+        balance: balanceOf(rows.map((r) => r.sign)),
+        rows,
+      },
+    ];
+  }
+
+  function damageReductionColumn(champion) {
+    const mods = (champion.damageReductionModifiers ?? []).filter(
+      (m) => m.amount !== 0,
+    );
+    if (!mods.length) return [];
+
+    const sum = (type) =>
+      mods.filter((m) => m.type === type).reduce((s, m) => s + m.amount, 0);
+    const stackedPercent = sum("percent");
+    const percent = Math.min(stackedPercent, 100);
+    const flat = sum("flat");
+
+    const rows = mergeByLabel(
+      mods.map((m) => ({
+        label:
+          originLabel(m.origin, champion) ??
+          (m.source ? humanizeKey(m.source) : "Unknown source"),
+        values: [
+          m.type === "percent" ? m.amount : 0,
+          m.type === "flat" ? m.amount : 0,
+        ],
+        turns: turnsLeft(m.expiresAtTurn, false),
+      })),
+    ).map((row) => {
+      const [p, f] = row.values;
+      return { ...row, display: percentAndFlat(p, f), sign: p || f };
+    });
+
+    return [
+      {
+        label: "Damage reduction",
+        total: percentAndFlat(percent, flat),
+        sub:
+          stackedPercent > 100
+            ? `capped at 100% (${stackedPercent}% stacked)`
+            : null,
+        sign: percent || flat,
+        balance: balanceOf(rows.map((r) => r.sign)),
+        rows,
+      },
+    ];
+  }
+
+  function effectChips(champion) {
+    const chips = [];
+    const statuses =
+      champion.statusEffects instanceof Map
+        ? [...champion.statusEffects.entries()]
+        : [];
+    for (const [key, data] of statuses) {
+      const entry = StatusEffectsRegistry[key];
+      chips.push({
+        label: entry?.name ?? humanizeKey(key),
+        type: entry?.type ?? null,
+        stacks: data?.stacks ?? 0,
+        turns: turnsLeft(data?.expiresAtTurn, false),
+      });
+    }
+    for (const effect of champion.runtime?.hookEffectData ?? []) {
+      chips.push({
+        label: humanizeKey(effect.key),
+        type: effect.type,
+        stacks: effect.stacks ?? 0,
+        turns: turnsLeft(effect.expiresAtTurn, false),
+      });
+    }
+    return chips;
+  }
+
+  /**
+   * Every live modifier on the champion, one column per category with its
+   * combined total on top and each source itemized below, plus a strip of
+   * active effects.
+   */
+  function renderModifierLedger(champion) {
+    const columns = [
+      ...statColumns(champion),
+      ...damageDealtColumn(champion),
+      ...damageReductionColumn(champion),
+    ];
+    const chips = effectChips(champion);
+
+    const ledger = document.createElement("section");
+    ledger.className = "modifier-ledger";
+    ledger.setAttribute("aria-label", "Active modifiers");
+
+    if (!columns.length && !chips.length) {
+      ledger.innerHTML = `<div class="ledger-panel"><p class="modifier-ledger-empty">No active modifiers on ${escapeHtml(champion.name)}.</p></div>`;
+      return ledger;
+    }
+
+    const turnsMarkup = (turns) =>
+      turns
+        ? `<span class="ledger-turns" title="${turns} turn(s) left">${turns}t</span>`
+        : "";
+    const countMarkup = (count) =>
+      count > 1 ? ` <span class="ledger-count">×${count}</span>` : "";
+
+    const columnsHtml = columns
+      .map(
+        (col) => `
+      <div class="ledger-col" data-tone="${tone(col.sign)}">
+        <div class="ledger-head">
+          <span class="ledger-label">${escapeHtml(col.label)}</span>
+          <span class="ledger-total">${escapeHtml(col.total)}</span>
+        </div>
+        <div class="ledger-balance" aria-hidden="true">
+          <span class="ledger-balance-down" style="--share:${col.balance.down}"></span>
+          <span class="ledger-balance-up" style="--share:${col.balance.up}"></span>
+        </div>
+        ${col.sub ? `<div class="ledger-sub">${escapeHtml(col.sub)}</div>` : ""}
+        <ul class="ledger-rows">
+          ${col.rows
+            .map(
+              (row) => `
+            <li class="ledger-row" data-tone="${tone(row.sign)}">
+              <span class="ledger-source" title="${escapeHtml(row.label)}">${escapeHtml(row.label)}${countMarkup(row.count)}</span>
+              ${turnsMarkup(row.turns)}
+              <span class="ledger-value">${escapeHtml(row.display)}</span>
+            </li>`,
+            )
+            .join("")}
+        </ul>
+      </div>`,
+      )
+      .join("");
+
+    const chipsHtml = chips.length
+      ? `<ul class="ledger-chips" aria-label="Active effects">
+          ${chips
+            .map(
+              (chip) => `
+            <li class="ledger-chip" data-type="${escapeHtml(chip.type ?? "neutral")}">${escapeHtml(chip.label)}${countMarkup(chip.stacks)}${turnsMarkup(chip.turns)}</li>`,
+            )
+            .join("")}
+        </ul>`
+      : "";
+
+    ledger.innerHTML = `
+      <div class="ledger-panel">
+        ${columns.length ? `<div class="ledger-cols">${columnsHtml}</div>` : ""}
+        ${chipsHtml}
+      </div>
+    `;
+    return ledger;
+  }
+
   // --- Champion portrait overlay ---
 
   function openChampionOverlay(champion) {
@@ -445,6 +801,8 @@ export function createOverlays({ getCurrentTurn, getPlayerTeam }) {
       skillsSection.appendChild(skillsBar);
       details.appendChild(skillsSection);
     }
+
+    overlay.appendChild(renderModifierLedger(champion));
 
     // Close when clicking on the backdrop
     overlay.addEventListener("click", (e) => {

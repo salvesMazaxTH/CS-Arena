@@ -1,5 +1,8 @@
 import { formatChampionName } from "../ui/formatters.js";
-import { emitCombatEvent } from "../engine/combat/combatEvents.js";
+import {
+  emitCombatEvent,
+  getRunningHook,
+} from "../engine/combat/combatEvents.js";
 
 export function roundToFive(x) {
   return Math.round(x / 5) * 5;
@@ -219,6 +222,7 @@ export function applyDamageReduction(champion, config = {}) {
     expiresAtTurn: context.currentTurn + duration,
     type: type,
     source: source,
+    origin: currentModifierOrigin(context),
   });
 }
 
@@ -274,6 +278,34 @@ export function runAsStatusModifierSource(statusKey, fn) {
   } finally {
     statusApplyingOwnModifiers = previous;
   }
+}
+
+// What is creating a modifier right now, as plain data the client can label:
+// a status adding its own modifiers, else whichever hook is running, else the
+// skill being resolved. Null when none of those is active.
+function currentModifierOrigin(context) {
+  if (statusApplyingOwnModifiers) {
+    return { kind: "status", key: statusApplyingOwnModifiers, ownerId: null };
+  }
+
+  const hook = getRunningHook();
+  if (hook) {
+    return {
+      kind: hook.kind,
+      key: hook.source?.key ?? null,
+      ownerId: hook.kind === "emblem" ? null : (hook.owner?.id ?? null),
+    };
+  }
+
+  if (context?.actionSource && context.currentSkill) {
+    return {
+      kind: "skill",
+      key: context.currentSkill.key,
+      ownerId: context.actionSource.id,
+    };
+  }
+
+  return null;
 }
 
 function statIsLocked(champion, statName) {
@@ -356,6 +388,7 @@ export function applyStatModifier(
       ignoreMinimum: ignoreMinimum,
       expiresAtTurn: currentTurn + duration,
       isPermanent: isPermanent,
+      origin: currentModifierOrigin(context),
     });
   }
 
@@ -768,7 +801,46 @@ function _recomputeStats(champion, remaining, affectedStats) {
 
 /** Append a damage modifier to the champion. */
 export function addDamageModifier(champion, mod) {
-  champion.damageModifiers.push(mod);
+  champion.damageModifiers.push({
+    ...mod,
+    origin: mod.origin ?? currentModifierOrigin(champion.runtime?.currentContext),
+  });
+}
+
+// A damage modifier is an opaque function, so its effect is read by probing it
+// at two base values and fitting result = factor * base + flat. Modifiers that
+// hinge on a defender are read as they apply against a generic one.
+export function describeDamageModifier(champion, mod) {
+  const probe = (baseDamage) =>
+    mod.apply(
+      { baseDamage, attacker: champion, defender: null, skill: null, hitId: null },
+      null,
+    );
+
+  let percent = null;
+  let flat = null;
+
+  try {
+    const low = probe(100);
+    const high = probe(200);
+    if (Number.isFinite(low) && Number.isFinite(high)) {
+      const factor = (high - low) / 100;
+      percent = Math.round((factor - 1) * 100);
+      flat = Math.round(low - 100 * factor);
+    }
+  } catch {
+    // Unreadable without a live hit; the hub shows it without a number.
+  }
+
+  return {
+    id: mod.id ?? null,
+    name: mod.name ?? null,
+    permanent: mod.permanent === true,
+    expiresAtTurn: mod.expiresAtTurn ?? null,
+    percent,
+    flat,
+    origin: mod.origin ?? null,
+  };
 }
 
 /** Drop expired (non-permanent) damage modifiers. */

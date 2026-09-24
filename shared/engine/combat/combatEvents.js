@@ -2,6 +2,25 @@ import { SpawnProtection } from "./spawnProtection.js";
 
 const debugMode = false; // Set to true to enable detailed logging of combat events
 
+// The hook source whose handler is executing right now, so anything it creates
+// (a stat modifier, a damage modifier) can record where it came from.
+let runningHook = null;
+
+/** { kind: "passive" | "status" | "effect" | "emblem", source, owner } or null. */
+export function getRunningHook() {
+  return runningHook;
+}
+
+function runHook(kind, source, owner, fn) {
+  const previous = runningHook;
+  runningHook = { kind, source, owner };
+  try {
+    return fn();
+  } finally {
+    runningHook = previous;
+  }
+}
+
 export function emitCombatEvent(eventName, payload, champions, options = {}) {
   const results = [];
 
@@ -36,21 +55,20 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
 
     const hookSources = [];
 
-    // 🔹 Passiva real
     if (champ.passive) {
-      hookSources.push(champ.passive);
+      hookSources.push({ kind: "passive", source: champ.passive });
     }
 
-    // 🔹 StatusEffects (Map)
     if (champ.statusEffects && champ.statusEffects.size > 0) {
       for (const effectInstance of champ.statusEffects.values()) {
-        hookSources.push(effectInstance);
+        hookSources.push({ kind: "status", source: effectInstance });
       }
     }
 
-    // 🔹 Hook effects temporários
     if (champ.runtime?.hookEffects?.length) {
-      hookSources.push(...champ.runtime.hookEffects);
+      for (const effect of champ.runtime.hookEffects) {
+        hookSources.push({ kind: "effect", source: effect });
+      }
     }
 
     const ctx = payload?.context;
@@ -62,7 +80,7 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
     if (rebindsActionSource) ctx.actionSourceId = champ.id;
 
     try {
-      for (const source of hookSources) {
+      for (const { kind, source } of hookSources) {
         const hook = source[eventName];
         if (typeof hook !== "function") continue;
 
@@ -74,11 +92,13 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
         }
 
         try {
-          const res = hook.call(source, {
-            ...payload,
-            owner: champ,
-            emitter: emitCombatEvent,
-          });
+          const res = runHook(kind, source, champ, () =>
+            hook.call(source, {
+              ...payload,
+              owner: champ,
+              emitter: emitCombatEvent,
+            }),
+          );
 
           if (res) {
             results.push(res);
@@ -107,12 +127,13 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
       }
 
       try {
-        const res = hook.call(source, {
-          ...payload,
-          owner: player,
-          emitter: emitCombatEvent,
-        });
-
+        const res = runHook("emblem", source, player, () =>
+          hook.call(source, {
+            ...payload,
+            owner: player,
+            emitter: emitCombatEvent,
+          }),
+        );
 
         if (res) {
           results.push(res);

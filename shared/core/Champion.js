@@ -35,6 +35,7 @@ import {
   purgeExpiredHookEffects,
   addHookEffect,
   addDamageModifier,
+  describeDamageModifier,
   purgeExpiredModifiers,
   getDamageModifiers,
 } from "./championCombat.js";
@@ -236,15 +237,29 @@ export class Champion {
 
       actionBlockedByHardCC: this.isActionBlockedByHardCC(),
 
-      // Modifier counts for UI indicators (buff/debuff arrows)
+      // Modifiers as plain data, for the buff/debuff arrows and the
+      // portrait overlay's modifier breakdown.
       statModifiers: (this.statModifiers || []).map((m) => ({
         amount: m.amount,
+        percentAmount: m.percentAmount ?? null,
         statName: m.statName,
         isPermanent: m.isPermanent,
+        expiresAtTurn: m.expiresAtTurn,
+        statusKey: m.statusKey ?? null,
+        origin: m.origin ?? null,
       })),
-      damageModifiersCount: (this.damageModifiers || []).length,
-      damageReductionModifiersCount: (this.damageReductionModifiers || [])
-        .length,
+      damageModifiers: (this.damageModifiers || []).map((m) =>
+        describeDamageModifier(this, m),
+      ),
+      damageReductionModifiers: (this.damageReductionModifiers || []).map(
+        (m) => ({
+          amount: m.amount,
+          type: m.type,
+          source: m.source,
+          expiresAtTurn: m.expiresAtTurn,
+          origin: m.origin ?? null,
+        }),
+      ),
 
       // Taunt effects for UI indicator (provocação)
       tauntEffects: (this.tauntEffects || []).map((t) => ({
@@ -321,7 +336,9 @@ export class Champion {
         .filter((effect) => typeof effect?.key === "string")
         .map((effect) => ({
           key: effect.key.toLowerCase(),
+          type: effect.type ?? null,
           stacks: effect.stacks ?? 0,
+          expiresAtTurn: effect.expiresAtTurn ?? null,
         })),
     };
   }

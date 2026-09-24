@@ -132,6 +132,7 @@ const {
 } = createOverlays({
   getCurrentTurn: () => currentTurn,
   getPlayerTeam: () => playerTeam,
+  getActiveChampions: () => activeChampions,
 });
 
 const { collectClientTargets } = createTargeting({

@@ -200,32 +200,23 @@ export const StatusIndicator = {
       .forEach((el) => el.remove());
 
     // Detect active buffs/debuffs
-    let hasBuff = false;
-    let hasDebuff = false;
-    // Buff: positive statModifiers, damageModifiers (presence = buff), positive damageReduction
-    if (
-      Array.isArray(champion.statModifiers) &&
-      champion.statModifiers.some((m) => m.amount > 0)
-    )
-      hasBuff = true;
-    if (
-      (Array.isArray(champion.damageModifiers) &&
-        champion.damageModifiers.length > 0) ||
-      champion.damageModifiersCount > 0
-    )
-      hasBuff = true;
-    if (
-      (Array.isArray(champion.damageReductionModifiers) &&
-        champion.damageReductionModifiers.length > 0) ||
-      champion.damageReductionModifiersCount > 0
-    )
-      hasBuff = true;
-    // Debuff: negative statModifiers
-    if (
-      Array.isArray(champion.statModifiers) &&
-      champion.statModifiers.some((m) => m.amount < 0)
-    )
-      hasDebuff = true;
+    // A damage modifier whose value could not be read counts as a buff.
+    const damageModSign = (m) =>
+      m.percent === null && m.flat === null
+        ? 1
+        : Math.sign((m.percent ?? 0) || (m.flat ?? 0));
+    const statMods = champion.statModifiers ?? [];
+    const damageMods = champion.damageModifiers ?? [];
+    const reductions = champion.damageReductionModifiers ?? [];
+
+    const hasBuff =
+      statMods.some((m) => m.amount > 0) ||
+      damageMods.some((m) => damageModSign(m) > 0) ||
+      reductions.some((m) => m.amount > 0);
+    const hasDebuff =
+      statMods.some((m) => m.amount < 0) ||
+      damageMods.some((m) => damageModSign(m) < 0) ||
+      reductions.some((m) => m.amount < 0);
 
     // Add buff indicator
     if (hasBuff) {

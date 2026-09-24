@@ -2821,6 +2821,15 @@ body.perspective-team2 .combat-dialog-bubble .team-2 {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* The modifier ledger wraps onto its own full-width row below, within a
+     fixed height budget that the portrait and details size themselves around. */
+  --ledger-max: 26vh;
+  flex-wrap: wrap;
+  align-content: center;
+  row-gap: 10px;
+  padding: 12px;
+  box-sizing: border-box;
+  overflow-y: auto;
   z-index: 12000;
   opacity: 0;
   pointer-events: none;
@@ -2836,13 +2845,26 @@ body.perspective-team2 .combat-dialog-bubble .team-2 {
   background: linear-gradient(180deg, #151515, #080808);
   border: 2px solid rgba(0, 255, 150, 0.5);
   border-radius: 16px;
-  padding: 18px;
+  padding: 12px;
   text-align: center;
   box-shadow: 0 0 30px rgba(0, 255, 150, 0.35);
   max-width: min(40vw, 420px);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Sized by height so the whole card, name included, fits beside the ledger. */
+.portrait-overlay-img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: calc(100vh - var(--ledger-max) - 100px);
+}
+
+.portrait-overlay-name {
+  margin: 0;
 }
 
 .portrait-overlay-details {
@@ -2852,7 +2874,7 @@ body.perspective-team2 .combat-dialog-bubble .team-2 {
   padding: 18px;
   box-shadow: 0 0 30px rgba(0, 255, 150, 0.35);
   max-width: min(40vw, 420px);
-  max-height: 60vh;
+  max-height: calc(100vh - var(--ledger-max) - 40px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -2976,6 +2998,238 @@ body.perspective-team2 .combat-dialog-bubble .team-2 {
     0 0 14px rgba(255, 230, 120, 0.8),
     0 0 28px rgba(255, 200, 0, 0.5),
     0 4px 12px rgba(0, 0, 0, 0.9);
+}
+
+/* ============================================
+   PORTRAIT OVERLAY — MODIFIER LEDGER
+   ============================================ */
+
+.modifier-ledger {
+  --ledger-up: #3dffa0;
+  --ledger-down: #ff5c5c;
+  --ledger-muted: #8c9a93;
+  --ledger-rule: rgba(0, 255, 150, 0.14);
+
+  /* The section claims its own full-width row; the panel inside hugs its
+     content so a single category is not stretched across the screen. */
+  flex: 1 0 100%;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  container-type: inline-size;
+  --ledger-col: 190px;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #e8efeb;
+}
+
+.ledger-panel {
+  width: fit-content;
+  /* fit-content alone stretches to the full row once columns wrap, leaving
+     slack at the sides; capping at a whole number of columns (plus the 4px
+     of border) keeps every full row flush. */
+  max-width: calc(
+    round(down, min(100cqw, 1400px) - 4px, var(--ledger-col)) + 4px
+  );
+  max-height: var(--ledger-max);
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, #151515, #080808);
+  border: 2px solid rgba(0, 255, 150, 0.5);
+  border-radius: 16px;
+  box-shadow: 0 0 30px rgba(0, 255, 150, 0.35);
+}
+
+.modifier-ledger-empty {
+  margin: 0;
+  color: var(--ledger-muted);
+  text-align: center;
+}
+
+/* Categories run side by side; hairlines rather than cards separate them. */
+/* Every column carries a left hairline; the container's negative margin and
+   clipping hide the one that starts each wrapped row. */
+.ledger-cols {
+  justify-content: center;
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 8px;
+  margin: 0 -12px;
+  overflow: hidden;
+}
+
+/* Columns may shrink a little below their width, so a scrollbar appearing
+   inside the panel does not push the last column onto a new row. */
+.ledger-col {
+  flex: 1 0 calc(var(--ledger-col) - 15px);
+  max-width: var(--ledger-col);
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 0 12px;
+  margin-left: -1px;
+  border-left: 1px solid var(--ledger-rule);
+}
+
+.ledger-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ledger-label {
+  color: var(--ledger-muted);
+  font-weight: 600;
+}
+
+.ledger-total {
+  font-family: "Chakra Petch", "Montserrat", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ledger-col[data-tone="up"] .ledger-total,
+.ledger-row[data-tone="up"] .ledger-value {
+  color: var(--ledger-up);
+}
+
+.ledger-col[data-tone="down"] .ledger-total,
+.ledger-row[data-tone="down"] .ledger-value {
+  color: var(--ledger-down);
+}
+
+/* Tug-of-war bar: red weight grows left from the centre, green grows right. */
+.ledger-balance {
+  display: flex;
+  height: 3px;
+  margin: 3px 0 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.ledger-balance > span {
+  flex: 1 1 50%;
+  animation: ledger-balance-fill 0.45s ease-out 0.12s both;
+}
+
+.ledger-balance-down {
+  background: linear-gradient(
+    to left,
+    var(--ledger-down) calc(var(--share) * 100%),
+    transparent 0
+  );
+  transform-origin: right center;
+}
+
+.ledger-balance-up {
+  background: linear-gradient(
+    to right,
+    var(--ledger-up) calc(var(--share) * 100%),
+    transparent 0
+  );
+  transform-origin: left center;
+  border-left: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+@keyframes ledger-balance-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.ledger-sub {
+  color: var(--ledger-muted);
+  font-size: 10px;
+  margin-bottom: 3px;
+}
+
+.ledger-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ledger-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 0;
+}
+
+.ledger-source {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ledger-value {
+  font-family: "Chakra Petch", "Montserrat", sans-serif;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ledger-count,
+.ledger-turns {
+  color: var(--ledger-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+/* Chips wrap to whatever width the columns set instead of widening the panel;
+   only when they stand alone do they size it. */
+.ledger-cols + .ledger-chips {
+  contain: inline-size;
+}
+
+.ledger-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 6px 0 0;
+  border-top: 1px solid var(--ledger-rule);
+}
+
+.ledger-cols:empty + .ledger-chips,
+.ledger-panel > .ledger-chips:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.ledger-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 1px 7px;
+  font-size: 10.5px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ledger-chip[data-type="buff"] {
+  border-color: color-mix(in srgb, var(--ledger-up) 55%, transparent);
+  color: var(--ledger-up);
+}
+
+.ledger-chip[data-type="debuff"] {
+  border-color: color-mix(in srgb, var(--ledger-down) 55%, transparent);
+  color: var(--ledger-down);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ledger-balance > span {
+    animation: none;
+  }
 }
 
 /* ============================================
@@ -3606,6 +3860,18 @@ body.perspective-team2 .combat-dialog-bubble .team-2 {
 @media (max-width: 900px) {
   .portrait-overlay {
     flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+
+  .modifier-ledger {
+    flex: 0 0 auto;
+    width: min(90vw, 620px);
+  }
+
+  .ledger-panel {
+    width: 100%;
+    max-height: none;
   }
 
   .portrait-overlay-details {

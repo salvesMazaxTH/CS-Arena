@@ -81,8 +81,8 @@ const SNAPSHOT_PASSTHROUGH_KEYS = [
   "momentum",
   "passive",
   "statModifiers",
-  "damageModifiersCount",
-  "damageReductionModifiersCount",
+  "damageModifiers",
+  "damageReductionModifiers",
 ];
 
 // ============================================================
