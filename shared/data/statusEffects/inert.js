@@ -5,7 +5,7 @@ const inert = {
   key: "inert",
   name: "Inert",
   type: "debuff",
-  subtypes: ["hardCC"],
+  subtypes: ["hardCC", "systemic"],
 
   hookScope: {
     onValidateAction: "actionSource",

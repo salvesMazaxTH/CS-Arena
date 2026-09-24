@@ -41,6 +41,7 @@ export const earthshaker = {
   onStatusEffectIncoming({ target, statusEffect, owner }) {
     if (!target || !owner || target.team !== owner.team) return;
     if (!statusEffect?.subtypes) return;
+    if (statusEffect.subtypes.includes("systemic")) return;
 
     const isControl =
       statusEffect.subtypes.includes("hardCC") ||
