@@ -8,6 +8,8 @@ export default {
   Defense: 110,
   Speed: 75,
 
+  elementalAffinities: ["poison"],
+
   classKey: "brawler",
   species: ["fey", "floraborn"],
 };

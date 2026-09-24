@@ -23,6 +23,8 @@ const PALETTES = Object.freeze({
   ice: { core: "#f4ffff", mid: "#b6f2ff", deep: "#56b2ce" },
   lightning: { core: "#fffce0", mid: "#ffe66b", deep: "#e0a915" },
   earth: { core: "#fff4e2", mid: "#d2a878", deep: "#8a5a2b" },
+  poison: { core: "#f7ecff", mid: "#c08bff", deep: "#6a1fa8" },
+  plant: { core: "#f2fff2", mid: "#8fe6a0", deep: "#2c8a4a" },
 });
 
 const DEFAULT_PALETTE = "violet";

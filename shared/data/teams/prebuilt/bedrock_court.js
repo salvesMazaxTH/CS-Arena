@@ -8,7 +8,7 @@ export const bedrockCourt = {
   champions: [
     "tharox",
     "theopetra",
-    "gryskarchu",
+    "yresa_petronika",
     "avarik",
     "avarion",
     "ysvane",

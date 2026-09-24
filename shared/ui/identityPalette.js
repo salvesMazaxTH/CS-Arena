@@ -50,6 +50,20 @@ const ELEMENT_IDENTITIES = Object.freeze({
     background: "rgba(112, 118, 128, 0.95)",
     border: "rgba(225, 230, 235, 0.65)",
   },
+  poison: {
+    label: "Poison",
+    icon: "☠️",
+    iconUrl: "/assets/indicators/poison_element_icon.svg",
+    background: "rgba(118, 58, 158, 0.94)",
+    border: "rgba(212, 170, 255, 0.7)",
+  },
+  plant: {
+    label: "Plant",
+    icon: "🌿",
+    iconUrl: "/assets/indicators/plant_element_icon.svg",
+    background: "rgba(46, 128, 74, 0.94)",
+    border: "rgba(170, 236, 190, 0.7)",
+  },
   air: {
     label: "Air",
     icon: "🌪️",

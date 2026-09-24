@@ -16,11 +16,10 @@ const gryskarchuSkills = [
   // =========================
 
   {
-    key: "earthroot",
-    name: "Earthroot",
+    key: "lifebind",
+    name: "Lifebind",
     bf: 75,
     damageMode: "standard",
-    element: "earth",
     rootDuration: 2,
     contact: false,
     hitVfx: "roots",
@@ -29,8 +28,8 @@ const gryskarchuSkills = [
 
     description() {
       return {
-        en: `Gryskarchu calls the roots up through the ground beneath the chosen target, dealing <b>Earth magical damage</b> and holding them <b>Rooted</b> for <b>${this.rootDuration}</b> turn(s).`,
-        pt: `Gryskarchu convoca as raízes através do solo sob o alvo escolhido, causando <b>dano mágico de Terra</b> e mantendo-o <b>Enraizado</b> por <b>${this.rootDuration}</b> turno(s).`,
+        en: `Gryskarchu sends his living current into the chosen target, dealing <b>magical damage</b> and coiling around them until they are <b>Rooted</b> for <b>${this.rootDuration}</b> turn(s).`,
+        pt: `Gryskarchu lança sua corrente vital sobre o alvo escolhido, causando <b>dano mágico</b> e o enlaçando até deixá-lo <b>Enraizado</b> por <b>${this.rootDuration}</b> turno(s).`,
       };
     },
 
@@ -59,8 +58,8 @@ const gryskarchuSkills = [
   },
 
   {
-    key: "vital_bloom",
-    name: "Vital Bloom",
+    key: "vital_surge",
+    name: "Vital Surge",
     healAmount: 40,
     contact: false,
 
@@ -68,8 +67,8 @@ const gryskarchuSkills = [
 
     description() {
       return {
-        en: `Green light opens across the field like something in bloom, restoring <b>${this.healAmount}</b> HP to Gryskarchu and every active ally.`,
-        pt: `Uma luz verde se abre pelo campo como algo desabrochando, restaurando <b>${this.healAmount}</b> de HP a Gryskarchu e a todos os aliados ativos.`,
+        en: `A green light swells across the field, restoring <b>${this.healAmount}</b> HP to Gryskarchu and every active ally.`,
+        pt: `Uma luz verde se expande pelo campo, restaurando <b>${this.healAmount}</b> de HP a Gryskarchu e a todos os aliados ativos.`,
       };
     },
 
@@ -94,20 +93,20 @@ const gryskarchuSkills = [
       return {
         log: someoneHealed
           ? {
-              en: `${formatChampionName(user)} invoked Vital Bloom.`,
-              pt: `${formatChampionName(user)} invocou Florescer Vital.`,
+              en: `${formatChampionName(user)} invoked Vital Surge.`,
+              pt: `${formatChampionName(user)} invocou Onda Vital.`,
             }
           : {
-              en: `${formatChampionName(user)} invoked Vital Bloom, but no one needed HP restored.`,
-              pt: `${formatChampionName(user)} invocou Florescer Vital, mas ninguém precisava de HP restaurado.`,
+              en: `${formatChampionName(user)} invoked Vital Surge, but no one needed HP restored.`,
+              pt: `${formatChampionName(user)} invocou Onda Vital, mas ninguém precisava de HP restaurado.`,
             },
       };
     },
   },
 
   {
-    key: "mother_earths_protection",
-    name: "Mother Earth's Protection",
+    key: "wardens_vigor",
+    name: "Warden's Vigor",
 
     defBuff: 25,
     healPercent: 30,
@@ -121,12 +120,12 @@ const gryskarchuSkills = [
 
     description() {
       return {
-        en: `Gryskarchu lays Mother Earth's own protection over the chosen ally, restoring <b>${this.healPercent}%</b> of their <b>Max HP</b>.
+        en: `Gryskarchu pours his own vitality into the chosen ally, restoring <b>${this.healPercent}%</b> of their <b>Max HP</b>.
 
-        For <b>${this.buffDuration}</b> turn(s), they gain <b>+${this.defBuff}%</b> <b>Defense</b>, and the ground itself carries their blows: their attacks deal <b>bonus damage</b> equal to <b>${this.defDamageBonus}%</b> of their <b>Defense</b>.`,
-        pt: `Gryskarchu envolve o aliado escolhido na própria proteção da Mãe Terra, restaurando <b>${this.healPercent}%</b> de seu <b>HP Máximo</b>.
+        For <b>${this.buffDuration}</b> turn(s), they gain <b>+${this.defBuff}%</b> <b>Defense</b>, and that vitality carries their blows: their attacks deal <b>bonus damage</b> equal to <b>${this.defDamageBonus}%</b> of their <b>Defense</b>.`,
+        pt: `Gryskarchu derrama a própria vitalidade no aliado escolhido, restaurando <b>${this.healPercent}%</b> de seu <b>HP Máximo</b>.
 
-        Por <b>${this.buffDuration}</b> turno(s), ele ganha <b>+${this.defBuff}%</b> de <b>Defesa</b>, e o próprio solo carrega seus golpes: seus ataques causam <b>dano bônus</b> igual a <b>${this.defDamageBonus}%</b> de sua <b>Defesa</b>.`,
+        Por <b>${this.buffDuration}</b> turno(s), ele ganha <b>+${this.defBuff}%</b> de <b>Defesa</b>, e essa vitalidade carrega seus golpes: seus ataques causam <b>dano bônus</b> igual a <b>${this.defDamageBonus}%</b> de sua <b>Defesa</b>.`,
       };
     },
 
@@ -158,11 +157,11 @@ const gryskarchuSkills = [
         ally.Defense * (this.defDamageBonus / 100);
 
       ally.damageModifiers = ally.damageModifiers.filter(
-        (mod) => mod.id !== "mother_earths_protection",
+        (mod) => mod.id !== "wardens_vigor",
       );
 
       ally.addDamageModifier({
-        id: "mother_earths_protection",
+        id: "wardens_vigor",
         expiresAtTurn:
           context.currentTurn + this.buffDuration,
 

@@ -49,6 +49,8 @@ const PALETTES = Object.freeze({
   lightning: { core: "#fffce0", mid: "#ffe66b", deep: "#e0a915" },
   azure: { core: "#f2ffff", mid: "#7df9ff", deep: "#12a7d6" },
   earth: { core: "#fff4e2", mid: "#d2a878", deep: "#8a5a2b" },
+  poison: { core: "#f7ecff", mid: "#c08bff", deep: "#6a1fa8" },
+  plant: { core: "#f2fff2", mid: "#8fe6a0", deep: "#2c8a4a" },
   violet: { core: "#fbf0ff", mid: "#c98bff", deep: "#7b2fd6" },
   crimson: { core: "#fff0f0", mid: "#ff6b6b", deep: "#b3121b" },
 });

@@ -6,7 +6,7 @@ const poisoned = {
   key: "poisoned",
   name: "Poisoned",
   type: "debuff",
-  subtypes: ["dot", "magical"],
+  subtypes: ["dot", "magical", "poison"],
   isStackable: true,
   durationFromStacks: true,
 

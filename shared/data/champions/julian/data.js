@@ -8,6 +8,8 @@ export default {
   Defense: 60,
   Speed: 65,
 
+  elementalAffinities: ["poison"],
+
   classKey: "marksman",
   species: ["human"],
 };

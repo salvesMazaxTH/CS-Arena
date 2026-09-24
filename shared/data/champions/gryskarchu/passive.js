@@ -13,10 +13,10 @@ export default {
     return {
       en: `Life given never leaves Gryskarchu. Whenever he restores <b>HP</b> to an ally, the same current runs back through him and he restores <b>${this.selfHeal}</b> HP himself; anything the wound cannot hold spills over into permanent <b>Max HP</b>.
 
-      If the ally was below <b>${this.hpThreshold}%</b> HP, the earth braces him in return and he gains <b>+${this.defBonus}</b> permanent Defense.`,
+      If the ally was below <b>${this.hpThreshold}%</b> HP, the current runs back stronger and he gains <b>+${this.defBonus}</b> permanent Defense.`,
       pt: `Vida cedida nunca deixa Gryskarchu. Sempre que ele restaura <b>HP</b> a um aliado, a mesma corrente volta através dele e restaura <b>${this.selfHeal}</b> de HP para si mesmo; o que a ferida não consegue conter transborda em <b>HP Máximo</b> permanente.
 
-      Se o aliado estava abaixo de <b>${this.hpThreshold}%</b> de HP, a terra o firma em retorno e ele ganha <b>+${this.defBonus}</b> de Defesa permanente.`,
+      Se o aliado estava abaixo de <b>${this.hpThreshold}%</b> de HP, a corrente volta mais forte e ele ganha <b>+${this.defBonus}</b> de Defesa permanente.`,
     };
   },
 

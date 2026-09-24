@@ -37,6 +37,16 @@ const ELEMENTAL_MATRIX = {
     weakTo: ["fire", "steel"],
     resists: ["ice", "water"],
   },
+
+  poison: {
+    weakTo: ["fire", "water"],
+    resists: ["poison", "plant", "earth"],
+  },
+
+  plant: {
+    weakTo: ["fire", "poison"],
+    resists: ["plant", "water", "earth"],
+  },
 };
 
 function applyAffinity(event, debugMode) {
