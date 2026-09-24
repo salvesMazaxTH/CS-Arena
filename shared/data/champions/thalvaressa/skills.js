@@ -117,8 +117,8 @@ const thalvaressaSkills = [
   },
 
   {
-    key: "canopy",
-    name: "Canopy",
+    key: "mother_earths_protection",
+    name: "Mother Earth's Protection",
 
     healPerTurn: 45,
     auraDuration: 3,
@@ -135,8 +135,8 @@ const thalvaressaSkills = [
 
     description() {
       return {
-        en: `Thálvaressa spreads her canopy over her whole team, herself included, tearing up to <b>${this.cleanseCount}</b> <b>negative status effects</b> off each of them. For <b>${this.auraDuration}</b> turn(s), everyone under it takes <b>${this.damageReduction}%</b> less damage and restores <b>${this.healPerTurn}</b> HP at the start of each turn — the healing alone never reaches Thálvaressa.`,
-        pt: `Thálvaressa estende sua copa sobre todo o seu time, ela inclusa, arrancando de cada um até <b>${this.cleanseCount}</b> <b>efeitos de status negativos</b>. Por <b>${this.auraDuration}</b> turno(s), todos sob ela recebem <b>${this.damageReduction}%</b> menos dano e restauram <b>${this.healPerTurn}</b> de HP no início de cada turno — só a cura é que nunca alcança Thálvaressa.`,
+        en: `Thálvaressa calls Mother Earth's protection down over her whole team, herself included, tearing up to <b>${this.cleanseCount}</b> <b>negative status effects</b> off each of them. For <b>${this.auraDuration}</b> turn(s), everyone under it takes <b>${this.damageReduction}%</b> less damage and restores <b>${this.healPerTurn}</b> HP at the start of each turn — the healing alone never reaches Thálvaressa.`,
+        pt: `Thálvaressa invoca a proteção da Mãe Terra sobre todo o seu time, ela inclusa, arrancando de cada um até <b>${this.cleanseCount}</b> <b>efeitos de status negativos</b>. Por <b>${this.auraDuration}</b> turno(s), todos sob ela recebem <b>${this.damageReduction}%</b> menos dano e restauram <b>${this.healPerTurn}</b> de HP no início de cada turno — só a cura é que nunca alcança Thálvaressa.`,
       };
     },
 
@@ -189,8 +189,8 @@ const thalvaressaSkills = [
 
               return {
                 log: {
-                  en: `<b>Canopy</b> restores <b>${healed}</b> HP to ${formatChampionName(owner)}.`,
-                  pt: `A <b>Copa</b> restaura <b>${healed}</b> de HP a ${formatChampionName(owner)}.`,
+                  en: `<b>Mother Earth's Protection</b> restores <b>${healed}</b> HP to ${formatChampionName(owner)}.`,
+                  pt: `A <b>Proteção da Mãe Terra</b> restaura <b>${healed}</b> de HP a ${formatChampionName(owner)}.`,
                 },
               };
             },
@@ -201,8 +201,8 @@ const thalvaressaSkills = [
 
       return {
         log: {
-          en: `${formatChampionName(user)} raises the <b>Canopy</b>: her team is cleansed of up to <b>${this.cleanseCount}</b> <b>negative status effects</b> each, takes <b>${this.damageReduction}%</b> less damage and restores <b>${this.healPerTurn}</b> HP at the start of each turn for <b>${this.auraDuration}</b> turn(s).`,
-          pt: `${formatChampionName(user)} ergue a <b>Copa</b>: seu time é limpo de até <b>${this.cleanseCount}</b> <b>efeitos de status negativos</b> cada, recebe <b>${this.damageReduction}%</b> menos dano e restaura <b>${this.healPerTurn}</b> de HP no início de cada turno por <b>${this.auraDuration}</b> turno(s).`,
+          en: `${formatChampionName(user)} calls down <b>Mother Earth's Protection</b>: her team is cleansed of up to <b>${this.cleanseCount}</b> <b>negative status effects</b> each, takes <b>${this.damageReduction}%</b> less damage and restores <b>${this.healPerTurn}</b> HP at the start of each turn for <b>${this.auraDuration}</b> turn(s).`,
+          pt: `${formatChampionName(user)} invoca a <b>Proteção da Mãe Terra</b>: seu time é limpo de até <b>${this.cleanseCount}</b> <b>efeitos de status negativos</b> cada, recebe <b>${this.damageReduction}%</b> menos dano e restaura <b>${this.healPerTurn}</b> de HP no início de cada turno por <b>${this.auraDuration}</b> turno(s).`,
         },
       };
     },
