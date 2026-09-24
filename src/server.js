@@ -1248,7 +1248,12 @@ io.on("connection", (socket) => {
 
   function startGameIfReady() {
     if (!checkAllTeamsSelected()) return;
-    if (match.isCombatStarted()) return;
+
+    // Both players just locked in fresh teams, so any combat still flagged as
+    // started belongs to an abandoned match that never got a full reset (it only
+    // happens when the slots empty out one at a time and the count never reaches
+    // zero). Wipe it, otherwise the old state would be restored instead.
+    if (match.isCombatStarted()) match.combat.reset();
 
     match.combat.start();
 
