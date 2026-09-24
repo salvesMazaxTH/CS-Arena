@@ -120,9 +120,9 @@ export default {
       Every <b>${this.stacksCap}</b> stacks, the accumulation comes undone: <b>1</b> unit of <b>Momentum</b> is stripped from every enemy, and those who held enough to unleash their ultimate are punished for it, taking <b>${this.drainPunishPercent}%</b> of their Max HP as <b>piercing damage</b>.`,
       pt: `Nada que se acumula perto de Noyre permanece acumulado. Sempre que um inimigo ganha ou gasta <b>Momentum</b>, ele acumula <b>1</b> de <b>Entropia</b>.
 
-      <b>Stacks atuais: ${stacks}</b>
+      <b>Entropia atual: ${stacks}</b>
 
-      A cada <b>${this.stacksCap}</b> stacks, o acúmulo se desfaz: <b>1</b> unidade de <b>Momentum</b> é removida de cada inimigo, e quem tinha o suficiente para desencadear seu ultimate é punido por isso, sofrendo <b>${this.drainPunishPercent}%</b> do seu HP Máximo como <b>dano perfurante</b>.`,
+      A cada <b>${this.stacksCap}</b> de <b>Entropia</b>, tudo se desfaz: <b>1</b> unidade de <b>Momentum</b> é removida de cada inimigo, e quem tinha o suficiente para desencadear seu ultimate é punido por isso, sofrendo <b>${this.drainPunishPercent}%</b> do seu HP Máximo como <b>dano perfurante</b>.`,
     };
   },
 

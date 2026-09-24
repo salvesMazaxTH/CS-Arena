@@ -21,8 +21,8 @@ const leoneSkills = [
 
     description() {
       return {
-        en: `Leone closes the gap between one heartbeat and the next, a flick of his nails opening the chosen target before they register he moved. Deals <b>physical damage</b> and leaves them <b>Bleeding</b> for <b>${this.bleedingStacks}</b> stack(s).`,
-        pt: `Leone cruza a distância entre uma batida do coração e a outra, e um só floreio de suas garras já abriu o alvo escolhido antes que ele perceba o movimento. Causa <b>dano físico</b> e o deixa <b>Sangrando</b> por <b>${this.bleedingStacks}</b> stack(s).`,
+        en: `Leone closes the gap between one heartbeat and the next, a flick of his nails opening the chosen target before they register he moved. Deals <b>physical damage</b> and leaves them <b>Bleeding</b> for <b>${this.bleedingStacks}</b> acúmulo(s).`,
+        pt: `Leone cruza a distância entre uma batida do coração e a outra, e um só floreio de suas garras já abriu o alvo escolhido antes que ele perceba o movimento. Causa <b>dano físico</b> e o deixa <b>Sangrando</b> por <b>${this.bleedingStacks}</b> acúmulo(s).`,
       };
     },
 

@@ -16,9 +16,9 @@ export default {
       At <b>${this.maxStacks}</b> stacks, her next attack consumes all Flow: it lands as <b>Absolute Damage</b> for <b>${this.absoluteBonusPercent}%</b> more than the hit would otherwise deal through the target's defenses.
 
       <b>Current Flow: ${stacks}/${this.maxStacks}</b>`,
-      pt: `Sempre que Rakhana causa dano a um inimigo, ela ganha 1 carga de <b>Fluxo</b> (máx.: <b>${this.maxStacks}</b>).
+      pt: `Sempre que Rakhana causa dano a um inimigo, ela ganha 1 acúmulo de <b>Fluxo</b> (máx.: <b>${this.maxStacks}</b>).
 
-      Com <b>${this.maxStacks}</b> cargas, seu próximo ataque consome todo o Fluxo: ele acerta como <b>dano Absoluto</b>, <b>${this.absoluteBonusPercent}%</b> maior do que o golpe causaria atravessando as defesas do alvo.
+      Com <b>${this.maxStacks}</b> acúmulos, seu próximo ataque consome todo o Fluxo: ele acerta como <b>dano Absoluto</b>, <b>${this.absoluteBonusPercent}%</b> maior do que o golpe causaria atravessando as defesas do alvo.
 
       <b>Fluxo atual: ${stacks}/${this.maxStacks}</b>`,
     };

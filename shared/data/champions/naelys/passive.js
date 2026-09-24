@@ -19,11 +19,11 @@ export default {
 
       <b>Current stacks: ${stacks}/${this.maxStacks}</b>
       <b>Maximum total bonus: +${this.dmgPerStack * this.maxStacks}</b> damage.`,
-      pt: `Sempre que causa dano, restaura <b>${this.healPerHit}</b> HP. A cada vez que restaura HP assim, ganha 1 stack de <b>Marés</b>.
+      pt: `Sempre que causa dano, restaura <b>${this.healPerHit}</b> HP. A cada vez que restaura HP assim, ganha 1 acúmulo de <b>Marés</b>.
 
-      Cada stack concede <b>+${this.dmgPerStack}</b> de dano fixo. Máximo de <b>${this.maxStacks}</b> stacks. Os stacks são permanentes.
+      Cada acúmulo concede <b>+${this.dmgPerStack}</b> de dano fixo. Máximo de <b>${this.maxStacks}</b> acúmulos. Os acúmulos são permanentes.
 
-      <b>Stacks atuais: ${stacks}/${this.maxStacks}</b>
+      <b>Acúmulos atuais: ${stacks}/${this.maxStacks}</b>
       <b>Bônus total máximo: +${this.dmgPerStack * this.maxStacks}</b> de dano.`,
     };
   },
@@ -89,7 +89,7 @@ export default {
         )} restored <b>${restored}</b> HP and gained 1 <b>Tides</b> stack (<b>${owner.runtime.mareStacks}/${this.maxStacks}</b>).`,
         pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(
           owner,
-        )} restaurou <b>${restored}</b> de HP e ganhou 1 stack de <b>Marés</b> (<b>${owner.runtime.mareStacks}/${this.maxStacks}</b>).`,
+        )} restaurou <b>${restored}</b> de HP e ganhou 1 acúmulo de <b>Marés</b> (<b>${owner.runtime.mareStacks}/${this.maxStacks}</b>).`,
       },
     };
   },

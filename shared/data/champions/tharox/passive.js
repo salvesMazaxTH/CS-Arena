@@ -13,7 +13,7 @@ export default {
   description() {
     return {
       en: `Whenever Tharox is struck, he gains <b>1</b> Inertia stack. At <b>${this.stacksNeeded}</b>, consume them and gain +<b>${this.defBonus}</b> permanent <b>Defense</b>. If his <b>HP</b> is at <b>${this.sustainHpThreshold * 100}%</b> or below, he additionally heals for <b>${this.healingPerMaxHP * 100}%</b> of his <b>Max HP</b> for every <b>${this.defensePerHealingStep}</b> <b>Defense</b> he has and gains a shield equivalent to <b>${this.shieldPercentage * 100}%</b> of his <b>Max HP</b>.`,
-      pt: `Sempre que é golpeado, Tharox ganha <b>1</b> stack de Inércia. Ao atingir <b>${this.stacksNeeded}</b>, ele as consome e ganha +<b>${this.defBonus}</b> de <b>Defesa</b> permanente. Se seu <b>HP</b> estiver em <b>${this.sustainHpThreshold * 100}%</b> ou menos, ele também se cura em <b>${this.healingPerMaxHP * 100}%</b> de seu <b>HP Máximo</b> para cada <b>${this.defensePerHealingStep}</b> de <b>Defesa</b> que possui e ganha um escudo equivalente a <b>${this.shieldPercentage * 100}%</b> de seu <b>HP Máximo</b>.`,
+      pt: `Sempre que é golpeado, Tharox ganha <b>1</b> acúmulo de Inércia. Ao atingir <b>${this.stacksNeeded}</b>, ele os consome e ganha +<b>${this.defBonus}</b> de <b>Defesa</b> permanente. Se seu <b>HP</b> estiver em <b>${this.sustainHpThreshold * 100}%</b> ou menos, ele também se cura em <b>${this.healingPerMaxHP * 100}%</b> de seu <b>HP Máximo</b> para cada <b>${this.defensePerHealingStep}</b> de <b>Defesa</b> que possui e ganha um escudo equivalente a <b>${this.shieldPercentage * 100}%</b> de seu <b>HP Máximo</b>.`,
     };
   },
 

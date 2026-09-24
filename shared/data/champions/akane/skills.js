@@ -22,8 +22,8 @@ const akaneSkills = [
 
     description() {
       return {
-        en: `Akane unsheathes a single katana and draws it across the chosen target in one clean violet arc, the blade back at her hip before the cut is even felt, dealing damage and leaving them <b>Bleeding</b> for <b>${this.bleedingStacks}</b> stack(s).`,
-        pt: `Akane desembainha uma única katana e a arrasta pelo alvo escolhido num único arco violeta limpo, a lâmina de volta ao quadril antes mesmo de o corte ser sentido, causando dano e deixando-o <b>Sangrando</b> por <b>${this.bleedingStacks}</b> stack(s).`,
+        en: `Akane unsheathes a single katana and draws it across the chosen target in one clean violet arc, the blade back at her hip before the cut is even felt, dealing damage and leaving them <b>Bleeding</b> for <b>${this.bleedingStacks}</b> acúmulo(s).`,
+        pt: `Akane desembainha uma única katana e a arrasta pelo alvo escolhido num único arco violeta limpo, a lâmina de volta ao quadril antes mesmo de o corte ser sentido, causando dano e deixando-o <b>Sangrando</b> por <b>${this.bleedingStacks}</b> acúmulo(s).`,
       };
     },
 

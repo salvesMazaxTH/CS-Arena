@@ -28,7 +28,7 @@ const ethanSkills = [
     description() {
       return {
         en: `Ethan doesn't waste a cut he hasn't already placed in his head. Deals <b>physical damage</b>, reducing the target's <b>Evasion</b> by <b>${this.evasionDebuff}</b> for <b>${this.debuffDuration}</b> turn(s) and leaving them <b>Bleeding</b> for <b>${this.bleedingStacks}</b> stack(s).`,
-        pt: `Ethan não desperdiça um corte que ele já não tenha planejado na cabeça. Causa <b>dano físico</b>, reduzindo a <b>Esquiva</b> do alvo em <b>${this.evasionDebuff}</b> por <b>${this.debuffDuration}</b> turno(s) e deixando-o <b>Sangrando</b> por <b>${this.bleedingStacks}</b> carga(s).`,
+        pt: `Ethan não desperdiça um corte que ele já não tenha planejado na cabeça. Causa <b>dano físico</b>, reduzindo a <b>Esquiva</b> do alvo em <b>${this.evasionDebuff}</b> por <b>${this.debuffDuration}</b> turno(s) e deixando-o <b>Sangrando</b> por <b>${this.bleedingStacks}</b> acúmulo(s).`,
       };
     },
 

@@ -26,7 +26,7 @@ const drexSkills = [
     description() {
       return {
         en: `Deals light to moderate damage to the chosen target and applies <b>${this.bleedingStacks}</b> <b>Bleeding</b> stacks. If the target is already <b>Bleeding</b>, applies <b>1</b> additional stack. The cut will not close: the target is afflicted with <b>Heal Block</b> for <b>${this.healBlockDuration}</b> turn(s).`,
-        pt: `Causa dano leve a moderado ao alvo escolhido e aplica <b>${this.bleedingStacks}</b> cargas de <b>Sangramento</b>. Se o alvo já estiver <b>Sangrando</b>, aplica <b>1</b> carga adicional. O corte, porém, não se fecha: o alvo é afligido com <b>Bloqueio de Cura</b> por <b>${this.healBlockDuration}</b> turno(s).`,
+        pt: `Causa dano leve a moderado ao alvo escolhido e aplica <b>${this.bleedingStacks}</b> acúmulos de <b>Sangramento</b>. Se o alvo já estiver <b>Sangrando</b>, aplica <b>1</b> acúmulo adicional. O corte, porém, não se fecha: o alvo é afligido com <b>Bloqueio de Cura</b> por <b>${this.healBlockDuration}</b> turno(s).`,
       };
     },
 
@@ -87,7 +87,7 @@ const drexSkills = [
     description() {
       return {
         en: `Deals damage to all enemies and applies <b>${this.bleedingStacksApplied}</b> <b>Bleeding</b> stacks to each, taking hold on any hit that reaches the target even when it deals no damage. If an enemy is already <b>Bleeding</b>, applies <b>${this.bonusBleedStacksIfBleeding}</b> additional stack. Each existing <b>Bleeding</b> stack also triggers an immediate instance of <b>Bleeding</b> damage without consuming the status.`,
-        pt: `Causa dano a todos os inimigos e aplica <b>${this.bleedingStacksApplied}</b> cargas de <b>Sangramento</b> a cada um, pegando em qualquer golpe que alcance o alvo mesmo sem causar dano. Se um inimigo já estiver <b>Sangrando</b>, aplica <b>${this.bonusBleedStacksIfBleeding}</b> carga adicional. Cada carga de <b>Sangramento</b> já existente também dispara uma instância imediata de dano de <b>Sangramento</b> sem consumir o status.`,
+        pt: `Causa dano a todos os inimigos e aplica <b>${this.bleedingStacksApplied}</b> acúmulos de <b>Sangramento</b> a cada um, pegando em qualquer golpe que alcance o alvo mesmo sem causar dano. Se um inimigo já estiver <b>Sangrando</b>, aplica <b>${this.bonusBleedStacksIfBleeding}</b> acúmulo adicional. Cada acúmulo de <b>Sangramento</b> já existente também dispara uma instância imediata de dano de <b>Sangramento</b> sem consumir o status.`,
       };
     },
 
@@ -203,7 +203,7 @@ const drexSkills = [
     description() {
       return {
         en: `Deals moderate-high damage to the chosen target. Deals <b>+${this.damagePerBleedStack}%</b> bonus damage for each <b>Bleeding</b> stack on the target. If the target has fewer than <b>${this.minimumBleedStacks}</b> Bleeding stacks, applies <b>${this.stacksApplied}</b> stacks, or only enough to reach <b>${this.minimumBleedStacks}</b>. If this ability hits a target with <b>${this.minimumBleedStacks}+</b> Bleeding stacks, Drex gains a <b>shield</b> equal to <b>${this.shieldFromTargetMaxHpRatio * 100}%</b> of the target's <b>Max HP</b> for <b>${this.shieldDecayTurns}</b> turns.`,
-        pt: `Causa dano moderado a alto ao alvo escolhido. Causa <b>+${this.damagePerBleedStack}%</b> de dano bônus para cada carga de <b>Sangramento</b> no alvo. Se o alvo tiver menos de <b>${this.minimumBleedStacks}</b> cargas de Sangramento, aplica <b>${this.stacksApplied}</b> cargas, ou apenas o suficiente para atingir <b>${this.minimumBleedStacks}</b>. Se esta habilidade atingir um alvo com <b>${this.minimumBleedStacks}+</b> cargas de Sangramento, Drex ganha um <b>escudo</b> igual a <b>${this.shieldFromTargetMaxHpRatio * 100}%</b> do <b>HP Máximo</b> do alvo por <b>${this.shieldDecayTurns}</b> turnos.`,
+        pt: `Causa dano moderado a alto ao alvo escolhido. Causa <b>+${this.damagePerBleedStack}%</b> de dano bônus para cada acúmulo de <b>Sangramento</b> no alvo. Se o alvo tiver menos de <b>${this.minimumBleedStacks}</b> acúmulos de Sangramento, aplica <b>${this.stacksApplied}</b> acúmulos, ou apenas o suficiente para atingir <b>${this.minimumBleedStacks}</b>. Se esta habilidade atingir um alvo com <b>${this.minimumBleedStacks}+</b> acúmulos de Sangramento, Drex ganha um <b>escudo</b> igual a <b>${this.shieldFromTargetMaxHpRatio * 100}%</b> do <b>HP Máximo</b> do alvo por <b>${this.shieldDecayTurns}</b> turnos.`,
       };
     },
 

@@ -31,7 +31,7 @@ const sebastianIgnisSkills = [
     description() {
       return {
         en: `Sebastian barely raises the blade, a flick of flame that costs him nothing he wasn't already carrying. Deals <b>physical damage</b>, plus <b>${this.apathyBonusFlat}</b> bonus damage per <b>Apathy</b> stack spent, and always sets the chosen enemy <b>Burning</b> for <b>${this.burnDuration}</b> turn(s).`,
-        pt: `Sebastian mal ergue a lâmina, um lampejo de chama que não lhe custa nada que ele já não estivesse carregando. Causa <b>dano físico</b>, mais <b>${this.apathyBonusFlat}</b> de dano bônus por carga de <b>Apatia</b> gasta, e sempre deixa o inimigo escolhido <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s).`,
+        pt: `Sebastian mal ergue a lâmina, um lampejo de chama que não lhe custa nada que ele já não estivesse carregando. Causa <b>dano físico</b>, mais <b>${this.apathyBonusFlat}</b> de dano bônus por acúmulo de <b>Apatia</b> gasto, e sempre deixa o inimigo escolhido <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s).`,
       };
     },
 
@@ -76,7 +76,7 @@ const sebastianIgnisSkills = [
         arr.push({
           log: {
             en: `${formatChampionName(user)} finally moves — ${stacks} Apathy stack(s) spent.`,
-            pt: `${formatChampionName(user)} finalmente se move — ${stacks} carga(s) de Apatia gasta(s).`,
+            pt: `${formatChampionName(user)} finalmente se move — ${stacks} acúmulo(s) de Apatia gasto(s).`,
           },
         });
       }
@@ -99,7 +99,7 @@ const sebastianIgnisSkills = [
     description() {
       return {
         en: `Sebastian plays a few bars on the harp, the same ones he always plays, and doesn't bother learning a new one for the occasion — it works anyway. Every ally takes <b>${this.damageReductionPercent}%</b> less damage for <b>${this.duration}</b> turn(s), plus <b>${this.perStackPercent}%</b> for every <b>Apathy</b> stack spent.`,
-        pt: `Sebastian toca alguns compassos na harpa, os mesmos de sempre, e nem se dá ao trabalho de aprender um novo para a ocasião — funciona do mesmo jeito. Todo aliado recebe <b>${this.damageReductionPercent}%</b> menos dano por <b>${this.duration}</b> turno(s), mais <b>${this.perStackPercent}%</b> para cada carga de <b>Apatia</b> gasta.`,
+        pt: `Sebastian toca alguns compassos na harpa, os mesmos de sempre, e nem se dá ao trabalho de aprender um novo para a ocasião — funciona do mesmo jeito. Todo aliado recebe <b>${this.damageReductionPercent}%</b> menos dano por <b>${this.duration}</b> turno(s), mais <b>${this.perStackPercent}%</b> para cada acúmulo de <b>Apatia</b> gasto.`,
       };
     },
 
@@ -164,7 +164,7 @@ const sebastianIgnisSkills = [
     description() {
       return {
         en: `Every stack of neglect Sebastian's been banking comes due at once, and for a moment he commits completely — the ground around the chosen enemy goes up with them. Deals <b>physical damage</b>, plus <b>${this.apathyBonusPercent}%</b> more per <b>Apathy</b> stack spent, to them and whoever stands beside them, always setting each one <b>Burning</b> for <b>${this.burnDuration}</b> turn(s).`,
-        pt: `Toda carga de descaso que Sebastian vinha acumulando cobra sua conta de uma vez, e por um instante ele se entrega por completo — o chão ao redor do inimigo escolhido explode junto com ele. Causa <b>dano físico</b>, mais <b>${this.apathyBonusPercent}%</b> a mais por carga de <b>Apatia</b> gasta, nele e em quem estiver ao seu lado, sempre deixando cada um <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s).`,
+        pt: `Toda carga de descaso que Sebastian vinha acumulando cobra sua conta de uma vez, e por um instante ele se entrega por completo — o chão ao redor do inimigo escolhido explode junto com ele. Causa <b>dano físico</b>, mais <b>${this.apathyBonusPercent}%</b> a mais por acúmulo de <b>Apatia</b> gasto, nele e em quem estiver ao seu lado, sempre deixando cada um <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s).`,
       };
     },
 
@@ -217,7 +217,7 @@ const sebastianIgnisSkills = [
         results.push({
           log: {
             en: `${formatChampionName(user)} finally commits — ${stacks} Apathy stack(s) spent.`,
-            pt: `${formatChampionName(user)} finalmente se entrega — ${stacks} carga(s) de Apatia gasta(s).`,
+            pt: `${formatChampionName(user)} finalmente se entrega — ${stacks} acúmulo(s) de Apatia gasto(s).`,
           },
         });
       }

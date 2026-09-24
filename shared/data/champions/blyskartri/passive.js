@@ -25,11 +25,11 @@ export default {
     Current Stacks: <b>${champion.runtime?.impulseStacks ?? 0}</b>
 
     At <b>${this.stackCap}</b> stacks, consume all stacks to immediately deal <b>50%</b> <b>Hybrid Damage</b> equal to <b>${this.speedPercentAsDamage * 100}%</b> of the fastest ally's <b>Speed</b> to the enemy with the lowest HP.`,
-      pt: `Sempre que Blyskartri ou um aliado ganha <b>Velocidade</b> ou <b>Esquiva</b>, Blyskartri ganha <b>1</b> carga de <b>Impulso</b>. Sempre que Blyskartri evade um ataque, ele ganha <b>1</b> carga adicional. Máx.: <b>${this.stackCap}</b>.
+      pt: `Sempre que Blyskartri ou um aliado ganha <b>Velocidade</b> ou <b>Esquiva</b>, Blyskartri ganha <b>1</b> acúmulo de <b>Impulso</b>. Sempre que Blyskartri esquiva um ataque, ele ganha <b>1</b> acúmulo adicional. Máx.: <b>${this.stackCap}</b>.
 
-    Cargas Atuais: <b>${champion.runtime?.impulseStacks ?? 0}</b>
+    Acúmulos Atuais: <b>${champion.runtime?.impulseStacks ?? 0}</b>
 
-    Ao atingir <b>${this.stackCap}</b> cargas, consome todas as cargas para causar imediatamente <b>50%</b> de <b>Dano Híbrido</b> igual a <b>${this.speedPercentAsDamage * 100}%</b> da <b>Velocidade</b> do aliado mais rápido ao inimigo com menos HP.`,
+    Ao atingir <b>${this.stackCap}</b> acúmulos, consome todos os acúmulos para causar imediatamente <b>50%</b> de <b>Dano Híbrido</b> igual a <b>${this.speedPercentAsDamage * 100}%</b> da <b>Velocidade</b> do aliado mais rápido ao inimigo com menos HP.`,
     };
   },
 
@@ -76,9 +76,7 @@ export default {
       fastestAlly.Speed * this.speedPercentAsDamage,
     );
 
-    const enemies = context.aliveChampions.filter(
-      (c) => c.team !== owner.team,
-    );
+    const enemies = context.aliveChampions.filter((c) => c.team !== owner.team);
 
     if (!enemies.length) return gained;
 

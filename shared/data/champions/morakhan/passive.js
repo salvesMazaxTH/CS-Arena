@@ -31,13 +31,13 @@ export default {
       <b>Current Stacks: ${stacks}</b>`,
       pt: `Morakhan sofre <b>${this.standingReductionPercent}%</b> menos dano (exceto <b>dano Absoluto</b>) e reduz o dano de ataques físicos em mais <b>${this.flatReductionVSPhysical}</b> pontos fixos.
 
-      Sempre que sofre dano físico, ganha 1 stack de <b>Estabilidade</b> (Máximo: <b>${this.stabilityStacksCap}</b>). Um <b>CLAIM</b>, feito em quietude, também concede 1 stack.
+      Sempre que sofre dano físico, ganha 1 acúmulo de <b>Estabilidade</b> (Máximo: <b>${this.stabilityStacksCap}</b>). Um <b>CLAIM</b>, feito em quietude, também concede 1 acúmulo.
 
-      Quando um golpe causaria mais de <b>${this.significantHitRatio * 100}%</b> de seu HP Máximo, ele consome todos os stacks de Estabilidade para reduzir esse dano em mais <b>${this.reductionPerStack}%</b> por stack, e então dobra seu dano causado pelos próximos <b>${this.dmgBuffAuraDuration}</b> turnos.
+      Quando um golpe causaria mais de <b>${this.significantHitRatio * 100}%</b> de seu HP Máximo, ele consome todos os acúmulos de Estabilidade para reduzir esse dano em mais <b>${this.reductionPerStack}%</b> por acúmulo, e então dobra seu dano causado pelos próximos <b>${this.dmgBuffAuraDuration}</b> turnos.
 
-      Já no máximo de Estabilidade, o próximo stack que ganharia — seja por um golpe físico ou por um <b>CLAIM</b> — é gasto na hora: nenhum dano é reduzido, mas a duplicação ainda é ativada.
+      Já no máximo de Estabilidade, o próximo acúmulo que ganharia — seja por um golpe físico ou por um <b>CLAIM</b> — é gasto na hora: nenhum dano é reduzido, mas a duplicação ainda é ativada.
 
-      <b>Stacks atuais: ${stacks}</b>`,
+      <b>Acúmulos atuais: ${stacks}</b>`,
     };
   },
 
@@ -109,7 +109,7 @@ export default {
       )} consumed <b>${consumedStacks}</b> Stability stack(s)!`,
       pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(
         owner,
-      )} consumiu <b>${consumedStacks}</b> stack(s) de Estabilidade!`,
+      )} consumiu <b>${consumedStacks}</b> acúmulo(s) de Estabilidade!`,
     };
 
     context.registerDialog({
@@ -136,7 +136,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} recites a sutra through the <b>CLAIM</b> and gains 1 Stability stack (<b>${runtime.stabilityStacks}/${this.stabilityStacksCap}</b>).`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} recita um sutra através do <b>CLAIM</b> e ganha 1 stack de Estabilidade (<b>${runtime.stabilityStacks}/${this.stabilityStacksCap}</b>).`,
+        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} recita um sutra através do <b>CLAIM</b> e ganha 1 acúmulo de Estabilidade (<b>${runtime.stabilityStacks}/${this.stabilityStacksCap}</b>).`,
       },
     };
   },
@@ -195,7 +195,7 @@ export default {
         )} gains 1 Stability stack (<b>${runtime.stabilityStacks}/${this.stabilityStacksCap}</b>).`,
         pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(
           owner,
-        )} ganha 1 stack de Estabilidade (<b>${runtime.stabilityStacks}/${this.stabilityStacksCap}</b>).`,
+        )} ganha 1 acúmulo de Estabilidade (<b>${runtime.stabilityStacks}/${this.stabilityStacksCap}</b>).`,
       },
     };
   },

@@ -15,9 +15,9 @@ export default {
       en: `Sebastian only bothers to move when the alternative costs him more. Any turn he spends without using one of his own abilities — a Basic Strike or a <b>CLAIM</b> don't count — he banks <b>1</b> stack of <b>Apathy</b> (Max: <b>${this.apathyCap}</b>). Whatever ability he finally commits to spends the whole bank at once.
 
       <b>Current Stacks: ${stacks}</b>`,
-      pt: `Sebastian só se dá ao trabalho de agir quando a alternativa custa mais caro. Em qualquer turno que passe sem usar uma de suas próprias habilidades — Ataque Básico ou <b>CLAIM</b> não contam — ele acumula <b>1</b> carga de <b>Apatia</b> (Máx: <b>${this.apathyCap}</b>). A habilidade que ele finalmente decidir usar gasta o banco inteiro de uma vez.
+      pt: `Sebastian só se dá ao trabalho de agir quando a alternativa custa mais caro. Em qualquer turno que passe sem usar uma de suas próprias habilidades — Ataque Básico ou <b>CLAIM</b> não contam — ele ganha <b>1</b> acúmulo de <b>Apatia</b> (Máx: <b>${this.apathyCap}</b>). A habilidade que ele finalmente decidir usar gasta o banco inteiro de uma vez.
 
-      <b>Cargas Atuais: ${stacks}</b>`,
+      <b>Acúmulos Atuais: ${stacks}</b>`,
     };
   },
 

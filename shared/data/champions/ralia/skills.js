@@ -217,7 +217,7 @@ const raliaSkills = [
       She then sweeps the field, dealing <b>piercing</b> physical damage (<b>${this.piercingPercentage}%</b> <b>piercing</b>) to all living enemies and leaving <b>${this.bleedStacks}</b> stacks of Bleeding in the wake of her edge.`,
         pt: `Rália crava a lâmina no chão e impõe sua lei sobre o campo de batalha. Por <b>${this.debuffDuration}</b> turno(s), todo inimigo ativo sofre −<b>${this.atkDebuff}</b> de <b>Ataque</b>.
 
-      Em seguida, ela varre o campo, causando dano físico <b>perfurante</b> (<b>${this.piercingPercentage}%</b> de <b>perfuração</b>) a todos os inimigos vivos e deixando <b>${this.bleedStacks}</b> stacks de <b>Sangramento</b> no rastro de sua lâmina.`,
+      Em seguida, ela varre o campo, causando dano físico <b>perfurante</b> (<b>${this.piercingPercentage}%</b> de <b>perfuração</b>) a todos os inimigos vivos e deixando <b>${this.bleedStacks}</b> acúmulos de <b>Sangramento</b> no rastro de sua lâmina.`,
       };
     },
     targetSpec: ["all:enemy"],

@@ -75,8 +75,8 @@ const claySkills = [
 
     description() {
       return {
-        en: `The worse off Clay already is, the less he holds back — the wound itself becomes a weapon. Deals physical damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost, leaves the target Bleeding for ${this.bleedingStacks} stack(s), and costs Clay Absolute recoil damage equal to ${this.recoilPercentOfMaxHP}% of his Max HP.`,
-        pt: `Quanto mais ferido Clay estiver, menos ele se contém — a própria ferida se transforma em arma. Causa dano físico, acrescentando até ${this.missingHpScalingPercent}% de seu Ataque, escalado conforme a quantidade de Vida que já perdeu, deixa o alvo Sangrando por ${this.bleedingStacks} stack(s), e custa a Clay dano de recuo Absoluto equivalente a ${this.recoilPercentOfMaxHP}% de sua Vida Máxima.`,
+        en: `The worse off Clay already is, the less he holds back — the wound itself becomes a weapon. Deals physical damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost, leaves the target Bleeding for ${this.bleedingStacks} acúmulo(s), and costs Clay Absolute recoil damage equal to ${this.recoilPercentOfMaxHP}% of his Max HP.`,
+        pt: `Quanto mais ferido Clay estiver, menos ele se contém — a própria ferida se transforma em arma. Causa dano físico, acrescentando até ${this.missingHpScalingPercent}% de seu Ataque, escalado conforme a quantidade de Vida que já perdeu, deixa o alvo Sangrando por ${this.bleedingStacks} acúmulo(s), e custa a Clay dano de recuo Absoluto equivalente a ${this.recoilPercentOfMaxHP}% de sua Vida Máxima.`,
       };
     },
 

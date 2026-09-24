@@ -36,8 +36,8 @@ function onResourceChanged({ owner, target, amount, context, resolver }) {
     ? `converted Resonance. Remaining stacks: ${owner.runtime.resonanceStacks}`
     : `gained ${amount} Resonance. Current stacks: ${owner.runtime.resonanceStacks}`;
   const summaryPt = converted
-    ? `converteu Ressonância. Cargas restantes: ${owner.runtime.resonanceStacks}`
-    : `ganhou ${amount} de Ressonância. Cargas atuais: ${owner.runtime.resonanceStacks}`;
+    ? `converteu Ressonância. Acúmulos restantes: ${owner.runtime.resonanceStacks}`
+    : `ganhou ${amount} de Ressonância. Acúmulos atuais: ${owner.runtime.resonanceStacks}`;
 
   return {
     log: {
@@ -65,9 +65,9 @@ export default {
       At <b>${this.stacksCap}</b> Resonance stacks, grants <b>${this.momentumGain}</b> Momentum to the ally with the lowest Momentum.`,
       pt: `Eryon foi criado entre magos que nunca perguntavam quando algo aconteceria — só a qual instante aquilo já pertencia, e cada oscilação de momentum ao seu redor ressoa nesse registro. Sempre que um aliado ganha ou gasta <b>Momentum</b>, Eryon ganha <b>Ressonância</b>.
 
-      <b>Cargas Atuais: ${stacks}</b>
+      <b>Acúmulos Atuais: ${stacks}</b>
 
-      Ao atingir <b>${this.stacksCap}</b> cargas de Ressonância, concede <b>${this.momentumGain}</b> de Momentum ao aliado com menos Momentum.`,
+      Ao atingir <b>${this.stacksCap}</b> acúmulos de Ressonância, concede <b>${this.momentumGain}</b> de Momentum ao aliado com menos Momentum.`,
     };
   },
 
