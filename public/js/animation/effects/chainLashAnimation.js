@@ -84,8 +84,12 @@ const GLINT_SPEED = 260;
 
 const PADDING = 220;
 
+// Motif variants (vines, tendrils) reuse this effect through `options`:
+// `dash` null draws the core pass as one continuous line instead of a glint,
+// `loopCount` how many coils tighten around the target, and `slackScale`
+// how heavily the line bows on its way out.
 export class ChainLashEffect {
-  constructor(ctx, from, to, size, paletteKey) {
+  constructor(ctx, from, to, size, paletteKey, options = {}) {
     this.ctx = ctx;
     this.from = from;
     this.to = to;
@@ -93,6 +97,9 @@ export class ChainLashEffect {
     this.age = 0;
     this.cracked = false;
     this.sparks = [];
+
+    this.dash = options.dash === undefined ? GLINT_DASH : options.dash;
+    this.loopCount = options.loopCount ?? LOOP_COUNT;
 
     this.colors = PALETTES[paletteKey];
     this.sprites = getSprites(paletteKey);
@@ -105,11 +112,12 @@ export class ChainLashEffect {
     this.dirX = dx / distance;
     this.dirY = dy / distance;
     this.angle = Math.atan2(dy, dx);
-    this.slackReach = Math.min(distance * 0.32, 150);
+    this.slackReach =
+      Math.min(distance * 0.32, 150) * (options.slackScale ?? 1);
     this.bowSign = this.dirX >= 0 ? -1 : 1;
 
-    this.loops = Array.from({ length: LOOP_COUNT }, (_, i) => ({
-      offsetY: (i - (LOOP_COUNT - 1) / 2) * size * 0.2,
+    this.loops = Array.from({ length: this.loopCount }, (_, i) => ({
+      offsetY: (i - (this.loopCount - 1) / 2) * size * 0.2,
       tilt: (Math.random() - 0.5) * 0.36,
       delay: i * LOOP_STAGGER,
       radius: size * (0.46 - i * 0.04),
@@ -168,8 +176,8 @@ export class ChainLashEffect {
       ctx.globalAlpha = layerAlpha * alpha;
       ctx.lineWidth = width;
 
-      if (dashed) {
-        ctx.setLineDash(GLINT_DASH);
+      if (dashed && this.dash) {
+        ctx.setLineDash(this.dash);
         ctx.lineDashOffset = -this.age * GLINT_SPEED;
       }
 
@@ -180,7 +188,7 @@ export class ChainLashEffect {
       }
       ctx.stroke();
 
-      if (dashed) ctx.setLineDash([]);
+      if (dashed && this.dash) ctx.setLineDash([]);
     }
 
     ctx.globalAlpha = 1;
@@ -200,8 +208,10 @@ export class ChainLashEffect {
     ctx.strokeStyle = this.colors.mid;
     ctx.lineCap = "round";
     ctx.lineWidth = 1.6;
-    ctx.setLineDash(GLINT_DASH);
-    ctx.lineDashOffset = -this.age * GLINT_SPEED;
+    if (this.dash) {
+      ctx.setLineDash(this.dash);
+      ctx.lineDashOffset = -this.age * GLINT_SPEED;
+    }
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, start, end);
     ctx.stroke();
@@ -242,8 +252,10 @@ export class ChainLashEffect {
       ctx.globalAlpha = alpha * (0.45 + 0.55 * eased);
       ctx.strokeStyle = this.colors.core;
       ctx.lineWidth = 1.2;
-      ctx.setLineDash(GLINT_DASH);
-      ctx.lineDashOffset = -this.age * GLINT_SPEED;
+      if (this.dash) {
+        ctx.setLineDash(this.dash);
+        ctx.lineDashOffset = -this.age * GLINT_SPEED;
+      }
       ctx.beginPath();
       ctx.ellipse(to.x, y, radiusX, radiusY, loop.tilt, 0, Math.PI * 2);
       ctx.stroke();

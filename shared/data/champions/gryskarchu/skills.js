@@ -20,16 +20,16 @@ const gryskarchuSkills = [
     name: "Lifebind",
     bf: 75,
     damageMode: "standard",
-    rootDuration: 2,
+    snareDuration: 2,
     contact: false,
-    hitVfx: "roots",
+    hitVfx: "vine_lash",
 
     priority: 0,
 
     description() {
       return {
-        en: `Gryskarchu sends his living current into the chosen target, dealing <b>magical damage</b> and coiling around them until they are <b>Rooted</b> for <b>${this.rootDuration}</b> turn(s).`,
-        pt: `Gryskarchu lança sua corrente vital sobre o alvo escolhido, causando <b>dano mágico</b> e o enlaçando até deixá-lo <b>Enraizado</b> por <b>${this.rootDuration}</b> turno(s).`,
+        en: `Gryskarchu sends his living current into the chosen target, dealing <b>magical damage</b> and coiling around them until they are <b>Snared</b> for <b>${this.snareDuration}</b> turn(s).`,
+        pt: `Gryskarchu lança sua corrente vital sobre o alvo escolhido, causando <b>dano mágico</b> e o enlaçando até deixá-lo <b>Enredado</b> por <b>${this.snareDuration}</b> turno(s).`,
       };
     },
 
@@ -49,8 +49,8 @@ const gryskarchuSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      if (effectConnected(result, "rooted")) {
-        enemy.applyStatusEffect("rooted", this.rootDuration, context);
+      if (effectConnected(result, "snared")) {
+        enemy.applyStatusEffect("snared", this.snareDuration, context);
       }
 
       return result;
