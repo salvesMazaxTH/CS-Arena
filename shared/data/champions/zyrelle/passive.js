@@ -9,14 +9,14 @@ export default {
 
   description(champion) {
     return {
-      en: `Zyrelle's revolver holds ${MAX_AMMO} rounds; every shot she fires spends one. If she ever runs dry, a turn spent not shooting lets her thumb ${IDLE_RELOAD} rounds back in.
+      en: `Zyrelle's revolver holds <b>${MAX_AMMO}</b> rounds; every shot she fires spends one. Any turn she holds her fire, she thumbs <b>${IDLE_RELOAD}</b> rounds back into the cylinder, up to the drum's limit.
 
-      Every critical hit she lands sharpens her aim: +${this.aimBonus}% Critical on her very next shot. An already-guaranteed crit doesn't spend the charge.
+      Every critical hit she lands sharpens her aim: +<b>${this.aimBonus}%</b> Critical on her very next shot. An already-guaranteed crit doesn't spend the charge.
 
       Ammo: <b>${champion.runtime?.zyrelleAmmo ?? MAX_AMMO}/${MAX_AMMO}</b>`,
-      pt: `O revólver de Zyrelle comporta ${MAX_AMMO} projéteis; cada disparo consome um. Quando a munição chega ao fim, passar um turno sem atirar permite que ela recarregue ${IDLE_RELOAD} projéteis com um movimento do polegar.
+      pt: `O revólver de Zyrelle comporta <b>${MAX_AMMO}</b> projéteis; cada disparo consome um. Em todo turno em que ela não atira, ela recarrega <b>${IDLE_RELOAD}</b> projéteis no tambor, até o limite dele.
 
-      Cada acerto crítico aguça ainda mais sua mira: o próximo disparo recebe +${this.aimBonus}% de Crítico. Um disparo que já tiver o Crítico garantido não consome essa carga.
+      Cada acerto crítico aguça ainda mais sua mira: +<b>${this.aimBonus}%</b> de Crítico no próximo disparo. Um disparo que já tiver o Crítico garantido não consome essa carga.
 
       Munição: <b>${champion.runtime?.zyrelleAmmo ?? MAX_AMMO}/${MAX_AMMO}</b>`,
     };
