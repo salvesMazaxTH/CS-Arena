@@ -92,10 +92,15 @@ export default {
 
   hookPolicies: {
     onAfterDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
+    onBeforeDmgTaking: { allowOnAbsolute: true },
   },
 
-  onBeforeDmgTaking({ owner, type, damage }) {
-    if (type !== "physical" || owner.runtime?.calypheraTransfigured) return;
+  onBeforeDmgTaking({ owner, type, damage, mode }) {
+    if (type !== "physical") return;
+    if (owner.runtime?.calypheraTransfigured) return { damage: 0 };
+    // Absolute never carried the glass-body vulnerability before this policy
+    // opted the hook into absolute hits; keep that untouched pre-Transfigured.
+    if (mode === "absolute") return;
     return { damage: damage * (1 + this.physicalVulnerabilityPercent / 100) };
   },
 
