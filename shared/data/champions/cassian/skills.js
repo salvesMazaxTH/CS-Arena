@@ -150,7 +150,7 @@ const cassianSkills = [
         if (effectConnected(mainDamage, "bleeding")) {
           enemy.applyStatusEffect("bleeding", this.bleedDuration, context);
         }
-      } else if (effectConnected(mainDamage, "blood_lash_slow")) {
+      } else if (mainDamage?.landed) {
         enemy.modifyStat({
           statName: "Speed",
           amount: -this.slowAmount,
@@ -221,7 +221,7 @@ const cassianSkills = [
         if (effectConnected(mainDamage, "bleeding")) {
           enemy.applyStatusEffect("bleeding", this.bleedDuration, context);
         }
-      } else if (effectConnected(mainDamage, "turn_of_the_tide_shield")) {
+      } else if (mainDamage?.landed) {
         const shieldAmount = Math.round(user.maxHP * this.shieldRatio);
         user.addShield(shieldAmount, 0, context, "regular", {
           visualVariant: "blood",

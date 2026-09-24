@@ -47,7 +47,7 @@ const seymourSkills = [
 
       const hit = Array.isArray(result) ? result[0] : result;
 
-      if (effectConnected(hit, "bleached")) {
+      if (hit?.landed) {
         enemy.runtime.hookEffects = (enemy.runtime.hookEffects ?? []).filter(
           (e) => e.key !== "bleached",
         );

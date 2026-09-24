@@ -1,6 +1,7 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
+import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import totalBlock from "../generic/totalBlock.js";
 
 const SCORNFUL_DOMINION_HOOK_KEY = "scornful_dominion_hook";
@@ -239,13 +240,9 @@ const torrenSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      if (damageEvent?.landed && damageEvent?.totalDamage > 0) {
+      if (effectConnected(damageEvent, "stunned")) {
         enemy.applyStatusEffect("stunned", this.stunDuration, context, {
-          source: {
-            type: "skill",
-            skill: this,
-            champion: user,
-          },
+          sourceId: user.id,
         });
       }
 
