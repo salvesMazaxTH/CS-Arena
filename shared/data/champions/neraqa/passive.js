@@ -1,7 +1,7 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { StatusEffectsRegistry } from "../../statusEffects/effectsRegistry.js";
-
-const ELEMENTS = ["fire", "water", "ice", "lightning", "earth", "steel"];
+import { TargetFilter } from "../../../engine/combat/targetFilter.js";
+import { resolveElementalStatusImmunity } from "../../../engine/combat/statusEffectImmunity.js";
 
 export default {
   key: "the_calm_she_returns_to",
@@ -9,8 +9,8 @@ export default {
 
   description() {
     return {
-      en: `Neraqa is the stillness the sea is always falling back toward. At the end of any turn in which she acted, every negative status effect on her is washed off — but a wound that hooked deeper than the surface (a curse, a mark, a lingering punishment) is not. What the tide takes it carries out: at the start of the next turn each washed-off effect is laid on an enemy instead, at half its remaining duration, and never on a foe its element could never have touched.`,
-      pt: `Neraqa é a calmaria para a qual o mar sempre retorna. Ao fim de qualquer turno em que agiu, todo efeito de status negativo nela é lavado — mas um ferimento que se prendeu mais fundo que a superfície (uma maldição, uma marca, um castigo persistente) não é. O que a maré leva, ela devolve: no início do próximo turno, cada efeito lavado é aplicado em um inimigo no lugar, pela metade de sua duração restante, e nunca em um alvo cujo elemento jamais poderia tê-lo alcançado.`,
+      en: `Neraqa is the stillness the sea is always falling back toward. At the end of any turn in which she acted, every <b>negative status effect</b> on her is washed off; a lowered stat or a mark a skill left on her is not a status effect, and stays. What the tide takes it carries out: at the start of the next turn each washed-off effect is laid on an enemy instead, at <b>half</b> its remaining duration, and never on a foe whose element makes them immune to it.`,
+      pt: `Neraqa é a calmaria para a qual o mar sempre retorna. Ao fim de qualquer turno em que agiu, todo <b>efeito de status negativo</b> nela é lavado; um atributo reduzido ou uma marca deixada por uma habilidade não é efeito de status, e permanece. O que a maré leva, ela devolve: no início do próximo turno, cada efeito lavado é aplicado em um inimigo no lugar, com <b>metade</b> de sua duração restante, e nunca em um alvo cujo elemento o torne imune a ele.`,
     };
   },
 
@@ -20,6 +20,7 @@ export default {
 
   onActionResolved({ owner, actionSource, context }) {
     if (actionSource?.id !== owner.id) return;
+    owner.runtime ??= {};
     owner.runtime.neraqaActedTurn = context.currentTurn;
   },
 
@@ -30,12 +31,11 @@ export default {
     const washed = owner.getStatusEffects({ type: "debuff" });
     if (!washed.length) return;
 
-    const remainingOf = (se) => {
-      const stacks = Number(se.stacks ?? se.stackCount);
-      if (Number.isFinite(stacks) && stacks > 0) return stacks;
-      const byTurn = Number(se.expiresAtTurn) - Number(context.currentTurn);
-      return Number.isFinite(byTurn) && byTurn > 0 ? byTurn : 1;
-    };
+    // Stack-bound effects count their remaining turns in stacks.
+    const remainingOf = (se) =>
+      StatusEffectsRegistry[se.key].durationFromStacks
+        ? se.stacks
+        : se.expiresAtTurn - context.currentTurn;
 
     const carried = washed.map((se) => ({
       key: se.key,
@@ -57,41 +57,44 @@ export default {
     owner.runtime.neraqaEbbPending = null;
     if (!owner.alive) return;
 
-    const enemies = (context.aliveChampions ?? []).filter(
-      (c) => c.team !== owner.team,
+    const enemies = TargetFilter.candidates(
+      "enemy",
+      owner,
+      context.aliveChampions ?? [],
     );
     if (!enemies.length) return;
 
     const ebbContext = { ...context, statModifierSrcId: owner.id };
     const laid = [];
-    let cursor = 0;
 
     for (const effect of pending.effects) {
-      const subtypes = StatusEffectsRegistry[effect.key]?.subtypes ?? [];
+      const statusEffect = StatusEffectsRegistry[effect.key];
+      const stackCount = statusEffect.durationFromStacks
+        ? effect.duration
+        : undefined;
 
-      for (let tries = 0; tries < enemies.length; tries++) {
-        const enemy = enemies[(cursor + tries) % enemies.length];
+      // Each effect tries the enemies in a fresh random order.
+      const order = [...enemies];
+      for (let i = order.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [order[i], order[j]] = [order[j], order[i]];
+      }
 
-        const untouchableByElement = subtypes.some(
-          (s) =>
-            ELEMENTS.includes(s) &&
-            (enemy.elementalAffinities ?? []).includes(s),
-        );
-        if (untouchableByElement) continue;
+      for (const enemy of order) {
+        if (resolveElementalStatusImmunity({ target: enemy, statusEffect })) {
+          continue;
+        }
 
         const applied = enemy.applyStatusEffect(
           effect.key,
           effect.duration,
           ebbContext,
           { sourceId: owner.id },
-          effect.duration,
+          stackCount,
         );
 
         if (applied) {
-          laid.push(
-            `${StatusEffectsRegistry[effect.key]?.name ?? effect.key} → ${formatChampionName(enemy)}`,
-          );
-          cursor++;
+          laid.push(`${statusEffect.name} → ${formatChampionName(enemy)}`);
           break;
         }
       }
@@ -102,7 +105,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> the ebb carries it out — ${laid.join(", ")}.`,
-        pt: `<b>[Passivo — ${this.name}]</b> a vazante leva embora — ${laid.join(", ")}.`,
+        pt: `<b>[Passiva — ${this.name}]</b> a vazante leva embora — ${laid.join(", ")}.`,
       },
     };
   },

@@ -1,13 +1,39 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicShot from "../generic/basicShot.js";
 
-const UNDERTOW_MARK_KEY = "undertow_submerged";
+const UNDERTOW_COUNTDOWN_KEY = "undertow_countdown";
 
-function aoeTargets(user, targets, context) {
+// Strikes every enemy with the skill's bf; onLanded runs per enemy it landed on.
+function strikeAll(skill, user, targets, context, onLanded) {
   const list = Array.isArray(targets) ? targets : targets ? [targets] : [];
-  if (list.length) return list.filter((c) => c?.alive && c.team !== user.team);
-  return (context.aliveChampions ?? []).filter((c) => c.team !== user.team);
+  const enemies = TargetFilter.candidates(
+    "enemy",
+    user,
+    list.length ? list : (context.aliveChampions ?? []),
+  );
+  const baseDamage = (user.Attack * skill.bf) / 100;
+  const results = [];
+
+  for (const enemy of enemies) {
+    const result = new DamageEvent({
+      baseDamage,
+      attacker: user,
+      defender: enemy,
+      skill,
+      type: "magical",
+      context,
+      allChampions: context.allChampions,
+    }).execute();
+
+    const hits = (Array.isArray(result) ? result : [result]).filter(Boolean);
+    results.push(...hits);
+
+    if (onLanded && hits.some((r) => r.landed)) onLanded(enemy);
+  }
+
+  return results;
 }
 
 const neraqaSkills = [
@@ -33,33 +59,15 @@ const neraqaSkills = [
 
     description() {
       return {
-        en: `Neraqa lifts the sea and drops it on the enemy line at once, dealing <b>Water magical damage</b> to <b>every enemy</b>.`,
-        pt: `Neraqa ergue o mar e o derruba sobre a linha inimiga de uma vez, causando <b>dano mágico de Água</b> a <b>todos os inimigos</b>.`,
+        en: `Neraqa lifts the sea and drops it on the enemy line at once, striking <b>every enemy</b>. Deals magical damage.`,
+        pt: `Neraqa ergue o mar e o derruba sobre a linha inimiga de uma vez, atingindo <b>todos os inimigos</b>. Causa dano mágico.`,
       };
     },
 
     targetSpec: ["all:enemy"],
 
     resolve({ user, targets, context = {} }) {
-      const baseDamage = (user.Attack * this.bf) / 100;
-      const results = [];
-
-      for (const enemy of aoeTargets(user, targets, context)) {
-        const result = new DamageEvent({
-          baseDamage,
-          attacker: user,
-          defender: enemy,
-          skill: this,
-          type: "magical",
-          context,
-          allChampions: context?.allChampions,
-        }).execute();
-
-        if (Array.isArray(result)) results.push(...result);
-        else if (result) results.push(result);
-      }
-
-      return results;
+      return strikeAll(this, user, targets, context);
     },
   },
 
@@ -78,44 +86,24 @@ const neraqaSkills = [
 
     description() {
       return {
-        en: `Neraqa lets the water rise cold around every enemy's feet, dealing <b>Water magical damage</b> to all of them and dragging their <b>Speed</b> down by <b>${this.speedReductionPercent}%</b> for <b>${this.speedReductionDuration}</b> turn(s).`,
-        pt: `Neraqa deixa a água subir fria ao redor dos pés de cada inimigo, causando <b>dano mágico de Água</b> a todos eles e reduzindo sua <b>Velocidade</b> em <b>${this.speedReductionPercent}%</b> por <b>${this.speedReductionDuration}</b> turno(s).`,
+        en: `Neraqa lets the water rise cold around every enemy's feet, striking all of them and dragging their <b>Speed</b> down by <b>${this.speedReductionPercent}%</b> for <b>${this.speedReductionDuration}</b> turn(s). Deals magical damage.`,
+        pt: `Neraqa deixa a água subir fria ao redor dos pés de cada inimigo, atingindo todos eles e reduzindo sua <b>Velocidade</b> em <b>${this.speedReductionPercent}%</b> por <b>${this.speedReductionDuration}</b> turno(s). Causa dano mágico.`,
       };
     },
 
     targetSpec: ["all:enemy"],
 
     resolve({ user, targets, context = {} }) {
-      const baseDamage = (user.Attack * this.bf) / 100;
-      const results = [];
-
-      for (const enemy of aoeTargets(user, targets, context)) {
-        const result = new DamageEvent({
-          baseDamage,
-          attacker: user,
-          defender: enemy,
-          skill: this,
-          type: "magical",
+      return strikeAll(this, user, targets, context, (enemy) =>
+        enemy.modifyStat({
+          statName: "Speed",
+          amount: -this.speedReductionPercent,
+          duration: this.speedReductionDuration,
           context,
-          allChampions: context?.allChampions,
-        }).execute();
-
-        const hits = Array.isArray(result) ? result : [result];
-        results.push(...hits.filter(Boolean));
-
-        if (hits.some((r) => r?.landed)) {
-          enemy.modifyStat({
-            statName: "Speed",
-            amount: -this.speedReductionPercent,
-            duration: this.speedReductionDuration,
-            context,
-            isPercent: true,
-            statModifierSrc: user,
-          });
-        }
-      }
-
-      return results;
+          isPercent: true,
+          statModifierSrc: user,
+        }),
+      );
     },
   },
 
@@ -137,102 +125,108 @@ const neraqaSkills = [
 
     description() {
       return {
-        en: `Neraqa draws the whole sea back from the field. Nothing happens where the enemies stand — not this turn, not the next — but at the close of that next turn the water she pulled away comes down on every enemy it left, dealing <b>Water magical damage</b> equal to <b>${this.bf}%</b> of her Attack and ignoring <b>${this.piercingPercentage}%</b> of their Defense: the weight of the sea does not care about armour, and it is the heaviest blow she can land. An enemy who dies or leaves before then is not there when it falls, and if Neraqa herself is gone the wave never returns.`,
-        pt: `Neraqa retira o mar inteiro do campo. Nada acontece onde os inimigos estão — nem neste turno, nem no próximo — mas ao fim daquele próximo turno a água que ela retirou desaba sobre todo inimigo que ali ficou, causando <b>dano mágico de Água</b> igual a <b>${this.bf}%</b> do seu Ataque e ignorando <b>${this.piercingPercentage}%</b> da Defesa deles: o peso do mar não se importa com armadura, e é o golpe mais pesado que ela pode desferir. Um inimigo que morre ou sai antes disso não está lá quando o golpe cai, e se a própria Neraqa estiver fora de combate a onda nunca retorna.`,
+        en: `Neraqa draws the whole sea back from the field, and a countdown on her shows how long it stays away. <b>${this.delayTurns}</b> turns later, as that turn begins, the water comes down on every enemy standing on the field at that moment, ignoring <b>${this.piercingPercentage}%</b> of their <b>Defense</b>; its weight is set by her <b>Attack</b> when she pulled the sea back, not when it falls. If Neraqa is gone before then, the wave never returns. Deals magical damage.`,
+        pt: `Neraqa retira o mar inteiro do campo, e uma contagem regressiva sobre ela mostra quanto tempo ele fica longe. <b>${this.delayTurns}</b> turnos depois, logo no início do turno, a água desaba sobre todo inimigo que estiver em campo naquele momento, ignorando <b>${this.piercingPercentage}%</b> da <b>Defesa</b> deles; o peso da onda é medido pelo <b>Ataque</b> que ela tinha ao retirar o mar, não ao devolvê-lo. Se Neraqa estiver fora de combate antes disso, a onda nunca retorna. Causa dano mágico.`,
       };
     },
 
-    targetSpec: ["all:enemy"],
+    targetSpec: ["self"],
 
-    resolve({ user, targets, context = {} }) {
+    resolve({ user, context = {} }) {
       const skillDef = this;
       const storedBaseDamage = (user.Attack * this.bf) / 100;
       const piercingPercentage = this.piercingPercentage;
       const detonateTurn = context.currentTurn + this.delayTurns;
-      const marked = [];
 
-      for (const enemy of aoeTargets(user, targets, context)) {
-        enemy.runtime.hookEffects ??= [];
-        enemy.runtime.hookEffects = enemy.runtime.hookEffects.filter(
-          (e) => e.key !== UNDERTOW_MARK_KEY,
-        );
+      const previous = user.runtime.hookEffects.filter(
+        (e) => e.key === UNDERTOW_COUNTDOWN_KEY,
+      );
 
-        enemy.addHookEffect(
-          {
-            type: "debuff",
-            key: UNDERTOW_MARK_KEY,
-            name: "Submerged",
-            group: "skill",
-            ownerId: user.id,
-            expiresAtTurn: detonateTurn + 1,
-            detonateTurn,
-            storedBaseDamage,
-            piercingPercentage,
-            skillDef,
+      const placed = user.addHookEffect(
+        {
+          type: "buff",
+          key: UNDERTOW_COUNTDOWN_KEY,
+          name: "The Undertow",
+          group: "skill",
+          expiresAtTurn: detonateTurn + 1,
+          // Turns left until the wave falls, read by the countdown indicator.
+          stacks: this.delayTurns,
 
-            onTurnStart({ owner, context }) {
-              if (context.currentTurn < this.detonateTurn) return;
+          onTurnStart({ owner, context }) {
+            if (context.currentTurn < detonateTurn) {
+              this.stacks = detonateTurn - context.currentTurn;
+              return;
+            }
 
-              owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
-                (e) => e !== this,
-              );
+            owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
+              (e) => e !== this,
+            );
 
-              const neraqa = context.allChampions?.get?.(this.ownerId);
-              if (!neraqa?.alive || !owner.alive) return;
+            const enemies = TargetFilter.candidates(
+              "enemy",
+              owner,
+              context.aliveChampions ?? [],
+            );
+            if (!enemies.length) return;
 
-              const result = new DamageEvent({
-                baseDamage: this.storedBaseDamage,
-                attacker: neraqa,
-                defender: owner,
-                skill: this.skillDef,
+            for (const enemy of enemies) {
+              new DamageEvent({
+                baseDamage: storedBaseDamage,
+                attacker: owner,
+                defender: enemy,
+                skill: skillDef,
                 type: "magical",
                 mode: "piercing",
-                piercingPercentage: this.piercingPercentage,
+                piercingPercentage,
                 context,
                 allChampions: context.allChampions,
               }).execute();
+            }
 
-              const main = Array.isArray(result) ? result[0] : result;
-              const targetName = formatChampionName(owner);
+            const names = enemies.map(formatChampionName).join(", ");
 
-              context.registerDialog?.({
-                message: {
-                  en: `🌊 The Undertow falls on ${targetName}!`,
-                  pt: `🌊 O Refluxo cai sobre ${targetName}!`,
-                },
-                sourceId: neraqa.id,
-                targetId: owner.id,
-              });
+            context.registerDialog?.({
+              message: {
+                en: `${formatChampionName(owner)} lets the sea fall back on the whole enemy line.`,
+                pt: `${formatChampionName(owner)} deixa o mar desabar de volta sobre toda a linha inimiga.`,
+              },
+              sourceId: owner.id,
+              targetId: owner.id,
+            });
 
-              return {
-                log: {
-                  en: `<b>The Undertow</b> falls on ${targetName}.`,
-                  pt: `<b>O Refluxo</b> cai sobre ${targetName}.`,
-                },
-              };
-            },
+            return {
+              log: {
+                en: `<b>The Undertow</b> comes down on ${names}.`,
+                pt: `<b>O Refluxo</b> desaba sobre ${names}.`,
+              },
+            };
           },
-          context,
-        );
+        },
+        context,
+      );
+      if (!placed) return null;
 
-        marked.push(formatChampionName(enemy));
-      }
+      user.runtime.hookEffects = user.runtime.hookEffects.filter(
+        (e) => !previous.includes(e),
+      );
 
       context.registerDialog?.({
         message: {
-          en: `🌊 Neraqa pulls the whole sea back — The Undertow is set on ${marked.length} enem${marked.length === 1 ? "y" : "ies"}.`,
-          pt: `🌊 Neraqa retira o mar inteiro — O Refluxo é fixado em ${marked.length} inimigo${marked.length === 1 ? "" : "s"}.`,
+          en: `${formatChampionName(user)} pulls the whole sea back — it returns in ${this.delayTurns} turns.`,
+          pt: `${formatChampionName(user)} retira o mar inteiro — ele volta em ${this.delayTurns} turnos.`,
         },
         sourceId: user.id,
         targetId: user.id,
       });
 
-      return {
-        log: {
-          en: `${formatChampionName(user)} pulls the sea back from ${marked.join(", ")} — <b>The Undertow</b> is set.`,
-          pt: `${formatChampionName(user)} retira o mar de ${marked.join(", ")} — <b>O Refluxo</b> é fixado.`,
+      return [
+        {
+          log: {
+            en: `${formatChampionName(user)} pulls the sea back from the field — <b>The Undertow</b> falls in ${this.delayTurns} turns.`,
+            pt: `${formatChampionName(user)} retira o mar do campo — <b>O Refluxo</b> cai em ${this.delayTurns} turnos.`,
+          },
         },
-      };
+      ];
     },
   },
 ];

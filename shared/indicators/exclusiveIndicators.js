@@ -253,3 +253,12 @@ registerRuntimeCounterIndicator("bergrisa_sediment", "bergrisaSediment", {
   showStackCount: true,
 });
 
+// Neraqa's The Undertow (hookEffect "undertow_countdown" on her): turns left
+// until the sea she pulled back falls on every enemy on the field.
+registerExclusiveIndicator("undertow_countdown", {
+  type: "emoji",
+  value: "⏳",
+  background: "rgba(25, 95, 150, 0.85)",
+  label: "Undertow",
+  showStackCount: true,
+});
