@@ -9,7 +9,6 @@ export default {
   Speed: 40,
 
   elementalAffinities: ["plant"],
-
   classKey: "enchanter",
   species: ["fey", "floraborn"],
 };

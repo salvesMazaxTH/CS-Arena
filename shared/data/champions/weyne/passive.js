@@ -10,7 +10,6 @@ const MAX_STILLNESS = 3;
 
 const COLD_ZERO_KEY = "cold_zero";
 
-const PASSIVE_TAG = "<b>[Passive — Held Breath]</b>";
 
 export function hitChance(owner) {
   const steady = owner.runtime?.weyneSteady || 0;
@@ -61,7 +60,6 @@ export default {
   onAfterDmgTaking({ owner, actualDmg }) {
     if (!owner.alive || !(actualDmg > 0)) return;
 
-    owner.runtime ??= {};
     owner.runtime.weyneDisturbed = true;
 
     const lost = (owner.runtime.weyneSteady || 0) + (owner.runtime.weyneStillness || 0);
@@ -72,7 +70,7 @@ export default {
     if (!lost) return;
 
     return {
-      log: `${PASSIVE_TAG} ${formatChampionName(owner)} is knocked off the scope and loses her hold on the shot.`,
+      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} is knocked off the scope and loses her hold on the shot.`,
     };
   },
 
@@ -83,8 +81,6 @@ export default {
       return;
     }
 
-    owner.runtime ??= {};
-
     const stacks = owner.runtime.weyneStillness || 0;
     if (stacks >= MAX_STILLNESS) return;
 
@@ -92,7 +88,7 @@ export default {
 
     if (owner.runtime.weyneStillness < MAX_STILLNESS) {
       return {
-        log: `${PASSIVE_TAG} ${formatChampionName(owner)} holds the shot and gathers Stillness (${owner.runtime.weyneStillness}/${MAX_STILLNESS}).`,
+        log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} holds the shot and gathers Stillness (${owner.runtime.weyneStillness}/${MAX_STILLNESS}).`,
       };
     }
 
@@ -102,14 +98,12 @@ export default {
     });
 
     return {
-      log: `${PASSIVE_TAG} ${formatChampionName(owner)} reaches full Stillness — every shot she fires now carries ${MAX_STILLNESS * STILLNESS_BONUS_DAMAGE} bonus damage.`,
+      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} reaches full Stillness — every shot she fires now carries ${MAX_STILLNESS * STILLNESS_BONUS_DAMAGE} bonus damage.`,
     };
   },
 
   onTurnEnd({ owner, context }) {
     if (!owner.alive) return;
-
-    owner.runtime ??= {};
 
     if (owner.runtime.weyneDisturbed) {
       owner.runtime.weyneDisturbed = false;
@@ -129,7 +123,7 @@ export default {
     });
 
     return {
-      log: `${PASSIVE_TAG} ${formatChampionName(owner)} is fully zeroed — her Basic Shot cannot miss while she keeps her HP.`,
+      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} is fully zeroed — her Basic Shot cannot miss while she keeps her HP.`,
     };
   },
 };

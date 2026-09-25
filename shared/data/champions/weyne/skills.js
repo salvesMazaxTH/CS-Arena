@@ -13,10 +13,6 @@ const weyneSkills = [
 
     element: "ice",
     hitVfx: "cryo_round",
-    contact: false,
-    damageMode: "standard",
-    priority: 0,
-    targetSpec: ["enemy"],
 
     description() {
       return {
@@ -66,13 +62,12 @@ const weyneSkills = [
 
     description() {
       return {
-        en: `Weyne stops being a person for a turn and becomes a measurement: windage, drop, the cold in her own hands. She does nothing else, and her next <b>Basic Shot</b> cannot miss and is always a <b>critical hit</b>.`,
-        pt: `Weyne deixa de ser uma pessoa por um turno e vira uma medição: vento, queda, o frio nas próprias mãos. Ela não faz mais nada, e seu próximo <b>Tiro Básico</b> não pode errar e é sempre um <b>acerto crítico</b>.`,
+        en: `Weyne stops being a person for a turn and becomes a measurement: windage, drop, the cold in her own hands. She does nothing else, and her next <b>Basic Shot</b> skips the <b>Held Breath</b> roll: it cannot miss and is always a <b>critical hit</b>.`,
+        pt: `Weyne deixa de ser uma pessoa por um turno e vira uma medição: vento, queda, o frio nas próprias mãos. Ela não faz mais nada, e seu próximo <b>Tiro Básico</b> dispensa a rolagem de <b>Held Breath</b>: não tem como errar e é sempre um <b>acerto crítico</b>.`,
       };
     },
 
-    resolve({ user, context = {} }) {
-      user.runtime ??= {};
+    resolve({ user, context }) {
       user.runtime.weyneZeroed = true;
 
       const message = `${formatChampionName(user)} takes her <b>Cold Zero</b> — the next round is already on its way.`;
@@ -132,7 +127,9 @@ const weyneSkills = [
       }
 
       if (effectConnected(results[0], "chilled")) {
-        enemy.applyStatusEffect("chilled", this.chillDuration, context);
+        enemy.applyStatusEffect("chilled", this.chillDuration, context, {
+          sourceId: user.id,
+        });
       }
 
       return results;
@@ -170,7 +167,7 @@ const weyneSkills = [
       const result = new DamageEvent({
         baseDamage: (user.Attack * this.bf) / 100,
         bonusDamage: stillnessBonus(user),
-        mode: "piercing",
+        mode: this.damageMode,
         piercingPercentage: this.piercingPercentage,
         attacker: user,
         defender: enemy,
@@ -182,7 +179,9 @@ const weyneSkills = [
       const results = Array.isArray(result) ? result : [result];
 
       if (effectConnected(results[0], "chilled")) {
-        enemy.applyStatusEffect("chilled", this.chillDuration, context);
+        enemy.applyStatusEffect("chilled", this.chillDuration, context, {
+          sourceId: user.id,
+        });
       }
 
       return results;

@@ -10,10 +10,9 @@ export default {
   Defense: 60,
   Speed: 80,
 
+  elementalAffinities: ["ice"],
   classKey: "marksman",
   species: ["human", "enhanced"],
-
-  elementalAffinities: ["ice"],
 
   // So the Steady and Stillness indicators show from turn 1 instead of only
   // appearing once her passive first touches them.
