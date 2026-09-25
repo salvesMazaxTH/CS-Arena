@@ -19,7 +19,10 @@ const weyneSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Weyne rides the crosshair down onto the chosen target and lets the cryogenic round go, and the barrel sheds a skin of frost as it leaves. The only shot in her kit that can miss, and the only one worth the risk. Deals physical damage, plus ${this.bonusDamage} bonus damage.`;
+      return {
+        en: `Weyne rides the crosshair down onto the chosen target and lets the cryogenic round go, and the barrel sheds a skin of frost as it leaves. The only shot in her kit that can miss, and the only one worth the risk. Deals physical damage, plus <b>${this.bonusDamage}</b> bonus damage.`,
+        pt: `Weyne desce a mira até o alvo escolhido e solta o projétil criogênico, e o cano solta uma camada de gelo ao disparar. O único tiro do seu kit que pode errar, e o único que vale o risco. Causa dano físico, mais <b>${this.bonusDamage}</b> de dano bônus.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -62,7 +65,10 @@ const weyneSkills = [
     targetSpec: ["self"],
 
     description() {
-      return `Weyne stops being a person for a turn and becomes a measurement: windage, drop, the cold in her own hands. She does nothing else, and her next Basic Shot cannot miss and is always a critical hit.`;
+      return {
+        en: `Weyne stops being a person for a turn and becomes a measurement: windage, drop, the cold in her own hands. She does nothing else, and her next <b>Basic Shot</b> cannot miss and is always a <b>critical hit</b>.`,
+        pt: `Weyne deixa de ser uma pessoa por um turno e vira uma medição: vento, queda, o frio nas próprias mãos. Ela não faz mais nada, e seu próximo <b>Tiro Básico</b> não pode errar e é sempre um <b>acerto crítico</b>.`,
+      };
     },
 
     resolve({ user, context = {} }) {
@@ -98,7 +104,10 @@ const weyneSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `She does not aim at the chosen target so much as at the ground they were about to stand on, and the frozen core of the barrel puts a wall of cold there instead. The round never misses. Deals physical damage, applies Snared for ${this.snareDuration} turn(s) and Chilled for ${this.chillDuration} turn(s).`;
+      return {
+        en: `She does not aim at the chosen target so much as at the ground they were about to stand on, and the frozen core of the barrel puts a wall of cold there instead. The round never misses. Deals physical damage, applies <b>Snared</b> for <b>${this.snareDuration}</b> turn(s) and <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).`,
+        pt: `Ela não mira tanto no alvo escolhido quanto no chão onde ele estava prestes a pisar, e o núcleo congelado do cano põe uma parede de frio ali no lugar. O projétil nunca erra. Causa dano físico, aplica <b>Enredado</b> por <b>${this.snareDuration}</b> turno(s) e <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -114,18 +123,19 @@ const weyneSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
+      const results = Array.isArray(result) ? result : [result];
 
-      if (effectConnected(result, "snared")) {
+      if (effectConnected(results[0], "snared")) {
         enemy.applyStatusEffect("snared", this.snareDuration, context, {
           sourceId: user.id,
         });
       }
 
-      if (effectConnected(result, "chilled")) {
+      if (effectConnected(results[0], "chilled")) {
         enemy.applyStatusEffect("chilled", this.chillDuration, context);
       }
 
-      return result;
+      return results;
     },
   },
 
@@ -148,7 +158,10 @@ const weyneSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Weyne has been holding this one since before the chosen target walked into the street, and the whole winter is in the barrel when she finally lets it go. The round cannot be evaded and ignores ${this.piercingPercentage}% of their Defense. Deals physical damage and leaves them Chilled for ${this.chillDuration} turn(s).`;
+      return {
+        en: `Weyne has been holding this one since before the chosen target walked into the street, and the whole winter is in the barrel when she finally lets it go. The round <b>cannot be evaded</b> and ignores <b>${this.piercingPercentage}%</b> of their <b>Defense</b>. Deals physical damage and leaves them <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).`,
+        pt: `Weyne segura esse tiro desde antes do alvo escolhido entrar naquela rua, e o inverno inteiro está no cano quando ela finalmente o solta. O projétil <b>não pode ser esquivado</b> e ignora <b>${this.piercingPercentage}%</b> da <b>Defesa</b> do alvo. Causa dano físico e deixa-o <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -166,12 +179,13 @@ const weyneSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
+      const results = Array.isArray(result) ? result : [result];
 
-      if (effectConnected(result, "chilled")) {
+      if (effectConnected(results[0], "chilled")) {
         enemy.applyStatusEffect("chilled", this.chillDuration, context);
       }
 
-      return result;
+      return results;
     },
   },
 ];

@@ -9,7 +9,6 @@ const STILLNESS_BONUS_DAMAGE = 25;
 const MAX_STILLNESS = 3;
 
 const COLD_ZERO_KEY = "cold_zero";
-const TOTAL_BLOCK_KEY = "total_block";
 
 const PASSIVE_TAG = "<b>[Passive — Held Breath]</b>";
 
@@ -36,11 +35,18 @@ export default {
     const steady = champion.runtime?.weyneSteady || 0;
     const stillness = champion.runtime?.weyneStillness || 0;
 
-    return `Weyne breathes out, and the breath hangs frozen in front of the scope until the city below her stops moving. Her Basic Shot is the only thing in her kit that can miss: it lands ${this.baseHitChance}% of the time, and every turn she ends without losing HP adds ${this.hitChancePerSteady}% to that (Max: ${this.maxSteady} turn(s), a certainty).
+    return {
+      en: `Weyne breathes out, and the breath hangs frozen in front of the scope until the city below her stops moving. Her <b>Basic Shot</b> is the only thing in her kit that can miss: it lands <b>${this.baseHitChance}%</b> of the time, and every turn she ends without losing <b>HP</b> adds <b>${this.hitChancePerSteady}%</b> to that (Max: <b>${this.maxSteady}</b> turn(s), a certainty).
 
-    Every turn she spends not shooting, she gathers one stack of <b>Stillness</b> (Max: ${this.maxStillness}), and every shot she fires carries ${this.stillnessBonusDamage} bonus damage for each stack she holds. Shooting does not spend them: losing HP does, and it empties her hit chance in the same moment.
+      Every turn she spends not shooting, she gathers one <b>stack</b> of <b>Stillness</b> (Max: <b>${this.maxStillness}</b>), and every shot she fires carries <b>${this.stillnessBonusDamage}</b> bonus damage for each stack she holds. Shooting does not spend them: losing <b>HP</b> does, and it empties her hit chance in the same moment.
 
-    <b>Hit chance: ${hitChance(champion)}% — Stillness: ${stillness}/${this.maxStillness} (Steady: ${steady}/${this.maxSteady})</b>`;
+      <b>Hit chance: ${hitChance(champion)}% — Stillness: ${stillness}/${this.maxStillness} (Steady: ${steady}/${this.maxSteady})</b>`,
+      pt: `Weyne solta o ar, e a respiração fica congelada na frente da mira até a cidade abaixo dela parar de se mexer. Seu <b>Tiro Básico</b> é a única coisa no kit dela que pode errar: ele acerta <b>${this.baseHitChance}%</b> das vezes, e cada turno que ela termina sem perder <b>HP</b> soma <b>${this.hitChancePerSteady}%</b> a isso (Máx: <b>${this.maxSteady}</b> turno(s), uma certeza).
+
+      A cada turno que ela passa sem atirar, ela ganha um <b>acúmulo</b> de <b>Quietude</b> (Máx: <b>${this.maxStillness}</b>), e cada tiro que ela dispara carrega <b>${this.stillnessBonusDamage}</b> de dano bônus para cada acúmulo que ela mantém. Atirar não os consome: perder <b>HP</b> consome, e isso zera sua chance de acerto no mesmo instante.
+
+      <b>Chance de acerto: ${hitChance(champion)}% — Quietude: ${stillness}/${this.maxStillness} (Estabilidade: ${steady}/${this.maxSteady})</b>`,
+    };
   },
 
   hookScope: {
@@ -53,7 +59,7 @@ export default {
   },
 
   onAfterDmgTaking({ owner, actualDmg }) {
-    if (!(actualDmg > 0)) return;
+    if (!owner.alive || !(actualDmg > 0)) return;
 
     owner.runtime ??= {};
     owner.runtime.weyneDisturbed = true;
@@ -73,7 +79,7 @@ export default {
   onActionResolved({ owner, skill, context }) {
     const key = skill?.key;
 
-    if (key !== CLAIM_ACTION_KEY && key !== TOTAL_BLOCK_KEY && key !== COLD_ZERO_KEY) {
+    if (key !== CLAIM_ACTION_KEY && key !== COLD_ZERO_KEY) {
       return;
     }
 

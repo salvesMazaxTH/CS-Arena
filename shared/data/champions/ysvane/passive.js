@@ -13,9 +13,14 @@ export default {
   lootMinimum: 1,
 
   description() {
-    return `Ysvane is old enough to be the vault rather than its warden, and what she wards is not allowed to slip. An ally she lays her Affliction Ward over is Kept for ${KEPT_DURATION} turn(s); when a Kept ally uses CLAIM the grab holds fast in the cold, and their team banks ${this.claimBonusPoints} extra point(s) from it.
+    return {
+      en: `Ysvane is old enough to be the vault rather than its warden, and what she wards is not allowed to slip. An ally she lays her <b>Affliction Ward</b> over is <b>Kept</b> for <b>${KEPT_DURATION}</b> turn(s); when a <b>Kept</b> ally uses CLAIM the grab holds fast in the cold, and their team banks <b>${this.claimBonusPoints}</b> extra point(s) from it.
 
-    The Keep is not looted for free either: when a Kept ally falls, Ysvane's team banks whatever that kill just paid the enemy, minus ${this.lootTax} (at least ${this.lootMinimum} point).`;
+      The Keep is not looted for free either: when a <b>Kept</b> ally falls, Ysvane's team banks whatever that kill just paid the enemy, minus <b>${this.lootTax}</b> (at least <b>${this.lootMinimum}</b> point).`,
+      pt: `Ysvane é velha o bastante para ser o cofre em vez de sua guardiã, e o que ela resguarda não tem permissão de escapar. Uma aliada sobre quem ela lança sua <b>Proteção contra Aflição</b> fica <b>Resguardada</b> por <b>${KEPT_DURATION}</b> turno(s); quando uma aliada <b>Resguardada</b> usa CLAIM, a captura se firma no frio, e o time dela ganha <b>${this.claimBonusPoints}</b> ponto(s) extra por isso.
+
+      O Cofre também não é saqueado de graça: quando uma aliada <b>Resguardada</b> cai, o time de Ysvane ganha o que aquela morte acabou de pagar ao inimigo, menos <b>${this.lootTax}</b> (no mínimo <b>${this.lootMinimum}</b> ponto).`,
+    };
   },
 
   onActionResolved({ owner, actionSource, skill, context }) {

@@ -29,9 +29,14 @@ const ysvaneSkills = [
     element: "ice",
 
     description() {
-      return `Ysvane sets the chosen ally inside the Keep, where nothing is permitted to spoil. For ${this.wardDuration} turn(s) they carry Affliction Ward — the first negative effect that would take hold never does — under a ${this.shieldAmount} Shield.
+      return {
+        en: `Ysvane sets the chosen ally inside the Keep, where nothing is permitted to spoil. For <b>${this.wardDuration}</b> turn(s) they carry <b>Affliction Ward</b> — the first negative effect that would take hold never does — under a <b>${this.shieldAmount}</b> <b>Shield</b>.
 
-      Nothing left untouched in the Keep stays the size it was: for ${this.vaultDuration} turn(s) that Shield does not thin, and it doubles at the start of every turn the ally came through without being hit at all, up to ${this.shieldCap}. Once the Keep lets go, the Shield thins by ${this.shieldDecay} each turn like any other.`;
+        Nothing left untouched in the Keep stays the size it was: for <b>${this.vaultDuration}</b> turn(s) that <b>Shield</b> does not thin, and it doubles at the start of every turn the ally came through without being hit at all, up to <b>${this.shieldCap}</b>. Once the Keep lets go, the <b>Shield</b> thins by <b>${this.shieldDecay}</b> each turn like any other.`,
+        pt: `Ysvane coloca a aliada escolhida dentro do Cofre, onde nada tem permissão de estragar. Por <b>${this.wardDuration}</b> turno(s) ela carrega <b>Proteção contra Aflição</b> — o primeiro efeito negativo que tentar se firmar simplesmente não acontece — sob um <b>Escudo</b> de <b>${this.shieldAmount}</b>.
+
+        Nada que fique intocado dentro do Cofre continua do mesmo tamanho: por <b>${this.vaultDuration}</b> turno(s) esse <b>Escudo</b> não diminui, e ele dobra no início de todo turno em que a aliada não é atingida nem uma vez, até <b>${this.shieldCap}</b>. Assim que o Cofre se abre, o <b>Escudo</b> passa a diminuir <b>${this.shieldDecay}</b> por turno como qualquer outro.`,
+      };
     },
 
     targetSpec: ["select:ally"],
@@ -130,7 +135,10 @@ const ysvaneSkills = [
     lockedOutStatusKeys: ["stunned", "frozen"],
 
     description() {
-      return `Ysvane closes the cold around the chosen ally until they are held at exactly the shape they were. For ${this.effectDuration} turn(s) they take ${this.damageReductionPercent}% less damage and cannot be Stunned or Frozen — nothing gets a grip on what the Keep is holding.`;
+      return {
+        en: `Ysvane closes the cold around the chosen ally until they are held at exactly the shape they were. For <b>${this.effectDuration}</b> turn(s) they take <b>${this.damageReductionPercent}%</b> less damage and cannot be <b>Stunned</b> or <b>Frozen</b> — nothing gets a grip on what the Keep is holding.`,
+        pt: `Ysvane fecha o frio em torno da aliada escolhida até segurá-la exatamente na forma que estava. Por <b>${this.effectDuration}</b> turno(s) ela sofre <b>${this.damageReductionPercent}%</b> menos dano e não pode ser <b>Atordoada</b> nem <b>Congelada</b> — nada consegue firmar pegada no que o Cofre está segurando.`,
+      };
     },
 
     targetSpec: ["select:ally"],
@@ -204,9 +212,14 @@ const ysvaneSkills = [
     element: "ice",
 
     description() {
-      return `Ysvane lets the Keep out all at once and a long winter settles over her whole side of the field. Every ally is stripped of every negative status effect, gains Affliction Ward for ${this.wardDuration} turn(s) and takes ${this.damageReductionPercent}% less damage for ${this.reductionDuration} turn(s).
+      return {
+        en: `Ysvane lets the Keep out all at once and a long winter settles over her whole side of the field. Every ally is stripped of every negative status effect, gains <b>Affliction Ward</b> for <b>${this.wardDuration}</b> turn(s) and takes <b>${this.damageReductionPercent}%</b> less damage for <b>${this.reductionDuration}</b> turn(s).
 
-      An ally who walks into the winter with their Keep still sealed — an Affliction Ward nobody has spent yet, under at least ${this.supremePrice} Shield — pays ${this.supremePrice} of that Shield and the cold closes over what is left as a Supreme Shield. Whatever Shield they had above the price stays standing underneath it.`;
+        An ally who walks into the winter with their Keep still sealed — an <b>Affliction Ward</b> nobody has spent yet, under at least <b>${this.supremePrice}</b> <b>Shield</b> — pays <b>${this.supremePrice}</b> of that <b>Shield</b> and the cold closes over what is left as a <b>Supreme Shield</b>. Whatever <b>Shield</b> they had above the price stays standing underneath it.`,
+        pt: `Ysvane deixa o Cofre se abrir de uma vez e um longo inverno se assenta sobre todo o lado dela do campo. Toda aliada é limpa de todo efeito de status negativo, ganha <b>Proteção contra Aflição</b> por <b>${this.wardDuration}</b> turno(s) e sofre <b>${this.damageReductionPercent}%</b> menos dano por <b>${this.reductionDuration}</b> turno(s).
+
+        Uma aliada que entra no inverno com seu Cofre ainda selado — uma <b>Proteção contra Aflição</b> que ninguém gastou, sob pelo menos <b>${this.supremePrice}</b> de <b>Escudo</b> — paga <b>${this.supremePrice}</b> desse <b>Escudo</b> e o frio fecha sobre o que sobra como um <b>Escudo Supremo</b>. Qualquer <b>Escudo</b> que ela tivesse acima do preço continua de pé por baixo dele.`,
+      };
     },
 
     targetSpec: ["self"],
