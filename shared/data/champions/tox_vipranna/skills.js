@@ -32,10 +32,16 @@ const toxViprannaSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Tox Vipranna lashes out with her venomous tongue, dealing light damage to the chosen enemy and inflicting Poisoned.
+      return {
+        en: `Tox Vipranna lashes out with her venomous tongue, dealing light damage to the chosen enemy and inflicting <b>Poisoned</b>.
 
-      • 4 stacks if the target is not Poisoned
-      • 2 stacks if the target is already Poisoned`;
+        • <b>4</b> stacks if the target is not yet <b>Poisoned</b>
+        • <b>2</b> stacks if the target is already <b>Poisoned</b>`,
+        pt: `Tox Vipranna ataca com sua língua venenosa, causando dano leve ao inimigo escolhido e infligindo <b>Envenenado</b>.
+
+        • <b>4</b> acúmulos se o alvo ainda não estiver <b>Envenenado</b>
+        • <b>2</b> acúmulos se o alvo já estiver <b>Envenenado</b>`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -98,11 +104,18 @@ const toxViprannaSkills = [
     targetSpec: ["self"],
 
     description() {
-      return `Tox Vipranna cloaks herself in a toxic coating for ${this.auraDuration} turn(s), gaining +${this.defenseBuff} Defense.
+      return {
+        en: `Tox Vipranna cloaks herself in a toxic coating for <b>${this.auraDuration}</b> turn(s), gaining <b>+${this.defenseBuff}</b> <b>Defense</b>.
 
-      Enemies that make contact attacks against her are afflicted with ${this.poisonedStacks} stacks of Poisoned.
+        Enemies that land contact attacks against her are afflicted with <b>${this.poisonedStacks}</b> stacks of <b>Poisoned</b>.
 
-      If she uses CLAIM while the coating still holds, she draws it back in and restores ${this.claimHeal} HP.`;
+        If she uses <b>CLAIM</b> while the coating still holds, she draws it back in and restores <b>${this.claimHeal}</b> <b>HP</b>.`,
+        pt: `Tox Vipranna se envolve em uma camada tóxica por <b>${this.auraDuration}</b> turno(s), ganhando <b>+${this.defenseBuff}</b> de <b>Defesa</b>.
+
+        Inimigos que a atingem com ataques de contato ficam com <b>${this.poisonedStacks}</b> acúmulos de <b>Envenenado</b>.
+
+        Se ela usar <b>CLAIM</b> enquanto a camada ainda estiver ativa, ela a reabsorve e restaura <b>${this.claimHeal}</b> de <b>HP</b>.`,
+      };
     },
 
     resolve({ user, context = {} }) {
@@ -227,11 +240,14 @@ const toxViprannaSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Tox Vipranna forces the venom within the chosen enemy to surge, doubling their Poisoned stacks before consuming them.
+      return {
+        en: `Tox Vipranna forces the venom inside the chosen enemy to surge, doubling their <b>Poisoned</b> stacks before consuming them entirely.
 
-      Deals Absolute Damage equal to:
+        Deals <b>Absolute Damage</b> equal to <b>consumed stacks × ${this.damageRatioPerStack * 100}%</b> of the target's lost <b>HP</b>.`,
+        pt: `Tox Vipranna força o veneno dentro do inimigo escolhido a se intensificar, dobrando os acúmulos de <b>Envenenado</b> antes de consumi-los por completo.
 
-      <b>Consumed stacks × ${this.damageRatioPerStack * 100}% of the target's lost HP</b>`;
+        Causa <b>Dano Absoluto</b> igual a <b>acúmulos consumidos × ${this.damageRatioPerStack * 100}%</b> do <b>HP</b> perdido do alvo.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {

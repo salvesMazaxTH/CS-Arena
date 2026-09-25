@@ -13,7 +13,10 @@ const thorwellsSkills = [
     element: "lightning",
     conductorDuration: 2,
     description() {
-      return `Thorwells makes a short offhand swing of his one-handed axe, the edge dragging a live thread of storm behind it — a plain Lightning blow that deals Physical damage and leaves the chosen target a Conductor for ${this.conductorDuration} turn(s).`;
+      return {
+        en: `Thorwells makes a short offhand swing of his one-handed axe, the edge dragging a live thread of storm behind it — a plain lightning blow that deals physical damage and leaves the chosen target a <b>Conductor</b> for <b>${this.conductorDuration}</b> turn(s).`,
+        pt: `Thorwells desfere um golpe curto com o machado de uma mão, a lâmina arrastando um fio vivo de tempestade atrás de si — um golpe simples de relâmpago que causa dano físico e deixa o alvo escolhido <b>Condutor</b> por <b>${this.conductorDuration}</b> turno(s).`,
+      };
     },
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
@@ -66,7 +69,10 @@ const thorwellsSkills = [
     ],
 
     description() {
-      return `Thorwells hooks the axe overhead and brings the whole weight of the sky down through it onto the chosen target — a heavy Lightning blow that deals Physical damage. If that target is a Conductor, the charge leaps: ${Math.round(this.arcRatio * 100)}% of the blow arcs on to the other enemy holding the most current HP, and the Conductor mark is spent.`;
+      return {
+        en: `Thorwells hooks the axe overhead and brings the whole weight of the sky down through it onto the chosen target — a heavy lightning blow that deals physical damage. If that target is a <b>Conductor</b>, the charge leaps: <b>${Math.round(this.arcRatio * 100)}%</b> of the blow arcs on to the other enemy holding the most current <b>HP</b>, and the Conductor mark is spent.`,
+        pt: `Thorwells ergue o machado sobre a cabeça e traz todo o peso do céu através dele contra o alvo escolhido — um golpe pesado de relâmpago que causa dano físico. Se esse alvo estiver <b>Condutor</b>, a carga salta: <b>${Math.round(this.arcRatio * 100)}%</b> do golpe atinge o outro inimigo com mais <b>HP</b> atual, e a marca de Condutor é consumida.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -135,7 +141,10 @@ const thorwellsSkills = [
     conductorDuration: 3,
 
     description() {
-      return `Thorwells drives the axe into the ground and a weather front rolls the length of the enemy line, striking every enemy for Lightning damage and leaving each one a Conductor for ${this.conductorDuration} turn(s).`;
+      return {
+        en: `Thorwells drives the axe into the ground and a weather front rolls the length of the enemy line, striking every enemy for lightning damage and leaving each one a <b>Conductor</b> for <b>${this.conductorDuration}</b> turn(s).`,
+        pt: `Thorwells crava o machado no chão e uma frente de tempestade avança por toda a linha inimiga, atingindo cada inimigo com dano de relâmpago e deixando todos <b>Condutores</b> por <b>${this.conductorDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["all:enemy"],
@@ -190,7 +199,10 @@ const thorwellsSkills = [
     speedGain: 10,
 
     description() {
-      return `Thorwells stops holding the sky up and lets the open weight of it fall on every enemy at once for heavy Lightning damage. Each Conductor among them is struck as Piercing, ignoring ${this.piercingPercentage}% of their Defense, and the mark burns out. The storm only climbs from here — Thorwells gains +${this.speedGain} Speed permanently. No elemental resistance stands under the open sky.`;
+      return {
+        en: `Thorwells stops holding the sky up and lets the open weight of it fall on every enemy at once for heavy lightning damage. Each <b>Conductor</b> among them is struck as <b>Piercing</b>, ignoring <b>${this.piercingPercentage}%</b> of their <b>Defense</b>, and the mark burns out. The storm only climbs from here — Thorwells gains <b>+${this.speedGain}</b> <b>Speed</b> permanently. No elemental resistance stands under the open sky.`,
+        pt: `Thorwells para de sustentar o céu e deixa todo o seu peso desabar sobre todos os inimigos ao mesmo tempo, causando pesado dano de relâmpago. Cada inimigo <b>Condutor</b> é atingido de forma <b>Perfurante</b>, ignorando <b>${this.piercingPercentage}%</b> da sua <b>Defesa</b>, e a marca se esgota. A tempestade só cresce a partir daqui — Thorwells ganha <b>+${this.speedGain}</b> de <b>Velocidade</b> permanentemente. Nenhuma resistência elemental resiste sob o céu aberto.`,
+      };
     },
 
     targetSpec: ["all:enemy"],

@@ -22,7 +22,7 @@ export default {
   description() {
     return {
       en: `Seymour read the appointed hour in the orrery long ago, and the sky keeps its word. The first <b>CLAIM</b> resolved on the field each turn, by either side, makes his star answer over the enemy line for <b>${this.radiancePerPoint}</b> radiant damage per point that <b>CLAIM</b> was worth. If the light puts one of them down, his team takes <b>${this.killScore}</b> point. The sky answers only once a turn, however the hour is called.`,
-      pt: `Seymour leu a hora marcada no orrery há muito tempo, e o céu cumpre a palavra dada. O primeiro <b>CLAIM</b> resolvido no campo a cada turno, de qualquer um dos lados, faz sua estrela responder sobre a linha inimiga com <b>${this.radiancePerPoint}</b> de dano radiante por ponto que aquele <b>CLAIM</b> valia. Se a luz derrubar um deles, o time dele ganha <b>${this.killScore}</b> ponto. O céu só responde uma vez por turno, não importa quantas vezes a hora seja chamada.`,
+      pt: `Há muito tempo, Seymour decifrou a hora certa no mecanismo das estrelas, e o céu cumpre a palavra dada. O primeiro <b>CLAIM</b> resolvido em campo a cada turno, não importa de qual lado, faz sua estrela responder sobre a linha inimiga, causando <b>${this.radiancePerPoint}</b> de dano radiante para cada ponto que aquele <b>CLAIM</b> valia. Se a luz derrubar algum inimigo, o time de Seymour ganha <b>${this.killScore}</b> ponto. Por mais vezes que a hora seja chamada, o céu só responde uma vez por turno.`,
     };
   },
 

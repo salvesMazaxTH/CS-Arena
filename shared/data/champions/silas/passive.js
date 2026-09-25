@@ -12,7 +12,7 @@ export default {
   description() {
     return {
       en: `Silas has spent most of his life in rooms where nobody knew he was standing, and he stopped minding a long time ago. Whenever a full turn passes without a single wound reaching him, he opens the next one <b>${this.momentumGain}</b> <b>Momentum</b> richer. Nothing has ever made Silas hurry: his <b>Speed</b> cannot be reduced.`,
-      pt: `Silas passou a maior parte da vida em salas onde ninguém sabia que ele estava presente, e há muito tempo parou de se importar com isso. Sempre que um turno inteiro passa sem que um único ferimento o alcance, ele abre o próximo turno <b>${this.momentumGain}</b> pontos de <b>Momentum</b> mais rico. Nada jamais fez Silas se apressar: sua <b>Velocidade</b> não pode ser reduzida.`,
+      pt: `Silas passou a maior parte da vida em salas onde ninguém sabia que ele estava presente, e há muito tempo parou de se importar com isso. Sempre que um turno inteiro passa sem que um único ferimento o alcance, ele começa o turno seguinte <b>${this.momentumGain}</b> pontos de <b>Momentum</b> mais rico. Nada jamais fez Silas se apressar: sua <b>Velocidade</b> não pode ser reduzida.`,
     };
   },
 

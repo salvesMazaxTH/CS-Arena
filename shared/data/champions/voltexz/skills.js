@@ -62,7 +62,10 @@ const voltexzSkills = [
     element: "lightning",
 
     description() {
-      return `Voltexz fires a bolt of lightning from each hand at once, dealing Lightning magical damage to two chosen targets or to the same target twice.`;
+      return {
+        en: `Voltexz fires a bolt of lightning from each hand at once, dealing <b>Lightning</b> magical damage to two chosen targets or to the same target twice.`,
+        pt: `Voltexz dispara um raio de cada mão ao mesmo tempo, causando dano mágico de <b>Relâmpago</b> em dois alvos escolhidos ou duas vezes no mesmo alvo.`,
+      };
     },
 
     targetSpec: [{ type: "enemy" }, { type: "enemy" }],
@@ -133,7 +136,10 @@ const voltexzSkills = [
     element: "lightning",
 
     description() {
-      return `Voltexz discharges a crackling surge of electricity into the target, dealing damage and leaving them Paralyzed for ${this.paralyzeDuration} turn(s).`;
+      return {
+        en: `Voltexz discharges a crackling surge of electricity into the target, dealing damage and leaving them <b>Paralyzed</b> for <b>${this.paralyzeDuration}</b> turn(s).`,
+        pt: `Voltexz descarrega uma onda crepitante de eletricidade no alvo, causando dano e deixando-o <b>Paralisado</b> por <b>${this.paralyzeDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -188,7 +194,10 @@ const voltexzSkills = [
     element: "lightning",
 
     description() {
-      return `Voltexz stops holding the current back and lets all of it go at once, burying the chosen target under a cataclysmic discharge of Lightning magical damage.`;
+      return {
+        en: `Voltexz stops holding the current back and lets all of it go at once, burying the chosen target under a cataclysmic discharge of <b>Lightning</b> magical damage.`,
+        pt: `Voltexz para de segurar a corrente e libera tudo de uma vez, soterrando o alvo escolhido sob uma descarga cataclísmica de dano mágico de <b>Relâmpago</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],

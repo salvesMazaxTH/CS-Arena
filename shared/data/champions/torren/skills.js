@@ -25,7 +25,10 @@ const torrenSkills = [
     priority: 0,
 
     description() {
-      return `Torren swings his sword with crushing force, the resounding blow striking the chosen enemy and stunning another at random.`;
+      return {
+        en: `Torren swings his sword with crushing force, the resounding blow striking the chosen enemy while <b>Stunning</b> another enemy at random.`,
+        pt: `Torren golpeia com força esmagadora — o impacto ressoante atinge o inimigo escolhido enquanto <b>Atordoa</b> outro inimigo aleatório.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -89,9 +92,14 @@ const torrenSkills = [
     claimBonusPoints: 2,
 
     description() {
-      return `Torren singles out the most fragile enemy, striking through their defenses with a piercing blow. If their fragility is significantly greater than his, they are Taunted for ${this.tauntDuration} turn(s) and deal 30% less damage to other targets.
+      return {
+        en: `Torren singles out the most fragile enemy on the field, striking through their defenses with a <b>Piercing</b> blow. If their fragility is significantly greater than his own, they are <b>Taunted</b> for <b>${this.tauntDuration}</b> turn(s) and deal <b>30%</b> less damage to anyone else.
 
-      For the next 2 turns, any CLAIM Torren makes while a foe he has Taunted still stands banks ${this.claimBonusPoints} extra points.`;
+        For the next <b>${this.dominionDuration}</b> turns, any <b>CLAIM</b> Torren makes while that <b>Taunted</b> foe still stands banks <b>${this.claimBonusPoints}</b> extra point(s).`,
+        pt: `Torren escolhe o inimigo mais frágil do campo, atingindo-o com um golpe <b>Perfurante</b> que atravessa suas defesas. Se a fragilidade desse alvo for consideravelmente maior que a dele, o inimigo fica <b>Provocado</b> por <b>${this.tauntDuration}</b> turno(s) e passa a causar <b>30%</b> a menos de dano a qualquer outro alvo.
+
+        Pelos próximos <b>${this.dominionDuration}</b> turnos, todo <b>CLAIM</b> que Torren fizer enquanto esse inimigo <b>Provocado</b> ainda estiver de pé garante <b>${this.claimBonusPoints}</b> ponto(s) extra(s).`,
+      };
     },
 
     targetSpec: ["all:enemy"],
@@ -220,7 +228,10 @@ const torrenSkills = [
     priority: 0,
 
     description() {
-      return `Torren advances with unstoppable force, crushing the chosen enemy beneath a devastating blow and Stunning them for ${this.stunDuration} turn(s).`;
+      return {
+        en: `Torren advances with unstoppable force, crushing the chosen enemy beneath a devastating blow and <b>Stunning</b> them for <b>${this.stunDuration}</b> turn(s).`,
+        pt: `Torren avança com força implacável, esmagando o inimigo escolhido sob um golpe devastador e o deixando <b>Atordoado</b> por <b>${this.stunDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],

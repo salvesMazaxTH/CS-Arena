@@ -18,9 +18,14 @@ export default {
     },
   ],
   description() {
-    return `Voltexz is not something that carries lightning — she is the lightning, a storm wearing the shape of a goddess, her hair drifting like thunderheads about to break. Every skill she throws is torn out of her own substance: she takes ${this.recoilPercent}% of its base damage as Absolute recoil, whether it lands or not.
+    return {
+      en: `Voltexz is not something that carries lightning — she is the lightning, a storm wearing the shape of a goddess, her hair drifting like thunderheads about to break. Every skill she throws is torn out of her own substance: she takes <b>${this.recoilPercent}%</b> of its base damage as <b>Absolute</b> recoil, whether it lands or not.
 
-    Everything she touches keeps the charge: the target is marked as a Conductor for ${this.conductorDuration} turn(s), and her next strike against a Conductor deals ${this.conductorBonusPercent}% bonus damage, consuming the mark.`;
+      Everything she touches keeps the charge: the target is marked as a <b>Conductor</b> for <b>${this.conductorDuration}</b> turn(s), and her next strike against a <b>Conductor</b> deals <b>${this.conductorBonusPercent}%</b> bonus damage, consuming the mark.`,
+      pt: `Voltexz não é alguém que carrega o raio — ela é o raio, uma tempestade com forma de deusa, os cabelos se movendo como nuvens de trovoada prestes a se romper. Toda habilidade que ela lança é arrancada da própria substância dela: ela sofre <b>${this.recoilPercent}%</b> do dano base como recuo <b>Absoluto</b>, acerte ou não.
+
+      Tudo que ela toca guarda a carga: o alvo é marcado como <b>Condutor</b> por <b>${this.conductorDuration}</b> turno(s), e o próximo golpe dela contra um <b>Condutor</b> causa <b>${this.conductorBonusPercent}%</b> de dano bônus, consumindo a marca.`,
+    };
   },
   hookScope: {
     onAfterDmgDealing: "attacker",

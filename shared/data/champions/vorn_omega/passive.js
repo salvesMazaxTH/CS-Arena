@@ -4,7 +4,8 @@ import {
   DAMAGE_CAP_AT,
   DAMAGE_CAP_PERCENT,
   MAX_PLATES,
-  PLATE_TEXT,
+  PLATE_TEXT_EN,
+  PLATE_TEXT_PT,
   platesDue,
   platesShed,
   shedPlates,
@@ -17,9 +18,14 @@ export default {
   description(champion) {
     const shed = platesShed(champion);
 
-    return `The foundry that made VØRN Ω went quiet a long time ago and every model before him is scrap, so there is nobody left who knows how to put him back together: he can never restore HP by any means, and his Speed cannot be reduced — whatever drives him turns at one fixed rate. What he can do is come apart usefully. Crossing 75%, 50% and 25% of his Max HP throws off a governor plate for good, and he is worse to stand in front of for it. ${PLATE_TEXT}
+    return {
+      en: `The foundry that made VØRN Ω went quiet a long time ago and every model before him is scrap, so there is nobody left who knows how to put him back together: he can never restore <b>HP</b> by any means, and his <b>Speed</b> cannot be reduced — whatever drives him turns at one fixed rate. What he can do is come apart usefully. Crossing <b>75%</b>, <b>50%</b> and <b>25%</b> of his Max HP throws off a governor plate for good, and he is worse to stand in front of for it. ${PLATE_TEXT_EN}
 
-    <b>Plates shed:</b> ${shed}/${MAX_PLATES}`;
+      <b>Plates shed:</b> ${shed}/${MAX_PLATES}`,
+      pt: `A fábrica que fez o VØRN Ω calou-se há muito tempo e todo modelo anterior a ele virou sucata, então não sobrou ninguém que saiba montá-lo de volta: ele nunca pode restaurar <b>HP</b> por nenhum meio, e sua <b>Velocidade</b> não pode ser reduzida — o que quer que o mova gira num ritmo fixo. O que ele pode fazer é se despedaçar com proveito. Cruzar <b>75%</b>, <b>50%</b> e <b>25%</b> do seu HP Máximo arranca uma placa reguladora de vez, e ele fica pior de enfrentar por isso. ${PLATE_TEXT_PT}
+
+      <b>Placas perdidas:</b> ${shed}/${MAX_PLATES}`,
+    };
   },
 
   hookScope: {

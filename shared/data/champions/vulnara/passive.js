@@ -4,7 +4,10 @@ export default {
   enhancedCritBonus: 70,
   atkBuff: 5,
   description() {
-    return `Vulnara's fire climbs with every clean shot. Each of her critical hits permanently raises her Attack by ${this.atkBuff}, and her critical hits strike at 1.${this.enhancedCritBonus}x instead of the usual multiplier.`;
+    return {
+      en: `Vulnara's fire climbs with every clean shot. Each of her <b>critical hits</b> permanently raises her <b>Attack</b> by <b>${this.atkBuff}</b>, and her <b>critical hits</b> strike at <b>1.${this.enhancedCritBonus}x</b> instead of the usual multiplier.`,
+      pt: `O fogo de Vulnara cresce a cada tiro certeiro. Cada um dos seus <b>acertos críticos</b> aumenta permanentemente seu <b>Ataque</b> em <b>${this.atkBuff}</b>, e seus <b>acertos críticos</b> golpeiam em <b>1.${this.enhancedCritBonus}x</b> em vez do multiplicador usual.`,
+    };
   },
 
   hookScope: {

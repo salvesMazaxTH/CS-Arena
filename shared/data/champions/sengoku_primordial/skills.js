@@ -14,7 +14,7 @@ const sengokuPrimordialSkills = [
     description() {
       return {
         en: `Sengoku tears through the chosen target with draconic talons older than the war itself, dealing heavy physical damage.`,
-        pt: `Sengoku rasga o alvo escolhido com garras dracônicas mais antigas que a própria guerra, causando pesado dano físico.`,
+        pt: `Sengoku rasga o alvo escolhido com garras dracônicas mais antigas que a própria guerra, causando dano físico pesado.`,
       };
     },
     targetSpec: ["enemy"],

@@ -20,7 +20,10 @@ const tonyRaiturusSkills = [
     priority: 0,
 
     description() {
-      return `Tony sights down the green eye, the one that is still only a boy's, and lets the bolt go on the second he chose. Deals Lightning magical damage in full, right away — it does not split into thunder, so it carries no bonus damage and can be evaded like any other strike.`;
+      return {
+        en: `Tony sights down the green eye, the one that is still only a boy's, and lets the bolt go on the second he chose. Deals lightning magical damage in full, right away — it does not split into thunder, so it carries no bonus damage and can be evaded like any other strike.`,
+        pt: `Tony mira pelo olho verde, aquele que ainda é só de um garoto, e solta o raio no instante exato que escolheu. Causa dano mágico de relâmpago por completo, na hora — não se divide em trovão, então não carrega dano bônus e pode ser esquivado como qualquer outro golpe.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -55,7 +58,10 @@ const tonyRaiturusSkills = [
     priority: 0,
 
     description() {
-      return `Tony lets the gold eye open all the way, and for a moment the shape he is holding is far too small for what is looking out of it. Deals Lightning magical damage and doubles the thunder left hanging over the target, at the cost of ${this.recoilPercentOfMaxHp}% of his own Max HP as Absolute Damage.`;
+      return {
+        en: `Tony lets the gold eye open all the way, and for a moment the shape he is holding is far too small for what is looking out of it. Deals lightning magical damage and doubles the thunder left hanging over the target, at the cost of <b>${this.recoilPercentOfMaxHp}%</b> of his own <b>Max HP</b> as <b>Absolute Damage</b>.`,
+        pt: `Tony deixa o olho dourado se abrir por completo, e por um instante a forma que ele ocupa fica pequena demais para o que olha através dela. Causa dano mágico de relâmpago e dobra o trovão que ainda paira sobre o alvo, ao custo de <b>${this.recoilPercentOfMaxHp}%</b> do seu próprio <b>HP Máximo</b> como <b>Dano Absoluto</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -103,7 +109,10 @@ const tonyRaiturusSkills = [
     transformDuration: 2,
 
     description() {
-      return `The boy's shape was never the redemption, only the terms of it, and Tony stops honouring them. Deals Lightning magical damage, then he unfolds into the storm he was sentenced to be, his <b>Primordial Form</b>, for ${this.transformDuration} turn(s), replacing his skills, his passive and his stats. As he unfolds, every thunder still owed to an enemy arrives on the spot.`;
+      return {
+        en: `The boy's shape was never the redemption, only the terms of it, and Tony stops honouring them. Deals lightning magical damage, then he unfolds into the storm he was sentenced to be, his <b>Primordial Form</b>, for <b>${this.transformDuration}</b> turn(s), replacing his skills, his passive and his stats. As he unfolds, every thunder still owed to an enemy arrives on the spot.`,
+        pt: `A forma do garoto nunca foi a redenção, apenas os termos dela, e Tony deixa de honrá-los. Causa dano mágico de relâmpago e então se desdobra na tempestade que foi condenado a ser, sua <b>Forma Primordial</b>, por <b>${this.transformDuration}</b> turno(s), substituindo suas habilidades, sua passiva e seus atributos. Ao se desdobrar, todo trovão ainda devido a um inimigo chega na hora.`,
+      };
     },
 
     targetSpec: ["enemy"],

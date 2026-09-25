@@ -41,4 +41,6 @@ export function shedPlates(champion, count, context) {
   return shedding;
 }
 
-export const PLATE_TEXT = `Each of the ${MAX_PLATES} plates is worth +${ATTACK_PERCENT_PER_PLATE}% Attack, permanently. The first leaves nothing on him for a Control effect to seize; the second lets his blows past any damage reduction; the third means no single source can take more than ${DAMAGE_CAP_PERCENT}% of his Max HP from him at once (except Absolute Damage).`;
+export const PLATE_TEXT_EN = `Each of the <b>${MAX_PLATES}</b> plates is worth <b>+${ATTACK_PERCENT_PER_PLATE}%</b> <b>Attack</b>, permanently. The first leaves nothing on him for a Control effect to seize; the second lets his blows past any damage reduction; the third means no single source can take more than <b>${DAMAGE_CAP_PERCENT}%</b> of his Max HP from him at once (except <b>Absolute Damage</b>).`;
+
+export const PLATE_TEXT_PT = `Cada uma das <b>${MAX_PLATES}</b> placas vale <b>+${ATTACK_PERCENT_PER_PLATE}%</b> de <b>Ataque</b>, permanentemente. A primeira não deixa nada nele para um efeito de Controle agarrar; a segunda faz seus golpes ignorarem qualquer redução de dano; a terceira garante que nenhuma fonte sozinha tire mais de <b>${DAMAGE_CAP_PERCENT}%</b> do seu HP Máximo de uma vez (exceto <b>Dano Absoluto</b>).`;

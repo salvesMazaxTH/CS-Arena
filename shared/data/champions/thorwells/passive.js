@@ -7,7 +7,10 @@ export default {
   slowEnough: 75,
 
   description() {
-    return `To Thorwells a mortal's swing is a letter posted a week too early — he reads its whole arc and is simply elsewhere when it lands. The first instance of damage each turn from an attacker whose Speed is ${this.slowEnough} or lower is evaded outright; Absolute Damage, and blows that cannot be evaded, still find him. Nothing drags at his own tempo: his Speed cannot be reduced.`;
+    return {
+      en: `To Thorwells a mortal's swing is a letter posted a week too early — he reads its whole arc and is simply elsewhere when it lands. The first instance of damage each turn from an attacker whose <b>Speed</b> is <b>${this.slowEnough}</b> or lower is evaded outright; <b>Absolute Damage</b>, and blows that <b>cannot be evaded</b>, still find him. Nothing drags at his own tempo: his <b>Speed</b> cannot be reduced.`,
+      pt: `Para Thorwells, o golpe de um mortal é uma carta postada com uma semana de antecedência — ele lê todo o arco do movimento e simplesmente já não está mais lá quando ele chega. A primeira instância de dano em cada turno vinda de um atacante com <b>Velocidade</b> igual ou menor que <b>${this.slowEnough}</b> é esquivada automaticamente; <b>Dano Absoluto</b> e golpes que <b>não podem ser esquivados</b> ainda o alcançam. Nada altera o ritmo dele: sua <b>Velocidade</b> não pode ser reduzida.`,
+    };
   },
 
   hookScope: {

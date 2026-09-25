@@ -28,7 +28,10 @@ const vulnaraSkills = [
     priority: 2,
 
     description() {
-      return `Vulnara goes still and lets the hunter take over, her eye settling on every opening at once as her legs coil beneath her: she gains +${this.critBuff}% Critical and +${this.speedBuff} Speed for ${this.duration} turn(s).`;
+      return {
+        en: `Vulnara goes still and lets the hunter take over, her eye settling on every opening at once as her legs coil beneath her: she gains <b>+${this.critBuff}%</b> <b>Critical</b> and <b>+${this.speedBuff}</b> <b>Speed</b> for <b>${this.duration}</b> turn(s).`,
+        pt: `Vulnara fica imóvel e deixa a caçadora assumir, o olhar se fixando em cada brecha ao mesmo tempo que as pernas se recolhem sob ela: ela ganha <b>+${this.critBuff}%</b> de <b>Crítico</b> e <b>+${this.speedBuff}</b> de <b>Velocidade</b> por <b>${this.duration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["self"],
@@ -72,7 +75,10 @@ const vulnaraSkills = [
     hitVfx: "flaming_arrow",
 
     description() {
-      return `Vulnara looses a rain of burning arrows over the whole field, dealing Fire physical damage to every enemy. Each arrow that lands has a ${this.burnChance * 100}% chance of setting its target Burning for ${this.burnDuration} turn(s).`;
+      return {
+        en: `Vulnara looses a rain of burning arrows over the whole field, dealing Fire physical damage to every enemy. Each arrow that lands has a <b>${this.burnChance * 100}%</b> chance of setting its target <b>Burning</b> for <b>${this.burnDuration}</b> turn(s).`,
+        pt: `Vulnara solta uma chuva de flechas em chamas sobre todo o campo, causando dano físico de Fogo em cada inimigo. Cada flecha que acerta tem <b>${this.burnChance * 100}%</b> de chance de deixar seu alvo <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["all:enemy"],
@@ -141,7 +147,10 @@ const vulnaraSkills = [
     burnDuration: 2,
 
     description() {
-      return `Vulnara draws and looses ${this.arrows} arrows before the first one lands, all of them burning, all of them on the chosen target. Each arrow rolls for a critical hit on its own, and every arrow that lands sets its target Burning for ${this.burnDuration} turn(s).`;
+      return {
+        en: `Vulnara draws and looses <b>${this.arrows}</b> arrows before the first one lands, all of them burning, all of them on the chosen target. Each arrow rolls for a <b>critical hit</b> on its own, and every arrow that lands sets its target <b>Burning</b> for <b>${this.burnDuration}</b> turn(s).`,
+        pt: `Vulnara saca e dispara <b>${this.arrows}</b> flechas antes mesmo da primeira acertar, todas em chamas, todas no alvo escolhido. Cada flecha rola seu próprio <b>acerto crítico</b>, e toda flecha que acerta deixa o alvo <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],

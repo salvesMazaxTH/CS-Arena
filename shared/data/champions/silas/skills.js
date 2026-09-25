@@ -61,7 +61,7 @@ const silasSkills = [
     description() {
       return {
         en: `Silas does not hurry the work, because hurrying it has never once been necessary: he waits out the half-second in which nothing at all stands over the chosen target, and closes it. Deals physical damage equal to <b>${this.bf}%</b> of his <b>Attack</b>, rising to <b>${this.unguardedBf}%</b> against a target carrying no positive status effect and no shield.`,
-        pt: `Silas não apressa o serviço, porque apressá-lo nunca foi necessário: ele espera pela fração de segundo em que nada resta protegendo o alvo escolhido, e a fecha. Causa dano físico igual a <b>${this.bf}%</b> do seu <b>Ataque</b>, subindo para <b>${this.unguardedBf}%</b> contra um alvo sem nenhum efeito positivo e sem escudo.`,
+        pt: `Silas nunca tem pressa no trabalho, porque apressá-lo nunca foi necessário: ele espera o instante em que nada mais protege o alvo escolhido, e golpeia exatamente aí. Causa dano físico igual a <b>${this.bf}%</b> do seu <b>Ataque</b>, subindo para <b>${this.unguardedBf}%</b> contra um alvo sem nenhum efeito positivo e sem escudo.`,
       };
     },
 
@@ -122,7 +122,7 @@ const silasSkills = [
     description() {
       return {
         en: `Silas has never once believed a barrier was anything but glass somebody paid too much for, and he collects on that opinion. When the strike connects, every regular or spell <b>Shield</b> on the chosen target shatters before the blade bites; the strike then deals physical damage and takes the cost out of their player's score — <b>${this.shieldedToll}</b> points if there was glass to break, <b>${this.barefacedToll}</b> if there was not, and never more than that player actually has.`,
-        pt: `Silas nunca acreditou que uma barreira fosse algo além de vidro pelo qual alguém pagou caro demais, e ele cobra essa opinião. Quando o golpe acerta, todo <b>Escudo</b> normal ou mágico no alvo escolhido se estilhaça antes da lâmina morder; o golpe então causa dano físico e retira o custo da pontuação do jogador adversário — <b>${this.shieldedToll}</b> pontos se havia vidro a quebrar, <b>${this.barefacedToll}</b> se não havia, nunca mais do que aquele jogador de fato possui.`,
+        pt: `Silas nunca acreditou que uma barreira fosse algo além de vidro caro demais, e ele cobra a conta. Quando o golpe acerta, todo <b>Escudo</b> normal ou mágico do alvo escolhido se estilhaça antes da lâmina morder; o golpe então causa dano físico e desconta o custo direto da pontuação do adversário — <b>${this.shieldedToll}</b> pontos se havia vidro para quebrar, <b>${this.barefacedToll}</b> se não havia, nunca mais do que aquele jogador realmente possui.`,
       };
     },
 
@@ -210,7 +210,7 @@ const silasSkills = [
     description() {
       return {
         en: `Silas steps once to the side, opens the chosen target on the way past, and something steps out of the motion wearing his face and keeping his silence. Deals physical damage equal to <b>${this.bf}%</b> of his <b>Attack</b>. At the start of the next turn a second Silas takes the field, and the enemy player is given no way at all to tell which of the two is the man; while the double stands, Silas takes <b>${this.damageReduction}%</b> less damage. It never acts, comes apart the moment anything reaches it, and is gone by the end of the next turn Silas acts.`,
-        pt: `Silas dá um único passo para o lado, abre o alvo escolhido de passagem, e algo emerge do movimento usando seu rosto e mantendo seu silêncio. Causa dano físico igual a <b>${this.bf}%</b> do seu <b>Ataque</b>. No início do turno seguinte, um segundo Silas entra em campo, e o jogador adversário não tem nenhuma forma de saber qual dos dois é o homem de verdade; enquanto o duplo estiver em pé, Silas recebe <b>${this.damageReduction}%</b> menos dano. Ele nunca age, se desfaz no instante em que qualquer coisa o alcança, e desaparece até o fim do próximo turno em que Silas agir.`,
+        pt: `Silas dá um único passo para o lado, corta o alvo escolhido de passagem, e algo sai daquele movimento com o rosto dele e o mesmo silêncio de sempre. Causa dano físico igual a <b>${this.bf}%</b> do seu <b>Ataque</b>. No início do turno seguinte, um segundo Silas entra em campo, e o jogador adversário não tem como saber qual dos dois é o homem de verdade; enquanto o sósia estiver em pé, Silas recebe <b>${this.damageReduction}%</b> menos dano. Ele nunca age, se desfaz no instante em que qualquer coisa o alcança, e some até o fim do próximo turno em que Silas agir.`,
       };
     },
 

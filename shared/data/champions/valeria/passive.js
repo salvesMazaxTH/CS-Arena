@@ -10,7 +10,10 @@ export default {
   dragonBonusDmgPercent: 20,
 
   description() {
-    return `Valeria answers every unearned gain. The first hit she lands after an enemy scores with CLAIM comes down as Judgment: guaranteed ${this.judgmentPiercingPercent}% piercing damage, plus ${this.judgmentBonusDmgPercent}% bonus damage. Dragonkind she has already taken the measure of once, and against it she deals a further ${this.dragonBonusDmgPercent}% bonus damage. Her wings never let the ground decide where she stands, so Root and Snare effects never take hold.`;
+    return {
+      en: `Valeria answers every unearned gain. The first hit she lands after an enemy scores with <b>CLAIM</b> comes down as Judgment: guaranteed <b>${this.judgmentPiercingPercent}%</b> <b>Piercing</b> damage, plus <b>${this.judgmentBonusDmgPercent}%</b> bonus damage. Dragonkind she has already taken the measure of once, and against it she deals a further <b>${this.dragonBonusDmgPercent}%</b> bonus damage. Her wings never let the ground decide where she stands, so <b>Rooted</b> and <b>Snared</b> effects never take hold on her.`,
+      pt: `Valeria cobra por todo ganho não merecido. O primeiro golpe que ela desfere depois de um inimigo pontuar com <b>CLAIM</b> cai como um Julgamento: <b>${this.judgmentPiercingPercent}%</b> de dano <b>Perfurante</b> garantido, mais <b>${this.judgmentBonusDmgPercent}%</b> de dano bônus. Contra dragões, que ela já mediu de perto uma vez, ela causa ainda mais <b>${this.dragonBonusDmgPercent}%</b> de dano bônus. Suas asas nunca deixam o chão decidir onde ela pisa, então os efeitos <b>Enraizado</b> e <b>Enredado</b> nunca a prendem.`,
+    };
   },
 
   hookScope: {

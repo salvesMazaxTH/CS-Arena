@@ -55,7 +55,10 @@ export default {
   thunderPercent: 55,
 
   description() {
-    return `Tony Raiturus is a storm wearing a boy, and the boy is always a little ahead of the storm. Every blow he lands splits: only ${this.flashPercent}% of it arrives as the flash, right away, while ${this.thunderPercent}% of it hangs over the target as thunder still on its way. At the start of his next turn all of it lands at once, plus ${THUNDER_FLAT_BONUS} bonus damage, and it cannot be evaded — the strike already happened, the sound is only catching up. If he falls first, the thunder arrives anyway.`;
+    return {
+      en: `Tony Raiturus is a storm wearing a boy, and the boy is always a little ahead of the storm. Every blow he lands splits: only <b>${this.flashPercent}%</b> of it arrives as the flash, right away, while <b>${this.thunderPercent}%</b> of it hangs over the target as thunder still on its way. At the start of his next turn all of it lands at once, plus <b>${THUNDER_FLAT_BONUS}</b> bonus damage, and it <b>cannot be evaded</b> — the strike already happened, the sound is only catching up. If he falls first, the thunder arrives anyway.`,
+      pt: `Tony Raiturus é uma tempestade vestindo a forma de um garoto, e o garoto está sempre um passo à frente da tempestade. Todo golpe que ele desfere se divide: apenas <b>${this.flashPercent}%</b> chega como o clarão, na hora, enquanto <b>${this.thunderPercent}%</b> fica pairando sobre o alvo como um trovão ainda a caminho. No início do turno seguinte dele, tudo isso desaba de uma vez, somado a <b>${THUNDER_FLAT_BONUS}</b> de dano bônus, e <b>não pode ser esquivado</b> — o golpe já aconteceu, o som é que está só chegando atrasado. Se ele cair antes, o trovão chega do mesmo jeito.`,
+    };
   },
 
   hookScope: {

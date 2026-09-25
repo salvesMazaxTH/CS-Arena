@@ -33,7 +33,10 @@ const tyrenSkills = [
     snareDuration: 2,
 
     description() {
-      return `Tyren shapes his liquid steel into a piercing lance, dealing Steel magical damage. The metal then ensnares the target for ${this.snareDuration} turn.`;
+      return {
+        en: `Tyren shapes his liquid steel into a piercing lance, dealing steel magical damage. The metal then leaves the target <b>Snared</b> for <b>${this.snareDuration}</b> turn(s).`,
+        pt: `Tyren molda seu aço líquido em uma lança perfurante, causando dano mágico de aço. O metal então deixa o alvo <b>Enredado</b> por <b>${this.snareDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -80,11 +83,18 @@ const tyrenSkills = [
     speedMultiplier: 0.5,
 
     description() {
-      return `Tyren transmutes his body into Living Steel for ${this.duration} turns.
+      return {
+        en: `Tyren transmutes his body into Living Steel for <b>${this.duration}</b> turns.
 
-        His Attack and Defense are inverted, then he gains +${this.attackBonus} Attack and +${this.defenseBonus} Defense. His Speed is reduced by ${Math.round((1 - this.speedMultiplier) * 100)}%.
+        His <b>Attack</b> and <b>Defense</b> are inverted, then he gains <b>+${this.attackBonus}</b> <b>Attack</b> and <b>+${this.defenseBonus}</b> <b>Defense</b>. His <b>Speed</b> is reduced by <b>${Math.round((1 - this.speedMultiplier) * 100)}%</b>.
 
-        Living Steel Aegis cannot be used again while its effect is active.`;
+        <b>Living Steel Aegis</b> cannot be used again while its effect is still active.`,
+        pt: `Tyren transmuta seu corpo em Aço Vivo por <b>${this.duration}</b> turnos.
+
+        Seu <b>Ataque</b> e sua <b>Defesa</b> se invertem, e então ele ganha <b>+${this.attackBonus}</b> de <b>Ataque</b> e <b>+${this.defenseBonus}</b> de <b>Defesa</b>. Sua <b>Velocidade</b> é reduzida em <b>${Math.round((1 - this.speedMultiplier) * 100)}%</b>.
+
+        <b>Transmutação de Aço Vivo</b> não pode ser usada novamente enquanto seu efeito ainda estiver ativo.`,
+      };
     },
 
     targetSpec: ["self"],
@@ -165,11 +175,18 @@ const tyrenSkills = [
     empoweredPercent: 35,
 
     description() {
-      return `Tyren unleashes a massive wave of living steel, dealing powerful Steel magical damage.
+      return {
+        en: `Tyren unleashes a massive wave of living steel, dealing powerful steel magical damage.
 
-      If the target is under Crowd Control, the metal violently crystallizes around them, dealing an additional ${this.empoweredPercent}% of this ability's base damage as bonus damage and extending their current Crowd Control by ${this.stunDuration} turn.
+        If the target is under crowd control, the metal violently crystallizes around them, dealing an additional <b>${this.empoweredPercent}%</b> of this ability's base damage as bonus damage and extending their current crowd control by <b>${this.stunDuration}</b> turn(s).
 
-      Otherwise, the target becomes Stunned for ${this.stunDuration} turn.`;
+        Otherwise, the target is <b>Stunned</b> for <b>${this.stunDuration}</b> turn(s).`,
+        pt: `Tyren libera uma onda massiva de aço vivo, causando poderoso dano mágico de aço.
+
+        Se o alvo estiver sob controle de grupo, o metal se cristaliza violentamente ao redor dele, causando <b>${this.empoweredPercent}%</b> adicionais do dano base desta habilidade como dano bônus e estendendo o controle de grupo atual em <b>${this.stunDuration}</b> turno(s).
+
+        Caso contrário, o alvo fica <b>Atordoado</b> por <b>${this.stunDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],

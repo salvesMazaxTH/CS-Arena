@@ -21,7 +21,10 @@ const theopetraSkills = [
     priority: 0,
 
     description() {
-      return `Theópetra closes in and strikes with her stone-forged body, dealing physical damage to the chosen target.`;
+      return {
+        en: `Theópetra closes in and strikes with her stone-forged body, dealing physical damage to the chosen target.`,
+        pt: `Theópetra avança e golpeia com seu corpo forjado em pedra, causando dano físico ao alvo escolhido.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -53,7 +56,10 @@ const theopetraSkills = [
     priority: 1,
 
     description() {
-      return `Theópetra plants her feet and lets the old stone answer in her place, raising her Defense by ${this.defenseBonusPercent}% for ${this.buffDuration} turn(s).`;
+      return {
+        en: `Theópetra plants her feet and lets the old stone answer in her place, raising her <b>Defense</b> by <b>${this.defenseBonusPercent}%</b> for <b>${this.buffDuration}</b> turn(s).`,
+        pt: `Theópetra crava os pés no chão e deixa a pedra antiga responder em seu lugar, aumentando sua <b>Defesa</b> em <b>${this.defenseBonusPercent}%</b> por <b>${this.buffDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["self"],
@@ -87,7 +93,10 @@ const theopetraSkills = [
     priority: 0,
 
     description() {
-      return `Theópetra commands the earth itself to pass judgment upon all enemies, dealing massive magical damage to them. This attack cannot be evaded.`;
+      return {
+        en: `Theópetra commands the earth itself to pass judgment upon all enemies, dealing massive magical damage to them. This attack <b>cannot be evaded</b>.`,
+        pt: `Theópetra convoca a própria terra para julgar todos os inimigos de uma vez, causando dano mágico devastador a todos eles. Este ataque <b>não pode ser esquivado</b>.`,
+      };
     },
 
     targetSpec: ["all:enemy"],

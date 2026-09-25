@@ -24,7 +24,10 @@ const valeriaSkills = [
     priority: 0,
 
     description() {
-      return `The impact alone knocks the fight out of most people — Valeria never even needs to swing twice. Deals physical damage and always Stuns the chosen target for ${this.stunDuration} turn(s).`;
+      return {
+        en: `The impact alone knocks the fight out of most people — Valeria never even needs to swing twice. Deals physical damage and always <b>Stuns</b> the chosen target for <b>${this.stunDuration}</b> turn(s).`,
+        pt: `O impacto sozinho já tira a vontade de lutar da maioria — Valeria nunca precisa golpear duas vezes. Causa dano físico e sempre <b>Atordoa</b> o alvo escolhido por <b>${this.stunDuration}</b> turno(s).`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -66,7 +69,10 @@ const valeriaSkills = [
     priority: 0,
 
     description() {
-      return `No half-measures, no mitigating circumstances — just the full weight of the hammer arriving at once. Deals physical damage.`;
+      return {
+        en: `No half-measures, no mitigating circumstances — just the full weight of the hammer arriving all at once. Deals physical damage.`,
+        pt: `Sem meio-termo, sem atenuantes — só o peso inteiro do martelo chegando de uma vez. Causa dano físico.`,
+      };
     },
 
     targetSpec: ["enemy"],
@@ -101,7 +107,10 @@ const valeriaSkills = [
     priority: 0,
 
     description() {
-      return `The same blow that put a dragon in the dirt, brought down now on someone far less legendary. Deals physical damage, with ${this.piercingPercentage}% of it guaranteed to go through as piercing damage, Defense be damned.`;
+      return {
+        en: `The same blow that put a dragon in the dirt, brought down now on someone far less legendary. Deals physical damage, with <b>${this.piercingPercentage}%</b> of it guaranteed to go through as <b>Piercing</b> damage, <b>Defense</b> be damned.`,
+        pt: `O mesmo golpe que derrubou um dragão, agora descendo sobre alguém bem menos lendário. Causa dano físico, com <b>${this.piercingPercentage}%</b> dele garantido a atravessar como dano <b>Perfurante</b>, dane-se a <b>Defesa</b>.`,
+      };
     },
 
     targetSpec: ["enemy"],

@@ -6,7 +6,10 @@ export default {
   name: "Unyielding",
 
   description() {
-    return `Can only take direct damage from skills. Damage over time and indirect effects do not affect him. Additionally, Torren takes 10% less damage from all sources (except Absolute Damage).`;
+    return {
+      en: `Torren can only take direct damage from skills — damage over time and other indirect effects do not affect him. He also takes <b>10%</b> less damage from all sources, except <b>Absolute Damage</b>.`,
+      pt: `Torren só pode sofrer dano direto de habilidades — dano ao longo do tempo e outros efeitos indiretos não o afetam. Ele também sofre <b>10%</b> a menos de dano de qualquer fonte, exceto <b>Dano Absoluto</b>.`,
+    };
   },
 
   hookScope: {

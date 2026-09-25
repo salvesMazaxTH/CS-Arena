@@ -10,9 +10,14 @@ export default {
   claimPoisonStacks: 2,
 
   description() {
-    return `Tox Vipranna absorbs the venom released by Poisoned targets, restoring ${this.healPercent}% of the damage dealt by Poisoned to her HP.
+    return {
+      en: `Tox Vipranna absorbs the venom released by <b>Poisoned</b> targets, restoring <b>${this.healPercent}%</b> of the damage dealt by <b>Poisoned</b> to her own <b>HP</b>.
 
-    When she uses CLAIM, ${this.claimPoisonStacks} stacks of Poisoned scatter at random across the enemy line — both may land on one foe or one on each.`;
+      Whenever she uses <b>CLAIM</b>, <b>${this.claimPoisonStacks}</b> stacks of <b>Poisoned</b> scatter at random across the enemy line — both may land on the same foe or one on each.`,
+      pt: `Tox Vipranna absorve o veneno liberado por alvos <b>Envenenados</b>, restaurando <b>${this.healPercent}%</b> do dano causado pelo <b>Envenenado</b> ao seu próprio <b>HP</b>.
+
+      Sempre que usa <b>CLAIM</b>, <b>${this.claimPoisonStacks}</b> acúmulos de <b>Envenenado</b> se espalham aleatoriamente pela linha inimiga — os dois podem cair no mesmo alvo ou um em cada.`,
+    };
   },
 
   hookScope: {

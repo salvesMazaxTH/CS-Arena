@@ -8,9 +8,10 @@ export default {
   piercingRatio: 0.4, // 40% of the damage becomes Piercing
 
   description() {
-    return `Every blow that lands on Theópetra only packs the old stone tighter: she gains 1 stack whenever she is struck (max ${this.maxStacks}). Upon reaching ${this.maxStacks} stacks, her next ability deals +${this.bonusPercent}% bonus damage and becomes Piercing (${this.piercingRatio * 100}% Piercing), then all stacks are consumed.
-
-    Nothing moves her against her will, so she is immune to crowd control.`;
+    return {
+      en: `Every blow that lands on Theópetra only packs the old stone tighter: she gains <b>1</b> stack whenever she is struck, up to <b>${this.maxStacks}</b>. Once she reaches <b>${this.maxStacks}</b> stacks, her next ability deals <b>+${this.bonusPercent}%</b> bonus damage, with <b>${this.piercingRatio * 100}%</b> of it ignoring the target's Defense, then every stack is spent. Nothing moves her against her will — she is immune to crowd control.`,
+      pt: `Cada golpe que acerta Theópetra só compacta ainda mais a pedra antiga: ela ganha <b>1</b> acúmulo sempre que é atingida, até o limite de <b>${this.maxStacks}</b>. Ao alcançar <b>${this.maxStacks}</b> acúmulos, sua próxima habilidade causa <b>+${this.bonusPercent}%</b> de dano bônus, com <b>${this.piercingRatio * 100}%</b> disso ignorando a Defesa do alvo, e todos os acúmulos são gastos em seguida. Nada a move contra a própria vontade — ela é imune a controle de grupo.`,
+    };
   },
 
   hookScope: {

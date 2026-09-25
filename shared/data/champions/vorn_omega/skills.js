@@ -36,7 +36,10 @@ const vornOmegaSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `VØRN Ω lets the long arm fall the way a bridge falls, without hurry and without any particular malice toward what is under it. Deals physical damage equal to ${this.bf}% of his Attack, plus ${this.bfPerPlate}% for every plate he has already shed.`;
+      return {
+        en: `VØRN Ω lets the long arm fall the way a bridge falls, without hurry and without any particular malice toward what is under it. Deals physical damage equal to <b>${this.bf}%</b> of his <b>Attack</b>, plus <b>${this.bfPerPlate}%</b> for every plate he has already shed.`,
+        pt: `VØRN Ω deixa o braço comprido cair como uma ponte desaba, sem pressa e sem malícia particular por aquilo que está embaixo. Causa dano físico igual a <b>${this.bf}%</b> do seu <b>Ataque</b>, mais <b>${this.bfPerPlate}%</b> para cada placa que ele já perdeu.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -76,7 +79,10 @@ const vornOmegaSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `VØRN Ω closes a hand around the chosen target and holds it the way his makers once held a part they had decided not to keep. Deals physical damage and afflicts them with Heal Block for ${this.healBlockDuration} turns — whatever was mending them stops, the way it stopped for him.`;
+      return {
+        en: `VØRN Ω closes a hand around the chosen target and holds it the way his makers once held a part they had decided not to keep. Deals physical damage and afflicts them with <b>Heal Block</b> for <b>${this.healBlockDuration}</b> turns — whatever was mending them stops, the way it stopped for him.`,
+        pt: `VØRN Ω fecha a mão em torno do alvo escolhido e o segura como seus criadores um dia seguraram uma peça que decidiram não manter. Causa dano físico e aflige-o com <b>Bloqueio de Cura</b> por <b>${this.healBlockDuration}</b> turnos — o que quer que o estivesse curando para, do mesmo jeito que parou para ele.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -129,7 +135,10 @@ const vornOmegaSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `VØRN Ω opens the core he was built around, which is the one thing his makers told him never to do, and there is nobody left to tell him again. Every plate still on him comes off at once. Deals physical damage equal to ${this.bf}% of his Attack, plus ${this.bfPerPlate}% for every plate he had already thrown off before opening — a machine that waited is a heavier one. No elemental resistance turns the core aside.`;
+      return {
+        en: `VØRN Ω opens the core he was built around, which is the one thing his makers told him never to do, and there is nobody left to tell him again. Every plate still on him comes off at once. Deals physical damage equal to <b>${this.bf}%</b> of his <b>Attack</b>, plus <b>${this.bfPerPlate}%</b> for every plate he had already thrown off before opening — a machine that waited is a heavier one. No elemental resistance turns the core aside.`,
+        pt: `VØRN Ω abre o núcleo em torno do qual foi construído, a única coisa que seus criadores disseram para ele nunca fazer, e não sobrou ninguém para dizer de novo. Toda placa que ainda estava nele se solta de uma vez. Causa dano físico igual a <b>${this.bf}%</b> do seu <b>Ataque</b>, mais <b>${this.bfPerPlate}%</b> para cada placa que ele já havia perdido antes de abrir o núcleo — uma máquina que esperou é uma máquina mais pesada. Nenhuma resistência elemental desvia o núcleo.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {

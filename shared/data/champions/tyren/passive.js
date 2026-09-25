@@ -11,15 +11,26 @@ export default {
   piercingPercentage: 30,
 
   description() {
-    return `Tyren's Living Steel adapts to the nature of the force that strikes him.
+    return {
+      en: `Tyren's Living Steel adapts to the nature of the force that strikes him.
 
-    The first time each turn Tyren is struck, his body automatically restructures itself in response to the impact, granting a shield equal to ${this.shieldPercent}% of the damage received.
+      The first time each turn he is struck, his body automatically restructures itself in response to the impact, granting a <b>Shield</b> equal to <b>${this.shieldPercent}%</b> of the damage received.
 
-    Physical Damage causes his steel to harden, granting a regular Shield and empowering his next damaging attack to deal ${this.bonusDamagePercent}% increased damage.
+      Physical damage hardens his steel, granting a regular <b>Shield</b> and empowering his next damaging attack to deal <b>${this.bonusDamagePercent}%</b> increased damage.
 
-    Magical Damage causes his steel to resonate with the incoming energy, granting a Spellshield and causing his next damaging ability to ignore ${this.piercingPercentage}% of the target's Defense.
+      Magical damage makes his steel resonate with the incoming energy, granting a <b>Spellshield</b> and causing his next damaging ability to ignore <b>${this.piercingPercentage}%</b> of the target's <b>Defense</b>.
 
-    Each offensive adaptation is consumed when Tyren next deals damage.`;
+      Each offensive adaptation is consumed the next time Tyren deals damage.`,
+      pt: `O Aço Vivo de Tyren se adapta à natureza da força que o atinge.
+
+      Na primeira vez que é atingido a cada turno, seu corpo se reestrutura automaticamente em resposta ao impacto, concedendo um <b>Escudo</b> igual a <b>${this.shieldPercent}%</b> do dano recebido.
+
+      Dano físico endurece seu aço, concedendo um <b>Escudo</b> comum e fortalecendo seu próximo ataque que causar dano, fazendo-o causar <b>${this.bonusDamagePercent}%</b> a mais de dano.
+
+      Dano mágico faz seu aço ressoar com a energia recebida, concedendo um <b>Escudo Mágico</b> e fazendo sua próxima habilidade que causar dano ignorar <b>${this.piercingPercentage}%</b> da <b>Defesa</b> do alvo.
+
+      Cada adaptação ofensiva é consumida na próxima vez que Tyren causar dano.`,
+    };
   },
 
   hookScope: {
