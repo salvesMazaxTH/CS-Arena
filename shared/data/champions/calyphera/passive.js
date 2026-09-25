@@ -4,6 +4,7 @@ export const DAMAGE_PER_FACET = 200;
 const MAX_FACETS = 8;
 const BONUS_PER_FACET = 5;
 const TRANSFIGURED_BONUS_PER_FACET = 10;
+const PASSIVE_NAME = "Every Crack a Window";
 
 export function accrueLight(owner, amount, context) {
   if (!(amount > 0)) return [];
@@ -25,11 +26,13 @@ export function accrueLight(owner, amount, context) {
 
   owner.runtime.calypheraFacets = after;
 
+  const name = formatChampionName(owner);
   const logs = [
     {
-      log: `<b>[Passive — Second Sutra: Every Crack a Window]</b> ${formatChampionName(
-        owner,
-      )} takes ${after - before} new Facet(s) (${after}/${MAX_FACETS}).`,
+      log: {
+        en: `<b>[Passive — ${PASSIVE_NAME}]</b> ${name} takes ${after - before} new Facet(s) (${after}/${MAX_FACETS}).`,
+        pt: `<b>[Passiva — ${PASSIVE_NAME}]</b> ${name} ganha ${after - before} nova(s) Faceta(s) (${after}/${MAX_FACETS}).`,
+      },
     },
   ];
 
@@ -38,22 +41,26 @@ export function accrueLight(owner, amount, context) {
   owner.runtime.calypheraTransfigured = true;
 
   context?.registerDialog?.({
-    message: `${formatChampionName(owner)} finishes breaking, and the light goes all the way through.`,
+    message: {
+      en: `${name} finishes breaking, and the light goes all the way through.`,
+      pt: `${name} termina de se partir, e a luz a atravessa por inteiro.`,
+    },
     sourceId: owner.id,
   });
 
   logs.push({
-    log: `<b>[Passive — Second Sutra: Every Crack a Window]</b> The last Facet opens. ${formatChampionName(
-      owner,
-    )} is a window now — every Facet is worth ${TRANSFIGURED_BONUS_PER_FACET}% and the fist has nothing left to break.`,
+    log: {
+      en: `<b>[Passive — ${PASSIVE_NAME}]</b> The last Facet opens. ${name} is a window now — every Facet is worth ${TRANSFIGURED_BONUS_PER_FACET}% and the fist has nothing left to break.`,
+      pt: `<b>[Passiva — ${PASSIVE_NAME}]</b> A última Faceta se abre. ${name} agora é uma janela — cada Faceta vale ${TRANSFIGURED_BONUS_PER_FACET}% e o punho não tem mais nada para quebrar.`,
+    },
   });
 
   return logs;
 }
 
 export default {
-  key: "second_sutra_every_crack_a_window",
-  name: "Second Sutra: Every Crack a Window",
+  key: "every_crack_a_window",
+  name: PASSIVE_NAME,
 
   damagePerFacet: DAMAGE_PER_FACET,
   maxFacets: MAX_FACETS,
@@ -68,14 +75,14 @@ export default {
     return {
       en: `Calyphera was given a body of glass and told to carry it kneeling, and every blow of the long fight writes another line of light through her. Every <b>${this.damagePerFacet}</b> damage she accumulates, dealt or suffered, cuts one more <b>Facet</b> into her (Max: <b>${this.maxFacets}</b>). Each <b>Facet</b> she carries raises the damage she deals by <b>${this.bonusPerFacet}%</b>.
 
-    Glass answers the fist more readily than the word: she takes <b>${this.physicalVulnerabilityPercent}%</b> more physical damage.
+    Glass answers the fist more readily than the word: she takes <b>${this.physicalVulnerabilityPercent}%</b> more physical damage, except <b>Absolute Damage</b>.
 
     The <b>${this.maxFacets}th Facet</b> finishes her, once per match and for good: every <b>Facet</b> is worth <b>${this.transfiguredBonusPerFacet}%</b> instead, and there is no longer anything solid in her for a physical blow to find.
 
     <b>Current Facets: ${facets}/${this.maxFacets}${transfigured ? " — Transfigured" : ""}</b>`,
       pt: `Calyphera recebeu um corpo de vidro e a ordem de carregá-lo ajoelhada, e cada golpe da longa luta grava outra linha de luz através dela. A cada <b>${this.damagePerFacet}</b> de dano acumulado, causado ou sofrido, mais uma <b>Faceta</b> se abre nela (Máx.: <b>${this.maxFacets}</b>). Cada <b>Faceta</b> que carrega eleva em <b>${this.bonusPerFacet}%</b> o dano que causa.
 
-    O vidro responde ao punho com mais facilidade do que à palavra: ela sofre <b>${this.physicalVulnerabilityPercent}%</b> a mais de dano físico.
+    O vidro responde ao punho com mais facilidade do que à palavra: ela sofre <b>${this.physicalVulnerabilityPercent}%</b> a mais de dano físico, exceto <b>Dano Absoluto</b>.
 
     A <b>${this.maxFacets}ª Faceta</b> a completa, uma vez por partida e para sempre: cada <b>Faceta</b> passa a valer <b>${this.transfiguredBonusPerFacet}%</b>, e não resta mais nada sólido nela para um golpe físico encontrar.
 
@@ -91,22 +98,22 @@ export default {
   },
 
   hookPolicies: {
-    onAfterDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
+    onAfterDmgTaking: { allowOnNestedDamage: true },
+    onAfterDmgDealing: { allowOnNestedDamage: true },
     onBeforeDmgTaking: { allowOnAbsolute: true },
   },
 
   onBeforeDmgTaking({ owner, type, damage, mode }) {
     if (type !== "physical") return;
     if (owner.runtime?.calypheraTransfigured) return { damage: 0 };
-    // Absolute never carried the glass-body vulnerability before this policy
-    // opted the hook into absolute hits; keep that untouched pre-Transfigured.
+    // Absolute hits skip the glass-body vulnerability.
     if (mode === "absolute") return;
     return { damage: damage * (1 + this.physicalVulnerabilityPercent / 100) };
   },
 
-  onAfterDmgTaking({ owner, attacker, actualDmg, context }) {
-    if (attacker === owner || !(actualDmg > 0)) return;
-    return accrueLight(owner, actualDmg, context);
+  onAfterDmgTaking({ owner, attacker, damage, context }) {
+    if (attacker === owner || !(damage > 0)) return;
+    return accrueLight(owner, damage, context);
   },
 
   onAfterDmgDealing({ owner, defender, damage, context }) {
