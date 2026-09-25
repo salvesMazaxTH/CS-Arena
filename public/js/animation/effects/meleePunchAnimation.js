@@ -1,5 +1,6 @@
-// Kai's close-range punch (quick_hook, blazing_fist_barrage): Three.js + bloom
-// in the shared #webgl-container. The ultimate throws a bigger, much faster hit.
+// Close-range fire punch: Kai's quick_hook and blazing_fist_barrage, plus the shared
+// fire_punch motif. Three.js + bloom in the shared #webgl-container. The ultimate
+// throws a bigger, much faster hit.
 
 import { getElementCenter } from "../core/animationUtils.js";
 

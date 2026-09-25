@@ -160,7 +160,7 @@ registerSkillAnimation("default_arcane_bolt", createArcaneBoltGL(1));
 registerSkillAnimation("default_arcane_bolt_big", createArcaneBoltGL(1.4));
 registerSkillAnimation("quick_hook", playMeleePunch);
 registerSkillAnimation("blazing_fist_barrage", playMeleePunch);
-registerSkillAnimation("solar_fist", playMeleePunch);
+registerSkillAnimation("default_fire_punch", playMeleePunch);
 registerSkillAnimation("knuckle_flare", playRonanPunch);
 registerSkillAnimation("say_that_again", playRonanPunch);
 registerSkillAnimation("ignisars_temper", createClaw(CLAW_PALETTES.dragon));

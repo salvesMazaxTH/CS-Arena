@@ -1,5 +1,7 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
+export const STORED_HEAT_RUNTIME_FLAG = "victoriaStoredHeat";
+
 export default {
   key: "flashpoint",
   name: "Flashpoint",
@@ -9,9 +11,9 @@ export default {
   comboChance: 25,
   burningComboBonus: 25,
   brandPiercing: 50,
-  rebirthThreshold: 0.35,
+  rebirthHpPercent: 35,
   rebirthAttackPercent: 20,
-  rebirthShieldRatio: 1.2,
+  rebirthShieldPercent: 120,
   rebirthComboBonus: 25,
 
   description(champion) {
@@ -24,8 +26,8 @@ export default {
       : this.comboChance;
 
     return {
-      en: `Fire answers Victoria before she asks. Whenever she damages a Burning enemy she banks <b>${heatPercent}%</b> of the damage dealt as heat, up to <b>${this.emberHeatCap}</b>, and the Phoenix Aegis is what turns that heat into a <b>Shield</b>. After any action of hers that deals damage, she has a <b>${base}%</b> chance to come back at the same enemy with her Basic Strike, rising to <b>${base + this.burningComboBonus}%</b> if that enemy is Burning. The first time she is driven to <b>${this.rebirthThreshold * 100}%</b> <b>HP</b> or below, the phoenix in her wakes: she permanently gains <b>+${this.rebirthAttackPercent}%</b> <b>Attack</b>, is wrapped in a <b>Shield</b> worth <b>${this.rebirthShieldRatio * 100}%</b> of her <b>Defense</b>, and from then on banks twice the heat and adds <b>+${this.rebirthComboBonus}</b> percentage points to both of those chances.`,
-      pt: `O fogo responde a Victoria antes mesmo de ela pedir. Sempre que causa dano a um inimigo <b>Queimando</b>, ela acumula <b>${heatPercent}%</b> do dano causado como calor, até um máximo de <b>${this.emberHeatCap}</b>, e é o Égide da Fênix que transforma esse calor em <b>Escudo</b>. Após qualquer ação sua que cause dano, ela tem <b>${base}%</b> de chance de voltar contra o mesmo inimigo com seu Golpe Básico, chance que sobe para <b>${base + this.burningComboBonus}%</b> se aquele inimigo estiver <b>Queimando</b>. Na primeira vez em que for reduzida a <b>${this.rebirthThreshold * 100}%</b> de <b>HP</b> ou menos, a fênix nela desperta: ganha permanentemente <b>+${this.rebirthAttackPercent}%</b> de <b>Ataque</b>, é envolta por um <b>Escudo</b> equivalente a <b>${this.rebirthShieldRatio * 100}%</b> de sua <b>Defesa</b>, e passa a acumular o dobro de calor e a somar <b>+${this.rebirthComboBonus}</b> pontos percentuais a ambas as chances.`,
+      en: `Fire answers Victoria before she asks. Whenever she damages a <b>Burning</b> enemy she banks <b>${heatPercent}%</b> of the damage dealt as heat, up to <b>${this.emberHeatCap}</b>, and the <b>Phoenix Aegis</b> is what turns that heat into a <b>Shield</b>. After any action of hers that deals damage, she has a <b>${base}%</b> chance to come back at the same enemy with her <b>Basic Strike</b>, rising to <b>${base + this.burningComboBonus}%</b> if that enemy is <b>Burning</b>. The first time she is driven to <b>${this.rebirthHpPercent}%</b> <b>HP</b> or below, the phoenix in her wakes: she permanently gains <b>+${this.rebirthAttackPercent}%</b> <b>Attack</b>, is wrapped in a <b>Shield</b> worth <b>${this.rebirthShieldPercent}%</b> of her <b>Defense</b>, and from then on banks twice the heat and adds <b>+${this.rebirthComboBonus}</b> percentage points to both of those chances.`,
+      pt: `O fogo responde a Victoria antes mesmo de ela pedir. Sempre que causa dano a um inimigo <b>Queimando</b>, ela acumula <b>${heatPercent}%</b> do dano causado como calor, até um máximo de <b>${this.emberHeatCap}</b>, e é a <b>Égide da Fênix</b> que transforma esse calor em <b>Escudo</b>. Após qualquer ação sua que cause dano, ela tem <b>${base}%</b> de chance de voltar contra o mesmo inimigo com seu <b>Golpe Básico</b>, chance que sobe para <b>${base + this.burningComboBonus}%</b> se aquele inimigo estiver <b>Queimando</b>. Na primeira vez em que for reduzida a <b>${this.rebirthHpPercent}%</b> de <b>HP</b> ou menos, a fênix nela desperta: ganha permanentemente <b>+${this.rebirthAttackPercent}%</b> de <b>Ataque</b>, é envolta por um <b>Escudo</b> equivalente a <b>${this.rebirthShieldPercent}%</b> de sua <b>Defesa</b>, e passa a acumular o dobro de calor e a somar <b>+${this.rebirthComboBonus}</b> pontos percentuais a ambas as chances.`,
     };
   },
 
@@ -56,8 +58,8 @@ export default {
       mode: "piercing",
       piercingPercentage: this.brandPiercing,
       log: {
-        en: `<b>[Passive — ${this.name}]</b> The brand on ${formatChampionName(defender)} opens up for Victoria's fist.`,
-        pt: `<b>[Passiva — ${this.name}]</b> A marca em ${formatChampionName(defender)} se abre para o punho de Victoria.`,
+        en: `<b>[Passive — ${this.name}]</b> The brand on ${formatChampionName(defender)} opens up for ${formatChampionName(owner)}'s fist.`,
+        pt: `<b>[Passiva — ${this.name}]</b> A marca em ${formatChampionName(defender)} se abre para o punho de ${formatChampionName(owner)}.`,
       },
     };
   },
@@ -72,18 +74,18 @@ export default {
     const gained = Math.round((Number(damage) * percent) / 100);
     if (gained <= 0) return;
 
-    const stored = Number(owner.runtime.victoriaStoredHeat) || 0;
+    const stored = Number(owner.runtime[STORED_HEAT_RUNTIME_FLAG]) || 0;
     if (stored >= this.emberHeatCap) return;
 
-    owner.runtime.victoriaStoredHeat = Math.min(
+    owner.runtime[STORED_HEAT_RUNTIME_FLAG] = Math.min(
       this.emberHeatCap,
       stored + gained,
     );
 
     return {
       log: {
-        en: `<b>[Passive — ${this.name}]</b> Victoria banks ${owner.runtime.victoriaStoredHeat - stored} heat from the fire on ${formatChampionName(defender)}.`,
-        pt: `<b>[Passiva — ${this.name}]</b> Victoria acumula ${owner.runtime.victoriaStoredHeat - stored} de calor do fogo em ${formatChampionName(defender)}.`,
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} banks ${owner.runtime[STORED_HEAT_RUNTIME_FLAG] - stored} heat from the fire on ${formatChampionName(defender)}.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} acumula ${owner.runtime[STORED_HEAT_RUNTIME_FLAG] - stored} de calor do fogo em ${formatChampionName(defender)}.`,
       },
     };
   },
@@ -91,7 +93,7 @@ export default {
   onAfterDmgTaking({ owner, actualDmg, context }) {
     if (!(actualDmg > 0) || !owner.alive) return;
     if (owner.runtime.victoriaReborn) return;
-    if (owner.HP > owner.maxHP * this.rebirthThreshold) return;
+    if (owner.HP > (owner.maxHP * this.rebirthHpPercent) / 100) return;
 
     owner.runtime.victoriaReborn = true;
 
@@ -105,14 +107,14 @@ export default {
     });
 
     owner.addShield(
-      Math.round(owner.Defense * this.rebirthShieldRatio),
+      Math.round((owner.Defense * this.rebirthShieldPercent) / 100),
       0,
       context,
       "regular",
       { visualVariant: "fire" },
     );
 
-    context.registerDialog({
+    context.registerDialog?.({
       message: {
         en: `${formatChampionName(owner)} burns brighter the closer she gets to going out.`,
         pt: `${formatChampionName(owner)} queima mais forte quanto mais perto está de se apagar.`,
@@ -152,10 +154,10 @@ export default {
 
     if (Math.random() * 100 >= chance) return;
 
-    context.registerDialog({
+    context.registerDialog?.({
       message: {
-        en: `<b>[Passive – "${this.name}"]</b> Victoria is already stepping back in.`,
-        pt: `<b>[Passiva – "${this.name}"]</b> Victoria já está avançando de novo.`,
+        en: `${formatChampionName(owner)} is already stepping back in.`,
+        pt: `${formatChampionName(owner)} já está avançando de novo.`,
       },
       sourceId: owner.id,
       targetId: target.id,
@@ -168,16 +170,5 @@ export default {
       priority: 0,
       speed: owner.Speed ?? 0,
     };
-  },
-
-  onTurnStart({ owner, context }) {
-    const turn = context?.currentTurn ?? 0;
-
-    for (const champion of context?.allChampions?.values?.() ?? []) {
-      const until = champion?.runtime?.victoriaEmberBrandUntilTurn;
-      if (until !== undefined && !(until > turn)) {
-        delete champion.runtime.victoriaEmberBrandUntilTurn;
-      }
-    }
   },
 };
