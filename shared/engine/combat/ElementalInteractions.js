@@ -4,9 +4,9 @@ import { formatChampionName } from "../../ui/formatters.js";
 // Reactions between an element and a status effect of an opposing one.
 export class ElementalInteractions {
   // Reaction damage, as a percentage of the target's max HP.
-  static SHATTER_MAXHP_PERCENT = 4;
-  static VAPORIZE_MAXHP_PERCENT = 7.5;
-  static ELECTROCUTE_MAXHP_PERCENT = 2.5;
+  static SHATTER_MAXHP_PERCENT = 8;
+  static VAPORIZE_MAXHP_PERCENT = 10;
+  static ELECTROCUTE_MAXHP_PERCENT = 8;
 
   // Statuses that cannot coexist: either one landing on the other vaporizes both.
   static OPPOSING_STATUSES = { burning: "frozen", frozen: "burning" };
