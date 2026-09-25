@@ -32,8 +32,8 @@ const thalvaressaSkills = [
 
     description() {
       return {
-        en: `A vine uncoils from Thálvaressa's canopy and snaps across the chosen target, dealing <b>magical damage</b> and taking root around their legs, leaving them <b>Rooted</b> for <b>${this.rootDuration}</b> turn(s).`,
-        pt: `Um cipó se desenrola da copa de Thálvaressa e estala sobre o alvo escolhido, causando <b>dano mágico</b> e criando raízes ao redor de suas pernas, deixando-o <b>Enraizado</b> por <b>${this.rootDuration}</b> turno(s).`,
+        en: `A vine uncoils from Thálvaressa's canopy and snaps across the chosen target, taking root around their legs and leaving them <b>Rooted</b> for <b>${this.rootDuration}</b> turn(s). Deals magical damage.`,
+        pt: `Um cipó se desenrola da copa de Thálvaressa e estala sobre o alvo escolhido, criando raízes ao redor de suas pernas e deixando-o <b>Enraizado</b> por <b>${this.rootDuration}</b> turno(s). Causa dano mágico.`,
       };
     },
 
@@ -52,14 +52,15 @@ const thalvaressaSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
+      const results = Array.isArray(result) ? result : [result];
 
-      if (effectConnected(result, "rooted")) {
+      if (effectConnected(results[0], "rooted")) {
         enemy.applyStatusEffect("rooted", this.rootDuration, context, {
           sourceId: user.id,
         });
       }
 
-      return result;
+      return results;
     },
   },
 
@@ -106,7 +107,7 @@ const thalvaressaSkills = [
           )}: <b>${this.damageReduction}%</b> less damage taken for <b>${this.wardDuration}</b> turn(s)${
             cleansed ? `, <b>${cleansed.name}</b> torn off` : ""
           }.`,
-          pt: `${formatChampionName(user)} fecha o <b>Manto de Espinheiros</b> ao redor de ${formatChampionName(
+          pt: `${formatChampionName(user)} fecha o <b>Bramble Ward</b> ao redor de ${formatChampionName(
             ally,
           )}: <b>${this.damageReduction}%</b> menos dano recebido por <b>${this.wardDuration}</b> turno(s)${
             cleansed ? `, <b>${cleansed.name}</b> arrancado` : ""
@@ -117,9 +118,12 @@ const thalvaressaSkills = [
   },
 
   {
-    key: "mother_earths_protection",
-    name: "Mother Earth's Protection",
+    key: "mother_earths_embrace",
+    name: "Mother Earth's Embrace",
 
+    bf: 25,
+    damageMode: "piercing",
+    piercingPercentage: 100,
     healPerTurn: 45,
     auraDuration: 3,
     cleanseCount: 2,
@@ -131,25 +135,41 @@ const thalvaressaSkills = [
     isUltimate: true,
     momentumCost: 55,
 
-    priority: 5,
+    priority: 2,
 
     description() {
       return {
-        en: `Thálvaressa calls Mother Earth's protection down over her whole team, herself included, tearing up to <b>${this.cleanseCount}</b> <b>negative status effects</b> off each of them. For <b>${this.auraDuration}</b> turn(s), everyone under it takes <b>${this.damageReduction}%</b> less damage and restores <b>${this.healPerTurn}</b> HP at the start of each turn — the healing alone never reaches Thálvaressa.`,
-        pt: `Thálvaressa invoca a proteção da Mãe Terra sobre todo o seu time, ela inclusa, arrancando de cada um até <b>${this.cleanseCount}</b> <b>efeitos de status negativos</b>. Por <b>${this.auraDuration}</b> turno(s), todos sob ela recebem <b>${this.damageReduction}%</b> menos dano e restauram <b>${this.healPerTurn}</b> de HP no início de cada turno — só a cura é que nunca alcança Thálvaressa.`,
+        en: `Thálvaressa calls Mother Earth's embrace down over her whole team, herself included, tearing up to <b>${this.cleanseCount}</b> <b>negative status effects</b> off each of them. For <b>${this.auraDuration}</b> turn(s), everyone under it takes <b>${this.damageReduction}%</b> less damage and restores <b>${this.healPerTurn}</b> <b>HP</b> at the start of each turn — the healing alone never reaches Thálvaressa. Beneath every enemy, the same embrace tightens into roots breaking through the ground, dealing light magical <b>Piercing damage</b>.`,
+        pt: `Thálvaressa invoca o abraço da Mãe Terra sobre todo o seu time, ela inclusa, arrancando de cada um até <b>${this.cleanseCount}</b> <b>efeitos de status negativos</b>. Por <b>${this.auraDuration}</b> turno(s), todos sob ele recebem <b>${this.damageReduction}%</b> menos dano e restauram <b>${this.healPerTurn}</b> de <b>HP</b> no início de cada turno — só a cura é que nunca alcança Thálvaressa. Sob cada inimigo, esse mesmo abraço se fecha em raízes que rompem o chão, causando um leve <b>dano Perfurante</b> mágico.`,
       };
     },
 
-    targetSpec: ["all:ally"],
+    targetSpec: ["all"],
 
     resolve({ user, targets, context }) {
       const { healPerTurn } = this;
       const key = this.key;
+      const allies = targets.filter((target) => target.team === user.team);
+      const enemies = targets.filter((target) => target.team !== user.team);
+      const results = [];
 
-      for (const ally of targets) {
-        if (!ally.alive) continue;
-        if (ally.team !== user.team) continue;
+      for (const enemy of enemies) {
+        const result = new DamageEvent({
+          baseDamage: (user.Attack * this.bf) / 100,
+          attacker: user,
+          defender: enemy,
+          skill: this,
+          type: "magical",
+          mode: this.damageMode,
+          piercingPercentage: this.piercingPercentage,
+          context,
+          allChampions: context?.allChampions,
+        }).execute();
 
+        results.push(...(Array.isArray(result) ? result : [result]));
+      }
+
+      for (const ally of allies) {
         for (const debuff of ally
           .getStatusEffects({ type: "debuff" })
           .slice(0, this.cleanseCount)) {
@@ -164,7 +184,9 @@ const thalvaressaSkills = [
           context,
         });
 
-        ally.runtime.hookEffects ??= [];
+        // Her passive zeroes every heal on her, so the aura's heal hook skips her.
+        if (ally === user) continue;
+
         ally.runtime.hookEffects = ally.runtime.hookEffects.filter(
           (effect) => effect.key !== key,
         );
@@ -189,8 +211,8 @@ const thalvaressaSkills = [
 
               return {
                 log: {
-                  en: `<b>Mother Earth's Protection</b> restores <b>${healed}</b> HP to ${formatChampionName(owner)}.`,
-                  pt: `A <b>Proteção da Mãe Terra</b> restaura <b>${healed}</b> de HP a ${formatChampionName(owner)}.`,
+                  en: `<b>Mother Earth's Embrace</b> restores <b>${healed}</b> <b>HP</b> to ${formatChampionName(owner)}.`,
+                  pt: `<b>Mother Earth's Embrace</b> restaura <b>${healed}</b> de <b>HP</b> a ${formatChampionName(owner)}.`,
                 },
               };
             },
@@ -199,12 +221,14 @@ const thalvaressaSkills = [
         );
       }
 
-      return {
+      results.push({
         log: {
-          en: `${formatChampionName(user)} calls down <b>Mother Earth's Protection</b>: her team is cleansed of up to <b>${this.cleanseCount}</b> <b>negative status effects</b> each, takes <b>${this.damageReduction}%</b> less damage and restores <b>${this.healPerTurn}</b> HP at the start of each turn for <b>${this.auraDuration}</b> turn(s).`,
-          pt: `${formatChampionName(user)} invoca a <b>Proteção da Mãe Terra</b>: seu time é limpo de até <b>${this.cleanseCount}</b> <b>efeitos de status negativos</b> cada, recebe <b>${this.damageReduction}%</b> menos dano e restaura <b>${this.healPerTurn}</b> de HP no início de cada turno por <b>${this.auraDuration}</b> turno(s).`,
+          en: `${formatChampionName(user)} calls down <b>Mother Earth's Embrace</b>: her team is cleansed of up to <b>${this.cleanseCount}</b> <b>negative status effects</b> each, takes <b>${this.damageReduction}%</b> less damage and restores <b>${this.healPerTurn}</b> <b>HP</b> at the start of each turn for <b>${this.auraDuration}</b> turn(s).`,
+          pt: `${formatChampionName(user)} invoca <b>Mother Earth's Embrace</b>: seu time é limpo de até <b>${this.cleanseCount}</b> <b>efeitos de status negativos</b> cada, recebe <b>${this.damageReduction}%</b> menos dano e restaura <b>${this.healPerTurn}</b> de <b>HP</b> no início de cada turno por <b>${this.auraDuration}</b> turno(s).`,
         },
-      };
+      });
+
+      return results;
     },
   },
 ];

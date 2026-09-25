@@ -34,9 +34,8 @@ export default {
     const headroom = ceiling - owner.maxHP;
     if (headroom <= 0) return;
 
-    // The wound never closes, so a flat share of it would be a fixed income
-    // forever. Weighting it by the share it still represents of her Max HP
-    // makes the same absolute wound pay less and less as the trunk thickens.
+    // Weighting the wound by its share of Max HP makes the same absolute
+    // wound pay less and less as the trunk thickens.
     const growth = Math.min(
       headroom,
       Math.floor(wound * (wound / owner.maxHP) * (this.growthRate / 100)),
