@@ -9,18 +9,19 @@ export default {
   sedimentPerTurn: 4,
   healPerSediment: 8,
   sedimentPerHeal: 2,
-  defensePerSediment: 1.5,
-  maxDefenseGain: 30,
+  defensePerSediment: 2.5,
+  maxDefenseGain: 50,
   baseSubtraction: 10,
   subtractionPerSediment: 0.75,
   subtractionCapRatio: 0.5,
   gapRatio: 0.5,
   maxGapBonus: 60,
+  incomingDamageBonus: 65,
 
   description() {
     return {
-      en: `Bergrisa does not move so much as accumulate. Every turn another layer of the world settles into her, <b>${this.sedimentPerTurn}</b> <b>Sediment</b> at a time up to <b>${this.maxSediment}</b>, each one granting <b>${this.defensePerSediment}</b> <b>Defense</b> up to <b>${this.maxDefenseGain}</b>. At the start of her turns, if she is wounded, she burns up to <b>${this.sedimentPerHeal}</b> <b>Sediment</b> to restore <b>${this.healPerSediment}</b> HP each. Every blow that reaches her is blunted by <b>${this.baseSubtraction}</b> plus <b>${this.subtractionPerSediment}</b> per <b>Sediment</b>, never past half the blow, and never <b>Absolute Damage</b>, damage over time or piercing hits. Everything she deals carries bonus damage equal to <b>${this.gapRatio * 100}%</b> of however much her <b>Defense</b> exceeds the chosen target's, up to <b>${this.maxGapBonus}</b>.`,
-      pt: `Bergrisa não se move tanto quanto acumula. A cada turno outra camada do mundo se assenta sobre ela, <b>${this.sedimentPerTurn}</b> de <b>Sedimento</b> por vez até <b>${this.maxSediment}</b>, cada um concedendo <b>${this.defensePerSediment}</b> de <b>Defesa</b> até <b>${this.maxDefenseGain}</b>. No início de seus turnos, se estiver ferida, ela queima até <b>${this.sedimentPerHeal}</b> de <b>Sedimento</b> para restaurar <b>${this.healPerSediment}</b> de HP cada. Todo golpe que a atinge é amortecido em <b>${this.baseSubtraction}</b> mais <b>${this.subtractionPerSediment}</b> por <b>Sedimento</b>, nunca além de metade do golpe, e nunca <b>Dano Absoluto</b>, dano ao longo do tempo ou acertos perfurantes. Tudo o que ela causa carrega dano bônus igual a <b>${this.gapRatio * 100}%</b> de quanto sua <b>Defesa</b> excede a do alvo escolhido, até <b>${this.maxGapBonus}</b>.`,
+      en: `Bergrisa does not move so much as accumulate. Every turn another layer of the world settles into her, <b>${this.sedimentPerTurn}</b> <b>Sediment</b> at a time up to <b>${this.maxSediment}</b>, each one granting <b>${this.defensePerSediment}</b> <b>Defense</b> up to <b>${this.maxDefenseGain}</b>. At the start of her turns, if she is wounded, she burns up to <b>${this.sedimentPerHeal}</b> <b>Sediment</b> to restore <b>${this.healPerSediment}</b> HP each. But all that weight lands somewhere: every standard hit against her lands <b>${this.incomingDamageBonus}%</b> harder before it's blunted. Every blow that reaches her is then blunted by <b>${this.baseSubtraction}</b> plus <b>${this.subtractionPerSediment}</b> per <b>Sediment</b>, never past half the blow, and never <b>Absolute Damage</b>, damage over time or piercing hits. Everything she deals carries bonus damage equal to <b>${this.gapRatio * 100}%</b> of however much her <b>Defense</b> exceeds the chosen target's, up to <b>${this.maxGapBonus}</b>.`,
+      pt: `Bergrisa não se move tanto quanto acumula. A cada turno outra camada do mundo se assenta sobre ela, <b>${this.sedimentPerTurn}</b> de <b>Sedimento</b> por vez até <b>${this.maxSediment}</b>, cada um concedendo <b>${this.defensePerSediment}</b> de <b>Defesa</b> até <b>${this.maxDefenseGain}</b>. No início de seus turnos, se estiver ferida, ela queima até <b>${this.sedimentPerHeal}</b> de <b>Sedimento</b> para restaurar <b>${this.healPerSediment}</b> de HP cada. Mas todo esse peso cobra seu preço: cada golpe padrão contra ela chega <b>${this.incomingDamageBonus}%</b> mais forte antes de ser amortecido. Todo golpe que a atinge é então amortecido em <b>${this.baseSubtraction}</b> mais <b>${this.subtractionPerSediment}</b> por <b>Sedimento</b>, nunca além de metade do golpe, e nunca <b>Dano Absoluto</b>, dano ao longo do tempo ou acertos perfurantes. Tudo o que ela causa carrega dano bônus igual a <b>${this.gapRatio * 100}%</b> de quanto sua <b>Defesa</b> excede a do alvo escolhido, até <b>${this.maxGapBonus}</b>.`,
     };
   },
 
@@ -111,7 +112,18 @@ export default {
   },
 
   onBeforeDmgTaking(payload) {
-    const damage = this.bluntHit(payload, this.subtractionFor(payload.owner));
+    const inflated =
+      payload.mode === "standard"
+        ? {
+            ...payload,
+            damage: payload.damage * (1 + this.incomingDamageBonus / 100),
+          }
+        : payload;
+
+    const damage = this.bluntHit(
+      inflated,
+      this.subtractionFor(payload.owner),
+    );
     if (damage === undefined) return;
 
     return { damage };

@@ -4,7 +4,7 @@ export default {
   portrait: "/assets/portraits/bergrisa.webp",
   HP: 320,
   Attack: 165,
-  Defense: 210,
+  Defense: 185,
   Speed: 20,
 
   classKey: "tank",
