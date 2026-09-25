@@ -199,8 +199,7 @@ const sereneSkills = [
           },
 
           onBeforeDmgTaking({ defender, owner, damage, context }) {
-            if (!defender || defender.id !== owner.id || defender !== owner)
-              return;
+            if (defender !== owner) return;
 
             // Not lethal: the Threshold stays shut.
             if (!owner.wouldBeLethal(damage)) return;

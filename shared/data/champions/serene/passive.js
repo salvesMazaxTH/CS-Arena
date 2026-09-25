@@ -29,7 +29,7 @@ export default {
   },
 
   onActionResolved({ owner, actionSource, skill }) {
-    if (!actionSource || actionSource.id !== owner.id) return;
+    if (actionSource !== owner) return;
 
     owner.runtime ??= {};
     owner.runtime.lastSereneSkillKey = skill?.key ?? null;

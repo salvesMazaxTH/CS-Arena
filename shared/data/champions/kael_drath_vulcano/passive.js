@@ -17,7 +17,7 @@ export default {
 
   onAfterDmgTaking({ attacker, owner, actualDmg, context }) {
     if (!(actualDmg > 0) || !owner.alive) return;
-    if (!attacker?.alive || attacker.id === owner.id) return;
+    if (!attacker?.alive || attacker === owner) return;
 
     attacker.applyStatusEffect("burning", this.burnDuration, context);
   },

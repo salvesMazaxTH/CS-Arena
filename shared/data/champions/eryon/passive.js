@@ -2,7 +2,7 @@ import { formatChampionName } from "../../../ui/formatters.js";
 
 function onResourceChanged({ owner, target, amount, context, resolver }) {
   if (owner.team !== target.team) return;
-  if (target.id === owner.id) return;
+  if (target === owner) return;
   if (amount <= 0) return;
 
   owner.runtime.resonanceStacks = Math.min(

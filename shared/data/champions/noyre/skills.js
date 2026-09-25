@@ -114,7 +114,7 @@ const noyreSkills = [
           },
           onResourceGain({ owner, amount, resolver, context, target }) {
             if (amount <= 0) return;
-            if (!owner || owner.id !== target.id) return;
+            if (!owner || owner !== target) return;
 
             resolver.applyResourceChange({
               target: owner,

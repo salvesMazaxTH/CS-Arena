@@ -49,7 +49,7 @@ export default {
   },
 
   onEvade({ owner, defender, context }) {
-    if (defender.id !== owner.id) return;
+    if (defender !== owner) return;
 
     return this._addStack({ owner, context });
   },

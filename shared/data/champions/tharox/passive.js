@@ -22,7 +22,7 @@ export default {
   },
 
   onAfterDmgTaking({ attacker, owner, actualDmg, context }) {
-    if (!(actualDmg > 0) || attacker.id === owner.id) return;
+    if (!(actualDmg > 0) || attacker === owner) return;
 
     owner.runtime.tharoxLastHitTurn = context.currentTurn;
 

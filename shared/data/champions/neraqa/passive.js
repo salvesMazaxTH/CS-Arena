@@ -19,7 +19,7 @@ export default {
   },
 
   onActionResolved({ owner, actionSource, context }) {
-    if (actionSource?.id !== owner.id) return;
+    if (actionSource !== owner) return;
     owner.runtime ??= {};
     owner.runtime.neraqaActedTurn = context.currentTurn;
   },

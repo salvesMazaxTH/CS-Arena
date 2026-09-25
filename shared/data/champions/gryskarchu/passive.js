@@ -26,7 +26,7 @@ export default {
 
   onAfterHealing({ healTarget, healSrc, owner, amount, context }) {
     if (healTarget.team !== owner.team) return;
-    if (healTarget.id === owner.id) return;
+    if (healTarget === owner) return;
 
     const selfHealAmount = this.selfHeal;
 

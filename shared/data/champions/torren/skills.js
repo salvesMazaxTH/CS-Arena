@@ -195,7 +195,7 @@ const torrenSkills = [
           expiresAtTurn: context.currentTurn + this.tauntDuration,
 
           apply: ({ baseDamage, defender }) => {
-            if (!defender || defender.id !== user.id) {
+            if (defender !== user) {
               return baseDamage * 0.7;
             }
 
