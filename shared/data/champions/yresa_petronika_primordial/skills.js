@@ -18,16 +18,16 @@ const yresaPetronikaPrimordialSkills = [
 
     description() {
       return {
-        en: `Yrêsa Petroníka's true form slams the ground flat, sending the shock through every enemy on the field. Deals <b>Earth</b> physical damage.`,
-        pt: `A forma verdadeira de Yrêsa Petroníka esmaga o chão, mandando o tranco por todos os inimigos no campo. Causa dano físico de <b>Terra</b>.`,
+        en: `Yrêsa Petroníka's true form slams the ground flat, sending the shock through every enemy on the field. Deals physical damage.`,
+        pt: `A forma verdadeira de Yrêsa Petroníka esmaga o chão, mandando o tranco por todos os inimigos no campo. Causa dano físico.`,
       };
     },
 
     targetSpec: ["all:enemy"],
 
     resolve({ user, targets, context = {} }) {
-      return targets.map(
-        (enemy) =>
+      return targets
+        .flatMap((enemy) =>
           new DamageEvent({
             baseDamage: (user.Attack * this.bf) / 100,
             attacker: user,
@@ -37,7 +37,8 @@ const yresaPetronikaPrimordialSkills = [
             context,
             allChampions: context?.allChampions,
           }).execute(),
-      );
+        )
+        .filter(Boolean);
     },
   },
 
@@ -96,16 +97,16 @@ const yresaPetronikaPrimordialSkills = [
 
     description() {
       return {
-        en: `Yrêsa Petroníka's true form puts back on every ounce she had been carrying lightly, and the ground gives under it. Strikes every enemy with unavoidable <b>Earth</b> magical damage.`,
-        pt: `A forma verdadeira de Yrêsa Petroníka recoloca cada grama que vinha carregando de leve, e o chão cede sob isso. Atinge todos os inimigos com dano mágico de <b>Terra</b> inevitável.`,
+        en: `Yrêsa Petroníka's true form puts back on every ounce she had been carrying lightly, and the ground gives under it. Strikes every enemy with damage that cannot be evaded. Deals magical damage.`,
+        pt: `A forma verdadeira de Yrêsa Petroníka recoloca cada grama que vinha carregando de leve, e o chão cede sob isso. Atinge todos os inimigos com dano que não pode ser esquivado. Causa dano mágico.`,
       };
     },
 
     targetSpec: ["all:enemy"],
 
     resolve({ user, targets, context = {} }) {
-      return targets.map(
-        (enemy) =>
+      return targets
+        .flatMap((enemy) =>
           new DamageEvent({
             baseDamage: (user.Attack * this.bf) / 100,
             attacker: user,
@@ -115,7 +116,8 @@ const yresaPetronikaPrimordialSkills = [
             context,
             allChampions: context?.allChampions,
           }).execute(),
-      );
+        )
+        .filter(Boolean);
     },
   },
 ];

@@ -21,8 +21,8 @@ export default {
     };
 
     return {
-      en: `Every Stoneward fused into the Colossus still keeps its vow: every ally other than the one who raised it takes <b>${this.auraDmgReductionPerStoneward}%</b> less damage from every source for each <b>Stoneward</b> inside it (except Absolute Damage).${standing.en}`,
-      pt: `Cada Stoneward fundido no Colossus ainda mantém seu voto: todo aliado que não seja quem o ergueu sofre <b>${this.auraDmgReductionPerStoneward}%</b> menos dano de qualquer fonte para cada <b>Stoneward</b> dentro dele (exceto Dano Absoluto).${standing.pt}`,
+      en: `Every Stoneward fused into the Colossus still keeps its vow: every ally other than the one who raised it takes <b>${this.auraDmgReductionPerStoneward}%</b> less damage from every source for each <b>Stoneward</b> inside it (except <b>Absolute Damage</b>).${standing.en}`,
+      pt: `Cada Stoneward fundido no Colossus ainda mantém seu voto: todo aliado que não seja quem o ergueu sofre <b>${this.auraDmgReductionPerStoneward}%</b> menos dano de qualquer fonte para cada <b>Stoneward</b> dentro dele (exceto <b>Dano Absoluto</b>).${standing.pt}`,
     };
   },
 

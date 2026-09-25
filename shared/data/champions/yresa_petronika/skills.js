@@ -1,10 +1,11 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import basicShot from "../generic/basicShot.js";
+import totalBlock from "../generic/totalBlock.js";
+import colossusData from "../yresa_colossus/data.js";
 
 const yresaPetronikaSkills = [
-  { ...basicShot, type: "magical", bonusDamage: 20 },
+  totalBlock,
 
   {
     key: "claiming_roots",
@@ -21,8 +22,8 @@ const yresaPetronikaSkills = [
 
     description() {
       return {
-        en: `Yrêsa Petroníka claims the ground beneath the chosen target as her own, dealing <b>Earth</b> magical damage and holding them <b>Rooted</b> for <b>${this.rootDuration}</b> turn(s).`,
-        pt: `Yrêsa Petroníka reivindica como seu o chão sob o alvo escolhido, causando dano mágico de <b>Terra</b> e mantendo-o <b>Enraizado</b> por <b>${this.rootDuration}</b> turno(s).`,
+        en: `Yrêsa Petroníka claims the ground beneath the chosen target as her own, holding them <b>Rooted</b> for <b>${this.rootDuration}</b> turn(s). Deals magical damage.`,
+        pt: `Yrêsa Petroníka reivindica como seu o chão sob o alvo escolhido, mantendo-o <b>Enraizado</b> por <b>${this.rootDuration}</b> turno(s). Causa dano mágico.`,
       };
     },
 
@@ -41,11 +42,15 @@ const yresaPetronikaSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      if (effectConnected(result, "rooted")) {
-        enemy.applyStatusEffect("rooted", this.rootDuration, context);
+      const results = Array.isArray(result) ? result : [result];
+
+      if (effectConnected(results[0], "rooted")) {
+        enemy.applyStatusEffect("rooted", this.rootDuration, context, {
+          sourceId: user.id,
+        });
       }
 
-      return result;
+      return results;
     },
   },
 
@@ -63,8 +68,8 @@ const yresaPetronikaSkills = [
 
     description() {
       return {
-        en: `Targeting herself, Yrêsa Petroníka raises another <b>Stoneward</b> out of the ground, a sentinel of packed earth and ore that stands on the field beside her. Targeting any other ally, she unmakes one of her standing Stonewards and pours it over them, leaving them with <b>${this.dmgReductionPercent}%</b> less damage taken for <b>${this.dmgReductionDuration}</b> turn(s) (except Absolute Damage). With no Stoneward standing but a <b>Stoneward Colossus</b> on the field, she takes the Colossus apart instead, for <b>${this.colossusDmgReductionPercent}%</b> less damage taken over the same duration. With nothing standing at all, she always raises one.`,
-        pt: `Ao mirar em si mesma, Yrêsa Petroníka ergue mais um <b>Stoneward</b> do chão, uma sentinela de terra compacta e minério que passa a ocupar o campo ao lado dela. Ao mirar em qualquer outro aliado, ela desfaz um de seus Stonewards de pé e o derrama sobre ele, deixando-o com <b>${this.dmgReductionPercent}%</b> menos dano sofrido por <b>${this.dmgReductionDuration}</b> turno(s) (exceto Dano Absoluto). Sem nenhum Stoneward de pé, mas com um <b>Stoneward Colossus</b> no campo, ela desfaz o Colossus no lugar, para <b>${this.colossusDmgReductionPercent}%</b> menos dano sofrido pela mesma duração. Sem nada de pé, ela sempre ergue um.`,
+        en: `Targeting herself, Yrêsa Petroníka raises another <b>Stoneward</b> out of the ground, a sentinel of packed earth and ore that stands on the field beside her. Targeting any other ally, she unmakes one of her standing Stonewards and pours it over them, leaving them with <b>${this.dmgReductionPercent}%</b> less damage taken for <b>${this.dmgReductionDuration}</b> turn(s) (except <b>Absolute Damage</b>). With no Stoneward standing but a <b>Stoneward Colossus</b> on the field, she takes the Colossus apart instead, for <b>${this.colossusDmgReductionPercent}%</b> less damage taken over the same duration. With nothing standing at all, she always raises one.`,
+        pt: `Ao mirar em si mesma, Yrêsa Petroníka ergue mais um <b>Stoneward</b> do chão, uma sentinela de terra compacta e minério que passa a ocupar o campo ao lado dela. Ao mirar em qualquer outro aliado, ela desfaz um de seus Stonewards de pé e o derrama sobre ele, deixando-o com <b>${this.dmgReductionPercent}%</b> menos dano sofrido por <b>${this.dmgReductionDuration}</b> turno(s) (exceto <b>Dano Absoluto</b>). Sem nenhum Stoneward de pé, mas com um <b>Stoneward Colossus</b> no campo, ela desfaz o Colossus no lugar, para <b>${this.colossusDmgReductionPercent}%</b> menos dano sofrido pela mesma duração. Sem nada de pé, ela sempre ergue um.`,
       };
     },
 
@@ -118,8 +123,15 @@ const yresaPetronikaSkills = [
           asEntityType: "minion",
 
           onSpawn: (sentinel, spawnContext) => {
-            sentinel.runtime.summonerId = user.id;
             sentinel.runtime.leavesNoDeath = true;
+
+            if (!user.alive) {
+              sentinel.HP = 0;
+              sentinel.alive = false;
+              return;
+            }
+
+            sentinel.runtime.summonerId = user.id;
             sentinel.runtime.arrivalVfx = "earth_summon";
 
             user.runtime.sentinelIds = [
@@ -127,8 +139,10 @@ const yresaPetronikaSkills = [
               sentinel.id,
             ];
 
-            sentinel.applyStatusEffect("inert", 99, spawnContext);
-            sentinel.passive.refreshAura({ owner: sentinel, context: spawnContext });
+            sentinel.passive.refreshAura({
+              owner: sentinel,
+              context: spawnContext,
+            });
             user.passive.refreshSoil({ owner: user, context: spawnContext });
 
             spawnContext.registerDialog?.({
@@ -212,7 +226,6 @@ const yresaPetronikaSkills = [
 
     fusionMinimum: 2,
     colossusKey: "yresa_colossus",
-    colossusBaseStats: { HP: 50, Attack: 50, Defense: 80, Speed: 10 },
     colossusStatsPerStoneward: { HP: 60, Attack: 10, Defense: 20, Speed: 5 },
 
     description() {
@@ -287,8 +300,15 @@ const yresaPetronikaSkills = [
           statScaleByStat: this._colossusScale(fused),
 
           onSpawn: (colossus, spawnContext) => {
-            colossus.runtime.summonerId = user.id;
             colossus.runtime.leavesNoDeath = true;
+
+            if (!user.alive) {
+              colossus.HP = 0;
+              colossus.alive = false;
+              return;
+            }
+
+            colossus.runtime.summonerId = user.id;
             colossus.runtime.arrivalVfx = "earth_summon";
             colossus.runtime.fusedStonewards = fused;
             user.runtime.colossusId = colossus.id;
@@ -318,8 +338,8 @@ const yresaPetronikaSkills = [
     _colossusScale(fused) {
       const scale = {};
 
-      for (const [stat, base] of Object.entries(this.colossusBaseStats)) {
-        scale[stat] = (base + this.colossusStatsPerStoneward[stat] * fused) / base;
+      for (const [stat, perStoneward] of Object.entries(this.colossusStatsPerStoneward)) {
+        scale[stat] = (colossusData[stat] + perStoneward * fused) / colossusData[stat];
       }
 
       return scale;

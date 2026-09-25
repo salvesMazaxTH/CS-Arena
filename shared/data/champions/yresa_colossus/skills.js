@@ -14,8 +14,8 @@ const yresaColossusSkills = [
 
     description() {
       return {
-        en: `The Colossus sets one foot down and the whole field tilts toward it. Every enemy is <b>Taunted</b> for <b>${this.tauntDuration}</b> turn.`,
-        pt: `O Colossus assenta um pé no chão e o campo inteiro se inclina na direção dele. Todos os inimigos ficam <b>Provocados</b> por <b>${this.tauntDuration}</b> turno.`,
+        en: `The Colossus sets one foot down and the whole field tilts toward it. Every enemy is <b>Taunted</b> for <b>${this.tauntDuration}</b> turn(s).`,
+        pt: `O Colossus assenta um pé no chão e o campo inteiro se inclina na direção dele. Todos os inimigos ficam <b>Provocados</b> por <b>${this.tauntDuration}</b> turno(s).`,
       };
     },
 
