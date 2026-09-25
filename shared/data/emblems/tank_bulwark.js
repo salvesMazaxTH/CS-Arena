@@ -33,7 +33,7 @@ export const tankBulwark = {
     if (champion.modifyStat) {
       champion.modifyStat({
         statName: "Defense",
-        amount: 30,
+        amount: 20,
         context,
         isPermanent: true,
       });
