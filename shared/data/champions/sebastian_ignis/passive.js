@@ -44,7 +44,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} does nothing worth mentioning (${owner.runtime.apathyStacks}/${this.apathyCap} Apathy).`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} não faz nada digno de nota (${owner.runtime.apathyStacks}/${this.apathyCap} de Apatia).`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} não faz nada digno de nota (${owner.runtime.apathyStacks}/${this.apathyCap} de Apatia).`,
       },
     };
   },

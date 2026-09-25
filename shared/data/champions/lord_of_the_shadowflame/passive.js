@@ -68,7 +68,7 @@ export default {
       ),
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} burns <b>${stacks}</b> Ember(s) to stay standing at <b>${survivalHP}</b> HP.`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} consome <b>${stacks}</b> Brasa(s) para continuar de pé com <b>${survivalHP}</b> HP.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} consome <b>${stacks}</b> Brasa(s) para continuar de pé com <b>${survivalHP}</b> HP.`,
       },
     };
   },
@@ -85,7 +85,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} gains <b>1 Ember</b> (${owner.runtime.emberStacks}/${this.maxStacks}).`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} ganha <b>1 Brasa</b> (${owner.runtime.emberStacks}/${this.maxStacks}).`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} ganha <b>1 Brasa</b> (${owner.runtime.emberStacks}/${this.maxStacks}).`,
       },
     };
   },

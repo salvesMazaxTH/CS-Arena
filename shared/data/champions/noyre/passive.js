@@ -37,7 +37,7 @@ function _processEntropy(owner, context, resolver, passive) {
         context.registerDialog({
           message: {
             en: `<b>[Passive — Entropy]</b> ${formatChampionName(owner)} drained the <b>Momentum</b> of ${formatChampionName(enemy)}!`,
-            pt: `<b>[Passivo — Entropia]</b> ${formatChampionName(owner)} drenou o <b>Momentum</b> de ${formatChampionName(enemy)}!`,
+            pt: `<b>[Passiva — Entropia]</b> ${formatChampionName(owner)} drenou o <b>Momentum</b> de ${formatChampionName(enemy)}!`,
           },
           sourceId: owner.id,
           targetId: enemy.id,
@@ -84,7 +84,7 @@ function onResourceChanged({ owner, target, amount, context, resolver }) {
       {
         log: {
           en: `<b>[Passive — Entropy]</b> ${formatChampionName(owner)} unleashed <b>Entropy</b> <b>${procs}x</b>.`,
-          pt: `<b>[Passivo — Entropia]</b> ${formatChampionName(owner)} desencadeou <b>Entropia</b> <b>${procs}x</b>.`,
+          pt: `<b>[Passiva — Entropia]</b> ${formatChampionName(owner)} desencadeou <b>Entropia</b> <b>${procs}x</b>.`,
         },
       },
       ...results,

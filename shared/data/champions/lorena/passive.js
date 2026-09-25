@@ -102,7 +102,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} gets the last laugh on ${formatChampionName(defender)} — <b>${stolen}</b> point(s) taken from the other side of the board.`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} dá a última risada em cima de ${formatChampionName(defender)} — <b>${stolen}</b> ponto(s) roubado(s) do adversário.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} dá a última risada em cima de ${formatChampionName(defender)} — <b>${stolen}</b> ponto(s) roubado(s) do adversário.`,
       },
     };
   },

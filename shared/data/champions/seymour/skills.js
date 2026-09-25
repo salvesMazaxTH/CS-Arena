@@ -28,7 +28,10 @@ const seymourSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Seymour narrows the light to a single white thread and lays it across the chosen target. Deals radiant magical damage and leaves them Bleached for ${this.bleachedDuration} turns — under that light almost nothing mends, and healing they receive is cut by ${this.healingReduction * 100}%.`;
+      return {
+        en: `Seymour narrows the light to a single white thread and lays it across the chosen target. Deals radiant magical damage and leaves them <b>Bleached</b> for <b>${this.bleachedDuration}</b> turns — under that light almost nothing mends, and healing they receive is cut by <b>${this.healingReduction * 100}%</b>.`,
+        pt: `Seymour estreita a luz a um único fio branco e o traça sobre o alvo escolhido. Causa dano mágico radiante e deixa o alvo <b>Descolorido</b> por <b>${this.bleachedDuration}</b> turnos — sob aquela luz quase nada cicatriza, e a cura que ele recebe é reduzida em <b>${this.healingReduction * 100}%</b>.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -103,7 +106,10 @@ const seymourSkills = [
     targetSpec: ["all:enemy"],
 
     description() {
-      return `Seymour opens his hand and lets the light flare white across the whole enemy line. Deals radiant magical damage to every enemy and leaves them Blind for ${this.blindDuration} turn(s).`;
+      return {
+        en: `Seymour opens his hand and lets the light flare white across the whole enemy line. Deals radiant magical damage to every enemy and leaves them <b>Blind</b> for <b>${this.blindDuration}</b> turn(s).`,
+        pt: `Seymour abre a mão e deixa a luz clarear branca sobre toda a linha inimiga. Causa dano mágico radiante a todos os inimigos e os deixa <b>Cegos</b> por <b>${this.blindDuration}</b> turno(s).`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {
@@ -159,7 +165,10 @@ const seymourSkills = [
     targetSpec: ["enemy"],
 
     description() {
-      return `Seymour lets the light reach its peak and brings the whole weight of it down on the chosen target. Deals heavy radiant magical damage, increased by ${this.setupBonus * 100}% if the target is Bleached or Blind.`;
+      return {
+        en: `Seymour lets the light reach its peak and brings the whole weight of it down on the chosen target. Deals heavy radiant magical damage, increased by <b>${this.setupBonus * 100}%</b> if the target is <b>Bleached</b> or <b>Blind</b>.`,
+        pt: `Seymour deixa a luz atingir seu ápice e traz todo aquele peso sobre o alvo escolhido. Causa pesado dano mágico radiante, aumentado em <b>${this.setupBonus * 100}%</b> se o alvo estiver <b>Descolorido</b> ou <b>Cego</b>.`,
+      };
     },
 
     resolve({ user, targets, context = {} }) {

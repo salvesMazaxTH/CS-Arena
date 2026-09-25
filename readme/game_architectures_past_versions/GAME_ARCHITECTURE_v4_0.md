@@ -462,7 +462,7 @@ const result = new DamageEvent({
 ```
 skill.resolve({ user, targets, context })
   └── new DamageEvent(params).execute()
-        ├── 1. preChecks()           → imunidade (onDamageIncoming) / evasão / shield block
+        ├── 1. preChecks()           → imunidade (onDamageIncoming) / esquiva / shield block
         ├── 2. prepareDamage()       → crit + modificadores de dano + afinidade elemental
         ├── 3. composeFinalDamage()  → aplica crítico + curva de defesa + piercingPortion + floor
         ├── 4. runBeforeHooks()      → onBeforeDmgDealing + onBeforeDmgTaking
@@ -486,7 +486,7 @@ emitCombatEnvelopesFromContext({ user, skill, context })
 │     → status-effects com onDamageIncoming (ex: imunidadeAbsoluta) podem retornar { cancel: true }
 │     → se cancelado: context.registerDamage({ flags:{immune:true} }); retorna resultado imune
 │
-├── Evasão? (saltado se mode === "absolute" ou skill.cannotBeEvaded)
+├── Esquiva? (saltado se mode === "absolute" ou skill.cannotBeEvaded)
 │     → DamageEvent._rollEvasion({ attacker, defender, context })
 │     → se evadido: context.registerDamage({ flags:{evaded:true} }); retorna
 │
@@ -616,7 +616,7 @@ onAfterDmgTaking({ context }) {
 
 | Flag                                | Efeito                                                    |
 | ----------------------------------- | --------------------------------------------------------- |
-| `cannotBeEvaded: true`              | Pula a checagem de evasão em `preChecks`                  |
+| `cannotBeEvaded: true`              | Pula a checagem de esquiva em `preChecks`                 |
 | `cannotBeBlocked: true`             | Pula a checagem de shield block em `preChecks`            |
 | `obliterateRule(dmgEvent) → number` | Se HP/maxHP ≤ threshold retornado → mata instantaneamente |
 
@@ -672,7 +672,7 @@ context.registerDamage({
   sourceId,        // ID do atacante
   isCritical,      // boolean
   flags: {
-    evaded?,       // true se evasão bem-sucedida
+    evaded?,       // true se esquiva bem-sucedida
     immune?,       // true se imunidade absoluta
     shieldBlocked?,
     obliterate?,   // true se morte por obliterateRule
@@ -1174,7 +1174,7 @@ O envelope é desestruturado em `{ action, log, state, ...eventGroups }`. O clie
 É o handler mais complexo, pois lida com vários casos especiais na ordem:
 
 ```
-1. Guarda de evasão: se effect.evaded !== undefined → animateEvasion(effect)
+1. Guarda de esquiva: se effect.evaded !== undefined → animateEvasion(effect)
    └── se evaded === true: .evasion CSS + dialog → return (não há dano)
    └── se evaded === false: dialog "falhou em esquivar" → continua
 
@@ -1401,7 +1401,7 @@ const editMode = {
   unreleasedChampions: true,
   damageOutput: null, // força dano fixo (ex: 999). null = desativado
   alwaysCrit: false, // força crítico em todos os ataques
-  alwaysEvade: false, // força evasão bem-sucedida
+  alwaysEvade: false, // força esquiva bem-sucedida
   executionOverride: null, // sobrescreve threshold de obliterateRule (number)
 };
 ```
@@ -1565,7 +1565,7 @@ StatusIndicator.statusEffectIcons["meuEfeito"] = {
 
 ### 5. Boas Práticas
 
-- **Dano sempre via `new DamageEvent(params).execute()`** — nunca debite HP diretamente. O DamageEvent lida com escudos, evasão, crítico, lifesteal, hooks, obliterateRule etc.
+- **Dano sempre via `new DamageEvent(params).execute()`** — nunca debite HP diretamente. O DamageEvent lida com escudos, esquiva, crítico, lifesteal, hooks, obliterateRule etc.
 - **Registros de cura/buff/escudo via `context.register*()`** — nunca modifique `context.visual` diretamente.
 - **Passivas devem verificar `damageDepth`** antes de enfileirar dano extra: `if (context.damageDepth > 0) return;`
 - **`isDot = true`** em danos de tick de status-effects para suprimir `onAfterDmgDealing`.

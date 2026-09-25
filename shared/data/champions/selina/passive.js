@@ -40,7 +40,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(actionSource)}'s <b>CLAIM</b> draws Selina's light — <b>${this.claimShieldAmount}</b> Shield granted.`,
-        pt: `<b>[Passivo — ${this.name}]</b> O <b>CLAIM</b> de ${formatChampionName(actionSource)} atrai a luz de Selina — <b>${this.claimShieldAmount}</b> de Escudo concedido.`,
+        pt: `<b>[Passiva — ${this.name}]</b> O <b>CLAIM</b> de ${formatChampionName(actionSource)} atrai a luz de Selina — <b>${this.claimShieldAmount}</b> de Escudo concedido.`,
       },
     };
   },
@@ -72,7 +72,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} answers for ${formatChampionName(defender)} — her blade opens ${formatChampionName(attacker)} for <b>${this.riposteDamage}</b>.`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} responde por ${formatChampionName(defender)} — sua lâmina fere ${formatChampionName(attacker)} em <b>${this.riposteDamage}</b>.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} responde por ${formatChampionName(defender)} — sua lâmina fere ${formatChampionName(attacker)} em <b>${this.riposteDamage}</b>.`,
       },
     };
   },

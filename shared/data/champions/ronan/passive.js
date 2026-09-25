@@ -105,7 +105,7 @@ export default {
     if (gained) {
       logs.push({
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} takes it personally and gains +${gained} Attack.`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} leva para o lado pessoal e ganha +${gained} de Ataque.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} leva para o lado pessoal e ganha +${gained} de Ataque.`,
       });
     }
 
@@ -124,7 +124,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} is getting into it and gains +${gained} Attack.`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} entra no ritmo da briga e ganha +${gained} de Ataque.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} entra no ritmo da briga e ganha +${gained} de Ataque.`,
       },
     };
   },
@@ -159,7 +159,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> Being looked after cools ${formatChampionName(owner)} down, costing him ${lost} Attack.`,
-        pt: `<b>[Passivo — ${this.name}]</b> Ser cuidado esfria ${formatChampionName(owner)}, custando ${lost} de Ataque.`,
+        pt: `<b>[Passiva — ${this.name}]</b> Ser cuidado esfria ${formatChampionName(owner)}, custando ${lost} de Ataque.`,
       },
     };
   },

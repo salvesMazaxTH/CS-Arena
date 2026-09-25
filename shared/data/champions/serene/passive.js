@@ -6,7 +6,10 @@ export default {
   name: "Grace of the Quietude",
   healPercent: 15,
   description() {
-    return `When nothing reaches Serene, the Quietude reaches her. Whenever she ends a turn without having her HP reduced, she slips for a moment into that far, still place, and returns at the start of the next turn restored by ${this.healPercent}% of her Max HP.`;
+    return {
+      en: `When nothing reaches Serene, the Quietude reaches her. Whenever she ends a turn without having her <b>HP</b> reduced, she slips for a moment into that far, still place, and returns at the start of the next turn restored by <b>${this.healPercent}%</b> of her Max HP.`,
+      pt: `Quando nada alcança Serene, é a Quietude que a alcança. Sempre que ela termina um turno sem ter seu <b>HP</b> reduzido, ela escorrega por um instante para aquele lugar distante e imóvel, e retorna no início do turno seguinte restaurada em <b>${this.healPercent}%</b> do seu HP máximo.`,
+    };
   },
 
   hookScope: {
@@ -50,7 +53,7 @@ export default {
     }).execute();
 
     return {
-      log: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} restores ${applied} HP (${before} → ${owner.HP}).`,
+      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} restores ${applied} HP (${before} → ${owner.HP}).`,
     };
   },
 };

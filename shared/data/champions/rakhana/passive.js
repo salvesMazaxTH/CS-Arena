@@ -45,7 +45,7 @@ export default {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
           owner,
         )} gains 1 Flow (<b>${owner.runtime.silverFlowStacks}/${this.maxStacks}</b>).`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(
           owner,
         )} ganha 1 Fluxo (<b>${owner.runtime.silverFlowStacks}/${this.maxStacks}</b>).`,
       },
@@ -74,7 +74,7 @@ export default {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
           owner,
         )} releases her accumulated Flow — the blow lands whole, <b>${this.absoluteBonusPercent}%</b> past what the target's defenses would have spared.`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(
           owner,
         )} libera todo o Fluxo acumulado — o golpe acerta por inteiro, <b>${this.absoluteBonusPercent}%</b> além do que as defesas do alvo teriam poupado.`,
       },

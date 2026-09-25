@@ -91,7 +91,7 @@ export default {
               )} doubles the damage dealt${
                 isOwnCounter ? " by the counterattack" : ""
               }!`,
-              pt: `<b>[Passivo — ${passiveName}]</b> ${formatChampionName(
+              pt: `<b>[Passiva — ${passiveName}]</b> ${formatChampionName(
                 attacker,
               )} dobra o dano causado${
                 isOwnCounter ? " pelo contra-ataque" : ""
@@ -107,7 +107,7 @@ export default {
       en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
         owner,
       )} consumed <b>${consumedStacks}</b> Stability stack(s)!`,
-      pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(
+      pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(
         owner,
       )} consumiu <b>${consumedStacks}</b> acúmulo(s) de Estabilidade!`,
     };
@@ -136,7 +136,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} recites a sutra through the <b>CLAIM</b> and gains 1 Stability stack (<b>${runtime.stabilityStacks}/${this.stabilityStacksCap}</b>).`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} recita um sutra através do <b>CLAIM</b> e ganha 1 acúmulo de Estabilidade (<b>${runtime.stabilityStacks}/${this.stabilityStacksCap}</b>).`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} recita um sutra através do <b>CLAIM</b> e ganha 1 acúmulo de Estabilidade (<b>${runtime.stabilityStacks}/${this.stabilityStacksCap}</b>).`,
       },
     };
   },
@@ -193,7 +193,7 @@ export default {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
           owner,
         )} gains 1 Stability stack (<b>${runtime.stabilityStacks}/${this.stabilityStacksCap}</b>).`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(
           owner,
         )} ganha 1 acúmulo de Estabilidade (<b>${runtime.stabilityStacks}/${this.stabilityStacksCap}</b>).`,
       },

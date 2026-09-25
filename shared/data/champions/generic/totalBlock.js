@@ -7,7 +7,10 @@ const totalBlock = {
   priority: 5,
   effectDuration: 1,
   description() {
-    return `\n The champion braces completely: the next instance of damage taken is fully negated, along with every negative status effect this turn.`;
+    return {
+      en: `The champion braces completely: the next instance of damage taken is fully negated, along with every negative status effect this turn.`,
+      pt: `O campeão se blinda por completo: a próxima instância de dano sofrida é totalmente anulada, junto com todo efeito de status negativo neste turno.`,
+    };
   },
   targetSpec: ["self"],
   resolve({ user, context = {} }) {

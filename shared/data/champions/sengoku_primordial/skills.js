@@ -12,7 +12,10 @@ const sengokuPrimordialSkills = [
     contact: true,
     priority: 0,
     description() {
-      return `Sengoku tears through the chosen target with draconic talons older than the war itself, dealing heavy physical damage.`;
+      return {
+        en: `Sengoku tears through the chosen target with draconic talons older than the war itself, dealing heavy physical damage.`,
+        pt: `Sengoku rasga o alvo escolhido com garras dracônicas mais antigas que a própria guerra, causando pesado dano físico.`,
+      };
     },
     targetSpec: ["enemy"],
     resolve({ user, targets, context }) {
@@ -40,7 +43,10 @@ const sengokuPrimordialSkills = [
     momentumCost: 33,
     priority: 0,
     description() {
-      return `Sengoku draws breath and pours primordial fire across the field, dealing magical damage to all enemies.`;
+      return {
+        en: `Sengoku draws breath and pours primordial fire across the field, dealing magical damage to all enemies.`,
+        pt: `Sengoku inspira e despeja fogo primordial pelo campo, causando dano mágico a todos os inimigos.`,
+      };
     },
     targetSpec: ["all:enemy"],
     resolve({ user, targets, context }) {

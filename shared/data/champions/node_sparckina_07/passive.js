@@ -38,7 +38,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} winds the discharge through the <b>CLAIM</b> — its next hit is a certain Paralyze.`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} acumula a descarga através do <b>CLAIM</b> — seu próximo acerto é uma Paralisia garantida.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} acumula a descarga através do <b>CLAIM</b> — seu próximo acerto é uma Paralisia garantida.`,
       },
     };
   },
@@ -57,7 +57,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} gains <b>+${result?.appliedAmount ?? this.speedBuff}</b> Speed.`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} ganha <b>+${result?.appliedAmount ?? this.speedBuff}</b> de Velocidade.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} ganha <b>+${result?.appliedAmount ?? this.speedBuff}</b> de Velocidade.`,
       },
     };
   },
@@ -91,7 +91,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(attacker)} leaves ${formatChampionName(defender)} <b>Paralyzed</b> for <b>${this.paralyzeDuration}</b> turn(s)!`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(attacker)} deixa ${formatChampionName(defender)} <b>Paralisado</b> por <b>${this.paralyzeDuration}</b> turno(s)!`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(attacker)} deixa ${formatChampionName(defender)} <b>Paralisado</b> por <b>${this.paralyzeDuration}</b> turno(s)!`,
       },
     };
   },

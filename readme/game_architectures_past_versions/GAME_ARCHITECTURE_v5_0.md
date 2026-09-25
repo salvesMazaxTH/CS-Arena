@@ -89,7 +89,7 @@
 │   │   ├── combatEvents.js         # Sistema de hooks (emitCombatEvent)
 │   │   │
 │   │   ├── pipeline/               # Etapas numeradas da pipeline de dano
-│   │   │   ├── 01_preChecks.js     # Imunidade, evasão, shield block
+│   │   │   ├── 01_preChecks.js     # Imunidade, esquiva, shield block
 │   │   │   ├── 02_prepareDamage.js # Crit, modificadores, afinidade elemental
 │   │   │   ├── 03_composeDamage.js # Aplicação de crit + curva de defesa + floor/cap
 │   │   │   ├── 04_beforeHooks.js   # onBeforeDmgDealing / onBeforeDmgTaking
@@ -738,7 +738,7 @@ emitCombatEnvelopesFromContext({ user, skill, context })
 │     → status-effects com onDamageIncoming (ex: imunidadeAbsoluta) podem retornar { cancel: true }
 │     → se cancelado: context.registerDamage({ flags:{immune:true} }); retorna resultado imune
 │
-├── Evasão? (saltado se mode === "absolute" ou skill.cannotBeEvaded)
+├── Esquiva? (saltado se mode === "absolute" ou skill.cannotBeEvaded)
 │     → _rollEvasion({ attacker, defender, context })
 │     → se evadido: context.registerDamage({ flags:{evaded:true} }); retorna
 │
@@ -886,7 +886,7 @@ Para cada extra em context.extraDamageQueue:
 | Mode         | Comportamento                                                                |
 | ------------ | ---------------------------------------------------------------------------- |
 | `"standard"` | Pipeline completa com defesa, crit, hooks                                    |
-| `"absolute"` | Bypassa prepareDamage, beforeHooks, evasão, escudo — dano direto ao HP       |
+| `"absolute"` | Bypassa prepareDamage, beforeHooks, esquiva, escudo — dano direto ao HP      |
 | `"hybrid"`   | `piercingPortion` do dano ignora defesa%; o restante passa pela curva normal |
 
 ### `damageDepth` e Reações
@@ -908,7 +908,7 @@ onAfterDmgTaking({ context }) {
 
 | Flag                                | Efeito                                                    |
 | ----------------------------------- | --------------------------------------------------------- |
-| `cannotBeEvaded: true`              | Pula checagem de evasão em `preChecks`                    |
+| `cannotBeEvaded: true`              | Pula checagem de esquiva em `preChecks`                   |
 | `cannotBeBlocked: true`             | Pula checagem de shield block em `preChecks`              |
 | `obliterateRule(dmgEvent) → number` | Se HP/maxHP ≤ threshold retornado → mata instantaneamente |
 

@@ -10,7 +10,10 @@ const basicStrike = {
   damageMode: "standard",
   priority: 0,
   description() {
-    return `\n A plain physical blow, carrying ${this.bonusDamage} bonus damage on top.`;
+    return {
+      en: `A plain physical blow, carrying <b>${this.bonusDamage}</b> bonus damage on top. Deals physical damage.`,
+      pt: `Um golpe físico direto, que carrega <b>${this.bonusDamage}</b> de dano bônus. Causa dano físico.`,
+    };
   },
   targetSpec: ["enemy"],
   resolve({ user, targets, context = {} }) {

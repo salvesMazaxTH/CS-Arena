@@ -53,7 +53,7 @@ export default {
           en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
             owner,
           )} restored <b>${restored}</b> HP.`,
-          pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(
+          pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(
             owner,
           )} restaurou <b>${restored}</b> de HP.`,
         },
@@ -87,7 +87,7 @@ export default {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(
           owner,
         )} restored <b>${restored}</b> HP and gained 1 <b>Tides</b> stack (<b>${owner.runtime.mareStacks}/${this.maxStacks}</b>).`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(
           owner,
         )} restaurou <b>${restored}</b> de HP e ganhou 1 acúmulo de <b>Marés</b> (<b>${owner.runtime.mareStacks}/${this.maxStacks}</b>).`,
       },

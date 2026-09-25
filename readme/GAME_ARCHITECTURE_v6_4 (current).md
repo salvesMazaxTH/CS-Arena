@@ -895,7 +895,7 @@ Não cruzar aliases entre camadas.
 Rider aditivo opcional (`params.bonusDamage`, número plano `>= 0`) para bônus
 flat de kit ("causa X de dano a mais"). Ele **pula** a curva de defesa do alvo,
 a `getTotalDamageReduction` (flat + percent), o crítico e a afinidade elemental;
-**respeita** evasão, block de spell/supreme shield, imunidade/cancel, shields
+**respeita** esquiva, block de spell/supreme shield, imunidade/cancel, shields
 regulares, o cap global de 999 sobre a soma e os hooks reativos
 `onBeforeDmg*` / `onAfterDmg*` — que leem e podem modificar o total somado
 (bônus incluído). É unido ao dano no fim de `composeDamage`. Um primário
@@ -965,8 +965,8 @@ skill.resolve({ user, targets, context })
 │     → status-effects com onDamageIncoming (ex: absoluteImmunity) podem cancelar
 │     → se cancelado: registerDamage({ flags:{immune:true} }); retorna
 │
-├── Evasão? (saltado se mode === "absolute" ou skill.cannotBeEvaded)
-│     → rola evasão com defender.Evasion
+├── Esquiva? (saltado se mode === "absolute" ou skill.cannotBeEvaded)
+│     → rola esquiva com defender.Evasion
 │     → se evadido: registerDamage({ flags:{evaded:true} }); retorna
 │
 └── [Shield Block — reservado]
@@ -1116,7 +1116,7 @@ Para cada extra em context.extraDamageQueue:
 | Mode         | Comportamento                                                                                                                                    |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `"standard"` | Pipeline completa com defesa, crit, hooks                                                                                                        |
-| `"absolute"` | Bypassa prepareDamage, evasão, block e os before-hooks (salvo `allowOnAbsolute`) — after-hooks e lifesteal continuam rodando                     |
+| `"absolute"` | Bypassa prepareDamage, esquiva, block e os before-hooks (salvo `allowOnAbsolute`) — after-hooks e lifesteal continuam rodando                    |
 | `"piercing"` | Ignora `piercingPercentage`% da defesa do alvo antes de calcular mitigação. Default 100% (ignora toda a defesa). Todo o baseDamage é perfurante. |
 
 `bonusDamage` **não é um mode** — é um rider flat que acompanha qualquer hit
@@ -1150,7 +1150,7 @@ carrega a regra. Só se explicita caso a caso quando o champion **desvia** dela.
 
 | Flag                                | Efeito                                          |
 | ----------------------------------- | ----------------------------------------------- |
-| `cannotBeEvaded: true`              | Pula evasão em `preChecks`                      |
+| `cannotBeEvaded: true`              | Pula esquiva em `preChecks`                     |
 | `cannotBeBlocked: true`             | Pula shield block em `preChecks`                |
 | `obliterateRule(dmgEvent) → number` | Se HP/maxHP ≤ threshold → mata instantaneamente |
 
@@ -1863,7 +1863,7 @@ const editMode = {
   unavailableChampions: false, // Exibe campeões unreleased
   damageOutput: null, // Força dano fixo. null = desativado (SERVER-ONLY)
   alwaysCrit: false, // Força crítico sempre (SERVER-ONLY)
-  alwaysEvade: false, // Força evasão sempre (SERVER-ONLY)
+  alwaysEvade: false, // Força esquiva sempre (SERVER-ONLY)
   executionOverride: null, // Sobrescreve threshold de obliterateRule (SERVER-ONLY)
   freeCostSkills: false, // Skills não consomem recurso
 };

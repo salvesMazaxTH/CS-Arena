@@ -34,7 +34,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> the venom on ${formatChampionName(attacker)}'s bolt leaves ${formatChampionName(defender)} <b>Poisoned</b>.`,
-        pt: `<b>[Passivo — ${this.name}]</b> o veneno no dardo de ${formatChampionName(attacker)} deixa ${formatChampionName(defender)} <b>Envenenado</b>.`,
+        pt: `<b>[Passiva — ${this.name}]</b> o veneno no dardo de ${formatChampionName(attacker)} deixa ${formatChampionName(defender)} <b>Envenenado</b>.`,
       },
     };
   },

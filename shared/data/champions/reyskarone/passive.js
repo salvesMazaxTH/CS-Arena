@@ -41,7 +41,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} drinks in the vital echo of ${formatChampionName(healSrc)} (+${restored} HP).`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} absorve o eco vital de ${formatChampionName(healSrc)} (+${restored} HP).`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} absorve o eco vital de ${formatChampionName(healSrc)} (+${restored} HP).`,
       },
     };
   },

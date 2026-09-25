@@ -10,7 +10,10 @@ export default {
   // No live counter here on purpose: the champion card is one of the few places
   // the double could read differently from the man.
   description() {
-    return `Silas has spent most of his life in rooms where nobody knew he was standing, and he stopped minding a long time ago. Whenever a full turn passes without a single wound reaching him, he opens the next one ${this.momentumGain} Momentum richer. Nothing has ever made Silas hurry: his Speed cannot be reduced.`;
+    return {
+      en: `Silas has spent most of his life in rooms where nobody knew he was standing, and he stopped minding a long time ago. Whenever a full turn passes without a single wound reaching him, he opens the next one <b>${this.momentumGain}</b> <b>Momentum</b> richer. Nothing has ever made Silas hurry: his <b>Speed</b> cannot be reduced.`,
+      pt: `Silas passou a maior parte da vida em salas onde ninguém sabia que ele estava presente, e há muito tempo parou de se importar com isso. Sempre que um turno inteiro passa sem que um único ferimento o alcance, ele abre o próximo turno <b>${this.momentumGain}</b> pontos de <b>Momentum</b> mais rico. Nada jamais fez Silas se apressar: sua <b>Velocidade</b> não pode ser reduzida.`,
+    };
   },
 
   hookScope: {

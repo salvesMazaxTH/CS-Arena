@@ -74,7 +74,7 @@ export default {
     context?.registerDialog?.({
       message: {
         en: `<b>[Passive — ${this.name}]</b> the unmade magic settles in ${formatChampionName(owner)} as <b>${gained}</b> Momentum.`,
-        pt: `<b>[Passivo — ${this.name}]</b> a magia desfeita se assenta em ${formatChampionName(owner)} como <b>${gained}</b> de Momentum.`,
+        pt: `<b>[Passiva — ${this.name}]</b> a magia desfeita se assenta em ${formatChampionName(owner)} como <b>${gained}</b> de Momentum.`,
       },
       sourceId: owner.id,
       targetId: owner.id,
@@ -83,7 +83,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} draws <b>${gained}</b> Momentum out of the pooled essence.`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} extrai <b>${gained}</b> de Momentum da essência armazenada.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} extrai <b>${gained}</b> de Momentum da essência armazenada.`,
       },
     };
   },

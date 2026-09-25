@@ -50,7 +50,7 @@ export default {
     context.registerDialog({
       message: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} grows weary (loses Attack and Defense).`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} se cansa (perde Ataque e Defesa).`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} se cansa (perde Ataque e Defesa).`,
       },
       sourceId: owner.id,
       targetId: owner.id,
@@ -59,7 +59,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} loses <b>${attackLoss}</b> Attack and <b>${defenseLoss}</b> Defense (${owner.runtime.weightOfAgesTriggers}/${this.maxTriggers}).`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} perde <b>${attackLoss}</b> de Ataque e <b>${defenseLoss}</b> de Defesa (${owner.runtime.weightOfAgesTriggers}/${this.maxTriggers}).`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} perde <b>${attackLoss}</b> de Ataque e <b>${defenseLoss}</b> de Defesa (${owner.runtime.weightOfAgesTriggers}/${this.maxTriggers}).`,
       },
     };
   },

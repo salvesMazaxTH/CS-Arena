@@ -493,7 +493,7 @@ O `CombatResolver` é um objeto singleton com todos os métodos de cálculo de d
 performSkillExecution(user, skill, targets, cost, context)
   ├── skill.resolve({ user, targets, context })
   │     └── CombatResolver.processDamageEvent({ baseDamage, user, target, skill, context })
-  │           ├── Pré-checagens (imunidade / evasão / shield block)
+  │           ├── Pré-checagens (imunidade / esquiva / shield block)
   │           ├── Before hooks + composição de dano
   │           ├── Afinidade elemental
   │           ├── _applyDamage()  → target.takeDamage()
@@ -533,7 +533,7 @@ performSkillExecution(user, skill, targets, cost, context)
 ```
 1. PRÉ-CHECAGENS  (saltadas se mode === "absolute")
    ├── Imunidade absoluta?   → context.registerDamage({ flags:{immune:true} }); retorna
-   ├── Evasão?               → roll vs target.Evasion%
+   ├── Esquiva?               → roll vs target.Evasion%
    │     (saltado se skill.cannotBeEvaded)
    │     → context.registerDamage({ flags:{evaded:true} }); retorna
    └── Shield Block?         → consome escudo "supremo"/"feitiço"
@@ -604,7 +604,7 @@ Cada depth > 0 gera um **`combatAction` separado** no cliente (via `buildReactio
 
 | Flag                           | Efeito                                                              |
 | ------------------------------ | ------------------------------------------------------------------- |
-| `cannotBeEvaded: true`         | Pula a checagem de evasão na pré-checagem                           |
+| `cannotBeEvaded: true`         | Pula a checagem de esquiva na pré-checagem                          |
 | `cannotBeBlocked: true`        | Pula a checagem de shield block                                     |
 | `obliterateRule(ctx) → number` | Se HP do alvo / maxHP ≤ threshold retornado → mata instantaneamente |
 
@@ -665,7 +665,7 @@ context.registerDamage({
   isCritical,      // boolean
   damageDepth,     // número de profundidade (padrão: 0)
   flags: {
-    evaded?,       // true se evasão bem-sucedida
+    evaded?,       // true se esquiva bem-sucedida
     immune?,       // true se imunidade absoluta
     shieldBlocked?,// true se escudo supremo/feitiço bloqueou
     obliterate?,      // true se morte por obliterateRule
@@ -1266,7 +1266,7 @@ const meu_campeao = {
       priority: 0, // maior = age primeiro no turno
       contact: true, // ataque físico (relevante para passivas)
       element: "fire", // opcional — ativa sistema de afinidade elemental
-      cannotBeEvaded: false, // true = ignora checagem de evasão
+      cannotBeEvaded: false, // true = ignora checagem de esquiva
       cannotBeBlocked: false, // true = ignora shield block
       description() {
         return `Descrição da skill.`;
@@ -1348,7 +1348,7 @@ export default championDB;
 
 - **IDs de skill com snake_case**: `"rajada_de_fogo"`.
 - **`description()` como função**: Permite exibir valores dinâmicos via `this`.
-- **Sempre use `CombatResolver.processDamageEvent()`** para dano — nunca debite HP diretamente. O resolver lida com escudos, evasão, crítico, lifesteal, hooks, obliterateRule, etc.
+- **Sempre use `CombatResolver.processDamageEvent()`** para dano — nunca debite HP diretamente. O resolver lida com escudos, esquiva, crítico, lifesteal, hooks, obliterateRule, etc.
 - **Sempre use `context.register*()`** para registrar curas, buffs, escudos e recursos — nunca modifique `context.visual` diretamente.
 - **Passivas devem verificar `damageDepth`** antes de enfileirar dano extra para evitar recursão: `if (context.damageDepth > 0) return;`.
 - **Use `context.isDot = true`** em danos de tick (statusEffects burn/poison) para suprimir `onAfterDmgDealing`.

@@ -41,7 +41,7 @@ export default {
     context?.registerDialog?.({
       message: {
         en: `<b>[Passive — ${this.name}]</b> The water around ${formatChampionName(defender)} crystallizes into Ice!`,
-        pt: `<b>[Passivo — ${this.name}]</b> A água ao redor de ${formatChampionName(defender)} se cristaliza em Gelo!`,
+        pt: `<b>[Passiva — ${this.name}]</b> A água ao redor de ${formatChampionName(defender)} se cristaliza em Gelo!`,
       },
       sourceId: owner.id,
       targetId: defender.id,

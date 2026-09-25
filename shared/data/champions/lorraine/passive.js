@@ -95,7 +95,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} names ${formatChampionName(named)} and refuses to look anywhere else.`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} nomeia ${formatChampionName(named)} e se recusa a olhar para outro lugar.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} nomeia ${formatChampionName(named)} e se recusa a olhar para outro lugar.`,
       },
     };
   },
@@ -141,7 +141,7 @@ export default {
       damage: Number(damage) * (1 - this.parryReduction / 100),
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} turns the blow aside and answers it in the same motion.`,
-        pt: `<b>[Passivo — ${this.name}]</b> ${formatChampionName(owner)} desvia o golpe e já responde no mesmo movimento.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} desvia o golpe e já responde no mesmo movimento.`,
       },
     };
   },
