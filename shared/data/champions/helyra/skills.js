@@ -3,7 +3,15 @@ import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import totalBlock from "../generic/totalBlock.js";
 
 const helyraSkills = [
+  // =========================
+  // Total Block (global)
+  // =========================
+
   totalBlock,
+
+  // =========================
+  // Special Abilities
+  // =========================
 
   {
     key: "twin_report",
@@ -25,7 +33,7 @@ const helyraSkills = [
       };
     },
 
-    resolve({ user, targets, context = {} }) {
+    resolve({ user, targets, context }) {
       const [enemy] = targets;
 
       return new DamageEvent({
@@ -56,12 +64,12 @@ const helyraSkills = [
 
     description() {
       return {
-        en: `Helyra buries a round that never finishes discharging, and from that moment the chosen target is less a person than a path to ground. Deals physical damage and applies Conductor for <b>${this.conductorDuration}</b> turn(s).`,
-        pt: `Helyra enterra no alvo um projétil que jamais termina de descarregar e, a partir desse instante, o alvo escolhido deixa de ser alguém e passa a ser apenas um caminho até o chão. Causa dano físico e aplica <b>Condutor</b> por <b>${this.conductorDuration}</b> turno(s).`,
+        en: `Helyra buries a round that never finishes discharging, and from that moment the chosen target is less a person than a path to ground: they are left <b>Conductor</b> for <b>${this.conductorDuration}</b> turn(s). Deals physical damage.`,
+        pt: `Helyra enterra no alvo um projétil que jamais termina de descarregar e, a partir desse instante, o alvo escolhido deixa de ser alguém e passa a ser apenas um caminho até o chão, ficando <b>Condutor</b> por <b>${this.conductorDuration}</b> turno(s). Causa dano físico.`,
       };
     },
 
-    resolve({ user, targets, context = {} }) {
+    resolve({ user, targets, context }) {
       const [enemy] = targets;
 
       const result = new DamageEvent({
@@ -79,7 +87,6 @@ const helyraSkills = [
       if (effectConnected(resultArray[0], "conductor")) {
         enemy.applyStatusEffect("conductor", this.conductorDuration, context, {
           sourceId: user.id,
-          sourceName: user.name,
         });
       }
 
@@ -92,6 +99,7 @@ const helyraSkills = [
     name: "Shatterline",
 
     bf: 125,
+    conductorArcPercent: 60,
 
     contact: false,
     damageMode: "standard",
@@ -104,12 +112,12 @@ const helyraSkills = [
 
     description() {
       return {
-        en: `Helyra runs the whole length of the hall with both guns open, and every pane and plinth between her and the chosen target comes apart in her wake. Deals physical damage.`,
-        pt: `Helyra atravessa o salão de uma ponta à outra, com as duas armas em punho, e cada vitral e cada pedestal entre ela e o alvo escolhido se desfaz por onde passa. Causa dano físico.`,
+        en: `Helyra runs the whole length of the hall with both guns open, and every pane and plinth between her and the chosen target comes apart in her wake. The current of this round goes looking for ground: every other <b>Conductor</b> enemy it reaches takes <b>${this.conductorArcPercent}%</b> of the damage dealt as <b>Absolute Damage</b> instead of the usual share, and every enemy it passes through loses <b>Conductor</b>. Deals physical damage.`,
+        pt: `Helyra atravessa o salão de uma ponta à outra, com as duas armas em punho, e cada vitral e cada pedestal entre ela e o alvo escolhido se desfaz por onde passa. A corrente dessa bala procura o chão: cada outro inimigo <b>Condutor</b> que ela alcança recebe <b>${this.conductorArcPercent}%</b> do dano causado como <b>Dano Absoluto</b>, no lugar da parcela de sempre, e todo inimigo por onde ela passa perde o <b>Condutor</b>. Causa dano físico.`,
       };
     },
 
-    resolve({ user, targets, context = {} }) {
+    resolve({ user, targets, context }) {
       const [enemy] = targets;
 
       return new DamageEvent({

@@ -1,3 +1,4 @@
+import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 
 const arcSkill = {
@@ -16,7 +17,7 @@ export default {
   description() {
     return {
       en: `Helyra has never in her life aimed at one thing. The charge riding her rounds refuses to stop at the body it entered, so every hit she lands jumps from the chosen target to each of the other enemies on the field for <b>${this.arcPercent}%</b> of the damage it actually dealt, as <b>Absolute Damage</b>.`,
-      pt: `Helyra jamais, em toda a sua vida, mirou em uma única coisa. A carga que cavalga por seu corpo se recusa a deter-se no corpo que primeiro atravessa; assim, cada golpe que desfere salta do alvo escolhido para cada um dos outros inimigos no campo, causando <b>${this.arcPercent}%</b> do dano que efetivamente infligiu, como <b>Dano Absoluto</b>.`,
+      pt: `Helyra nunca mirou em uma coisa só na vida. A carga que corre em suas balas se recusa a parar no corpo em que entrou: cada golpe que ela acerta salta do alvo escolhido para cada um dos outros inimigos em campo, causando <b>${this.arcPercent}%</b> do dano que de fato infligiu, como <b>Dano Absoluto</b>.`,
     };
   },
 
@@ -26,33 +27,40 @@ export default {
 
   onAfterDmgDealing({ owner, attacker, defender, actualDmg, skill, context }) {
     if (attacker !== owner || !(actualDmg > 0)) return;
-    if (!defender || defender.team === owner.team) return;
-    if (skill?.key === arcSkill.key) return;
+    if (defender.team === owner.team) return;
 
-    const arcDamage = (Number(actualDmg) * this.arcPercent) / 100;
+    // A skill carrying conductorArcPercent grounds through Conductor enemies harder, spending it.
+    const grounding = skill.conductorArcPercent;
+    if (grounding) defender.removeStatusEffect("conductor");
 
-    const others = context.aliveChampions.filter(
-      (champion) => champion.team !== owner.team && champion !== defender,
-    );
+    const others = TargetFilter.candidates(
+      "enemy",
+      owner,
+      context.aliveChampions ?? [],
+    ).filter((champion) => champion !== defender);
     if (!others.length) return;
 
     context.extraDamageQueue ??= [];
 
     for (const other of others) {
+      const grounded = grounding && other.hasStatusEffect("conductor");
+      if (grounded) other.removeStatusEffect("conductor");
+
       context.extraDamageQueue.push({
-        baseDamage: arcDamage,
+        baseDamage: (actualDmg * (grounded ? grounding : this.arcPercent)) / 100,
         attacker: owner,
         defender: other,
         skill: arcSkill,
         type: "physical",
-        element: arcSkill.element,
-        contact: false,
         mode: "absolute",
       });
     }
 
     return {
-      log: `[PASSIVE — ${this.name}] the current leaves ${formatChampionName(defender)} and looks for the rest of the room.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> The current leaves ${formatChampionName(defender)} and looks for the rest of the room.`,
+        pt: `<b>[Passiva — ${this.name}]</b> A corrente deixa ${formatChampionName(defender)} e procura o resto do salão.`,
+      },
     };
   },
 };
