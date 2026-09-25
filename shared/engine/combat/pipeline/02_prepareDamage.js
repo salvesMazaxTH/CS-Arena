@@ -132,7 +132,11 @@ function processCrit(event, debugMode) {
     console.group(`⚔️ [CRÍTICO PROCESSING] - Damage Base: ${event.damage}`);
   }
 
-  const chance = Math.min(event.attacker?.Critical || 0, MAX_CRIT_CHANCE);
+  // extraChance adds to the attacker's Critical before the cap, in the same roll.
+  const chance = Math.min(
+    (event.attacker?.Critical || 0) + (event.critOptions?.extraChance || 0),
+    MAX_CRIT_CHANCE,
+  );
 
   event.crit = {
     chance,
@@ -146,6 +150,7 @@ function processCrit(event, debugMode) {
     const rolled = _rollCrit(
       event.attacker,
       event.context,
+      chance,
       event.critOptions,
       debugMode,
     );
@@ -167,10 +172,9 @@ function processCrit(event, debugMode) {
   if (debugMode) console.groupEnd();
 }
 
-function _rollCrit(user, context, critOptions = {}, debugMode = false) {
+function _rollCrit(user, context, chance, critOptions = {}, debugMode = false) {
   const { force = false, disable = false } = critOptions;
 
-  const chance = Math.min(user?.Critical || 0, MAX_CRIT_CHANCE);
   const bonus = user?.critBonusOverride || DEFAULT_CRIT_BONUS;
 
   if (disable) {
