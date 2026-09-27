@@ -2,6 +2,8 @@
 //  IMPORTS
 // ============================================================
 
+import "../shared/data/champions/promoteScheduledReleases.js";
+
 import "dotenv/config";
 import express from "express";
 import compression from "compression";

@@ -1,6 +1,6 @@
 export default {
   name: "Gorvakharr",
-  releaseDate: "2026-09-18",
+  releaseDate: "2026-10-01",
   portrait: "/assets/portraits/gorvakharr.webp",
 
   unreleased: true,

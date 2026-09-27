@@ -3,8 +3,6 @@ export default {
   releaseDate: "2026-09-27",
   portrait: "/assets/portraits/weyne.webp",
 
-  unreleased: true,
-
   HP: 300,
   Attack: 305,
   Defense: 60,

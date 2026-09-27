@@ -3,8 +3,6 @@ export default {
   releaseDate: "2026-09-27",
   portrait: "/assets/portraits/helyra.webp",
 
-  unreleased: true,
-
   HP: 285,
   Attack: 315,
   Defense: 50,

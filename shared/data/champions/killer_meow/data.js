@@ -2,7 +2,7 @@ import { STARTING_LIVES } from "./passive.js";
 
 export default {
   name: "Killer Meow",
-  releaseDate: "2026-09-14",
+  releaseDate: "2026-10-01",
   portrait: "/assets/portraits/killer_meow.webp",
 
   unreleased: true,
