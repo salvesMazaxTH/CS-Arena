@@ -21,6 +21,7 @@ const poisoned = {
       skill: { name: "Poison", key: "poisoned_tick" },
       context: dotContext,
       type: "magical",
+      element: "poison",
       baseDamage: dmgPerStack * stacks,
       mode: DamageEvent.Modes.ABSOLUTE,
       allChampions: context.allChampions,

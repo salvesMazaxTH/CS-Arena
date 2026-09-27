@@ -27,6 +27,7 @@ const toxViprannaSkills = [
     bf: 30,
     contact: true,
     damageMode: "standard",
+    element: "poison",
     priority: 0,
 
     targetSpec: ["enemy"],
@@ -94,6 +95,7 @@ const toxViprannaSkills = [
     name: "Toxic Coating",
 
     contact: false,
+    element: "poison",
     priority: 3,
 
     auraDuration: 2,
@@ -230,6 +232,7 @@ const toxViprannaSkills = [
 
     contact: false,
     damageMode: "absolute",
+    element: "poison",
     isUltimate: true,
     momentumCost: 55,
 

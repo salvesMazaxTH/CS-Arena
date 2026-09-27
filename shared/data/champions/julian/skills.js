@@ -17,6 +17,7 @@ const julianSkills = [
 
     contact: false,
     damageMode: "piercing",
+    element: "poison",
     piercingPercentage: 100,
     hitVfx: "poisoned_arrow",
     priority: 0,
@@ -75,6 +76,7 @@ const julianSkills = [
 
     contact: false,
     damageMode: "piercing",
+    element: "poison",
     piercingPercentage: 100,
     hitVfx: "poisoned_arrow",
     priority: 0,
@@ -148,6 +150,7 @@ const julianSkills = [
 
     contact: false,
     damageMode: "standard",
+    element: "poison",
     type: "physical",
     hitVfx: "poisoned_arrow",
     priority: 0,
