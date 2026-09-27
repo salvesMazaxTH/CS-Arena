@@ -226,6 +226,14 @@ export function applyDamageReduction(champion, config = {}) {
   });
 }
 
+// Percent DR stacks up to this; runtime.damageReductionCap lets a kit move its own ceiling.
+export const MAX_PERCENT_DAMAGE_REDUCTION = 70;
+
+export function getPercentDamageReductionCap(champion) {
+  const cap = champion?.runtime?.damageReductionCap ?? MAX_PERCENT_DAMAGE_REDUCTION;
+  return Math.min(cap, 100);
+}
+
 /** Sum active damage reduction as { flat, percent }; pass currentTurn to skip expired. */
 export function getTotalDamageReduction(champion, currentTurn) {
   let flat = 0;
@@ -244,7 +252,10 @@ export function getTotalDamageReduction(champion, currentTurn) {
     }
   }
 
-  return { flat, percent: Math.min(percent, 100) };
+  return {
+    flat,
+    percent: Math.min(percent, getPercentDamageReductionCap(champion)),
+  };
 }
 
 // Per-stat floor and ceiling. Both the clamp on the way in and the recompute

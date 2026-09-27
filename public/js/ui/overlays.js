@@ -12,6 +12,7 @@ import { getLocale } from "../i18n/clientLocale.js";
 import { StatusEffectsRegistry } from "../../../shared/data/statusEffects/effectsRegistry.js";
 import { EMBLEMS } from "../../../shared/data/emblems/index.js";
 import { championDB } from "../../../shared/data/championDB.js";
+import { getPercentDamageReductionCap } from "../../../shared/core/championCombat.js";
 
 /**
  * Hover/touch overlays: skill tooltips (with glossary), the champion portrait
@@ -523,7 +524,8 @@ export function createOverlays({
     const sum = (type) =>
       mods.filter((m) => m.type === type).reduce((s, m) => s + m.amount, 0);
     const stackedPercent = sum("percent");
-    const percent = Math.min(stackedPercent, 100);
+    const cap = getPercentDamageReductionCap(champion);
+    const percent = Math.min(stackedPercent, cap);
     const flat = sum("flat");
 
     const rows = mergeByLabel(
@@ -547,8 +549,8 @@ export function createOverlays({
         label: "Damage reduction",
         total: percentAndFlat(percent, flat),
         sub:
-          stackedPercent > 100
-            ? `capped at 100% (${stackedPercent}% stacked)`
+          stackedPercent > cap
+            ? `capped at ${cap}% (${stackedPercent}% stacked)`
             : null,
         sign: percent || flat,
         balance: balanceOf(rows.map((r) => r.sign)),
