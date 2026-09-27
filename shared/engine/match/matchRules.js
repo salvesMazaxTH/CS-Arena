@@ -1,5 +1,7 @@
 export const SCORE_THRESHOLD = 45;
-export const GENERIC_SCORE_HALVING_THRESHOLD = 38;
+export const GENERIC_SCORE_HALVING_THRESHOLD = 37;
+// The arena draws each team as rows of this many combat slots; adjacency never crosses a row.
+export const ARENA_ROW_SIZE = 4;
 
 // Generic/global scoring (kills, CLAIM) is halved, rounded up, but only for
 // the slice of the award that lands at or past the halving threshold — the

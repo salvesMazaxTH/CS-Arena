@@ -37,6 +37,7 @@ import { renderTeamSummary } from "./ui/teamCard.js";
 import { mirrorEditMode } from "./editModeMirror.js";
 import { Champion } from "/shared/core/Champion.js";
 import { SpawnProtection } from "/shared/engine/combat/spawnProtection.js";
+import { ARENA_ROW_SIZE } from "/shared/engine/match/matchRules.js";
 import { StatusIndicator } from "../../shared/ui/statusIndicator.js";
 import { createCombatAnimationManager } from "./animation/animsAndLogManager.js";
 import { syncChampionVFX } from "../../shared/vfx/vfxManager.js";
@@ -1492,13 +1493,25 @@ function sortTeamContainersByCombatSlot() {
     const sorted = Array.from(activeChampions.values())
       .filter((c) => c.team === team)
       .sort((a, b) => (a.combatSlot ?? 0) - (b.combatSlot ?? 0));
-    // Remove all .champion elements from container
-    championEls.forEach((el) => teamContainer.removeChild(el));
-    // Re-append in correct order
-    for (const champ of sorted) {
+    championEls.forEach((el) => el.remove());
+    teamContainer.querySelectorAll(".team-row").forEach((row) => row.remove());
+    // Rows split on the same boundary the engine uses, so adjacency never crosses one.
+    const rows = new Map();
+    sorted.forEach((champ, index) => {
       const el = elById.get(champ.id?.toString() || champ.id);
-      if (el) teamContainer.appendChild(el);
-    }
+      if (!el) return;
+      const slot = Number.isInteger(champ.combatSlot) ? champ.combatSlot : index;
+      const rowIndex = Math.floor(slot / ARENA_ROW_SIZE);
+      if (!rows.has(rowIndex)) {
+        const row = document.createElement("div");
+        row.className = "team-row";
+        rows.set(rowIndex, row);
+      }
+      rows.get(rowIndex).appendChild(el);
+    });
+    [...rows.keys()]
+      .sort((a, b) => a - b)
+      .forEach((rowIndex) => teamContainer.appendChild(rows.get(rowIndex)));
   }
 }
 

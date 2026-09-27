@@ -1,5 +1,9 @@
 import { getClaimMaxPoints, getClaimPoints } from "../combat/claim.js";
-import { SCORE_THRESHOLD, applyGenericScoreHalving } from "./matchRules.js";
+import {
+  ARENA_ROW_SIZE,
+  SCORE_THRESHOLD,
+  applyGenericScoreHalving,
+} from "./matchRules.js";
 import { championDB } from "../../data/championDB.js";
 import { getDuoForCore } from "../../data/duos.js";
 import { SpawnProtection } from "../combat/spawnProtection.js";
@@ -261,11 +265,14 @@ class CombatState {
 
     if (!champion || !Number.isInteger(champion.combatSlot)) return [];
 
-    const left = this.getChampionAtSlot(champion.team, champion.combatSlot - 1);
-    const right = this.getChampionAtSlot(
-      champion.team,
-      champion.combatSlot + 1,
-    );
+    const slot = champion.combatSlot;
+    const column = slot % ARENA_ROW_SIZE;
+    const left =
+      column > 0 ? this.getChampionAtSlot(champion.team, slot - 1) : null;
+    const right =
+      column < ARENA_ROW_SIZE - 1
+        ? this.getChampionAtSlot(champion.team, slot + 1)
+        : null;
 
     if (side === "left") return left ? [left] : [];
     if (side === "right") return right ? [right] : [];

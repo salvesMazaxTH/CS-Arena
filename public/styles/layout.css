@@ -162,10 +162,7 @@ header h1 {
   position: relative;
   isolation: isolate;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  align-items: flex-start;
-  align-content: flex-start;
+  flex-direction: column;
   gap: clamp(6px, 1vw, 12px);
 
   min-height: clamp(108px, 24vh, 210px);
@@ -372,6 +369,13 @@ body.team-selection-active .team-container:hover {
   .player-plate-fill {
     transition: none;
   }
+}
+
+.team-row {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  gap: inherit;
 }
 
 .team-container .champion {
