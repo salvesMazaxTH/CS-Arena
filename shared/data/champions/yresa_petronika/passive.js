@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import stonewardPassive from "../yresa_sentinel/passive.js";
 
 export default {
   key: "soilbound_oath",
@@ -13,8 +14,8 @@ export default {
     const current = this.soilReduction(champion);
 
     return {
-      en: `The ground answers to Yrêsa Petroníka, so it never holds her: <b>Rooted</b> and <b>Snared</b> never take hold on her. She stands outside Stoneward's aura and draws from the soil instead, taking <b>${this.dmgReductionPerSentinel}%</b> less damage from every source for each <b>Stoneward</b> standing on the field (except <b>Absolute Damage</b>). Right now the soil is taking <b>${current}%</b> of every hit off her.`,
-      pt: `O solo responde a Yrêsa Petroníka, então ele nunca a prende: <b>Enraizado</b> e <b>Enredado</b> jamais pegam nela. Ela fica de fora da aura do <b>Stoneward</b> e bebe da terra diretamente, sofrendo <b>${this.dmgReductionPerSentinel}%</b> menos dano de qualquer fonte para cada <b>Stoneward</b> de pé no campo (exceto <b>Dano Absoluto</b>). No momento o solo está tirando <b>${current}%</b> de cada golpe que vem nela.`,
+      en: `The ground answers to Yrêsa Petroníka, so it never holds her: <b>Rooted</b> and <b>Snared</b> never take hold on her. She stands outside Stoneward's aura and draws from the soil instead, taking <b>${this.dmgReductionPerSentinel}%</b> less damage from every source for each <b>Stoneward</b> on the field, those fused into the <b>Stoneward Colossus</b> included (except <b>Absolute Damage</b>). Right now the soil is taking <b>${current}%</b> of every hit off her.`,
+      pt: `O solo responde a Yrêsa Petroníka, então ele nunca a prende: <b>Enraizado</b> e <b>Enredado</b> jamais pegam nela. Ela fica de fora da aura do <b>Stoneward</b> e bebe da terra diretamente, sofrendo <b>${this.dmgReductionPerSentinel}%</b> menos dano de qualquer fonte para cada <b>Stoneward</b> no campo, contando os fundidos no <b>Stoneward Colossus</b> (exceto <b>Dano Absoluto</b>). No momento o solo está tirando <b>${current}%</b> de cada golpe que vem nela.`,
     };
   },
 
@@ -45,19 +46,19 @@ export default {
   },
 
   onChampionDeath({ owner, deadChampion, context }) {
-    if (!owner.runtime.sentinelIds?.includes(deadChampion.id)) return;
+    if (!owner.runtime.colossusIds?.includes(deadChampion.id)) return;
 
     this.refreshSoil({ owner, context });
   },
 
-  livingColossus({ owner, context }) {
-    const colossus = context?.allChampions?.get?.(owner.runtime.colossusId);
-    if (colossus?.alive !== true) {
-      owner.runtime.colossusId = null;
-      return null;
-    }
+  livingColossi({ owner, context }) {
+    const ids = owner.runtime.colossusIds ?? [];
+    const living = ids.filter(
+      (id) => context?.allChampions?.get?.(id)?.alive === true,
+    );
 
-    return colossus;
+    owner.runtime.colossusIds = living;
+    return living;
   },
 
   livingSentinels({ owner, context }) {
@@ -66,12 +67,24 @@ export default {
       (id) => context?.allChampions?.get?.(id)?.alive === true,
     );
 
+    // A fallen Stoneward fires no death hook, so its aura is lifted here.
+    for (const id of ids) {
+      if (!living.includes(id)) {
+        stonewardPassive.clearAura({ owner: { id }, context });
+      }
+    }
+
     owner.runtime.sentinelIds = living;
     return living;
   },
 
   refreshSoil({ owner, context }) {
-    const count = this.livingSentinels({ owner, context }).length;
+    const fused = this.livingColossi({ owner, context }).reduce(
+      (total, id) =>
+        total + (context.allChampions.get(id).runtime.fusedStonewards ?? 0),
+      0,
+    );
+    const count = this.livingSentinels({ owner, context }).length + fused;
 
     owner.damageReductionModifiers = (
       owner.damageReductionModifiers ?? []

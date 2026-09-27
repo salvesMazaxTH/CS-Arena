@@ -68,8 +68,8 @@ const yresaPetronikaSkills = [
 
     description() {
       return {
-        en: `Targeting herself, Yrêsa Petroníka raises another <b>Stoneward</b> out of the ground, a sentinel of packed earth and ore that stands on the field beside her. Targeting any other ally, she unmakes one of her standing Stonewards and pours it over them, leaving them with <b>${this.dmgReductionPercent}%</b> less damage taken for <b>${this.dmgReductionDuration}</b> turn(s) (except <b>Absolute Damage</b>). With no Stoneward standing but a <b>Stoneward Colossus</b> on the field, she takes the Colossus apart instead, for <b>${this.colossusDmgReductionPercent}%</b> less damage taken over the same duration. With nothing standing at all, she always raises one.`,
-        pt: `Ao mirar em si mesma, Yrêsa Petroníka ergue mais um <b>Stoneward</b> do chão, uma sentinela de terra compacta e minério que passa a ocupar o campo ao lado dela. Ao mirar em qualquer outro aliado, ela desfaz um de seus Stonewards de pé e o derrama sobre ele, deixando-o com <b>${this.dmgReductionPercent}%</b> menos dano sofrido por <b>${this.dmgReductionDuration}</b> turno(s) (exceto <b>Dano Absoluto</b>). Sem nenhum Stoneward de pé, mas com um <b>Stoneward Colossus</b> no campo, ela desfaz o Colossus no lugar, para <b>${this.colossusDmgReductionPercent}%</b> menos dano sofrido pela mesma duração. Sem nada de pé, ela sempre ergue um.`,
+        en: `Targeting herself, Yrêsa Petroníka raises another <b>Stoneward</b> out of the ground, a sentinel of packed earth and ore that stands on the field beside her. Targeting any other ally, she unmakes one of her standing Stonewards and pours it over them, leaving them with <b>${this.dmgReductionPercent}%</b> less damage taken for <b>${this.dmgReductionDuration}</b> turn(s) (except <b>Absolute Damage</b>). With no Stoneward standing but a <b>Stoneward Colossus</b> on the field, she takes the most worn Colossus apart instead, for <b>${this.colossusDmgReductionPercent}%</b> less damage taken over the same duration. With nothing standing at all, she always raises one.`,
+        pt: `Ao mirar em si mesma, Yrêsa Petroníka ergue mais um <b>Stoneward</b> do chão, uma sentinela de terra compacta e minério que passa a ocupar o campo ao lado dela. Ao mirar em qualquer outro aliado, ela desfaz um de seus Stonewards de pé e o derrama sobre ele, deixando-o com <b>${this.dmgReductionPercent}%</b> menos dano sofrido por <b>${this.dmgReductionDuration}</b> turno(s) (exceto <b>Dano Absoluto</b>). Sem nenhum Stoneward de pé, mas com um <b>Stoneward Colossus</b> no campo, ela desfaz o Colossus mais desgastado no lugar, para <b>${this.colossusDmgReductionPercent}%</b> menos dano sofrido pela mesma duração. Sem nada de pé, ela sempre ergue um.`,
       };
     },
 
@@ -78,24 +78,24 @@ const yresaPetronikaSkills = [
     resolve({ user, targets, context = {} }) {
       const ally = targets[0];
       const sentinelIds = user.passive.livingSentinels({ owner: user, context });
-      const colossus = user.passive.livingColossus({ owner: user, context });
+      const colossusIds = user.passive.livingColossi({ owner: user, context });
 
       if (ally.id === user.id) return this._raise({ user, context });
 
       if (sentinelIds.length > 0) {
         return this._unmake({
           user,
-          stoneward: this._spentFirst({ sentinelIds, context }),
+          stoneward: this._spentFirst({ ids: sentinelIds, context }),
           ally,
           amount: this.dmgReductionPercent,
           context,
         });
       }
 
-      if (colossus) {
+      if (colossusIds.length > 0) {
         return this._unmake({
           user,
-          stoneward: colossus,
+          stoneward: this._spentFirst({ ids: colossusIds, context }),
           ally,
           amount: this.colossusDmgReductionPercent,
           context,
@@ -105,8 +105,8 @@ const yresaPetronikaSkills = [
       return this._raise({ user, context });
     },
 
-    _spentFirst({ sentinelIds, context }) {
-      return sentinelIds
+    _spentFirst({ ids, context }) {
+      return ids
         .map((id) => context.allChampions.get(id))
         .reduce((spent, stoneward) =>
           stoneward.HP < spent.HP ? stoneward : spent,
@@ -168,13 +168,17 @@ const yresaPetronikaSkills = [
     _unmake({ user, stoneward, ally, amount, context }) {
       stoneward.passive.clearAura({ owner: stoneward, context });
 
+      // Spending her own Colossus is an unmaking, never a kill the enemy scores.
+      stoneward.runtime.leavesNoDeath = true;
       stoneward.HP = 0;
       stoneward.alive = false;
 
       user.runtime.sentinelIds = (user.runtime.sentinelIds ?? []).filter(
         (id) => id !== stoneward.id,
       );
-      if (user.runtime.colossusId === stoneward.id) user.runtime.colossusId = null;
+      user.runtime.colossusIds = (user.runtime.colossusIds ?? []).filter(
+        (id) => id !== stoneward.id,
+      );
       user.passive.refreshSoil({ owner: user, context });
 
       ally.damageReductionModifiers = (
@@ -300,9 +304,8 @@ const yresaPetronikaSkills = [
           statScaleByStat: this._colossusScale(fused),
 
           onSpawn: (colossus, spawnContext) => {
-            colossus.runtime.leavesNoDeath = true;
-
             if (!user.alive) {
+              colossus.runtime.leavesNoDeath = true;
               colossus.HP = 0;
               colossus.alive = false;
               return;
@@ -311,7 +314,10 @@ const yresaPetronikaSkills = [
             colossus.runtime.summonerId = user.id;
             colossus.runtime.arrivalVfx = "earth_summon";
             colossus.runtime.fusedStonewards = fused;
-            user.runtime.colossusId = colossus.id;
+            user.runtime.colossusIds = [
+              ...(user.runtime.colossusIds ?? []),
+              colossus.id,
+            ];
 
             colossus.passive.refreshAura({ owner: colossus, context: spawnContext });
 

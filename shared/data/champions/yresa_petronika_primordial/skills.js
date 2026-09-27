@@ -84,7 +84,7 @@ const yresaPetronikaPrimordialSkills = [
     key: "the_weight_she_set_aside",
     name: "The Weight She Set Aside",
 
-    bf: 90,
+    bf: 120,
     cannotBeEvaded: true,
 
     contact: false,
@@ -97,8 +97,8 @@ const yresaPetronikaPrimordialSkills = [
 
     description() {
       return {
-        en: `Yrêsa Petroníka's true form puts back on every ounce she had been carrying lightly, and the ground gives under it. Strikes every enemy with damage that cannot be evaded. Deals magical damage.`,
-        pt: `A forma verdadeira de Yrêsa Petroníka recoloca cada grama que vinha carregando de leve, e o chão cede sob isso. Atinge todos os inimigos com dano que não pode ser esquivado. Causa dano mágico.`,
+        en: `Yrêsa Petroníka's true form puts back on every ounce she had been carrying lightly, and the ground gives under it. Strikes <b>every enemy</b> with damage that <b>cannot be evaded</b>. Deals magical damage.`,
+        pt: `A forma verdadeira de Yrêsa Petroníka para de carregar o próprio peso como se não fosse nada — e quando ele volta todo de uma vez, o chão inteiro afunda. O impacto alcança <b>todos os inimigos</b> e <b>não pode ser esquivado</b>. Causa dano mágico.`,
       };
     },
 
