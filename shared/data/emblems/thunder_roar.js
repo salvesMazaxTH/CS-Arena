@@ -1,6 +1,7 @@
 export const thunderRoar = {
   key: "thunder_roar",
   name: "Emblem of the Thunder Roar",
+  speedBonus: 10,
 
   requirements: {
     elementalAffinity: {
@@ -10,7 +11,7 @@ export const thunderRoar = {
   },
 
   description() {
-    return "Your champions gain +10 Speed. The thunder's energy makes their attacks harder to evade.";
+    return `Your champions gain +${this.speedBonus} Speed. The thunder's energy makes their attacks harder to evade.`;
   },
 
   onChampionAdded({ champion, owner, context }) {
@@ -28,7 +29,7 @@ export const thunderRoar = {
     if (champion.modifyStat) {
       champion.modifyStat({
         statName: "Speed",
-        amount: 10,
+        amount: this.speedBonus,
         context,
         isPermanent: true,
       });

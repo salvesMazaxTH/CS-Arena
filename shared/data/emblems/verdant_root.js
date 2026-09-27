@@ -1,9 +1,12 @@
 // shared/data/emblems/verdant_root.js
 
+import { StatusEffectsRegistry } from "../statusEffects/effectsRegistry.js";
+
 export const verdantRoot = {
   key: "verdant_root",
   name: "Emblem of the Verdant Root",
   defenseBonus: 10,
+  immuneStatusKeys: ["poisoned", "rooted"],
 
   requirements: {
     elementalAffinity: {
@@ -13,7 +16,9 @@ export const verdantRoot = {
   },
 
   description() {
-    return `Your champions gain +${this.defenseBonus} Defense when entering combat and are immune to Poisoned and Rooted.`;
+    return `Your champions gain +${this.defenseBonus} Defense when entering combat and are immune to ${this.immuneStatusKeys
+      .map((key) => StatusEffectsRegistry[key].name)
+      .join(" and ")}.`;
   },
 
   hookScope: {
@@ -40,7 +45,7 @@ export const verdantRoot = {
 
   onStatusEffectIncoming({ target, statusEffect, owner }) {
     if (!target || !owner || target.team !== owner.team) return;
-    if (!["poisoned", "rooted"].includes(statusEffect?.key)) return;
+    if (!this.immuneStatusKeys.includes(statusEffect?.key)) return;
 
     return {
       cancel: true,

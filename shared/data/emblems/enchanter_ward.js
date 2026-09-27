@@ -5,6 +5,8 @@ import { championHasClass } from "../championClasses.js";
 export const enchanterWard = {
   key: "enchanter_ward",
   name: "Emblem of Mystic Sanctuary",
+  evasionBonus: 10,
+  healingBonusPercent: 15,
 
   requirements: {
     classKey: {
@@ -14,7 +16,7 @@ export const enchanterWard = {
   },
 
   description() {
-    return "Your Enchanter class champions gain +10 Evasion and their healing effectiveness is increased by +15%.";
+    return `Your Enchanter class champions gain +${this.evasionBonus} Evasion and their healing effectiveness is increased by +${this.healingBonusPercent}%.`;
   },
 
   onChampionAdded({ champion, owner, context }) {
@@ -33,7 +35,7 @@ export const enchanterWard = {
     if (champion.modifyStat) {
       champion.modifyStat({
         statName: "Evasion",
-        amount: 10,
+        amount: this.evasionBonus,
         context,
         isPermanent: true,
       });
@@ -46,7 +48,7 @@ export const enchanterWard = {
     if (!championHasClass(healSrc, "enchanter")) return;
 
     return {
-      amount: Math.round(amount * 1.15),
+      amount: Math.round(amount * (1 + this.healingBonusPercent / 100)),
     };
   },
 };

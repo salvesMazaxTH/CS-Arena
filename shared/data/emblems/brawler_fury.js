@@ -5,6 +5,8 @@ import { championHasClass } from "../championClasses.js";
 export const brawlerFury = {
   key: "brawler_fury",
   name: "Emblem of the Apex Brawler",
+  attackBonus: 15,
+  criticalBonus: 5,
 
   requirements: {
     classKey: {
@@ -14,7 +16,7 @@ export const brawlerFury = {
   },
 
   description() {
-    return "Your Brawler class champions gain +15 Attack and +5% Critical Chance.";
+    return `Your Brawler class champions gain +${this.attackBonus} Attack and +${this.criticalBonus}% Critical Chance.`;
   },
 
   onChampionAdded({ champion, owner, context }) {
@@ -33,13 +35,13 @@ export const brawlerFury = {
     if (champion.modifyStat) {
       champion.modifyStat({
         statName: "Attack",
-        amount: 15,
+        amount: this.attackBonus,
         context,
         isPermanent: true,
       });
       champion.modifyStat({
         statName: "Critical",
-        amount: 5,
+        amount: this.criticalBonus,
         context,
         isPermanent: true,
       });

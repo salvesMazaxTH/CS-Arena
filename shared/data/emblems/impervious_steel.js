@@ -1,6 +1,7 @@
 export const impervious_steel = {
   key: "impervious_steel",
   name: "Emblem of Impervious Steel",
+  dmgReductionPercent: 15,
   piercingResistPercent: 50,
 
   requirements: {
@@ -11,7 +12,7 @@ export const impervious_steel = {
   },
 
   description() {
-    return `Your champions gain 15% damage reduction (except Absolute Damage) and halve the effectiveness of Piercing damage against them.`;
+    return `Your champions gain ${this.dmgReductionPercent}% damage reduction (except Absolute Damage) and Piercing damage against them loses ${this.piercingResistPercent}% of its effectiveness.`;
   },
 
   hookPolicies: {
@@ -36,7 +37,7 @@ export const impervious_steel = {
 
     // Apply buff only to this specific champion
     champion.applyDamageReduction({
-      amount: 15,
+      amount: this.dmgReductionPercent,
       type: "percent",
       duration: 9999,
       source: "Emblem of Impervious Steel",
@@ -53,7 +54,7 @@ export const impervious_steel = {
 
     return {
       piercingPercentage: resistedPiercing,
-      log: `<b>[Emblem — Impervious Steel]</b> ${defender.name}'s steel resists the piercing strike, halving its effectiveness!`,
+      log: `<b>[Emblem — Impervious Steel]</b> ${defender.name}'s steel resists the piercing strike, cutting its effectiveness by ${this.piercingResistPercent}%!`,
     };
   },
 };

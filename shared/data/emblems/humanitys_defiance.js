@@ -41,18 +41,7 @@ export const humanitysDefiance = {
     if (isHuman(defender)) return;
 
     const bonusDamage = Number(damage) * (this.bonusDmgPercent / 100);
-    
     const newDamage = Number(damage) + bonusDamage;
-
-    console.log("[HUMANITY'S DEFIANCE - Class Adaptation] Bonus applied:", {
-      attacker: attacker?.name,
-      defender: defender?.name,
-      attackerClass: attacker?.classKey,
-      defenderClass: defender?.classKey,
-      before: damage,
-      bonus: bonusDamage.toFixed(2),
-      after: newDamage.toFixed(2),
-    });
 
     return {
       damage: newDamage,
@@ -71,16 +60,6 @@ export const humanitysDefiance = {
 
     const reduction = Number(damage) * (this.damageReductionPercent / 100);
     const newDamage = Number(damage) - reduction;
-
-    console.log("[HUMANITY'S DEFIANCE - Adaptive Defense] Reduction applied:", {
-      defender: defender?.name,
-      attacker: attacker?.name,
-      defenderAttack: defender?.Attack,
-      attackerAttack: attacker?.Attack,
-      before: damage,
-      reduction: reduction.toFixed(2),
-      after: newDamage.toFixed(2),
-    });
 
     return {
       damage: newDamage,

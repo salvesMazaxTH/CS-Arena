@@ -18,20 +18,6 @@ function hasLightningAffinity(champion) {
   );
 }
 
-// Speed granted to each half of the emblem, keyed by the test that qualifies a
-// champion for it. A champion that is both takes the higher grant, not the sum.
-const SPEED_GRANTS = [
-  { matches: (champion) => championHasClass(champion, "brawler"), amount: 12 },
-  { matches: hasLightningAffinity, amount: 5 },
-];
-
-function getSpeedGrant(champion) {
-  const amounts = SPEED_GRANTS.filter((grant) => grant.matches(champion)).map(
-    (grant) => grant.amount,
-  );
-  return amounts.length ? Math.max(...amounts) : 0;
-}
-
 function carriesTheStorm(champion) {
   return championHasClass(champion, "brawler") || hasLightningAffinity(champion);
 }
@@ -40,6 +26,8 @@ export const stormFist = {
   key: "storm_fist",
   name: "Emblem of the Storm Fist",
   bonusDmgPercent: 15,
+  brawlerSpeedBonus: 12,
+  lightningSpeedBonus: 5,
 
   requirements: {
     classKey: {
@@ -53,10 +41,15 @@ export const stormFist = {
   },
 
   description() {
-    const [brawlerGrant, lightningGrant] = SPEED_GRANTS.map(
-      (grant) => grant.amount,
+    return `Your Brawler champions gain +${this.brawlerSpeedBonus} Speed and your Lightning champions gain +${this.lightningSpeedBonus} Speed when entering combat. Both deal ${this.bonusDmgPercent}% bonus damage to enemies slower than them.`;
+  },
+
+  // A champion that is both takes the higher grant, not the sum.
+  speedGrant(champion) {
+    return Math.max(
+      championHasClass(champion, "brawler") ? this.brawlerSpeedBonus : 0,
+      hasLightningAffinity(champion) ? this.lightningSpeedBonus : 0,
     );
-    return `Your Brawler champions gain +${brawlerGrant} Speed and your Lightning champions gain +${lightningGrant} Speed when entering combat. Both deal ${this.bonusDmgPercent}% bonus damage to enemies slower than them.`;
   },
 
   hookScope: {
@@ -68,7 +61,7 @@ export const stormFist = {
     if (!champion || !owner) return;
     if (champion.team !== owner.team) return;
 
-    const speedBonus = getSpeedGrant(champion);
+    const speedBonus = this.speedGrant(champion);
     if (!speedBonus) return;
 
     // Mark that this champion has already received the emblem buff
@@ -100,16 +93,6 @@ export const stormFist = {
 
     const bonusDamage = Number(damage) * (this.bonusDmgPercent / 100);
     const newDamage = Number(damage) + bonusDamage;
-
-    console.log("[STORM FIST - Outpaced] Bonus applied:", {
-      attacker: attacker?.name,
-      defender: defender?.name,
-      attackerSpeed: attacker?.Speed,
-      defenderSpeed: defender?.Speed,
-      before: damage,
-      bonus: bonusDamage.toFixed(2),
-      after: newDamage.toFixed(2),
-    });
 
     return {
       damage: newDamage,

@@ -50,16 +50,6 @@ export const divineMandate = {
     const bonusDamage = Number(damage) * (this.bonusDmgPercent / 100);
     const newDamage = Number(damage) + bonusDamage;
 
-    console.log("[DIVINE MANDATE - Judgement] Bonus applied:", {
-      attacker: attacker?.name,
-      defender: defender?.name,
-      attackerHPPercent: hpPercent(attacker).toFixed(2),
-      defenderHPPercent: hpPercent(defender).toFixed(2),
-      before: damage,
-      bonus: bonusDamage.toFixed(2),
-      after: newDamage.toFixed(2),
-    });
-
     return {
       damage: newDamage,
     };
@@ -77,15 +67,6 @@ export const divineMandate = {
 
     const reduction = Number(damage) * (this.damageReductionPercent / 100);
     const newDamage = Number(damage) - reduction;
-
-    console.log("[DIVINE MANDATE - Unshaken Form] Reduction applied:", {
-      defender: defender?.name,
-      attacker: attacker?.name,
-      defenderHPPercent: hpPercent(defender).toFixed(2),
-      before: damage,
-      reduction: reduction.toFixed(2),
-      after: newDamage.toFixed(2),
-    });
 
     return {
       damage: newDamage,

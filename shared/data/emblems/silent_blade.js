@@ -5,6 +5,8 @@ import { championHasClass } from "../championClasses.js";
 export const silentBlade = {
   key: "silent_blade",
   name: "Emblem of the Silent Blade",
+  speedBonus: 15,
+  criticalBonus: 10,
 
   requirements: {
     classKey: {
@@ -14,7 +16,7 @@ export const silentBlade = {
   },
 
   description() {
-    return "Your Assassin class champions gain +15 Speed and +10% Critical Chance.";
+    return `Your Assassin class champions gain +${this.speedBonus} Speed and +${this.criticalBonus}% Critical Chance.`;
   },
 
   onChampionAdded({ champion, owner, context }) {
@@ -33,13 +35,13 @@ export const silentBlade = {
     if (champion.modifyStat) {
       champion.modifyStat({
         statName: "Speed",
-        amount: 15,
+        amount: this.speedBonus,
         context,
         isPermanent: true,
       });
       champion.modifyStat({
         statName: "Critical",
-        amount: 10,
+        amount: this.criticalBonus,
         context,
         isPermanent: true,
       });

@@ -1,6 +1,7 @@
 export const earthshaker = {
   key: "earthshaker",
   name: "Emblem of the Earthshaker",
+  defenseBonus: 25,
 
   requirements: {
     elementalAffinity: {
@@ -10,7 +11,7 @@ export const earthshaker = {
   },
 
   description() {
-    return "Your champions gain +25 Defense and are immune to control effects.";
+    return `Your champions gain +${this.defenseBonus} Defense and are immune to control effects.`;
   },
 
   hookScope: {
@@ -32,7 +33,7 @@ export const earthshaker = {
     // Apply buff only to this specific champion
     champion.modifyStat({
       statName: "Defense",
-      amount: 25,
+      amount: this.defenseBonus,
       context,
       isPermanent: true,
     });

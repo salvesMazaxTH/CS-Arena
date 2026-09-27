@@ -5,6 +5,8 @@ import { championHasClass } from "../championClasses.js";
 export const tankBulwark = {
   key: "tank_bulwark",
   name: "Emblem of the Titan's Bulwark",
+  defenseBonus: 20,
+  maxHPBonusPercent: 5,
 
   requirements: {
     classKey: {
@@ -14,7 +16,7 @@ export const tankBulwark = {
   },
 
   description() {
-    return "Your Tank class champions gain +30 Defense and +5% Max HP.";
+    return `Your Tank class champions gain +${this.defenseBonus} Defense and +${this.maxHPBonusPercent}% Max HP.`;
   },
 
   onChampionAdded({ champion, owner, context }) {
@@ -33,13 +35,16 @@ export const tankBulwark = {
     if (champion.modifyStat) {
       champion.modifyStat({
         statName: "Defense",
-        amount: 20,
+        amount: this.defenseBonus,
         context,
         isPermanent: true,
       });
     }
 
-    const hpBonus = Math.max(1, Math.round((champion.maxHP || 100) * 0.05));
+    const hpBonus = Math.max(
+      1,
+      Math.round((champion.maxHP || 100) * (this.maxHPBonusPercent / 100)),
+    );
     if (champion.modifyHP) {
       champion.modifyHP(hpBonus, {
         affectMax: true,

@@ -1,5 +1,7 @@
 // shared/data/emblems/permafrost.js
 
+import { StatusEffectsRegistry } from "../statusEffects/effectsRegistry.js";
+
 export const permafrost = {
   key: "permafrost",
   name: "Emblem of the Permafrost",
@@ -7,6 +9,7 @@ export const permafrost = {
   baseDamageReductionPercent: 7,
   iceDamageReductionPercent: 12,
   iceHitShieldPercent: 25,
+  immuneStatusKey: "chilled",
 
   requirements: {
     elementalAffinity: {
@@ -16,7 +19,7 @@ export const permafrost = {
   },
 
   description() {
-    return `The cold your team carries is the settled kind — old ice that has forgotten how to melt and does not feel a fresh chill land on it. Every allied champion is immune to Chilled and takes ${this.baseDamageReductionPercent}% less damage (except Absolute Damage), rising to ${this.iceDamageReductionPercent}% against Ice damage; when Ice damage does land, ${this.iceHitShieldPercent}% of it freezes onto the champion as a Shield.`;
+    return `The cold your team carries is the settled kind — old ice that has forgotten how to melt and does not feel a fresh chill land on it. Every allied champion is immune to ${StatusEffectsRegistry[this.immuneStatusKey].name} and takes ${this.baseDamageReductionPercent}% less damage (except Absolute Damage), rising to ${this.iceDamageReductionPercent}% against Ice damage; when Ice damage does land, ${this.iceHitShieldPercent}% of it freezes onto the champion as a Shield.`;
   },
 
   hookPolicies: {
@@ -34,7 +37,7 @@ export const permafrost = {
   // only the Chilled half to the rest of the team, never Frozen.
   onStatusEffectIncoming({ target, statusEffect, owner }) {
     if (!target || !owner || target.team !== owner.team) return;
-    if (statusEffect?.key !== "chilled") return;
+    if (statusEffect?.key !== this.immuneStatusKey) return;
 
     return {
       cancel: true,

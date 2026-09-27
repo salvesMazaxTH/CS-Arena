@@ -5,6 +5,8 @@ import { championHasClass } from "../championClasses.js";
 export const marksmanPrecision = {
   key: "marksman_precision",
   name: "Emblem of Deadeye Precision",
+  attackBonus: 20,
+  criticalBonus: 8,
 
   requirements: {
     classKey: {
@@ -14,7 +16,7 @@ export const marksmanPrecision = {
   },
 
   description() {
-    return "Your Marksman class champions gain +20 Attack and +8% Critical Chance.";
+    return `Your Marksman class champions gain +${this.attackBonus} Attack and +${this.criticalBonus}% Critical Chance.`;
   },
 
   onChampionAdded({ champion, owner, context }) {
@@ -33,13 +35,13 @@ export const marksmanPrecision = {
     if (champion.modifyStat) {
       champion.modifyStat({
         statName: "Attack",
-        amount: 20,
+        amount: this.attackBonus,
         context,
         isPermanent: true,
       });
       champion.modifyStat({
         statName: "Critical",
-        amount: 8,
+        amount: this.criticalBonus,
         context,
         isPermanent: true,
       });
