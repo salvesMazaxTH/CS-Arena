@@ -18,8 +18,8 @@ const yresaPetronikaPrimordialSkills = [
 
     description() {
       return {
-        en: `Yrêsa Petroníka's true form slams the ground flat, sending the shock through every enemy on the field. Deals physical damage.`,
-        pt: `A forma verdadeira de Yrêsa Petroníka esmaga o chão, mandando o tranco por todos os inimigos no campo. Causa dano físico.`,
+        en: `Yrêsa Petroníka's true form slams the ground flat, sending the shock through <b>every enemy</b> on the field. Deals physical damage.`,
+        pt: `A forma verdadeira de Yrêsa Petroníka esmaga o chão, mandando o tranco por <b>todos os inimigos</b> no campo. Causa dano físico.`,
       };
     },
 
@@ -54,19 +54,25 @@ const yresaPetronikaPrimordialSkills = [
 
     description() {
       return {
-        en: `The true form draws the surrounding ore into herself, raising her <b>Defense</b> by <b>${this.defenseBonusPercent}%</b> for <b>${this.duration}</b> turn(s).`,
-        pt: `A forma verdadeira puxa para dentro de si o minério ao redor, aumentando sua <b>Defesa</b> em <b>${this.defenseBonusPercent}%</b> por <b>${this.duration}</b> turno(s).`,
+        en: `The true form draws the surrounding ore into herself, raising her <b>Defense</b> by <b>${this.defenseBonusPercent}%</b> for <b>${this.duration}</b> turn(s), or until she leaves this form.`,
+        pt: `A forma verdadeira puxa para dentro de si o minério ao redor, aumentando sua <b>Defesa</b> em <b>${this.defenseBonusPercent}%</b> por <b>${this.duration}</b> turno(s), ou até ela deixar esta forma.`,
       };
     },
 
     targetSpec: ["self"],
 
     resolve({ user, context = {} }) {
+      // Capped at the revert, so the ore goes back into the ground with the form.
+      const revertAtTurn = user.runtime.transformation?.revertAtTurn;
+      const duration = revertAtTurn
+        ? Math.min(this.duration, revertAtTurn - context.currentTurn)
+        : this.duration;
+
       user.modifyStat({
         statName: "Defense",
         amount: this.defenseBonusPercent,
         isPercent: true,
-        duration: this.duration,
+        duration,
         context,
         statModifierSrc: "yresa_petronika_primordial_bulwark_of_ore",
       });

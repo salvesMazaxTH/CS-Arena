@@ -281,9 +281,9 @@ class CombatState {
   }
 
   /**
-   * Checks whether the team has room for one more living entity. Champions are
-   * bound by `maxPerTeam`; every entity, minions included, is bound by the
-   * team-wide entity cap.
+   * Checks whether the team has room for `requiredSlots` more living entities.
+   * Every entity type counts toward the team-wide entity cap; only entities of
+   * type "champion" are further bound by `maxPerTeam`.
    */
   canSpawnOnTeam(
     team,
@@ -296,25 +296,20 @@ class CombatState {
       return false;
     }
 
-    if (entityType === "minion") return true;
+    if (entityType !== "champion") return true;
 
     const championsOnField = entitiesOnField.filter(
-      (champion) => champion.entityType !== "minion",
+      (champion) => (champion.entityType ?? "champion") === "champion",
     );
 
     return championsOnField.length + requiredSlots <= maxPerTeam;
   }
 
   /**
-   * Returns the next free combatSlot (0-based) for a team, or null when every
-   * slot in 0..maxPerTeam-1 is taken.
-   *
-   * Minions never take a champion slot: they search from `maxPerTeam` upwards
-   * (extra slots, rendered after the champion line). Occupancy itself still
-   * considers every living entity — two entities cannot share a slot, minion
-   * or not.
+   * Returns the first free combatSlot (0-based) for a team, or null when every
+   * slot is taken. No slot is reserved for any entity type.
    */
-  getNextAvailableSlot(team, maxPerTeam = 3, { entityType = "champion" } = {}) {
+  getNextAvailableSlot(team) {
     const occupied = new Set(
       [...this.activeChampions.values()]
         .filter(
@@ -323,15 +318,7 @@ class CombatState {
         .map((c) => c.combatSlot),
     );
 
-    if (entityType === "minion") {
-      const ceiling = maxPerTeam + MAX_ENTITIES_PER_TEAM;
-      for (let i = maxPerTeam; i < ceiling; i++) {
-        if (!occupied.has(i)) return i;
-      }
-      return null;
-    }
-
-    for (let i = 0; i < maxPerTeam; i++) {
+    for (let i = 0; i < MAX_ENTITIES_PER_TEAM; i++) {
       if (!occupied.has(i)) return i;
     }
     return null;
@@ -379,10 +366,11 @@ class CombatState {
   }
 
   /**
-   * Creates and registers a champion from its DB key, honoring the field cap and
-   * relocating off a taken explicit slot. Fires the onChampionAdded hooks. Returns
-   * the instance, or null when the team is full, no slot is free or the key is
-   * invalid. Server-only concerns (portrait skin, state broadcast) stay in the
+   * Creates and registers a champion from its DB key, honoring the team-wide
+   * entity cap and relocating off a taken explicit slot. The champion cap is the
+   * line-up summon's to enforce, so other effects may bring in a fourth.
+   * Fires the onChampionAdded hooks. Returns the instance, or null when the team
+   * is full, no slot is free or the key is invalid. Server-only concerns (portrait skin, state broadcast) stay in the
    * server wrapper — this method never touches sockets.
    */
   spawnChampion({
@@ -390,11 +378,11 @@ class CombatState {
     team,
     combatSlot = null,
     trackSnapshot = true,
-    maxPerTeam = 3,
     spawnProtection = true,
     asEntityType = null,
     statScale = 1,
     statScaleByStat = null,
+    runtime = null,
   } = {}) {
     const dbData = championDB[championKey];
     if (!dbData) {
@@ -411,7 +399,7 @@ class CombatState {
     }
     const baseData = { ...dbData, entityType, ...scaledStats };
 
-    if (!this.canSpawnOnTeam(team, maxPerTeam, { entityType })) {
+    if (!this.canSpawnOnTeam(team, Infinity, { entityType })) {
       console.warn(
         `[SPAWN] Aborted: team ${team} has no room for another ${entityType} (attempted: ${championKey}).`,
       );
@@ -419,7 +407,7 @@ class CombatState {
     }
 
     if (!Number.isInteger(combatSlot)) {
-      combatSlot = this.getNextAvailableSlot(team, maxPerTeam, { entityType });
+      combatSlot = this.getNextAvailableSlot(team);
       if (combatSlot === null) {
         console.warn(
           `[SPAWN] Aborted: no free slot on team ${team} (attempted: ${championKey}).`,
@@ -428,9 +416,7 @@ class CombatState {
       }
     } else if (this.getChampionAtSlot(team, combatSlot)) {
       // The explicit slot (e.g. a revival) is taken — relocate rather than stack.
-      const fallbackSlot = this.getNextAvailableSlot(team, maxPerTeam, {
-        entityType,
-      });
+      const fallbackSlot = this.getNextAvailableSlot(team);
       console.warn(
         `[SPAWN] Slot ${combatSlot} on team ${team} is taken; relocating ${championKey} to ${fallbackSlot}.`,
       );
@@ -441,6 +427,9 @@ class CombatState {
     const id = generateId(championKey);
     const newChampion = Champion.fromBaseData(baseData, id, team, { combatSlot });
     newChampion.championKey = championKey;
+
+    // Seeded before onChampionAdded so the newcomer's own hooks can read it.
+    if (runtime) Object.assign(newChampion.runtime, runtime);
 
     if (spawnProtection !== false && entityType === "champion") {
       SpawnProtection.grant(newChampion);
@@ -461,7 +450,8 @@ class CombatState {
         },
         spawnProtection,
       },
-      [newChampion],
+      // Everyone on the field hears the arrival; hookScope "champion" narrows it to the newcomer.
+      this.activeChampions,
       { players: this.match.players },
     );
 
@@ -479,8 +469,8 @@ class CombatState {
   }
 
   /**
-   * Applies a champion mutation request (restore / transform / revertTransform /
-   * vanish / recallFromNothingness / swap) and returns { champion, log? }, or
+   * Applies a champion mutation request (summon / restore / transform /
+   * revertTransform / vanish / recallFromNothingness / swap) and returns { champion, log? }, or
    * null when it cannot be applied.
    * On transform, schedules the matching revert. Sockets are the server's job.
    */
@@ -497,16 +487,34 @@ class CombatState {
       turns = 1,
       returnState = null,
       ruptureSourceId = null,
+      championKey = null,
+      team = null,
+      asEntityType = null,
+      runtime = null,
+      onSettled = null,
     } = {},
     options = {},
   ) {
     const mutationContext = options?.context ?? null;
+
+    if (mode === "summon") {
+      const summoned = this.spawnChampion({
+        championKey,
+        team,
+        asEntityType,
+        runtime,
+      });
+      // Told either way, so the requester can speak for a full field too.
+      onSettled?.(summoned, mutationContext);
+      return summoned ? { champion: summoned } : null;
+    }
 
     if (mode === "vanish") {
       return Nothingness.send(this, targetId, {
         turns,
         returnState,
         ruptureSourceId,
+        context: mutationContext,
       });
     }
 

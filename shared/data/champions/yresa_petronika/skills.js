@@ -68,8 +68,8 @@ const yresaPetronikaSkills = [
 
     description() {
       return {
-        en: `Targeting herself, Yrêsa Petroníka raises another <b>Stoneward</b> out of the ground, a sentinel of packed earth and ore that stands on the field beside her. Targeting any other ally, she unmakes one of her standing Stonewards and pours it over them, leaving them with <b>${this.dmgReductionPercent}%</b> less damage taken for <b>${this.dmgReductionDuration}</b> turn(s) (except <b>Absolute Damage</b>). With no Stoneward standing but a <b>Stoneward Colossus</b> on the field, she takes the most worn Colossus apart instead, for <b>${this.colossusDmgReductionPercent}%</b> less damage taken over the same duration. With nothing standing at all, she always raises one.`,
-        pt: `Ao mirar em si mesma, Yrêsa Petroníka ergue mais um <b>Stoneward</b> do chão, uma sentinela de terra compacta e minério que passa a ocupar o campo ao lado dela. Ao mirar em qualquer outro aliado, ela desfaz um de seus Stonewards de pé e o derrama sobre ele, deixando-o com <b>${this.dmgReductionPercent}%</b> menos dano sofrido por <b>${this.dmgReductionDuration}</b> turno(s) (exceto <b>Dano Absoluto</b>). Sem nenhum Stoneward de pé, mas com um <b>Stoneward Colossus</b> no campo, ela desfaz o Colossus mais desgastado no lugar, para <b>${this.colossusDmgReductionPercent}%</b> menos dano sofrido pela mesma duração. Sem nada de pé, ela sempre ergue um.`,
+        en: `Targeting herself, Yrêsa Petroníka raises another <b>Stoneward</b> out of the ground, a sentinel of packed earth and ore that stands on the field beside her. Targeting any other allied champion, she unmakes the most worn of her standing <b>Stonewards</b> and pours it over them, leaving them with <b>${this.dmgReductionPercent}%</b> less damage taken for <b>${this.dmgReductionDuration}</b> turn(s) (except <b>Absolute Damage</b>). With no <b>Stoneward</b> standing but a <b>Stoneward Colossus</b> on the field, she takes the most worn <b>Colossus</b> apart instead, for <b>${this.colossusDmgReductionPercent}%</b> less damage taken over the same duration. With nothing standing at all, she always raises one.`,
+        pt: `Ao mirar em si mesma, Yrêsa Petroníka ergue mais um <b>Stoneward</b> do chão, uma sentinela de terra compacta e minério que passa a ocupar o campo ao lado dela. Ao mirar em qualquer outro campeão aliado, ela desfaz o mais desgastado de seus <b>Stonewards</b> de pé e o derrama sobre ele, deixando-o com <b>${this.dmgReductionPercent}%</b> menos dano sofrido por <b>${this.dmgReductionDuration}</b> turno(s) (exceto <b>Dano Absoluto</b>). Sem nenhum <b>Stoneward</b> de pé, mas com um <b>Stoneward Colossus</b> no campo, ela desfaz o <b>Colossus</b> mais desgastado no lugar, para <b>${this.colossusDmgReductionPercent}%</b> menos dano sofrido pela mesma duração. Sem nada de pé, ela sempre ergue um.`,
       };
     },
 
@@ -109,7 +109,9 @@ const yresaPetronikaSkills = [
       return ids
         .map((id) => context.allChampions.get(id))
         .reduce((spent, stoneward) =>
-          stoneward.HP < spent.HP ? stoneward : spent,
+          stoneward.HP / stoneward.maxHP < spent.HP / spent.maxHP
+            ? stoneward
+            : spent,
         );
     },
 
@@ -124,18 +126,21 @@ const yresaPetronikaSkills = [
 
           onSpawn: (sentinel, spawnContext) => {
             sentinel.runtime.leavesNoDeath = true;
+            sentinel.runtime.unmakingVfx = "crumble";
 
-            if (!user.alive) {
+            // A transform or revert since scheduling swaps her instance out.
+            const summoner = spawnContext.allChampions.get(user.id);
+            if (!summoner?.alive) {
               sentinel.HP = 0;
               sentinel.alive = false;
               return;
             }
 
-            sentinel.runtime.summonerId = user.id;
+            sentinel.runtime.summonerId = summoner.id;
             sentinel.runtime.arrivalVfx = "earth_summon";
 
-            user.runtime.sentinelIds = [
-              ...(user.runtime.sentinelIds ?? []),
+            summoner.runtime.sentinelIds = [
+              ...(summoner.runtime.sentinelIds ?? []),
               sentinel.id,
             ];
 
@@ -143,14 +148,17 @@ const yresaPetronikaSkills = [
               owner: sentinel,
               context: spawnContext,
             });
-            user.passive.refreshSoil({ owner: user, context: spawnContext });
+            summoner.passive.refreshSoil?.({
+              owner: summoner,
+              context: spawnContext,
+            });
 
             spawnContext.registerDialog?.({
               message: {
-                en: `${formatChampionName(user)} calls Stoneward up from the ground to guard her.`,
-                pt: `${formatChampionName(user)} chama Stoneward para fora do chão para guardá-la.`,
+                en: `${formatChampionName(summoner)} calls Stoneward up from the ground to guard her.`,
+                pt: `${formatChampionName(summoner)} chama Stoneward para fora do chão para guardá-la.`,
               },
-              sourceId: user.id,
+              sourceId: summoner.id,
               targetId: sentinel.id,
             });
           },
@@ -159,8 +167,8 @@ const yresaPetronikaSkills = [
 
       return {
         log: {
-          en: `${formatChampionName(user)} pulls <b>Stoneward</b> out of the soil.`,
-          pt: `${formatChampionName(user)} puxa <b>Stoneward</b> para fora da terra.`,
+          en: `${formatChampionName(user)} sinks her hands into the soil to call <b>Stoneward</b> up.`,
+          pt: `${formatChampionName(user)} afunda as mãos na terra para chamar <b>Stoneward</b> à superfície.`,
         },
       };
     },
@@ -234,8 +242,8 @@ const yresaPetronikaSkills = [
 
     description() {
       return {
-        en: `Yrêsa Petroníka lets go of the shape she wears and becomes the ground itself. She strikes the chosen target once, then unfolds into the earth and ore she ruled before it had a name — her <b>Primordial Form</b> — for <b>${this.transformDuration}</b> turn(s), replacing her skills, her passive and her stats. If <b>${this.fusionMinimum}</b> or more <b>Stonewards</b> stand when she unfolds, they collapse into one another and rise as the <b>Stoneward Colossus</b>, a golem that grows with every Stoneward poured into it and stays on the field after she returns. Deals magical damage.`,
-        pt: `Yrêsa Petroníka abre mão da forma que veste e se torna o próprio chão. Ela golpeia o alvo escolhido uma vez e então se desdobra na terra e no minério que governava antes de isso ter nome — sua <b>Forma Primordial</b> — por <b>${this.transformDuration}</b> turno(s), substituindo suas skills, sua passiva e seus atributos. Se <b>${this.fusionMinimum}</b> ou mais <b>Stonewards</b> estiverem de pé quando ela se desdobrar, eles desabam uns sobre os outros e se erguem como o <b>Stoneward Colossus</b>, um golem que cresce a cada Stoneward derramado nele e que permanece no campo depois que ela volta. Causa dano mágico.`,
+        en: `Yrêsa Petroníka lets go of the shape she wears and becomes the ground itself. She strikes the chosen target once, then unfolds into the earth and ore she ruled before it had a name — her <b>Primordial Form</b> — for <b>${this.transformDuration}</b> turn(s), replacing her skills, her passive and her stats. If <b>${this.fusionMinimum}</b> or more <b>Stonewards</b> stand when she unfolds, they collapse into one another and rise as the <b>Stoneward Colossus</b>, a golem that grows with every <b>Stoneward</b> poured into it and stays on the field after she returns. Deals magical damage.`,
+        pt: `Yrêsa Petroníka abre mão da forma que veste e se torna o próprio chão. Ela golpeia o alvo escolhido uma vez e então se desdobra na terra e no minério que governava antes de isso ter nome — sua <b>Forma Primordial</b> — por <b>${this.transformDuration}</b> turno(s), substituindo suas skills, sua passiva e seus atributos. Se <b>${this.fusionMinimum}</b> ou mais <b>Stonewards</b> estiverem de pé quando ela se desdobrar, eles desabam uns sobre os outros e se erguem como o <b>Stoneward Colossus</b>, um golem que cresce a cada <b>Stoneward</b> derramado nele e que permanece no campo depois que ela volta. Causa dano mágico.`,
       };
     },
 
@@ -268,6 +276,9 @@ const yresaPetronikaSkills = [
       const fusionLog = this._fuse({ user, context });
       if (fusionLog) results.push(fusionLog);
 
+      // The soil is her passive's, and the transform would carry it into a form without it.
+      user.passive.clearSoil({ owner: user });
+
       results.push({
         log: {
           en: `${formatChampionName(user)} lets go of her worn shape and unfolds into the earth itself for ${this.transformDuration} turn(s)!`,
@@ -291,8 +302,10 @@ const yresaPetronikaSkills = [
         stoneward.alive = false;
       }
 
-      user.runtime.sentinelIds = [];
-      user.passive.refreshSoil({ owner: user, context });
+      // Only the fused leave the list; any away in the Nothingness are still hers.
+      user.runtime.sentinelIds = user.runtime.sentinelIds.filter(
+        (id) => !sentinelIds.includes(id),
+      );
 
       context.schedule({
         type: "spawnChampion",
@@ -304,18 +317,21 @@ const yresaPetronikaSkills = [
           statScaleByStat: this._colossusScale(fused),
 
           onSpawn: (colossus, spawnContext) => {
-            if (!user.alive) {
+            // She has transformed since scheduling, so her old instance is stale.
+            const summoner = spawnContext.allChampions.get(user.id);
+            if (!summoner?.alive) {
               colossus.runtime.leavesNoDeath = true;
               colossus.HP = 0;
               colossus.alive = false;
               return;
             }
 
-            colossus.runtime.summonerId = user.id;
+            colossus.runtime.summonerId = summoner.id;
             colossus.runtime.arrivalVfx = "earth_summon";
+            colossus.runtime.unmakingVfx = "crumble";
             colossus.runtime.fusedStonewards = fused;
-            user.runtime.colossusIds = [
-              ...(user.runtime.colossusIds ?? []),
+            summoner.runtime.colossusIds = [
+              ...(summoner.runtime.colossusIds ?? []),
               colossus.id,
             ];
 
@@ -323,8 +339,8 @@ const yresaPetronikaSkills = [
 
             spawnContext.registerDialog?.({
               message: {
-                en: `The Stonewards fall into one another and stand back up as the <b>Stoneward Colossus</b>.`,
-                pt: `Os Stonewards desabam uns sobre os outros e se levantam como o <b>Stoneward Colossus</b>.`,
+                en: `The <b>Stonewards</b> fall into one another and stand back up as the <b>Stoneward Colossus</b>.`,
+                pt: `Os <b>Stonewards</b> desabam uns sobre os outros e se levantam como o <b>Stoneward Colossus</b>.`,
               },
               sourceId: user.id,
               targetId: colossus.id,
@@ -335,8 +351,8 @@ const yresaPetronikaSkills = [
 
       return {
         log: {
-          en: `<b>${fused}</b> Stonewards collapse into one another at ${formatChampionName(user)}'s feet.`,
-          pt: `<b>${fused}</b> Stonewards desabam uns sobre os outros aos pés de ${formatChampionName(user)}.`,
+          en: `<b>${fused} Stonewards</b> collapse into one another at ${formatChampionName(user)}'s feet.`,
+          pt: `<b>${fused} Stonewards</b> desabam uns sobre os outros aos pés de ${formatChampionName(user)}.`,
         },
       };
     },

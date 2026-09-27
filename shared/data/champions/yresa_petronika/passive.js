@@ -1,4 +1,6 @@
+import { Nothingness } from "../../../engine/combat/nothingness.js";
 import { formatChampionName } from "../../../ui/formatters.js";
+import colossusPassive from "../yresa_colossus/passive.js";
 import stonewardPassive from "../yresa_sentinel/passive.js";
 
 export default {
@@ -14,7 +16,7 @@ export default {
     const current = this.soilReduction(champion);
 
     return {
-      en: `The ground answers to Yrêsa Petroníka, so it never holds her: <b>Rooted</b> and <b>Snared</b> never take hold on her. She stands outside Stoneward's aura and draws from the soil instead, taking <b>${this.dmgReductionPerSentinel}%</b> less damage from every source for each <b>Stoneward</b> on the field, those fused into the <b>Stoneward Colossus</b> included (except <b>Absolute Damage</b>). Right now the soil is taking <b>${current}%</b> of every hit off her.`,
+      en: `The ground answers to Yrêsa Petroníka, so it never holds her: <b>Rooted</b> and <b>Snared</b> never take hold on her. She stands outside <b>Stoneward</b>'s aura and draws from the soil instead, taking <b>${this.dmgReductionPerSentinel}%</b> less damage from every source for each <b>Stoneward</b> on the field, those fused into the <b>Stoneward Colossus</b> included (except <b>Absolute Damage</b>). Right now the soil is taking <b>${current}%</b> of every hit off her.`,
       pt: `O solo responde a Yrêsa Petroníka, então ele nunca a prende: <b>Enraizado</b> e <b>Enredado</b> jamais pegam nela. Ela fica de fora da aura do <b>Stoneward</b> e bebe da terra diretamente, sofrendo <b>${this.dmgReductionPerSentinel}%</b> menos dano de qualquer fonte para cada <b>Stoneward</b> no campo, contando os fundidos no <b>Stoneward Colossus</b> (exceto <b>Dano Absoluto</b>). No momento o solo está tirando <b>${current}%</b> de cada golpe que vem nela.`,
     };
   },
@@ -27,6 +29,10 @@ export default {
 
   hookScope: {
     onStatusEffectIncoming: "target",
+  },
+
+  hookPolicies: {
+    onAfterDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
   },
 
   onStatusEffectIncoming({ owner, statusEffect }) {
@@ -45,37 +51,77 @@ export default {
     this.refreshSoil({ owner, context });
   },
 
+  // A Stoneward is born leavesNoDeath, so its fall is caught on the blow itself.
+  onAfterDmgTaking({ defender, owner, context }) {
+    if (defender.alive || !owner.runtime.sentinelIds?.includes(defender.id)) {
+      return;
+    }
+
+    this.refreshSoil({ owner, context });
+  },
+
   onChampionDeath({ owner, deadChampion, context }) {
     if (!owner.runtime.colossusIds?.includes(deadChampion.id)) return;
 
     this.refreshSoil({ owner, context });
   },
 
-  livingColossi({ owner, context }) {
-    const ids = owner.runtime.colossusIds ?? [];
-    const living = ids.filter(
-      (id) => context?.allChampions?.get?.(id)?.alive === true,
-    );
+  // A Stoneward away in the Nothingness stops counting until it comes back.
+  onChampionVanished({ owner, champion, context }) {
+    if (this._isOwnStone(owner, champion)) this.refreshSoil({ owner, context });
+  },
 
-    owner.runtime.colossusIds = living;
-    return living;
+  onChampionReturned({ owner, champion, context }) {
+    if (champion === owner || this._isOwnStone(owner, champion)) {
+      this.refreshSoil({ owner, context });
+    }
+  },
+
+  _isOwnStone(owner, champion) {
+    return [
+      ...(owner.runtime.sentinelIds ?? []),
+      ...(owner.runtime.colossusIds ?? []),
+    ].includes(champion.id);
+  },
+
+  livingColossi({ owner, context }) {
+    return this._standing({
+      owner,
+      context,
+      idsKey: "colossusIds",
+      auraPassive: colossusPassive,
+    });
   },
 
   livingSentinels({ owner, context }) {
-    const ids = owner.runtime.sentinelIds ?? [];
-    const living = ids.filter(
+    return this._standing({
+      owner,
+      context,
+      idsKey: "sentinelIds",
+      auraPassive: stonewardPassive,
+    });
+  },
+
+  // Off the field means no aura, but one away in the Nothingness stays hers.
+  _standing({ owner, context, idsKey, auraPassive }) {
+    const ids = owner.runtime[idsKey] ?? [];
+    const standing = ids.filter(
       (id) => context?.allChampions?.get?.(id)?.alive === true,
     );
+    const vanishedIds = (context?.matchChampions ?? [])
+      .filter((champion) => Nothingness.isVanished(champion))
+      .map((champion) => champion.id);
 
-    // A fallen Stoneward fires no death hook, so its aura is lifted here.
     for (const id of ids) {
-      if (!living.includes(id)) {
-        stonewardPassive.clearAura({ owner: { id }, context });
+      if (!standing.includes(id)) {
+        auraPassive.clearAura({ owner: { id }, context });
       }
     }
 
-    owner.runtime.sentinelIds = living;
-    return living;
+    owner.runtime[idsKey] = ids.filter(
+      (id) => standing.includes(id) || vanishedIds.includes(id),
+    );
+    return standing;
   },
 
   refreshSoil({ owner, context }) {
@@ -86,10 +132,7 @@ export default {
     );
     const count = this.livingSentinels({ owner, context }).length + fused;
 
-    owner.damageReductionModifiers = (
-      owner.damageReductionModifiers ?? []
-    ).filter((modifier) => modifier?.source !== this.dmgReductionSrc);
-
+    this.clearSoil({ owner });
     if (count === 0) return;
 
     owner.applyDamageReduction({
@@ -99,5 +142,11 @@ export default {
       source: this.dmgReductionSrc,
       context,
     });
+  },
+
+  clearSoil({ owner }) {
+    owner.damageReductionModifiers = (
+      owner.damageReductionModifiers ?? []
+    ).filter((modifier) => modifier?.source !== this.dmgReductionSrc);
   },
 };

@@ -12,7 +12,7 @@ const TELLTALE_RUNTIME_KEYS = [
   "silasMirageOwnerId",
   "silasMirageSpawnTurn",
   "leavesNoDeath",
-  "unmakingPalette",
+  "unmakingVfx",
   "hookEffectData",
 ];
 
@@ -239,7 +239,7 @@ const silasSkills = [
 
           onSpawn: (mirage, spawnContext) => {
             mirage.runtime.leavesNoDeath = true;
-            mirage.runtime.unmakingPalette = "hollow";
+            mirage.runtime.unmakingVfx = "hollow";
 
             if (!user.alive) {
               mirage.HP = 0;

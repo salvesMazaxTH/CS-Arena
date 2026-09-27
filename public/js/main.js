@@ -138,6 +138,7 @@ const {
 
 const { collectClientTargets } = createTargeting({
   getActiveChampions: () => activeChampions,
+  getCurrentTurn: () => currentTurn,
   removeSkillOverlay,
 });
 
@@ -1924,7 +1925,8 @@ function initActionBar() {
   if (!playerTeam || window.gameEnded) return;
 
   actionBarSlotOrder = Array.from(activeChampions.values())
-    .filter((c) => c.team === playerTeam)
+    // A body with no skills has nothing to declare, CLAIM included.
+    .filter((c) => c.team === playerTeam && c.skills?.length > 0)
     .sort((a, b) => (a.combatSlot ?? 0) - (b.combatSlot ?? 0))
     .map((c) => c.id);
 

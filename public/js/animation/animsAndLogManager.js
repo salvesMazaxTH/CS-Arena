@@ -17,7 +17,10 @@ import { resolveText } from "../../../shared/i18n/locale.js";
 import { getLocale } from "../i18n/clientLocale.js";
 import { audioManager } from "../utils/AudioManager.js";
 import { animateSkill } from "./skillAnimations.js";
-import { playUnmakingEffect } from "./effects/unmakingAnimation.js";
+import {
+  getUnmakingShape,
+  playUnmakingEffect,
+} from "./effects/unmakingAnimation.js";
 import {
   getArrivalReveal,
   playArrivalEffect,
@@ -64,6 +67,7 @@ const TIMING = {
   BETWEEN_EFFECTS: 60, // Reduced from 120
   BETWEEN_ACTIONS: 60, // Reduced from 60
   RESOURCE_PHASE_GAP: 260,
+  TAUNT_LEAD: 280,
 
   DEATH_CLAIM_EFFECT: 5600,
 };
@@ -533,6 +537,14 @@ export function createCombatAnimationManager(deps) {
     const clearAffectGlows = applySkillAffectGlows(envelope);
 
     try {
+      // A forced retarget must read before the dialog that names the new target.
+      if (envelope.redirectionEvents?.length) {
+        for (const event of envelope.redirectionEvents) {
+          await animateTauntRedirection(event);
+        }
+        await wait(TIMING.TAUNT_LEAD);
+      }
+
       if (action && typeof handleActionDialog === "function") {
         currentPhase = "combat";
         await handleActionDialog(action);
@@ -551,7 +563,9 @@ export function createCombatAnimationManager(deps) {
         await runDialogs(envelope.globalDialogs);
       }
       const hasAnyEvent =
-        dispatcher.keys.some((key) => envelope[key]?.length) ||
+        dispatcher.keys.some(
+          (key) => key !== "redirectionEvents" && envelope[key]?.length,
+        ) ||
         Boolean(envelope.scorePayload);
 
       if (!hasAnyEvent) {
@@ -562,7 +576,7 @@ export function createCombatAnimationManager(deps) {
 
       // event loop — plays events in the real chronological order (seq)
       // instead of a fixed category order.
-      await dispatcher.runOrdered(envelope);
+      await dispatcher.runOrdered({ ...envelope, redirectionEvents: null });
 
       if (state) applyStateSnapshots(state);
       if (log) appendToLog(log);
@@ -1026,7 +1040,8 @@ export function createCombatAnimationManager(deps) {
   async function animateTauntRedirection(effect) {
     const { attackerId } = effect;
     const championEl = getChampionElement(attackerId);
-    const portraitWrapper = championEl?.querySelector(".portrait-wrapper");
+    if (!championEl) return;
+    const portraitWrapper = championEl.querySelector(".portrait-wrapper");
 
     championEl.classList.add("taunt");
     createFloatElement(portraitWrapper, "TAUNTED", "taunt-float");
@@ -1587,7 +1602,7 @@ export function createCombatAnimationManager(deps) {
   // ============================================================
 
   async function processChampionRemoved(payload) {
-    const { championId, leavesNoDeath, unmakingPalette } = payload;
+    const { championId, leavesNoDeath, unmakingVfx } = payload;
 
     const champion = deps.activeChampions.get(championId);
     if (!champion) return;
@@ -1597,8 +1612,9 @@ export function createCombatAnimationManager(deps) {
 
     if (leavesNoDeath) {
       // Its ending is not a death, so it must not wear the skull.
+      el.dataset.unmaking = getUnmakingShape(unmakingVfx);
       el.classList.add("unmaking");
-      playUnmakingEffect(el, unmakingPalette);
+      playUnmakingEffect(el, unmakingVfx);
       await wait(TIMING.UNMAKING_ANIM);
     } else if (champion.runtime?.deathClaimTriggered) {
       // special vfx + dialog for Jeff_The_Death claim/special execution

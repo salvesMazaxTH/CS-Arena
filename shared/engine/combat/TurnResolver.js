@@ -579,7 +579,9 @@ export class TurnResolver {
 
       const shouldApplyImmediately =
         request.timing !== "postTurn" &&
-        ["transform", "swap", "restore", "vanish"].includes(request.mode);
+        ["summon", "transform", "swap", "restore", "vanish"].includes(
+          request.mode,
+        );
 
       if (!shouldApplyImmediately) {
         deferredRequests.push(request);

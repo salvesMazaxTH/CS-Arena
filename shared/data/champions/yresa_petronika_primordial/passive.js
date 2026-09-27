@@ -1,3 +1,5 @@
+import soilboundOath from "../yresa_petronika/passive.js";
+
 export default {
   key: "unyielding_bedrock",
   name: "Unyielding Bedrock",
@@ -15,7 +17,6 @@ export default {
   },
 
   hookScope: {
-    onAfterDmgTaking: "defender",
     onAfterHealing: "healTarget",
   },
 
@@ -27,8 +28,16 @@ export default {
     this._refresh({ owner, context });
   },
 
-  onAfterDmgTaking({ owner, context }) {
-    this._refresh({ owner, context });
+  // Unscoped: a Stoneward left standing through the transform can still fall.
+  onAfterDmgTaking({ defender, owner, context }) {
+    if (defender.id === owner.id) {
+      this._refresh({ owner, context });
+      return;
+    }
+
+    if (!defender.alive && owner.runtime.sentinelIds?.includes(defender.id)) {
+      soilboundOath.livingSentinels({ owner, context });
+    }
   },
 
   onAfterHealing({ owner, context }) {
@@ -42,9 +51,15 @@ export default {
 
     if (owner.HP > owner.maxHP * (this.hpThresholdPercent / 100)) return;
 
+    // Capped at the revert, so it expires with the form instead of following her back.
+    const revertAtTurn = owner.runtime.transformation?.revertAtTurn;
+    const duration = revertAtTurn
+      ? Math.min(this.refreshDurationTurns, revertAtTurn - context.currentTurn)
+      : this.refreshDurationTurns;
+
     owner.applyDamageReduction({
       amount: this.dmgReductionPercent,
-      duration: this.refreshDurationTurns,
+      duration,
       type: "percent",
       source: this.dmgReductionSrc,
       context,

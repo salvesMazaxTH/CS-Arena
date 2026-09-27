@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../ui/formatters.js";
 import { SpawnProtection } from "./spawnProtection.js";
+import { emitCombatEvent } from "./combatEvents.js";
 
 // Engine state, never a status: a cleanse must not be able to pull someone out.
 export class Nothingness {
@@ -9,10 +10,43 @@ export class Nothingness {
     return champion?.runtime?.nothingness != null;
   }
 
+  // Mutations may arrive without a context, and the hooks still need the whole match.
+  static eventContext(combat, context) {
+    return (
+      context ?? {
+        currentTurn: combat.currentTurn,
+        allChampions: combat.activeChampions,
+        players: combat.match?.players,
+        get matchChampions() {
+          return [
+            ...combat.activeChampions.values(),
+            ...combat.inactiveChampions.values(),
+            ...combat.deadChampions.values(),
+          ];
+        },
+      }
+    );
+  }
+
+  // The one who left is off the field, so it is told alongside everyone still on it.
+  static emit(combat, eventName, champion, context) {
+    emitCombatEvent(
+      eventName,
+      { champion, context: this.eventContext(combat, context) },
+      [...combat.activeChampions.values(), champion],
+      { players: combat.match?.players },
+    );
+  }
+
   static send(
     combat,
     championId,
-    { turns = 1, returnState = null, ruptureSourceId = null } = {},
+    {
+      turns = 1,
+      returnState = null,
+      ruptureSourceId = null,
+      context = null,
+    } = {},
   ) {
     const champion = combat.activeChampions.get(championId);
     if (!champion) return null;
@@ -26,6 +60,8 @@ export class Nothingness {
       ruptureSourceId,
     };
 
+    this.emit(combat, "onChampionVanished", champion, context);
+
     return {
       champion,
       log: {
@@ -38,13 +74,16 @@ export class Nothingness {
   static recall(combat, championId, { context = null, maxPerTeam = 3 } = {}) {
     const champion = combat.inactiveChampions.get(championId);
     if (!this.isVanished(champion)) return null;
-    if (!combat.canSpawnOnTeam(champion.team, maxPerTeam)) return null;
+    if (
+      !combat.canSpawnOnTeam(champion.team, maxPerTeam, {
+        entityType: champion.entityType,
+      })
+    ) {
+      return null;
+    }
 
     if (combat.getChampionAtSlot(champion.team, champion.combatSlot)) {
-      champion.combatSlot = combat.getNextAvailableSlot(
-        champion.team,
-        maxPerTeam,
-      );
+      champion.combatSlot = combat.getNextAvailableSlot(champion.team);
     }
 
     const { returnState } = champion.runtime.nothingness;
@@ -74,6 +113,8 @@ export class Nothingness {
     SpawnProtection.grant(champion);
     champion.runtime.arrivalVfx = "nothingness_return";
     if (context) champion.runtime.currentContext = context;
+
+    this.emit(combat, "onChampionReturned", champion, context);
 
     return {
       champion,
@@ -106,6 +147,7 @@ export class Nothingness {
       return (
         group.every(isDue) &&
         combat.canSpawnOnTeam(champion.team, maxPerTeam, {
+          entityType: champion.entityType,
           requiredSlots: group.length,
         })
       );

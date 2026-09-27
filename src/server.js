@@ -449,10 +449,7 @@ function applyCosmeticSkin(champion) {
  * could not be spawned.
  */
 function spawnChampion({ emitState = true, ...spawnOpts } = {}) {
-  const champion = match.combat.spawnChampion({
-    ...spawnOpts,
-    maxPerTeam: ACTIVE_PER_TEAM,
-  });
+  const champion = match.combat.spawnChampion(spawnOpts);
   if (!champion) return null;
 
   applyCosmeticSkin(champion);
@@ -501,7 +498,7 @@ function emitChampionDeath(deathResult) {
   io.emit("championRemoved", {
     championId: deathResult.championId,
     leavesNoDeath: champ?.runtime?.leavesNoDeath === true,
-    unmakingPalette: champ?.runtime?.unmakingPalette ?? null,
+    unmakingVfx: champ?.runtime?.unmakingVfx ?? null,
   });
 }
 
@@ -518,19 +515,23 @@ const pendingFieldArrivals = [];
  * puts a champion there writes runtime.arrivalVfx, which is consumed here so
  * the entrance plays once however the champion got in.
  */
-function collectFieldArrivals() {
+function collectFieldArrivals(drawnIds = null) {
   match.combat.activeChampions.forEach((champion) => {
     const arrivalVfx = champion.runtime?.arrivalVfx;
     if (!arrivalVfx) return;
+    if (drawnIds && !drawnIds.has(champion.id)) return;
 
     delete champion.runtime.arrivalVfx;
     pendingFieldArrivals.push({ championId: champion.id, arrivalVfx });
   });
 }
 
-/** Emits the queued entrances. Only ever call it after a state broadcast. */
-function flushFieldArrivals() {
-  collectFieldArrivals();
+/**
+ * Emits the queued entrances. Only ever call it after a state broadcast, or
+ * pass the ids of the snapshot that has just drawn them.
+ */
+function flushFieldArrivals(drawnIds = null) {
+  collectFieldArrivals(drawnIds);
 
   while (pendingFieldArrivals.length) {
     io.emit("championArrived", pendingFieldArrivals.shift());
@@ -541,11 +542,15 @@ function flushFieldArrivals() {
 function applyChampionMutation(request, options = {}) {
   const result = match.combat.mutateChampion(request, options);
 
+  if (request?.mode === "summon" && result?.champion) {
+    applyCosmeticSkin(result.champion);
+  }
+
   if (request?.mode === "vanish" && result?.champion) {
     pendingFieldDepartures.push({
       championId: result.champion.id,
       leavesNoDeath: true,
-      unmakingPalette: result.champion.runtime?.unmakingPalette ?? null,
+      unmakingVfx: result.champion.runtime?.unmakingVfx ?? null,
     });
   }
 
@@ -728,6 +733,11 @@ function handleEndTurn() {
         claimPoints: result.claimPoints ?? null,
         log: logsOrNull(result.results),
       });
+
+      // A mid-turn summon is drawn by this envelope's snapshot, so its
+      // entrance plays right after the action that brought it in.
+      const drawn = result.context?._intermediateSnapshot;
+      if (drawn) flushFieldArrivals(new Set(drawn.map(({ id }) => id)));
 
       const championMutationRequests =
         result.context?.flags?.championMutationRequests;
@@ -1561,7 +1571,7 @@ io.on("connection", (socket) => {
       );
     }
 
-    // The field cap counts champions only — minions are always allowed in.
+    // The champion cap binds line-up summons only; every type counts toward the entity cap.
     const summonEntityType = championDB[championKey].entityType ?? "champion";
 
     if (

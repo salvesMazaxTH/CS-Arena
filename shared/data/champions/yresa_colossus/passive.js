@@ -1,5 +1,3 @@
-import { TargetFilter } from "../../../engine/combat/targetFilter.js";
-
 export default {
   key: "many_made_one",
   name: "Many Made One",
@@ -13,21 +11,36 @@ export default {
 
     const standing = {
       en: fused
-        ? ` <b>${fused}</b> Stonewards stand inside it right now, so it is granting <b>${total}%</b> damage reduction in total.`
+        ? ` <b>${fused} Stonewards</b> stand inside it right now, so it is granting <b>${total}%</b> damage reduction in total.`
         : "",
       pt: fused
-        ? ` <b>${fused}</b> Stonewards estão de pé dentro dele agora, então ele está concedendo <b>${total}%</b> de redução de dano no total.`
+        ? ` <b>${fused} Stonewards</b> estão de pé dentro dele agora, então ele está concedendo <b>${total}%</b> de redução de dano no total.`
         : "",
     };
 
     return {
-      en: `Every Stoneward fused into the Colossus still keeps its vow: every ally other than the one who raised it takes <b>${this.auraDmgReductionPerStoneward}%</b> less damage from every source for each <b>Stoneward</b> inside it (except <b>Absolute Damage</b>).${standing.en}`,
-      pt: `Cada Stoneward fundido no Colossus ainda mantém seu voto: todo aliado que não seja quem o ergueu sofre <b>${this.auraDmgReductionPerStoneward}%</b> menos dano de qualquer fonte para cada <b>Stoneward</b> dentro dele (exceto <b>Dano Absoluto</b>).${standing.pt}`,
+      en: `Every <b>Stoneward</b> fused into the <b>Colossus</b> still keeps its vow: every ally other than the one who raised it takes <b>${this.auraDmgReductionPerStoneward}%</b> less damage from every source for each <b>Stoneward</b> inside it (except <b>Absolute Damage</b>).${standing.en}`,
+      pt: `Cada <b>Stoneward</b> fundido no <b>Colossus</b> ainda mantém seu voto: todo aliado que não seja quem o ergueu sofre <b>${this.auraDmgReductionPerStoneward}%</b> menos dano de qualquer fonte para cada <b>Stoneward</b> dentro dele (exceto <b>Dano Absoluto</b>).${standing.pt}`,
     };
   },
 
   onTurnStart({ owner, context }) {
     this.refreshAura({ owner, context });
+  },
+
+  onChampionAdded({ owner, champion, context }) {
+    if (champion !== owner && champion.team === owner.team) {
+      this.refreshAura({ owner, context });
+    }
+  },
+
+  // Leaving for the Nothingness takes the aura along; the return brings it back.
+  onChampionVanished({ owner, champion, context }) {
+    if (champion === owner) this.clearAura({ owner, context });
+  },
+
+  onChampionReturned({ owner, champion, context }) {
+    if (champion.team === owner.team) this.refreshAura({ owner, context });
   },
 
   onChampionDeath({ owner, deadChampion, context }) {
@@ -46,13 +59,13 @@ export default {
     const fused = owner.runtime.fusedStonewards ?? 0;
     if (fused === 0) return;
 
-    const champions = [...(context?.allChampions?.values?.() ?? [])];
-    const allies = TargetFilter.candidates(
-      { type: "ally" },
-      owner,
-      champions,
-    ).filter(
-      (ally) => ally.id !== owner.id && ally.id !== owner.runtime.summonerId,
+    // Like an emblem, the aura reaches allies still taking the field.
+    const allies = [...(context?.allChampions?.values?.() ?? [])].filter(
+      (ally) =>
+        ally.alive &&
+        ally.team === owner.team &&
+        ally.id !== owner.id &&
+        ally.id !== owner.runtime.summonerId,
     );
 
     for (const ally of allies) {

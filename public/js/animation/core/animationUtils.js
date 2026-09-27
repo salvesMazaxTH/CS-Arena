@@ -60,7 +60,8 @@ export async function runSoloEffect(box, buildEffect, onFrame) {
 
   await new Promise((resolve) => {
     function frame(now) {
-      const dt = Math.min((now - last) / 1000, 1 / 30);
+      // The first rAF timestamp can predate the performance.now() taken above.
+      const dt = Math.min(Math.max((now - last) / 1000, 0), 1 / 30);
       last = now;
 
       ctx.clearRect(box.x, box.y, box.width, box.height);

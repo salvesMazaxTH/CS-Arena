@@ -1028,8 +1028,44 @@
   }
 }
 
+/* What the soil raised gives way from the top down after the canvas has
+   cracked it, sinking a little as it goes. */
+.champion.unmaking[data-unmaking="crumble"] {
+  animation: crumble 560ms 160ms ease-in forwards;
+}
+
+@keyframes crumble {
+  from {
+    translate: 0 0;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      #000 0%,
+      #000 100%
+    );
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 0%, #000 100%);
+  }
+
+  to {
+    translate: 0 10px;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 100%,
+      #000 106%,
+      #000 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 100%,
+      #000 106%,
+      #000 100%
+    );
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .champion.unmaking {
+  .champion.unmaking,
+  .champion.unmaking[data-unmaking="crumble"] {
     animation: unmakeFade 640ms linear forwards;
   }
 

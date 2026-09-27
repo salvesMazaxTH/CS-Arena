@@ -1,5 +1,3 @@
-import { TargetFilter } from "../../../engine/combat/targetFilter.js";
-
 export default {
   key: "bedrock_vow",
   name: "Bedrock Vow",
@@ -10,27 +8,31 @@ export default {
 
   description() {
     return {
-      en: `Stoneward is born <b>Inert</b>: by nature, it does not move of its own accord. While it stands, the ground around it holds: every ally other than the one who raised it takes <b>${this.auraDmgReductionPercent}%</b> less damage from every source (except <b>Absolute Damage</b>).`,
-      pt: `O Stoneward nasce <b>Inerte</b>: por natureza, ele não se move por conta própria. Enquanto estiver de pé, o chão ao redor dele aguenta: todo aliado que não seja quem o ergueu sofre <b>${this.auraDmgReductionPercent}%</b> menos dano de qualquer fonte (exceto <b>Dano Absoluto</b>).`,
+      en: `<b>Stoneward</b> is born <b>Inert</b>: by nature, it does not move of its own accord. While it stands, the ground around it holds: every ally other than the one who raised it takes <b>${this.auraDmgReductionPercent}%</b> less damage from every source (except <b>Absolute Damage</b>).`,
+      pt: `O <b>Stoneward</b> nasce <b>Inerte</b>: por natureza, ele não se move por conta própria. Enquanto estiver de pé, o chão ao redor dele aguenta: todo aliado que não seja quem o ergueu sofre <b>${this.auraDmgReductionPercent}%</b> menos dano de qualquer fonte (exceto <b>Dano Absoluto</b>).`,
     };
   },
 
-  hookScope: {
-    onChampionAdded: "champion",
-  },
+  onChampionAdded({ owner, champion, context }) {
+    if (champion === owner) {
+      owner.applyStatusEffect("inert", this.inertDurationTurns, context);
+      return;
+    }
 
-  onChampionAdded({ owner, context }) {
-    owner.applyStatusEffect("inert", this.inertDurationTurns, context);
+    if (champion.team === owner.team) this.refreshAura({ owner, context });
   },
 
   onTurnStart({ owner, context }) {
     this.refreshAura({ owner, context });
   },
 
-  onChampionDeath({ owner, deadChampion, context }) {
-    if (deadChampion !== owner) return;
+  // Leaving for the Nothingness takes the aura along; the return brings it back.
+  onChampionVanished({ owner, champion, context }) {
+    if (champion === owner) this.clearAura({ owner, context });
+  },
 
-    this.clearAura({ owner, context });
+  onChampionReturned({ owner, champion, context }) {
+    if (champion.team === owner.team) this.refreshAura({ owner, context });
   },
 
   auraSource(owner) {
@@ -40,13 +42,13 @@ export default {
   refreshAura({ owner, context }) {
     this.clearAura({ owner, context });
 
-    const champions = [...(context?.allChampions?.values?.() ?? [])];
-    const allies = TargetFilter.candidates(
-      { type: "ally" },
-      owner,
-      champions,
-    ).filter(
-      (ally) => ally.id !== owner.id && ally.id !== owner.runtime.summonerId,
+    // Like an emblem, the aura reaches allies still taking the field.
+    const allies = [...(context?.allChampions?.values?.() ?? [])].filter(
+      (ally) =>
+        ally.alive &&
+        ally.team === owner.team &&
+        ally.id !== owner.id &&
+        ally.id !== owner.runtime.summonerId,
     );
 
     for (const ally of allies) {

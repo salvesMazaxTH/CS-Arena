@@ -3,10 +3,14 @@ import { TargetFilter } from "../../../shared/engine/combat/targetFilter.js";
 /**
  * Client-side target selection for a skill: reads the champions on the field and
  * opens a picker overlay when the player must choose. Returns the chosen targets;
- * it never mutates shared game state. Depends on the live champion list and on
- * removeSkillOverlay, both injected.
+ * it never mutates shared game state. Depends on the live champion list, the
+ * current turn and removeSkillOverlay, all injected.
  */
-export function createTargeting({ getActiveChampions, removeSkillOverlay }) {
+export function createTargeting({
+  getActiveChampions,
+  getCurrentTurn,
+  removeSkillOverlay,
+}) {
   async function collectClientTargets(user, skill) {
     if (!skill || !Array.isArray(skill.targetSpec)) return null;
 
@@ -27,6 +31,7 @@ export function createTargeting({ getActiveChampions, removeSkillOverlay }) {
     const targets = {};
     const enemyCounter = { count: 0 };
     const chosenTargets = new Set();
+    const taunterId = skill.ignoresTaunt ? null : getActiveTaunterId(user);
 
     for (const spec of normalizedSpec) {
       const target = await selectTargetForRole(
@@ -36,6 +41,7 @@ export function createTargeting({ getActiveChampions, removeSkillOverlay }) {
         enemyCounter,
         chosenTargets,
         spec.unique === true,
+        taunterId,
       );
 
       // Manual cancel.
@@ -62,6 +68,7 @@ export function createTargeting({ getActiveChampions, removeSkillOverlay }) {
     enemyCounter,
     chosenTargets,
     enforceUnique,
+    taunterId,
   ) {
     // Helper: filters already chosen targets when uniqueness is enforced.
     const filterUnique = (list) =>
@@ -135,13 +142,20 @@ export function createTargeting({ getActiveChampions, removeSkillOverlay }) {
 
       const index = enemyCounter.count;
 
-      const candidates = byFieldOrder(
+      let candidates = byFieldOrder(
         filterUnique(TargetFilter.candidates(spec, user, championsInField)),
       );
 
+      // Mirrors the server's taunt redirection: offer only the taunter when it is targetable.
+      const taunter = enforceUnique
+        ? null
+        : candidates.find((c) => c.id === taunterId);
+      if (taunter) candidates = [taunter];
+
+      const label = index === 1 ? "Select the ENEMY" : `Select the ENEMY ${index}`;
       const target = await createTargetSelectionOverlay(
         candidates,
-        index === 1 ? "Select the ENEMY" : `Select the ENEMY ${index}`,
+        taunter ? `TAUNTED — ${label}` : label,
       );
 
       if (target === null) return null;
@@ -155,6 +169,12 @@ export function createTargeting({ getActiveChampions, removeSkillOverlay }) {
 
     console.error(`[selectTargetForRole] Unknown target role: ${role}`);
     return undefined;
+  }
+
+  function getActiveTaunterId(user) {
+    const currentTurn = getCurrentTurn();
+    const taunt = user.tauntEffects?.find((e) => e.expiresAtTurn > currentTurn);
+    return taunt?.taunterId ?? null;
   }
 
   function createTargetSelectionOverlay(candidates, title) {
