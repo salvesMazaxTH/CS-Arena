@@ -89,6 +89,8 @@ import yresa_petronika_primordial from "./yresa_petronika_primordial/index.js";
 import yresa_sentinel from "./yresa_sentinel/index.js";
 import yresa_colossus from "./yresa_colossus/index.js";
 import thalvaressa from "./thalvaressa/index.js";
+import hikari from "./hikari/index.js";
+import hikari_dummy from "./hikari_dummy/index.js";
 
 const championDB = {
   atlas,
@@ -182,6 +184,8 @@ const championDB = {
   yresa_sentinel,
   yresa_colossus,
   thalvaressa,
+  hikari,
+  hikari_dummy,
 };
 
 export default championDB;
