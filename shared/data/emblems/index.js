@@ -18,6 +18,9 @@ import { assassinsAmbush } from "./assassins_ambush.js";
 import { permafrost } from "./permafrost.js";
 import { dragonsFury } from "./dragons_fury.js";
 import { risingInferno } from "./rising_inferno.js";
+import { verdantRoot } from "./verdant_root.js";
+import { galeStep } from "./gale_step.js";
+import { creepingVenom } from "./creeping_venom.js";
 
 export { evaluateEmblemEligibilityForRoster } from "./eligibility.js";
 
@@ -42,4 +45,7 @@ export const EMBLEMS = [
   permafrost,
   dragonsFury,
   risingInferno,
+  verdantRoot,
+  galeStep,
+  creepingVenom,
 ];
