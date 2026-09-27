@@ -68,6 +68,9 @@ const TIMING = {
   BETWEEN_ACTIONS: 60, // Reduced from 60
   RESOURCE_PHASE_GAP: 260,
   TAUNT_LEAD: 280,
+  // Held on a freshly arrived card, so even one struck down by the very next
+  // action is seen whole, HP bar included, before it is hit.
+  ARRIVAL_SETTLE: 550,
 
   DEATH_CLAIM_EFFECT: 5600,
 };
@@ -1398,11 +1401,22 @@ export function createCombatAnimationManager(deps) {
   function applyStateSnapshots(snapshots) {
     if (!Array.isArray(snapshots)) return;
 
+    let drewNewcomer = false;
+
     for (const snap of snapshots) {
       if (!snap?.id) continue;
 
-      const champion = deps.activeChampions.get(snap.id);
-      if (!champion) continue;
+      let champion = deps.activeChampions.get(snap.id);
+
+      // Whoever reached the field mid-resolution is drawn by the first
+      // envelope that carries it, so its entrance and the blows it takes in
+      // that same turn have an element to play on. One already gone by then
+      // has nothing left to show.
+      if (!champion) {
+        if (!(snap.HP > 0)) continue;
+        champion = deps.createNewChampion(snap);
+        drewNewcomer = true;
+      }
 
       syncChampionFromSnapshot(champion, snap);
 
@@ -1410,6 +1424,9 @@ export function createCombatAnimationManager(deps) {
       StatusIndicator.updateChampionIndicators(champion);
       syncChampionVFX(champion);
     }
+
+    // A newcomer is appended at the end of its row, not at its slot.
+    if (drewNewcomer) deps.onChampionReplaced?.();
   }
 
   // The state a single event left its target in, rendered the moment that
@@ -1672,6 +1689,8 @@ export function createCombatAnimationManager(deps) {
     el.classList.remove("materializing");
     delete el.dataset.arrival;
     el.style.removeProperty("--arrival-duration");
+
+    await wait(TIMING.ARRIVAL_SETTLE);
   }
 
   // ============================================================

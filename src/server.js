@@ -304,9 +304,14 @@ function getViewerTeam(socketId) {
 }
 
 /** Rewrites the champion payload embedded in an envelope, in either shape it
- *  takes: a bare snapshot array, or a full getGameState object. */
+ *  takes: a bare snapshot array, or a full getGameState object. A bare snapshot
+ *  draws whoever the client does not know yet, so a concealed summon leaves it. */
 function disguiseState(state, viewerTeam) {
-  if (Array.isArray(state)) return applyDisguises(state, viewerTeam);
+  if (Array.isArray(state)) {
+    return applyDisguises(state, viewerTeam).filter(
+      (champion) => !isConcealedFromViewer(champion, viewerTeam),
+    );
+  }
 
   if (Array.isArray(state?.champions)) {
     return { ...state, champions: applyDisguises(state.champions, viewerTeam) };
@@ -516,14 +521,20 @@ const pendingFieldArrivals = [];
  * the entrance plays once however the champion got in.
  */
 function collectFieldArrivals(drawnIds = null) {
-  match.combat.activeChampions.forEach((champion) => {
-    const arrivalVfx = champion.runtime?.arrivalVfx;
-    if (!arrivalVfx) return;
-    if (drawnIds && !drawnIds.has(champion.id)) return;
+  // A mid-turn snapshot is looked up by id: whoever it drew may already have
+  // died later in the same resolution and left activeChampions, yet its
+  // entrance still has to play before the blow that took it away.
+  const candidates = drawnIds
+    ? [...drawnIds].map((id) => match.combat.getChampion(id))
+    : match.combat.activeChampions.values();
+
+  for (const champion of candidates) {
+    const arrivalVfx = champion?.runtime?.arrivalVfx;
+    if (!arrivalVfx) continue;
 
     delete champion.runtime.arrivalVfx;
     pendingFieldArrivals.push({ championId: champion.id, arrivalVfx });
-  });
+  }
 }
 
 /**
