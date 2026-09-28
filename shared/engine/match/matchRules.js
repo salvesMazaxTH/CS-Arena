@@ -1,5 +1,11 @@
-export const SCORE_THRESHOLD = 45;
-export const GENERIC_SCORE_HALVING_THRESHOLD = 37;
+// A team earns a star at the end of each of these turns if it leads (or ties)
+// on points; the first team to STARS_TO_WIN stars ends the match.
+export const STAR_CHECKPOINT_TURNS = [5, 8, 11, 14, 17];
+export const STARS_TO_WIN = 3;
+// Reaching this score grants a one-time extra star, and whoever reached it
+// first breaks a tie on stars.
+export const STAR_SCORE_THRESHOLD = 60;
+export const GENERIC_SCORE_HALVING_THRESHOLD = 53;
 // The arena draws each team as rows of this many combat slots; adjacency never crosses a row.
 export const ARENA_ROW_SIZE = 4;
 

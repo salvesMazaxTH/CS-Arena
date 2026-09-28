@@ -13,6 +13,7 @@ const GATED_FLAGS = {
   unrestrictedSummon: false,
   actMultipleTimesPerTurn: false,
   summonWithoutSpawnProtection: false,
+  everyTurnIsStarCheckpoint: false,
 };
 
 export function isEditModeClean(editMode) {

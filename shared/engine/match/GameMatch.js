@@ -1,7 +1,9 @@
 import { getClaimMaxPoints, getClaimPoints } from "../combat/claim.js";
 import {
   ARENA_ROW_SIZE,
-  SCORE_THRESHOLD,
+  STAR_CHECKPOINT_TURNS,
+  STAR_SCORE_THRESHOLD,
+  STARS_TO_WIN,
   applyGenericScoreHalving,
 } from "./matchRules.js";
 import { championDB } from "../../data/championDB.js";
@@ -111,6 +113,7 @@ class CombatState {
     this.inactiveChampions = new Map(); // Champions already materialized and swapped out but can return (e.g., Lana when Tutu enters field)
     this.reserveQueues = new Map(); // Fila de reserva por time (unmaterialized roster/lineup)
     this.playerScores = [0, 0]; // score system enabled
+    this.resetStars();
     this.gameEnded = false;
     this.started = false;
     this.playersReadyToEndTurn = new Set();
@@ -132,6 +135,7 @@ class CombatState {
     this.turnHistory.clear();
     this.scheduledEffects = [];
     this.playerScores = [0, 0]; // reset progress also clears score counters
+    this.resetStars();
     this.gameEnded = false;
     this.reserveQueues.clear();
     this.firstChampionChoices.clear();
@@ -716,7 +720,67 @@ class CombatState {
     this.currentTurn += 1;
   }
 
+  resetStars() {
+    this.playerStars = [0, 0];
+    // The turn each slot first reached STAR_SCORE_THRESHOLD, stamped the
+    // moment the points land — not at the end of the turn.
+    this.scoreThresholdTurns = [null, null];
+    this.thresholdStarGranted = [false, false];
+  }
+
+  /** The slot that reached STAR_SCORE_THRESHOLD strictly first; a same-turn crossing is a tie. */
+  getFirstToScoreThresholdSlot() {
+    const [turn1, turn2] = this.scoreThresholdTurns;
+    if (turn1 == null && turn2 == null) return null;
+    if (turn2 == null) return 0;
+    if (turn1 == null) return 1;
+    if (turn1 === turn2) return null;
+    return turn1 < turn2 ? 0 : 1;
+  }
+
+  /**
+   * End-of-turn star awards: the one-time threshold star for every slot at or
+   * past STAR_SCORE_THRESHOLD, then the checkpoint star for the points leader
+   * (both slots on a tie). Returns which slots earned which star.
+   * everyTurnIsCheckpoint treats every turn as a checkpoint (test setting).
+   */
+  awardTurnEndStars({ everyTurnIsCheckpoint = false } = {}) {
+    const thresholdSlots = [];
+    const checkpointSlots = [];
+
+    for (const slot of [0, 1]) {
+      if (this.thresholdStarGranted[slot]) continue;
+      if ((this.playerScores[slot] || 0) < STAR_SCORE_THRESHOLD) continue;
+      this.thresholdStarGranted[slot] = true;
+      this.playerStars[slot] += 1;
+      thresholdSlots.push(slot);
+    }
+
+    if (
+      everyTurnIsCheckpoint ||
+      STAR_CHECKPOINT_TURNS.includes(this.currentTurn)
+    ) {
+      const score1 = this.playerScores[0] || 0;
+      const score2 = this.playerScores[1] || 0;
+      if (score1 >= score2) checkpointSlots.push(0);
+      if (score2 >= score1) checkpointSlots.push(1);
+      for (const slot of checkpointSlots) this.playerStars[slot] += 1;
+    }
+
+    return { thresholdSlots, checkpointSlots };
+  }
+
   resolveWinnerSlot() {
+    const player1Stars = this.playerStars[0] || 0;
+    const player2Stars = this.playerStars[1] || 0;
+
+    if (player1Stars !== player2Stars) {
+      return player1Stars > player2Stars ? 0 : 1;
+    }
+
+    const firstToThreshold = this.getFirstToScoreThresholdSlot();
+    if (firstToThreshold != null) return firstToThreshold;
+
     const player1Score = this.playerScores[0] || 0;
     const player2Score = this.playerScores[1] || 0;
 
@@ -741,21 +805,11 @@ class CombatState {
     return null;
   }
 
-  checkGameEnd({
-    maxTurns = 20,
-    checkTurnLimit = false,
-    scoreThreshold = SCORE_THRESHOLD,
-  } = {}) {
-    if (!this.gameEnded && checkTurnLimit && this.currentTurn >= maxTurns) {
-      this.gameEnded = true;
-    }
-
+  checkGameEnd({ endOfTurn = false } = {}) {
     if (
       !this.gameEnded &&
-      checkTurnLimit &&
-      Number.isFinite(scoreThreshold) &&
-      (this.playerScores[0] >= scoreThreshold ||
-        this.playerScores[1] >= scoreThreshold)
+      endOfTurn &&
+      this.playerStars.some((stars) => stars >= STARS_TO_WIN)
     ) {
       this.gameEnded = true;
     }
@@ -799,6 +853,12 @@ class CombatState {
       ? applyGenericScoreHalving(currentScore, rawAmount)
       : rawAmount;
     this.playerScores[normalizedSlot] = Math.max(0, currentScore + awarded);
+    if (
+      this.scoreThresholdTurns[normalizedSlot] == null &&
+      this.playerScores[normalizedSlot] >= STAR_SCORE_THRESHOLD
+    ) {
+      this.scoreThresholdTurns[normalizedSlot] = this.currentTurn;
+    }
     return awarded;
   }
 
@@ -816,6 +876,10 @@ class CombatState {
     return {
       player1: this.playerScores[0] || 0,
       player2: this.playerScores[1] || 0,
+      stars: {
+        player1: this.playerStars[0] || 0,
+        player2: this.playerStars[1] || 0,
+      },
     };
   }
 }
@@ -997,16 +1061,8 @@ export class GameMatch {
     return this.combat.resolveWinnerSlot();
   }
 
-  checkGameEnd({
-    maxTurns = 20,
-    checkTurnLimit = false,
-    scoreThreshold = SCORE_THRESHOLD,
-  } = {}) {
-    return this.combat.checkGameEnd({
-      maxTurns,
-      checkTurnLimit,
-      scoreThreshold,
-    });
+  checkGameEnd({ endOfTurn = false } = {}) {
+    return this.combat.checkGameEnd({ endOfTurn });
   }
 
   clearActions() {

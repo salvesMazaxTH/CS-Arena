@@ -29,6 +29,7 @@ process.on("SIGTERM", () => {
 
 import { GameMatch } from "../shared/engine/match/GameMatch.js";
 import { Player } from "../shared/engine/match/Player.js";
+import { STAR_SCORE_THRESHOLD } from "../shared/engine/match/matchRules.js";
 
 import { championDB } from "../shared/data/championDB.js";
 import { getDuoForCore } from "../shared/data/duos.js";
@@ -72,11 +73,11 @@ const editMode = {
   freeCostSkills: false, // Skills cost no resource. (SERVER-ONLY)
   unrestrictedSummon: false, // Summon line-up champions from turn 1 and more than once per turn (field cap still applies).
   summonWithoutSpawnProtection: false, // Line-up summons enter with no spawn protection at all.
+  everyTurnIsStarCheckpoint: false, // Every turn end awards the checkpoint star, not only the scheduled turns.
 };
 
 const TEAM_SIZE = 8;
 const ACTIVE_PER_TEAM = 3; // max champions on the field per team (roster=8, active=3)
-const MAX_MATCH_TURNS = 20; // game ends at the end of turn 20
 const FIRST_CHOICE_TIMEOUT = 45 * 1000; // 45s for the 1v1 pick before auto-selecting at random
 const DISCONNECT_TIMEOUT = 30 * 1000; // 30s to reconnect
 
@@ -663,11 +664,8 @@ function getMatchRosterStats() {
   return roster.map((champion) => champion.serialize());
 }
 
-function emitGameOverIfNeeded({ checkTurnLimit = false } = {}) {
-  const gameEnd = match.checkGameEnd({
-    maxTurns: MAX_MATCH_TURNS,
-    checkTurnLimit,
-  });
+function emitGameOverIfNeeded({ endOfTurn = false } = {}) {
+  const gameEnd = match.checkGameEnd({ endOfTurn });
 
   if (!gameEnd.ended) return;
 
@@ -811,9 +809,11 @@ function handleEndTurn() {
   match.clearFinishedAnimationSockets();
   match.clearTurnSummons();
 
-  // Check game end (roster wipe, turn limit or score threshold) only after every
-  // other end-of-turn task.
-  emitGameOverIfNeeded({ checkTurnLimit: true });
+  emitTurnEndStars(resolver);
+
+  // Check game end (roster wipe or stars) only after every other end-of-turn
+  // task.
+  emitGameOverIfNeeded({ endOfTurn: true });
 
   if (!match.isGameEnded()) {
     match.nextTurn();
@@ -821,6 +821,44 @@ function handleEndTurn() {
 
   // Signal clients that every combat event has been emitted.
   io.emit("combatPhaseComplete");
+}
+
+/** Awards the end-of-turn stars and announces them through the animation queue. */
+function emitTurnEndStars(resolver) {
+  const { thresholdSlots, checkpointSlots } =
+    match.combat.awardTurnEndStars({
+      everyTurnIsCheckpoint: !!editMode.everyTurnIsStarCheckpoint,
+    });
+  if (!thresholdSlots.length && !checkpointSlots.length) return;
+
+  const context = resolver.createBaseContext({ sourceId: null });
+  const messages = [
+    ...thresholdSlots.map((slot) => {
+      const name = match.players[slot]?.username ?? `Player ${slot + 1}`;
+      return {
+        en: `<b>${name}</b> reached <b>${STAR_SCORE_THRESHOLD}</b> points and earns a <b>star</b>!`,
+        pt: `<b>${name}</b> chegou a <b>${STAR_SCORE_THRESHOLD}</b> pontos e ganha uma <b>estrela</b>!`,
+      };
+    }),
+    ...checkpointSlots.map((slot) => {
+      const name = match.players[slot]?.username ?? `Player ${slot + 1}`;
+      return {
+        en: `<b>${name}</b> leads on points at the end of turn <b>${match.combat.currentTurn}</b> and earns a <b>star</b>!`,
+        pt: `<b>${name}</b> lidera nos pontos ao fim do turno <b>${match.combat.currentTurn}</b> e ganha uma <b>estrela</b>!`,
+      };
+    }),
+  ];
+  for (const message of messages) {
+    context.registerDialog({ message, sourceId: null, targetId: null });
+  }
+
+  emitCombatEnvelopesFromContext({
+    user: null,
+    skill: { key: "star_award", name: "Star" },
+    context,
+    scorePayload: match.getScorePayload(),
+    log: messages,
+  });
 }
 
 function handleScheduledEffect(effect, context) {

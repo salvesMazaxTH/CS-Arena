@@ -1,7 +1,10 @@
 import {
-  SCORE_THRESHOLD,
+  STAR_SCORE_THRESHOLD,
+  STARS_TO_WIN,
   GENERIC_SCORE_HALVING_THRESHOLD,
 } from "/shared/engine/match/matchRules.js";
+
+// Star icon: "Round star" by Delapouite (game-icons.net, CC BY 3.0).
 
 /**
  * Team scoreboard: updates the two player score displays with an animated
@@ -10,9 +13,14 @@ import {
 export function createScoreboard() {
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+  const penaltyText = `Kill and CLAIM points score at a reduced rate from ${GENERIC_SCORE_HALVING_THRESHOLD} points on.`;
+
   [1, 2].forEach((team) => {
-    document.getElementById(`player${team}-goal-display`).textContent =
-      `/${SCORE_THRESHOLD}`;
+    const penalty = document.getElementById(`player${team}-score-penalty`);
+    penalty.dataset.tooltip = penaltyText;
+    penalty.setAttribute("aria-label", penaltyText);
+
+    updateStars(document.getElementById(`player${team}-stars`), 0);
   });
 
   function updateScoreValue(element, progressFill, newValue) {
@@ -21,7 +29,7 @@ export function createScoreboard() {
 
     if (oldValue === nextValue) return;
 
-    progressFill.style.width = `${Math.min(100, (nextValue / SCORE_THRESHOLD) * 100)}%`;
+    progressFill.style.width = `${Math.min(100, (nextValue / STAR_SCORE_THRESHOLD) * 100)}%`;
 
     const increasing = nextValue > oldValue;
     const delta = Math.abs(nextValue - oldValue);
@@ -63,8 +71,48 @@ export function createScoreboard() {
     element.hidden = (Number(value) || 0) < GENERIC_SCORE_HALVING_THRESHOLD;
   }
 
+  /** Draws STARS_TO_WIN slots (more if the threshold star pushes a team past
+   *  it), fills the earned ones, and pops the ones earned since last time. */
+  function updateStars(container, value) {
+    const earned = Math.max(0, Number(value) || 0);
+    const slots = Math.max(STARS_TO_WIN, earned);
+
+    while (container.children.length < slots) {
+      const star = document.createElement("span");
+      star.className = "match-star";
+      container.appendChild(star);
+    }
+    while (container.children.length > slots) {
+      container.lastElementChild.remove();
+    }
+
+    Array.from(container.children).forEach((star, index) => {
+      const shouldEarn = index < earned;
+      const wasEarned = star.classList.contains("earned");
+      star.classList.toggle("earned", shouldEarn);
+      if (shouldEarn && !wasEarned) {
+        star.classList.remove("star-gained");
+        void star.offsetWidth;
+        star.classList.add("star-gained");
+      } else if (!shouldEarn) {
+        star.classList.remove("star-gained");
+      }
+    });
+
+    container.setAttribute("aria-label", `${earned} of ${STARS_TO_WIN} stars`);
+  }
+
   function update(score) {
     if (!score) return;
+
+    updateStars(
+      document.getElementById("player1-stars"),
+      score.stars?.player1 ?? 0,
+    );
+    updateStars(
+      document.getElementById("player2-stars"),
+      score.stars?.player2 ?? 0,
+    );
 
     updateScoreValue(
       document.getElementById("player1-score-display"),
