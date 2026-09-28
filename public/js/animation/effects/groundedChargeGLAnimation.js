@@ -1,7 +1,6 @@
 // Grounded charge hit: a conductor is driven into the target and the charge
 // runs down it into the soil, arcing between the wound and their feet.
 
-import { playContactLunge } from "./contactLungeAnimation.js";
 import { getParticleScale } from "../core/effectQuality.js";
 import { ensureStage, startLoop, screenToWorld } from "../core/glStage.js";
 
@@ -325,9 +324,6 @@ export function createGroundedChargeGL(scale = 1) {
     const st = ensureStage();
     if (!st) return;
     bakeTextures();
-
-    // The conductor has to be driven in before anything can run down it.
-    if (opts.skill?.contact === true) await playContactLunge(opts);
 
     const rect = targetEl.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;

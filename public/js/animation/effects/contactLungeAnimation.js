@@ -1,9 +1,10 @@
 // ============================================================
 //  Contact Lunge Animation
 //
-//  Last-resort default for a contact hit whose skill registers no
-//  animation and names no motif: the attacker's portrait winds up,
-//  drives at the target until the two almost touch, and snaps back.
+//  The attacker's portrait winds up, drives at the target and snaps
+//  back. In full it is the last-resort default for a contact hit with
+//  no animation of its own; shortened and without the burst, it is the
+//  prelude that tells a contact hit's own motif apart from a ranged one.
 // ============================================================
 
 import { computeEffectBox, runSoloEffect } from "../core/animationUtils.js";
@@ -162,7 +163,20 @@ function edgeRadius(rect, angle) {
   );
 }
 
-export async function playContactLunge({ userEl, targetEl, canvasBatch }) {
+/**
+ * @param {{ travelScale?: number, impactBurst?: boolean }} options
+ *   travelScale - share of the full approach the portrait covers.
+ *   impactBurst - whether the steel burst marks the moment of contact.
+ */
+export function createContactLunge({ travelScale = 1, impactBurst = true } = {}) {
+  return (opts) => playLunge(opts, travelScale, impactBurst);
+}
+
+async function playLunge(
+  { userEl, targetEl, canvasBatch },
+  travelScale,
+  impactBurst,
+) {
   if (!userEl || !targetEl || userEl === targetEl) return;
 
   const userWrapper = userEl.querySelector(".portrait-wrapper");
@@ -180,10 +194,9 @@ export async function playContactLunge({ userEl, targetEl, canvasBatch }) {
   const dirX = dx / distance;
   const dirY = dy / distance;
   const reach = edgeRadius(from, angle);
-  const travel = Math.max(
-    0,
-    distance - reach - edgeRadius(to, angle) - NEAR_MISS_GAP,
-  );
+  const travel =
+    Math.max(0, distance - reach - edgeRadius(to, angle) - NEAR_MISS_GAP) *
+    travelScale;
   const contactPoint = {
     x: from.left + from.width / 2 + dirX * (travel + reach),
     y: from.top + from.height / 2 + dirY * (travel + reach),
@@ -204,7 +217,7 @@ export async function playContactLunge({ userEl, targetEl, canvasBatch }) {
 
   // An attacker already mid-lunge — an AoE's later targets — only gets struck.
   if (lunging.has(userEl)) {
-    await playBurst();
+    if (impactBurst) await playBurst();
     return;
   }
   lunging.add(userEl);
@@ -260,5 +273,13 @@ export async function playContactLunge({ userEl, targetEl, canvasBatch }) {
     setTimeout(resolve, WINDUP_MS + STRIKE_MS),
   );
   // Left running so the target's own shake lands on the frame of contact.
-  playBurst();
+  if (impactBurst) playBurst();
 }
+
+export const playContactLunge = createContactLunge();
+
+// Stops short of the target: the skill's own motif is what lands the blow.
+export const playContactLungePrelude = createContactLunge({
+  travelScale: 0.74,
+  impactBurst: false,
+});

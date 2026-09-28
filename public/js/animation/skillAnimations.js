@@ -46,7 +46,10 @@ import { createRootsGL } from "./effects/rootsGLAnimation.js";
 import { createWaterShurikenGL } from "./effects/waterShurikenGLAnimation.js";
 import { createTidalLanceGL } from "./effects/tidalLanceGLAnimation.js";
 import { createUndertowGL } from "./effects/undertowGLAnimation.js";
-import { playContactLunge } from "./effects/contactLungeAnimation.js";
+import {
+  playContactLunge,
+  playContactLungePrelude,
+} from "./effects/contactLungeAnimation.js";
 
 const skillAnimationRegistry = new Map();
 
@@ -153,6 +156,12 @@ export async function animateSkill(skillKey, opts = {}) {
   }
 
   if (!factory) return;
+
+  // A contact hit with an animation of its own still shows the approach.
+  const contact = (opts.hit?.contact ?? opts.skill?.contact) === true;
+  if (contact && factory !== playContactLunge) {
+    await playContactLungePrelude(opts);
+  }
   await factory(opts);
 }
 
