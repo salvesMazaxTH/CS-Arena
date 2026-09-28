@@ -31,9 +31,7 @@ export default {
   onChampionAdded({ owner, champion, context }) {
     if (champion !== owner) return;
 
-    owner.applyStatusEffect("inert", this.inertDurationTurns, context, {
-      hiddenIndicator: true,
-    });
+    owner.applyStatusEffect("inert", this.inertDurationTurns, context);
 
     for (const aimerId of owner.runtime.substitutionAimerIds ?? []) {
       const aimer = context.allChampions?.get(aimerId);
