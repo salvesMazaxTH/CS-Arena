@@ -13,6 +13,8 @@ export const CLAW_PALETTES = Object.freeze({
   // Bared steel-bright claws: the default any champion's rake falls back to.
   feral: Object.freeze({ core: "#ffffff", mid: "#cfe2f2", deep: "#5d7f9c" }),
   dragon: Object.freeze({ core: "#fff1d6", mid: "#ff801f", deep: "#c11606" }),
+  // Venom-green rake that reads as acid still eating at the wound.
+  acid: Object.freeze({ core: "#f4ffd6", mid: "#9cff2e", deep: "#2f7d0c" }),
 });
 
 function makeGlowSprite(color) {

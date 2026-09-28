@@ -29,6 +29,7 @@ import { startDeathsInevitability } from "./deathsInevitabilityCanvas.js";
 import { startInvisibilityCanvas } from "./invisibilityCanvas.js";
 import { startConcealedCanvas } from "./concealedCanvas.js";
 import { startCrimsonFrenzy } from "./crimsonFrenzyCanvas.js";
+import { startMolted } from "./moltedCanvas.js";
 import { startBleached } from "./bleachedCanvas.js";
 import { startShadowstormMark } from "./shadowstormMarkCanvas.js";
 
@@ -68,6 +69,8 @@ const ExclusiveVFXTriggers = {
     champion.runtime?.markedByDeathsInevitability,
 
   crimsonFrenzy: (champion) => champion.runtime?.drexBloodAscension,
+
+  molted: (champion) => champion.runtime?.zophiroxMolted,
 
   bleached: (champion) =>
     (champion.runtime?.hookEffectData ?? []).some(
@@ -255,6 +258,10 @@ export function playVFX(type, canvas, data = {}) {
 
     case "crimsonFrenzy":
       controller = startCrimsonFrenzy(canvas, data);
+      break;
+
+    case "molted":
+      controller = startMolted(canvas, data);
       break;
 
     case "bleached":

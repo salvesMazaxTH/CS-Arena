@@ -91,6 +91,7 @@ import yresa_colossus from "./yresa_colossus/index.js";
 import thalvaressa from "./thalvaressa/index.js";
 import hikari from "./hikari/index.js";
 import hikari_dummy from "./hikari_dummy/index.js";
+import zophirox from "./zophirox/index.js";
 
 const championDB = {
   atlas,
@@ -186,6 +187,7 @@ const championDB = {
   thalvaressa,
   hikari,
   hikari_dummy,
+  zophirox,
 };
 
 export default championDB;
