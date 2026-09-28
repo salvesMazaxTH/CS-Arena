@@ -1559,7 +1559,8 @@ export function createCombatAnimationManager(deps) {
       let champion = deps.activeChampions.get(champData.id);
 
       if (!champion) {
-        // NEW CHAMPION: create from server snapshot
+        // Same rule as the mid-turn snapshots: one already gone has nothing to show.
+        if (!(champData.HP > 0)) continue;
         champion = deps.createNewChampion(champData);
       } else if (
         champData.championKey &&
