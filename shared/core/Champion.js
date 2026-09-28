@@ -33,6 +33,7 @@ import {
   removeStatModifiers,
   purgeExpiredStatModifiers,
   purgeExpiredHookEffects,
+  removeHookEffects,
   addHookEffect,
   addDamageModifier,
   describeDamageModifier,
@@ -634,6 +635,10 @@ export class Champion {
 
   purgeExpiredHookEffects(currentTurn) {
     return purgeExpiredHookEffects(this, currentTurn);
+  }
+
+  removeHookEffects(predicate) {
+    return removeHookEffects(this, predicate);
   }
 
   takeDamage(amount, context) {

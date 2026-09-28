@@ -201,13 +201,15 @@ export function isTauntedBy(champion, taunterId) {
   return champion.tauntEffects.some((effect) => effect.taunterId === taunterId);
 }
 
-/** Add a damage-reduction modifier. config.type: "flat" | "percent". Requires context. */
+/** Add a damage-reduction modifier. config.type: "flat" | "percent". Requires context.
+ *  An undefined duration never expires; sustainedById ties it to that champion staying on the field. */
 export function applyDamageReduction(champion, config = {}) {
   const {
     amount = 0,
-    duration = 0,
+    duration,
     type = "flat",
     source = "unknown",
+    sustainedById,
     context,
   } = config;
 
@@ -219,9 +221,11 @@ export function applyDamageReduction(champion, config = {}) {
 
   champion.damageReductionModifiers.push({
     amount: amount,
-    expiresAtTurn: context.currentTurn + duration,
+    expiresAtTurn:
+      duration === undefined ? undefined : context.currentTurn + duration,
     type: type,
     source: source,
+    sustainedById: sustainedById,
     origin: currentModifierOrigin(context),
   });
 }
@@ -339,6 +343,7 @@ export function applyStatModifier(
     isPermanent = false,
     ignoreMinimum = false,
     statModifierSrc = undefined,
+    sustainedById = undefined,
   } = {},
 ) {
   if (!(statName in champion)) {
@@ -399,6 +404,7 @@ export function applyStatModifier(
       ignoreMinimum: ignoreMinimum,
       expiresAtTurn: currentTurn + duration,
       isPermanent: isPermanent,
+      sustainedById: sustainedById,
       origin: currentModifierOrigin(context),
     });
   }
@@ -440,6 +446,7 @@ function _applyStatChange(champion, config, rawAmount) {
     isPercent = false,
     ignoreMinimum = false,
     statModifierSrc = undefined,
+    sustainedById = undefined,
   } = config;
 
   if (!(statName in champion)) {
@@ -470,6 +477,7 @@ function _applyStatChange(champion, config, rawAmount) {
     isPermanent,
     ignoreMinimum,
     statModifierSrc,
+    sustainedById,
   });
 }
 
@@ -499,6 +507,7 @@ export function modifyStat(
     isPercent = false,
     ignoreMinimum = false,
     statModifierSrc,
+    sustainedById,
   } = {},
 ) {
   if (amount === 0) {
@@ -517,6 +526,7 @@ export function modifyStat(
       ignoreMinimum,
       statModifierSrc:
         statModifierSrc !== undefined ? statModifierSrc : champion,
+      sustainedById,
     });
   }
 
@@ -536,6 +546,7 @@ export function modifyStat(
     isPercent,
     ignoreMinimum,
     statModifierSrc,
+    sustainedById,
   });
 }
 
@@ -734,10 +745,24 @@ export function purgeExpiredStatModifiers(champion, currentTurn) {
   );
 
   champion.damageReductionModifiers = champion.damageReductionModifiers.filter(
-    (modifier) => modifier.expiresAtTurn > currentTurn,
+    (modifier) =>
+      modifier.expiresAtTurn === undefined ||
+      modifier.expiresAtTurn > currentTurn,
   );
 
   return revertedStats;
+}
+
+/** Drop every record sourceId sustained on this champion; returns reverted stats. */
+export function releaseSustainedBy(champion, sourceId) {
+  const sustained = (record) => record?.sustainedById === sourceId;
+  const keep = (records) => records.filter((record) => !sustained(record));
+
+  champion.damageReductionModifiers = keep(champion.damageReductionModifiers);
+  champion.damageModifiers = keep(champion.damageModifiers);
+  removeHookEffects(champion, sustained);
+
+  return removeStatModifiers(champion, champion.statModifiers.filter(sustained));
 }
 
 /** Remove the given stat modifiers (matched by reference) and recompute their stats. */
@@ -864,12 +889,23 @@ export function purgeExpiredModifiers(champion, currentTurn) {
 
 /** Drop expired runtime hook effects (those past their expiresAtTurn). */
 export function purgeExpiredHookEffects(champion, currentTurn) {
-  if (!Array.isArray(champion.runtime?.hookEffects)) return;
-
-  champion.runtime.hookEffects = champion.runtime.hookEffects.filter(
+  removeHookEffects(
+    champion,
     (effect) =>
-      effect?.expiresAtTurn === undefined || effect.expiresAtTurn > currentTurn,
+      effect?.expiresAtTurn !== undefined && effect.expiresAtTurn <= currentTurn,
   );
+}
+
+/** Drop the hook effects matching predicate, letting each undo what it granted. */
+export function removeHookEffects(champion, predicate) {
+  const effects = champion.runtime?.hookEffects;
+  if (!Array.isArray(effects)) return;
+
+  const removed = effects.filter(predicate);
+  if (removed.length === 0) return;
+
+  champion.runtime.hookEffects = effects.filter((e) => !removed.includes(e));
+  for (const effect of removed) effect.onRemoved?.({ owner: champion });
 }
 
 /** All damage modifiers on the champion (empty array if none). */

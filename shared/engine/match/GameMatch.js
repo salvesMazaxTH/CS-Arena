@@ -9,7 +9,7 @@ import { getDuoForCore } from "../../data/duos.js";
 import { SpawnProtection } from "../combat/spawnProtection.js";
 import { Nothingness } from "../combat/nothingness.js";
 import { Champion } from "../../core/Champion.js";
-import { roundToFive } from "../../core/championCombat.js";
+import { releaseSustainedBy, roundToFive } from "../../core/championCombat.js";
 import { generateId } from "../../utils/id.js";
 import { emitCombatEvent } from "../combat/combatEvents.js";
 import { formatChampionName } from "../../ui/formatters.js";
@@ -187,7 +187,19 @@ class CombatState {
 
     this.activeChampions.delete(championId);
     this.inactiveChampions.set(championId, champion);
+    this._releaseSustainedBy(championId);
     return champion;
+  }
+
+  /** Whatever a champion sustained on others ends the moment it leaves the field. */
+  _releaseSustainedBy(sourceId) {
+    for (const map of [
+      this.activeChampions,
+      this.inactiveChampions,
+      this.deadChampions,
+    ]) {
+      for (const champion of map.values()) releaseSustainedBy(champion, sourceId);
+    }
   }
 
   /**
@@ -362,6 +374,7 @@ class CombatState {
 
     this.activeChampions.delete(championId);
     this.deadChampions.set(championId, champion);
+    this._releaseSustainedBy(championId);
     return champion;
   }
 
