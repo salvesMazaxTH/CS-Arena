@@ -1,5 +1,3 @@
-import soilboundOath from "../yresa_petronika/passive.js";
-
 export default {
   key: "unyielding_bedrock",
   name: "Unyielding Bedrock",
@@ -17,6 +15,7 @@ export default {
   },
 
   hookScope: {
+    onAfterDmgTaking: "defender",
     onAfterHealing: "healTarget",
   },
 
@@ -28,16 +27,8 @@ export default {
     this._refresh({ owner, context });
   },
 
-  // Unscoped: a Stoneward left standing through the transform can still fall.
-  onAfterDmgTaking({ defender, owner, context }) {
-    if (defender.id === owner.id) {
-      this._refresh({ owner, context });
-      return;
-    }
-
-    if (!defender.alive && owner.runtime.sentinelIds?.includes(defender.id)) {
-      soilboundOath.livingSentinels({ owner, context });
-    }
+  onAfterDmgTaking({ owner, context }) {
+    this._refresh({ owner, context });
   },
 
   onAfterHealing({ owner, context }) {

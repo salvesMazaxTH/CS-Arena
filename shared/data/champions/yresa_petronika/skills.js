@@ -144,14 +144,8 @@ const yresaPetronikaSkills = [
               sentinel.id,
             ];
 
-            sentinel.passive.refreshAura({
-              owner: sentinel,
-              context: spawnContext,
-            });
-            summoner.passive.refreshSoil?.({
-              owner: summoner,
-              context: spawnContext,
-            });
+            sentinel.passive.grantAura({ owner: sentinel, context: spawnContext });
+            summoner.passive.grantSoil?.({ owner: summoner, context: spawnContext });
 
             spawnContext.registerDialog?.({
               message: {
@@ -174,8 +168,6 @@ const yresaPetronikaSkills = [
     },
 
     _unmake({ user, stoneward, ally, amount, context }) {
-      stoneward.passive.clearAura({ owner: stoneward, context });
-
       // Spending her own Colossus is an unmaking, never a kill the enemy scores.
       stoneward.runtime.leavesNoDeath = true;
       stoneward.HP = 0;
@@ -187,7 +179,6 @@ const yresaPetronikaSkills = [
       user.runtime.colossusIds = (user.runtime.colossusIds ?? []).filter(
         (id) => id !== stoneward.id,
       );
-      user.passive.refreshSoil({ owner: user, context });
 
       ally.damageReductionModifiers = (
         ally.damageReductionModifiers ?? []
@@ -297,7 +288,6 @@ const yresaPetronikaSkills = [
 
       for (const id of sentinelIds) {
         const stoneward = context.allChampions.get(id);
-        stoneward.passive.clearAura({ owner: stoneward, context });
         stoneward.HP = 0;
         stoneward.alive = false;
       }
@@ -317,6 +307,8 @@ const yresaPetronikaSkills = [
           statScaleByStat: this._colossusScale(fused),
 
           onSpawn: (colossus, spawnContext) => {
+            colossus.runtime.unmakingVfx = "crumble";
+
             // She has transformed since scheduling, so her old instance is stale.
             const summoner = spawnContext.allChampions.get(user.id);
             if (!summoner?.alive) {
@@ -328,14 +320,14 @@ const yresaPetronikaSkills = [
 
             colossus.runtime.summonerId = summoner.id;
             colossus.runtime.arrivalVfx = "earth_summon";
-            colossus.runtime.unmakingVfx = "crumble";
             colossus.runtime.fusedStonewards = fused;
             summoner.runtime.colossusIds = [
               ...(summoner.runtime.colossusIds ?? []),
               colossus.id,
             ];
 
-            colossus.passive.refreshAura({ owner: colossus, context: spawnContext });
+            colossus.passive.grantAura({ owner: colossus, context: spawnContext });
+            summoner.passive.grantSoil?.({ owner: summoner, context: spawnContext });
 
             spawnContext.registerDialog?.({
               message: {

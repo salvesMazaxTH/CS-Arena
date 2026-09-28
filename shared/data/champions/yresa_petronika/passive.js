@@ -1,7 +1,5 @@
 import { Nothingness } from "../../../engine/combat/nothingness.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import colossusPassive from "../yresa_colossus/passive.js";
-import stonewardPassive from "../yresa_sentinel/passive.js";
 
 export default {
   key: "soilbound_oath",
@@ -9,7 +7,6 @@ export default {
 
   wardedStatusKeys: ["rooted", "snared"],
   dmgReductionPerSentinel: 5,
-  pseudoPermanentDurationTurns: 2,
   dmgReductionSrc: "yresa_petronika_soilbound_oath",
 
   description(champion) {
@@ -31,10 +28,6 @@ export default {
     onStatusEffectIncoming: "target",
   },
 
-  hookPolicies: {
-    onAfterDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
-  },
-
   onStatusEffectIncoming({ owner, statusEffect }) {
     if (!this.wardedStatusKeys.includes(statusEffect.key)) return;
 
@@ -47,33 +40,15 @@ export default {
     };
   },
 
+  // Catches the revert: the transform dropped the soil and nothing else re-grants it.
   onTurnStart({ owner, context }) {
-    this.refreshSoil({ owner, context });
+    this.grantSoil({ owner, context });
   },
 
-  // A Stoneward is born leavesNoDeath, so its fall is caught on the blow itself.
-  onAfterDmgTaking({ defender, owner, context }) {
-    if (defender.alive || !owner.runtime.sentinelIds?.includes(defender.id)) {
-      return;
-    }
-
-    this.refreshSoil({ owner, context });
-  },
-
-  onChampionDeath({ owner, deadChampion, context }) {
-    if (!owner.runtime.colossusIds?.includes(deadChampion.id)) return;
-
-    this.refreshSoil({ owner, context });
-  },
-
-  // A Stoneward away in the Nothingness stops counting until it comes back.
-  onChampionVanished({ owner, champion, context }) {
-    if (this._isOwnStone(owner, champion)) this.refreshSoil({ owner, context });
-  },
-
+  // A stone away in the Nothingness took its soil along; the return brings it back.
   onChampionReturned({ owner, champion, context }) {
     if (champion === owner || this._isOwnStone(owner, champion)) {
-      this.refreshSoil({ owner, context });
+      this.grantSoil({ owner, context });
     }
   },
 
@@ -85,25 +60,15 @@ export default {
   },
 
   livingColossi({ owner, context }) {
-    return this._standing({
-      owner,
-      context,
-      idsKey: "colossusIds",
-      auraPassive: colossusPassive,
-    });
+    return this._standing({ owner, context, idsKey: "colossusIds" });
   },
 
   livingSentinels({ owner, context }) {
-    return this._standing({
-      owner,
-      context,
-      idsKey: "sentinelIds",
-      auraPassive: stonewardPassive,
-    });
+    return this._standing({ owner, context, idsKey: "sentinelIds" });
   },
 
-  // Off the field means no aura, but one away in the Nothingness stays hers.
-  _standing({ owner, context, idsKey, auraPassive }) {
+  // A stone off the field is dropped, but one away in the Nothingness stays hers.
+  _standing({ owner, context, idsKey }) {
     const ids = owner.runtime[idsKey] ?? [];
     const standing = ids.filter(
       (id) => context?.allChampions?.get?.(id)?.alive === true,
@@ -112,36 +77,34 @@ export default {
       .filter((champion) => Nothingness.isVanished(champion))
       .map((champion) => champion.id);
 
-    for (const id of ids) {
-      if (!standing.includes(id)) {
-        auraPassive.clearAura({ owner: { id }, context });
-      }
-    }
-
     owner.runtime[idsKey] = ids.filter(
       (id) => standing.includes(id) || vanishedIds.includes(id),
     );
     return standing;
   },
 
-  refreshSoil({ owner, context }) {
-    const fused = this.livingColossi({ owner, context }).reduce(
-      (total, id) =>
-        total + (context.allChampions.get(id).runtime.fusedStonewards ?? 0),
-      0,
-    );
-    const count = this.livingSentinels({ owner, context }).length + fused;
+  // One record per stone, sustained by it, so each fall or vanish takes only its share.
+  grantSoil({ owner, context }) {
+    const stoneIds = [
+      ...this.livingSentinels({ owner, context }),
+      ...this.livingColossi({ owner, context }),
+    ];
 
-    this.clearSoil({ owner });
-    if (count === 0) return;
+    for (const id of stoneIds) {
+      const held = owner.damageReductionModifiers?.some(
+        (m) => m?.source === this.dmgReductionSrc && m.sustainedById === id,
+      );
+      if (held) continue;
 
-    owner.applyDamageReduction({
-      amount: this.dmgReductionPerSentinel * count,
-      duration: this.pseudoPermanentDurationTurns,
-      type: "percent",
-      source: this.dmgReductionSrc,
-      context,
-    });
+      const stone = context.allChampions.get(id);
+      owner.applyDamageReduction({
+        amount: this.dmgReductionPerSentinel * (stone.runtime.fusedStonewards ?? 1),
+        type: "percent",
+        source: this.dmgReductionSrc,
+        sustainedById: id,
+        context,
+      });
+    }
   },
 
   clearSoil({ owner }) {

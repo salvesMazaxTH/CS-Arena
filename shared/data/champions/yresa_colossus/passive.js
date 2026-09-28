@@ -3,7 +3,6 @@ export default {
   name: "Many Made One",
 
   auraDmgReductionPerStoneward: 3,
-  pseudoPermanentDurationTurns: 2,
 
   description(champion) {
     const fused = champion?.runtime?.fusedStonewards ?? 0;
@@ -24,71 +23,39 @@ export default {
     };
   },
 
-  onTurnStart({ owner, context }) {
-    this.refreshAura({ owner, context });
-  },
-
   onChampionAdded({ owner, champion, context }) {
     if (champion !== owner && champion.team === owner.team) {
-      this.refreshAura({ owner, context });
+      this.grantAura({ owner, context });
     }
-  },
-
-  // Leaving for the Nothingness takes the aura along; the return brings it back.
-  onChampionVanished({ owner, champion, context }) {
-    if (champion === owner) this.clearAura({ owner, context });
   },
 
   onChampionReturned({ owner, champion, context }) {
-    if (champion.team === owner.team) this.refreshAura({ owner, context });
+    if (champion.team === owner.team) this.grantAura({ owner, context });
   },
 
-  onChampionDeath({ owner, deadChampion, context }) {
-    if (deadChampion !== owner) return;
-
-    this.clearAura({ owner, context });
-  },
-
-  auraSource(owner) {
-    return `yresa_colossus_many_made_one_${owner.id}`;
-  },
-
-  refreshAura({ owner, context }) {
-    this.clearAura({ owner, context });
-
+  // Sustained by the Colossus, so the engine lifts it the moment it leaves the field.
+  grantAura({ owner, context }) {
     const fused = owner.runtime.fusedStonewards ?? 0;
-    if (fused === 0) return;
+    if (!owner.alive || fused === 0) return;
 
-    // Like an emblem, the aura reaches allies still taking the field.
-    const allies = [...(context?.allChampions?.values?.() ?? [])].filter(
-      (ally) =>
-        ally.alive &&
-        ally.team === owner.team &&
-        ally.id !== owner.id &&
-        ally.id !== owner.runtime.summonerId,
-    );
+    for (const ally of context?.allChampions?.values?.() ?? []) {
+      if (
+        !ally.alive ||
+        ally.team !== owner.team ||
+        ally.id === owner.id ||
+        ally.id === owner.runtime.summonerId ||
+        ally.damageReductionModifiers?.some((m) => m?.sustainedById === owner.id)
+      ) {
+        continue;
+      }
 
-    for (const ally of allies) {
       ally.applyDamageReduction({
         amount: this.auraDmgReductionPerStoneward * fused,
-        duration: this.pseudoPermanentDurationTurns,
         type: "percent",
-        source: this.auraSource(owner),
+        source: this.key,
+        sustainedById: owner.id,
         context,
       });
-    }
-  },
-
-  clearAura({ owner, context }) {
-    const source = this.auraSource(owner);
-
-    for (const champion of context?.allChampions?.values?.() ?? []) {
-      if (!champion.damageReductionModifiers?.length) continue;
-
-      champion.damageReductionModifiers =
-        champion.damageReductionModifiers.filter(
-          (modifier) => modifier?.source !== source,
-        );
     }
   },
 };

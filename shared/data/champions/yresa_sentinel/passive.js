@@ -4,7 +4,6 @@ export default {
 
   auraDmgReductionPercent: 2,
   inertDurationTurns: 99,
-  pseudoPermanentDurationTurns: 2,
 
   description() {
     return {
@@ -19,59 +18,35 @@ export default {
       return;
     }
 
-    if (champion.team === owner.team) this.refreshAura({ owner, context });
-  },
-
-  onTurnStart({ owner, context }) {
-    this.refreshAura({ owner, context });
-  },
-
-  // Leaving for the Nothingness takes the aura along; the return brings it back.
-  onChampionVanished({ owner, champion, context }) {
-    if (champion === owner) this.clearAura({ owner, context });
+    if (champion.team === owner.team) this.grantAura({ owner, context });
   },
 
   onChampionReturned({ owner, champion, context }) {
-    if (champion.team === owner.team) this.refreshAura({ owner, context });
+    if (champion.team === owner.team) this.grantAura({ owner, context });
   },
 
-  auraSource(owner) {
-    return `yresa_sentinel_bedrock_vow_${owner.id}`;
-  },
+  // Sustained by the Stoneward, so the engine lifts it the moment it leaves the field.
+  grantAura({ owner, context }) {
+    if (!owner.alive) return;
 
-  refreshAura({ owner, context }) {
-    this.clearAura({ owner, context });
+    for (const ally of context?.allChampions?.values?.() ?? []) {
+      if (
+        !ally.alive ||
+        ally.team !== owner.team ||
+        ally.id === owner.id ||
+        ally.id === owner.runtime.summonerId ||
+        ally.damageReductionModifiers?.some((m) => m?.sustainedById === owner.id)
+      ) {
+        continue;
+      }
 
-    // Like an emblem, the aura reaches allies still taking the field.
-    const allies = [...(context?.allChampions?.values?.() ?? [])].filter(
-      (ally) =>
-        ally.alive &&
-        ally.team === owner.team &&
-        ally.id !== owner.id &&
-        ally.id !== owner.runtime.summonerId,
-    );
-
-    for (const ally of allies) {
       ally.applyDamageReduction({
         amount: this.auraDmgReductionPercent,
-        duration: this.pseudoPermanentDurationTurns,
         type: "percent",
-        source: this.auraSource(owner),
+        source: this.key,
+        sustainedById: owner.id,
         context,
       });
-    }
-  },
-
-  clearAura({ owner, context }) {
-    const source = this.auraSource(owner);
-
-    for (const champion of context?.allChampions?.values?.() ?? []) {
-      if (!champion.damageReductionModifiers?.length) continue;
-
-      champion.damageReductionModifiers =
-        champion.damageReductionModifiers.filter(
-          (modifier) => modifier?.source !== source,
-        );
     }
   },
 };
