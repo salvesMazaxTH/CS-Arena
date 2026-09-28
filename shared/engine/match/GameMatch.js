@@ -725,7 +725,7 @@ class CombatState {
     // The turn each slot first reached STAR_SCORE_THRESHOLD, stamped the
     // moment the points land — not at the end of the turn.
     this.scoreThresholdTurns = [null, null];
-    this.thresholdStarGranted = [false, false];
+    this.thresholdStarAwarded = false;
   }
 
   /** The slot that reached STAR_SCORE_THRESHOLD strictly first; a same-turn crossing is a tie. */
@@ -739,8 +739,9 @@ class CombatState {
   }
 
   /**
-   * End-of-turn star awards: the one-time threshold star for every slot at or
-   * past STAR_SCORE_THRESHOLD, then the checkpoint star for the points leader
+   * End-of-turn star awards: the once-per-match threshold star for whoever
+   * first reached STAR_SCORE_THRESHOLD (both slots when they reached it in the
+   * same turn), then the checkpoint star for the points leader
    * (both slots on a tie). Returns which slots earned which star.
    * everyTurnIsCheckpoint treats every turn as a checkpoint (test setting).
    */
@@ -748,12 +749,15 @@ class CombatState {
     const thresholdSlots = [];
     const checkpointSlots = [];
 
-    for (const slot of [0, 1]) {
-      if (this.thresholdStarGranted[slot]) continue;
-      if ((this.playerScores[slot] || 0) < STAR_SCORE_THRESHOLD) continue;
-      this.thresholdStarGranted[slot] = true;
-      this.playerStars[slot] += 1;
-      thresholdSlots.push(slot);
+    if (!this.thresholdStarAwarded) {
+      const reachedTurns = this.scoreThresholdTurns.filter((turn) => turn != null);
+      const firstTurn = reachedTurns.length ? Math.min(...reachedTurns) : null;
+      for (const slot of [0, 1]) {
+        if (firstTurn == null || this.scoreThresholdTurns[slot] !== firstTurn) continue;
+        this.playerStars[slot] += 1;
+        thresholdSlots.push(slot);
+      }
+      if (thresholdSlots.length) this.thresholdStarAwarded = true;
     }
 
     if (

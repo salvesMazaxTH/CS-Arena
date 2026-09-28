@@ -836,8 +836,8 @@ function emitTurnEndStars(resolver) {
     ...thresholdSlots.map((slot) => {
       const name = match.players[slot]?.username ?? `Player ${slot + 1}`;
       return {
-        en: `<b>${name}</b> reached <b>${STAR_SCORE_THRESHOLD}</b> points and earns a <b>star</b>!`,
-        pt: `<b>${name}</b> chegou a <b>${STAR_SCORE_THRESHOLD}</b> pontos e ganha uma <b>estrela</b>!`,
+        en: `<b>${name}</b> reached <b>${STAR_SCORE_THRESHOLD}</b> points first and earns a <b>star</b>!`,
+        pt: `<b>${name}</b> chegou primeiro a <b>${STAR_SCORE_THRESHOLD}</b> pontos e ganha uma <b>estrela</b>!`,
       };
     }),
     ...checkpointSlots.map((slot) => {

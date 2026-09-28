@@ -2,8 +2,9 @@
 // on points; the first team to STARS_TO_WIN stars ends the match.
 export const STAR_CHECKPOINT_TURNS = [5, 8, 11, 14, 17];
 export const STARS_TO_WIN = 3;
-// Reaching this score grants a one-time extra star, and whoever reached it
-// first breaks a tie on stars.
+// The first team to reach this score earns one extra star, once per match
+// (both teams when they reach it in the same turn); reaching it first also
+// breaks a tie on stars.
 export const STAR_SCORE_THRESHOLD = 60;
 export const GENERIC_SCORE_HALVING_THRESHOLD = 53;
 // The arena draws each team as rows of this many combat slots; adjacency never crosses a row.
