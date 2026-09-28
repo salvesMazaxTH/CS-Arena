@@ -2,7 +2,130 @@ import { regularShieldTotal } from "../../../core/championCombat.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 import basicShot from "../generic/basicShot.js";
-import { KEPT_RUNTIME_FLAG, KEPT_DURATION } from "./passive.js";
+import { KEPT_KEY } from "./passive.js";
+
+const wardOfTheKeep = {
+  key: "ward_of_the_keep",
+  name: "Ward of the Keep",
+
+  keptDuration: 2,
+  dmgReductionPercent: 10,
+  shieldAmount: 30,
+  shieldDecay: 15,
+  shieldCap: 120,
+
+  contact: false,
+  priority: 2,
+  element: "ice",
+
+  description() {
+    return {
+      en: `Ysvane sets the chosen ally inside the Keep, where nothing is permitted to spoil, under a <b>${this.shieldAmount}</b> <b>Shield</b>. They are <b>Kept</b> for <b>${this.keptDuration}</b> turn(s), or until Ysvane leaves the field: they carry <b>Affliction Ward</b> — the first negative effect that would take hold never does — and take <b>${this.dmgReductionPercent}%</b> less damage.
+
+      Nothing left untouched in the Keep stays the size it was: while they are <b>Kept</b>, that <b>Shield</b> does not thin, and it doubles at the start of every turn they came through without being hit at all, up to <b>${this.shieldCap}</b>. Once the Keep lets go, everything it held goes with it, and the <b>Shield</b> thins by <b>${this.shieldDecay}</b> each turn like any other.`,
+      pt: `Ysvane coloca a aliada escolhida dentro do Cofre, onde nada tem permissão de estragar, sob um <b>Escudo</b> de <b>${this.shieldAmount}</b>. Ela fica <b>Resguardada</b> por <b>${this.keptDuration}</b> turno(s), ou até Ysvane deixar o campo: carrega <b>Proteção contra Aflição</b> — o primeiro efeito negativo que tentar se firmar simplesmente não acontece — e sofre <b>${this.dmgReductionPercent}%</b> menos dano.
+
+      Nada que fique intocado dentro do Cofre continua do mesmo tamanho: enquanto ela estiver <b>Resguardada</b>, esse <b>Escudo</b> não diminui, e dobra no início de todo turno em que ela não é atingida nem uma vez, até <b>${this.shieldCap}</b>. Quando o Cofre se abre, tudo o que ele guardava vai junto, e o <b>Escudo</b> passa a diminuir <b>${this.shieldDecay}</b> por turno como qualquer outro.`,
+    };
+  },
+
+  targetSpec: ["select:ally"],
+
+  resolve({ user, targets, context = {} }) {
+    const [ally = user] = targets;
+
+    ally.addShield(this.shieldAmount, this.shieldDecay, context, "regular", {
+      vaultShield: true,
+    });
+    this.keep({ user, ally, context });
+
+    const userName = formatChampionName(user);
+    const allyName = formatChampionName(ally);
+
+    return {
+      log: `${userName} sets ${
+        userName === allyName ? "herself" : allyName
+      } inside the Keep: Kept, under a ${this.shieldAmount} Shield.`,
+    };
+  },
+
+  // Kept is one aura: every bonus hangs off this hook and leaves with it.
+  keep({ user, ally, context, dmgReductionPercent = this.dmgReductionPercent }) {
+    const { keptDuration, shieldCap, shieldDecay } = this;
+    const vaultShields = () => ally.runtime.shields.filter((s) => s.vaultShield);
+
+    ally.removeHookEffects((e) => e.key === KEPT_KEY);
+
+    const added = ally.addHookEffect(
+      {
+        type: "buff",
+        key: KEPT_KEY,
+        name: "Kept",
+        group: "skill",
+        ownerId: user.id,
+        sustainedById: user.id,
+        expiresAtTurn: context.currentTurn + keptDuration,
+
+        hookScope: {
+          onAfterDmgTaking: "defender",
+        },
+
+        // Any hit at all opens the Keep, a burn tick included.
+        hookPolicies: {
+          onAfterDmgTaking: {
+            allowOnDot: true,
+            allowOnNestedDamage: true,
+            allowOnAbsolute: true,
+          },
+        },
+
+        // The Shield eating the blow does not save the turn: what matters is
+        // that something reached them at all.
+        onAfterDmgTaking({ owner, damage, context }) {
+          if (!(damage > 0)) return;
+          owner.runtime.vaultShieldSpoiledTurn = context.currentTurn;
+        },
+
+        onTurnStart({ owner, context }) {
+          const shield = owner.runtime.shields.find((s) => s.vaultShield);
+          if (!shield) return;
+          if (owner.runtime.vaultShieldSpoiledTurn === context.currentTurn - 1)
+            return;
+          if (shield.amount >= shieldCap) return;
+
+          shield.amount = Math.min(shield.amount * 2, shieldCap);
+
+          return {
+            log: `The Keep has not been opened: ${formatChampionName(owner)}'s Shield doubles to ${shield.amount}.`,
+          };
+        },
+
+        onRemoved({ owner }) {
+          owner.damageReductionModifiers = owner.damageReductionModifiers.filter(
+            (m) => m.source !== KEPT_KEY,
+          );
+          if (owner.getStatusEffect("afflictionWard")?.sourceId === user.id) {
+            owner.removeStatusEffect("afflictionWard");
+          }
+          for (const shield of vaultShields()) shield.decayPerTurn = shieldDecay;
+        },
+      },
+      context,
+    );
+    if (!added) return;
+
+    ally.applyStatusEffect("afflictionWard", keptDuration, context, {
+      sourceId: user.id,
+    });
+    ally.applyDamageReduction({
+      amount: dmgReductionPercent,
+      type: "percent",
+      source: KEPT_KEY,
+      context,
+    });
+    for (const shield of vaultShields()) shield.decayPerTurn = 0;
+  },
+};
 
 const ysvaneSkills = [
   // ========================
@@ -14,112 +137,7 @@ const ysvaneSkills = [
   // Special Abilities
   // ========================
 
-  {
-    key: "ward_of_the_keep",
-    name: "Ward of the Keep",
-
-    wardDuration: 2,
-    shieldAmount: 30,
-    shieldDecay: 15,
-    shieldCap: 120,
-    vaultDuration: 3,
-
-    contact: false,
-    priority: 2,
-    element: "ice",
-
-    description() {
-      return {
-        en: `Ysvane sets the chosen ally inside the Keep, where nothing is permitted to spoil. For <b>${this.wardDuration}</b> turn(s) they carry <b>Affliction Ward</b> — the first negative effect that would take hold never does — under a <b>${this.shieldAmount}</b> <b>Shield</b>.
-
-        Nothing left untouched in the Keep stays the size it was: for <b>${this.vaultDuration}</b> turn(s) that <b>Shield</b> does not thin, and it doubles at the start of every turn the ally came through without being hit at all, up to <b>${this.shieldCap}</b>. Once the Keep lets go, the <b>Shield</b> thins by <b>${this.shieldDecay}</b> each turn like any other.`,
-        pt: `Ysvane coloca a aliada escolhida dentro do Cofre, onde nada tem permissão de estragar. Por <b>${this.wardDuration}</b> turno(s) ela carrega <b>Proteção contra Aflição</b> — o primeiro efeito negativo que tentar se firmar simplesmente não acontece — sob um <b>Escudo</b> de <b>${this.shieldAmount}</b>.
-
-        Nada que fique intocado dentro do Cofre continua do mesmo tamanho: por <b>${this.vaultDuration}</b> turno(s) esse <b>Escudo</b> não diminui, e ele dobra no início de todo turno em que a aliada não é atingida nem uma vez, até <b>${this.shieldCap}</b>. Assim que o Cofre se abre, o <b>Escudo</b> passa a diminuir <b>${this.shieldDecay}</b> por turno como qualquer outro.`,
-      };
-    },
-
-    targetSpec: ["select:ally"],
-
-    resolve({ user, targets, context = {} }) {
-      const [ally = user] = targets;
-      const key = "vault_of_the_keep";
-      const { shieldCap, shieldDecay } = this;
-
-      ally.runtime.hookEffects ??= [];
-      ally.runtime.hookEffects = ally.runtime.hookEffects.filter(
-        (e) => e.key !== key,
-      );
-
-      ally.applyStatusEffect("afflictionWard", this.wardDuration, context, {
-        sourceId: user.id,
-      });
-      ally.addShield(this.shieldAmount, 0, context, "regular", {
-        vaultShield: true,
-      });
-      ally.runtime[KEPT_RUNTIME_FLAG] = context.currentTurn + KEPT_DURATION;
-
-      ally.addHookEffect(
-        {
-          type: "buff",
-          key,
-          group: "skill",
-          ownerId: user.id,
-          expiresAtTurn: context.currentTurn + this.vaultDuration,
-
-          hookScope: {
-            onAfterDmgTaking: "defender",
-          },
-
-          // Any hit at all opens the Keep, a burn tick included.
-          hookPolicies: {
-            onAfterDmgTaking: {
-              allowOnDot: true,
-              allowOnNestedDamage: true,
-              allowOnAbsolute: true,
-            },
-          },
-
-          // The Shield eating the blow does not save the turn: what matters is
-          // that something reached them at all.
-          onAfterDmgTaking({ owner, damage, context }) {
-            if (!(damage > 0)) return;
-            owner.runtime.vaultShieldSpoiledTurn = context.currentTurn;
-          },
-
-          onTurnStart({ owner, context }) {
-            const shield = owner.runtime.shields.find((s) => s.vaultShield);
-            if (!shield) return;
-
-            if (context.currentTurn >= this.expiresAtTurn) {
-              shield.decayPerTurn = shieldDecay;
-              return;
-            }
-
-            if (owner.runtime.vaultShieldSpoiledTurn === context.currentTurn - 1)
-              return;
-            if (shield.amount >= shieldCap) return;
-
-            shield.amount = Math.min(shield.amount * 2, shieldCap);
-
-            return {
-              log: `The Keep has not been opened: ${formatChampionName(owner)}'s Shield doubles to ${shield.amount}.`,
-            };
-          },
-        },
-        context,
-      );
-
-      const userName = formatChampionName(user);
-      const allyName = formatChampionName(ally);
-
-      return {
-        log: `${userName} sets ${
-          userName === allyName ? "herself" : allyName
-        } inside the Keep: Affliction Ward and a ${this.shieldAmount} Shield.`,
-      };
-    },
-  },
+  wardOfTheKeep,
 
   {
     key: "hold_fast",
@@ -200,9 +218,7 @@ const ysvaneSkills = [
     key: "the_long_winter",
     name: "The Long Winter",
 
-    wardDuration: 2,
-    damageReductionPercent: 20,
-    reductionDuration: 2,
+    dmgReductionPercent: 20,
     supremePrice: 60,
 
     contact: false,
@@ -213,12 +229,12 @@ const ysvaneSkills = [
 
     description() {
       return {
-        en: `Ysvane lets the Keep out all at once and a long winter settles over her whole side of the field. Every ally is stripped of every negative status effect, gains <b>Affliction Ward</b> for <b>${this.wardDuration}</b> turn(s) and takes <b>${this.damageReductionPercent}%</b> less damage for <b>${this.reductionDuration}</b> turn(s).
+        en: `Ysvane lets the Keep out all at once and a long winter settles over her whole side of the field. Every ally is stripped of every negative status effect and becomes <b>Kept</b> as by <b>${wardOfTheKeep.name}</b>, but takes <b>${this.dmgReductionPercent}%</b> less damage instead of <b>${wardOfTheKeep.dmgReductionPercent}%</b>.
 
-        An ally who walks into the winter with their Keep still sealed — an <b>Affliction Ward</b> nobody has spent yet, under at least <b>${this.supremePrice}</b> <b>Shield</b> — pays <b>${this.supremePrice}</b> of that <b>Shield</b> and the cold closes over what is left as a <b>Supreme Shield</b>. Whatever <b>Shield</b> they had above the price stays standing underneath it.`,
-        pt: `Ysvane deixa o Cofre se abrir de uma vez e um longo inverno se assenta sobre todo o lado dela do campo. Toda aliada é limpa de todo efeito de status negativo, ganha <b>Proteção contra Aflição</b> por <b>${this.wardDuration}</b> turno(s) e sofre <b>${this.damageReductionPercent}%</b> menos dano por <b>${this.reductionDuration}</b> turno(s).
+        An ally who walks into the winter with their Keep still sealed — an <b>Affliction Ward</b> nobody has spent yet, under at least <b>${this.supremePrice}</b> <b>Shield</b> — pays <b>${this.supremePrice}</b> of that <b>Shield</b> and the cold closes over what is left as a <b>Supreme Shield</b>. That one is theirs to keep: it stays when the Keep lets go. Whatever <b>Shield</b> they had above the price stays standing underneath it.`,
+        pt: `Ysvane deixa o Cofre se abrir de uma vez e um longo inverno se assenta sobre todo o lado dela do campo. Toda aliada é limpa de todo efeito de status negativo e fica <b>Resguardada</b> como por <b>${wardOfTheKeep.name}</b>, mas sofre <b>${this.dmgReductionPercent}%</b> menos dano em vez de <b>${wardOfTheKeep.dmgReductionPercent}%</b>.
 
-        Uma aliada que entra no inverno com seu Cofre ainda selado — uma <b>Proteção contra Aflição</b> que ninguém gastou, sob pelo menos <b>${this.supremePrice}</b> de <b>Escudo</b> — paga <b>${this.supremePrice}</b> desse <b>Escudo</b> e o frio fecha sobre o que sobra como um <b>Escudo Supremo</b>. Qualquer <b>Escudo</b> que ela tivesse acima do preço continua de pé por baixo dele.`,
+        Uma aliada que entra no inverno com seu Cofre ainda selado — uma <b>Proteção contra Aflição</b> que ninguém gastou, sob pelo menos <b>${this.supremePrice}</b> de <b>Escudo</b> — paga <b>${this.supremePrice}</b> desse <b>Escudo</b> e o frio fecha sobre o que sobra como um <b>Escudo Supremo</b>. Esse é dela: continua quando o Cofre se abre. Qualquer <b>Escudo</b> que ela tivesse acima do preço continua de pé por baixo dele.`,
       };
     },
 
@@ -248,17 +264,12 @@ const ysvaneSkills = [
           .getStatusEffects({ type: "debuff" })
           .forEach((se) => ally.removeStatusEffect(se.key));
 
-        ally.applyStatusEffect("afflictionWard", this.wardDuration, context, {
-          sourceId: user.id,
-        });
-        ally.applyDamageReduction({
-          amount: this.damageReductionPercent,
-          duration: this.reductionDuration,
-          type: "percent",
-          source: this.key,
+        wardOfTheKeep.keep({
+          user,
+          ally,
           context,
+          dmgReductionPercent: this.dmgReductionPercent,
         });
-        ally.runtime[KEPT_RUNTIME_FLAG] = context.currentTurn + KEPT_DURATION;
       }
 
       const sealed = crystallized.length
@@ -266,7 +277,7 @@ const ysvaneSkills = [
         : "";
 
       return {
-        log: `${formatChampionName(user)} lets the Keep out over the whole team: every ally cleansed, Warded and wrapped in the long winter.${sealed}`,
+        log: `${formatChampionName(user)} lets the Keep out over the whole team: every ally cleansed and Kept in the long winter.${sealed}`,
       };
     },
   },

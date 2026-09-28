@@ -1,8 +1,11 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
 
-export const KEPT_RUNTIME_FLAG = "ysvaneKeptUntilTurn";
-export const KEPT_DURATION = 2;
+export const KEPT_KEY = "ysvane_kept";
+
+export function isKept(champion) {
+  return champion.runtime?.hookEffects?.some((e) => e.key === KEPT_KEY) ?? false;
+}
 
 export default {
   key: "what_the_keep_holds",
@@ -14,10 +17,10 @@ export default {
 
   description() {
     return {
-      en: `Ysvane is old enough to be the vault rather than its warden, and what she wards is not allowed to slip. An ally she lays her <b>Affliction Ward</b> over is <b>Kept</b> for <b>${KEPT_DURATION}</b> turn(s); when a <b>Kept</b> ally uses CLAIM the grab holds fast in the cold, and their team banks <b>${this.claimBonusPoints}</b> extra point(s) from it.
+      en: `Ysvane is old enough to be the vault rather than its warden, and what she wards is not allowed to slip. When a <b>Kept</b> ally uses CLAIM the grab holds fast in the cold, and their team banks <b>${this.claimBonusPoints}</b> extra point(s) from it.
 
       The Keep is not looted for free either: when a <b>Kept</b> ally falls, Ysvane's team banks whatever that kill just paid the enemy, minus <b>${this.lootTax}</b> (at least <b>${this.lootMinimum}</b> point).`,
-      pt: `Ysvane é velha o bastante para ser o cofre em vez de sua guardiã, e o que ela resguarda não tem permissão de escapar. Uma aliada sobre quem ela lança sua <b>Proteção contra Aflição</b> fica <b>Resguardada</b> por <b>${KEPT_DURATION}</b> turno(s); quando uma aliada <b>Resguardada</b> usa CLAIM, a captura se firma no frio, e o time dela ganha <b>${this.claimBonusPoints}</b> ponto(s) extra por isso.
+      pt: `Ysvane é velha o bastante para ser o cofre em vez de sua guardiã, e o que ela resguarda não tem permissão de escapar. Quando uma aliada <b>Resguardada</b> usa CLAIM, a captura se firma no frio, e o time dela ganha <b>${this.claimBonusPoints}</b> ponto(s) extra por isso.
 
       O Cofre também não é saqueado de graça: quando uma aliada <b>Resguardada</b> cai, o time de Ysvane ganha o que aquela morte acabou de pagar ao inimigo, menos <b>${this.lootTax}</b> (no mínimo <b>${this.lootMinimum}</b> ponto).`,
     };
@@ -27,8 +30,7 @@ export default {
     if (skill?.key !== CLAIM_ACTION_KEY) return;
     if (!owner.alive || !actionSource || actionSource.team !== owner.team) return;
 
-    const keptUntil = Number(actionSource.runtime?.[KEPT_RUNTIME_FLAG] ?? 0);
-    if (keptUntil <= context.currentTurn) return;
+    if (!isKept(actionSource)) return;
 
     context.registerScore({
       amount: this.claimBonusPoints,
@@ -45,8 +47,7 @@ export default {
   onChampionDeath({ owner, deadChampion, context }) {
     if (deadChampion.team !== owner.team) return;
 
-    const keptUntil = Number(deadChampion.runtime?.[KEPT_RUNTIME_FLAG] ?? 0);
-    if (keptUntil <= context.currentTurn) return;
+    if (!isKept(deadChampion)) return;
 
     const conceded = Number(deadChampion.runtime?.deathConcededPoints ?? 0);
     if (conceded <= 0) return;
