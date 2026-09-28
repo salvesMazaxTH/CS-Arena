@@ -27,7 +27,7 @@ const julianSkills = [
     description() {
       return {
         en: `Julian rolls a bolt-head across a vial of his own making, unhurried, and admires the sheen on it before firing into the chosen target. Deals <b>Piercing damage</b> equal to <b>${this.maxHPPercent}%</b> of their Max HP and leaves <b>${this.poisonedStacks}</b> stack of <b>Poisoned</b>.`,
-        pt: `Julian passa a ponta do dardo por um de seus próprios frascos, sem pressa, admirando o brilho antes de disparar contra o alvo escolhido. Causa <b>dano Perfurante</b> igual a <b>${this.maxHPPercent}%</b> do HP Máximo dele e deixa <b>${this.poisonedStacks}</b> stack de <b>Veneno</b>.`,
+        pt: `Julian passa a ponta do dardo por um de seus próprios frascos, sem pressa, admirando o brilho antes de disparar contra o alvo escolhido. Causa <b>dano Perfurante</b> igual a <b>${this.maxHPPercent}%</b> do HP Máximo dele e deixa <b>${this.poisonedStacks}</b> acúmulo(s) de <b>Veneno</b>.`,
       };
     },
 
@@ -86,7 +86,7 @@ const julianSkills = [
     description() {
       return {
         en: `Julian shoulders the heavy crossbow he keeps for gates and for anything that calls itself unbreakable, and puts a quarrel through the chosen target. Deals <b>Piercing damage</b> equal to <b>${this.maxHPPercent}%</b> of their Max HP, plus <b>${this.perStackPercent}%</b> for every stack of <b>Poisoned</b> they carry. If they carry <b>${this.scoreStackThreshold}</b> or more, Julian collects on the mark and his player scores <b>${this.scorePoints}</b> point.`,
-        pt: `Julian ergue a besta pesada que reserva para portões e para tudo que se acha indestrutível, e crava um virote no alvo escolhido. Causa <b>dano Perfurante</b> igual a <b>${this.maxHPPercent}%</b> do HP Máximo dele, mais <b>${this.perStackPercent}%</b> por stack de <b>Veneno</b> que carregar. Se carregar <b>${this.scoreStackThreshold}</b> stacks ou mais, Julian cobra a marca e seu time pontua <b>${this.scorePoints}</b> ponto.`,
+        pt: `Julian ergue a besta pesada que reserva para portões e para tudo que se acha indestrutível, e crava um virote no alvo escolhido. Causa <b>dano Perfurante</b> igual a <b>${this.maxHPPercent}%</b> do HP Máximo dele, mais <b>${this.perStackPercent}%</b> por acúmulo de <b>Veneno</b> que carregar. Se carregar <b>${this.scoreStackThreshold}</b> acúmulo(s) ou mais, Julian cobra a marca e seu time pontua <b>${this.scorePoints}</b> ponto.`,
       };
     },
 
