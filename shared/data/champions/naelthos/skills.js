@@ -195,7 +195,7 @@ const naelthosSkills = [
 
     element: "water",
 
-    priority: 0,
+    priority: 2,
     description() {
       return {
         en: `Naelthos opens the depths of the Primordial Sea and lets them rise through him: his <b>Max HP</b> swells by up to <b>${this.hpFactor}%</b> of his base HP, and the same surge floods his current HP. Each invocation swells him less than the last.
