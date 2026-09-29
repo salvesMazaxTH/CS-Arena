@@ -15,14 +15,14 @@ function isCorroded(champion, context) {
 }
 
 const zophiroxSkills = [
-  // ========================
-  // Basic Attack
-  // ========================
+  // =========================
+  // Basic Strike (global)
+  // =========================
   basicStrike,
 
-  // ========================
-  // Z1 — Caustic Rend
-  // ========================
+  // =========================
+  // Special Abilities
+  // =========================
   {
     key: "caustic_rend",
     name: "Caustic Rend",
@@ -42,8 +42,8 @@ const zophiroxSkills = [
 
     description() {
       return {
-        en: `Zophiróx rakes the chosen target with claws still dripping from his glands, and the acid keeps eating after the claws are gone. The target is <b>Corroded</b> for <b>${this.corrosionDuration}</b> turns, losing <b>${this.defenseShredPercent}%</b> of its <b>Defense</b>, and receives <b>${this.poisonedStacks}</b> stacks of <b>Poisoned</b>. Striking an already <b>Corroded</b> target renews the corrosion instead of deepening it. Deals physical damage.`,
-        pt: `Zophiróx rasga o alvo escolhido com garras ainda pingando das próprias glândulas, e o ácido continua corroendo depois que as garras se vão. O alvo fica <b>Corroído</b> por <b>${this.corrosionDuration}</b> turnos, perdendo <b>${this.defenseShredPercent}%</b> da sua <b>Defesa</b>, e recebe <b>${this.poisonedStacks}</b> acúmulos de <b>Envenenado</b>. Golpear um alvo já <b>Corroído</b> renova a corrosão em vez de aprofundá-la. Causa dano físico.`,
+        en: `Zophiróx rakes the chosen target with claws still dripping from his glands, and the acid keeps eating after the claws are gone. If it lands, the target is <b>Corroded</b> for <b>${this.corrosionDuration}</b> turn(s), losing <b>${this.defenseShredPercent}%</b> of its <b>Defense</b>, and receives <b>${this.poisonedStacks}</b> stacks of <b>Poisoned</b>. Striking an already <b>Corroded</b> target renews the corrosion instead of deepening it. Deals physical damage.`,
+        pt: `Zophiróx rasga o alvo escolhido com garras ainda pingando das próprias glândulas, e o ácido continua corroendo depois que as garras se vão. Se acertar, o alvo fica <b>Corroído</b> por <b>${this.corrosionDuration}</b> turno(s), perdendo <b>${this.defenseShredPercent}%</b> da sua <b>Defesa</b>, e recebe <b>${this.poisonedStacks}</b> acúmulos de <b>Envenenado</b>. Golpear um alvo já <b>Corroído</b> renova a corrosão em vez de aprofundá-la. Causa dano físico.`,
       };
     },
 
@@ -79,13 +79,32 @@ const zophiroxSkills = [
       return results;
     },
 
-    // Corroded is Zophiróx's own mark, not a shared status effect: a hookEffect
-    // carrying the Defense modifier it owns, so a reapplication can replace
-    // both instead of stacking the shred.
+    // Corroded is a hookEffect owning its Defense modifier, so a reapplication
+    // replaces both instead of stacking the shred.
     _corrode(user, enemy, context) {
       enemy.removeHookEffects((effect) => effect.key === CORROSION_KEY);
 
-      const modifierCount = enemy.statModifiers.length;
+      const corrosion = {
+        type: "debuff",
+        key: CORROSION_KEY,
+        name: "Corroded",
+        expiresAtTurn: context.currentTurn + this.corrosionDuration,
+        modifiers: [],
+
+        onTurnStart({ owner, context }) {
+          if (context.currentTurn < this.expiresAtTurn) return;
+          owner.removeHookEffects((effect) => effect === this);
+        },
+
+        onRemoved({ owner }) {
+          owner.removeStatModifiers(this.modifiers);
+        },
+      };
+
+      // An immunity or Affliction Ward turning the mark away spares the Defense too.
+      if (!enemy.addHookEffect(corrosion, context)) return;
+
+      const from = enemy.statModifiers.length;
 
       enemy.modifyStat({
         statName: "Defense",
@@ -96,42 +115,18 @@ const zophiroxSkills = [
         statModifierSrc: user,
       });
 
-      const modifier =
-        enemy.statModifiers.length > modifierCount
-          ? enemy.statModifiers.at(-1)
-          : null;
-
-      enemy.addHookEffect(
-        {
-          type: "debuff",
-          key: CORROSION_KEY,
-          expiresAtTurn: context.currentTurn + this.corrosionDuration,
-
-          onTurnStart({ owner, context }) {
-            if (context.currentTurn < this.expiresAtTurn) return;
-            owner.removeHookEffects((effect) => effect === this);
-          },
-
-          onRemoved({ owner }) {
-            if (modifier) owner.removeStatModifiers([modifier]);
-          },
-        },
-        context,
-      );
+      corrosion.modifiers = enemy.statModifiers.slice(from);
     },
   },
 
-  // ========================
-  // Z2 — Hardened Scales
-  // ========================
   {
     key: "hardened_scales",
     name: "Hardened Scales",
 
     baseShield: 5,
     shieldPerWornSkin: 5,
-    shieldPerAfflictedEnemy: 30,
-    shieldDecay: 30,
+    shieldPerAfflictedEnemy: 25,
+    shieldDecay: 25,
 
     contact: false,
     priority: 1,
@@ -175,9 +170,6 @@ const zophiroxSkills = [
     },
   },
 
-  // ========================
-  // Ultimate — Corrosive Maw
-  // ========================
   {
     key: "corrosive_maw",
     name: "Corrosive Maw",
@@ -186,8 +178,8 @@ const zophiroxSkills = [
     momentumCost: 55,
 
     bf: 100,
-    executeHpPercent: 60,
-    executeBonusDamage: 40,
+    weakenedHpPercent: 60,
+    weakenedBonusDamage: 40,
     poisonedStacks: 3,
 
     contact: true,
@@ -200,19 +192,19 @@ const zophiroxSkills = [
 
     description() {
       return {
-        en: `Zophiróx closes his jaws on the chosen target and empties every gland he has into the bite. Below <b>${this.executeHpPercent}%</b> of its <b>Max HP</b>, the target is already too weak to pull free, and the bite deals <b>${this.executeBonusDamage}</b> bonus damage. If it lands, it applies <b>${this.poisonedStacks}</b> stacks of <b>Poisoned</b>. Deals physical damage.`,
-        pt: `Zophiróx fecha as mandíbulas no alvo escolhido e esvazia todas as glândulas na mordida. Abaixo de <b>${this.executeHpPercent}%</b> do seu <b>HP Máximo</b>, o alvo já está fraco demais para se soltar, e a mordida causa <b>${this.executeBonusDamage}</b> de dano bônus. Se acertar, aplica <b>${this.poisonedStacks}</b> acúmulos de <b>Envenenado</b>. Causa dano físico.`,
+        en: `Zophiróx closes his jaws on the chosen target and empties every gland he has into the bite. Below <b>${this.weakenedHpPercent}%</b> of its <b>Max HP</b>, the target is already too weak to pull free, and the bite deals <b>${this.weakenedBonusDamage}</b> bonus damage. If it lands, it applies <b>${this.poisonedStacks}</b> stacks of <b>Poisoned</b>. Deals physical damage.`,
+        pt: `Zophiróx fecha as mandíbulas no alvo escolhido e esvazia todas as glândulas na mordida. Abaixo de <b>${this.weakenedHpPercent}%</b> do seu <b>HP Máximo</b>, o alvo já está fraco demais para se soltar, e a mordida causa <b>${this.weakenedBonusDamage}</b> de dano bônus. Se acertar, aplica <b>${this.poisonedStacks}</b> acúmulos de <b>Envenenado</b>. Causa dano físico.`,
       };
     },
 
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
 
-      const weakened = enemy.HP < (enemy.maxHP * this.executeHpPercent) / 100;
+      const weakened = enemy.HP < (enemy.maxHP * this.weakenedHpPercent) / 100;
 
       const result = new DamageEvent({
         baseDamage: (user.Attack * this.bf) / 100,
-        bonusDamage: weakened ? this.executeBonusDamage : 0,
+        bonusDamage: weakened ? this.weakenedBonusDamage : 0,
         attacker: user,
         defender: enemy,
         skill: this,

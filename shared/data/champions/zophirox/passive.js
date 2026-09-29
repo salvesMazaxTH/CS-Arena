@@ -1,9 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 
-// The one Defense modifier Worn Skin currently holds on each Zophiróx, so a new
-// stack replaces it with a deeper one instead of piling modifiers up.
-const wornSkinModifiers = new WeakMap();
-
 export default {
   key: "molting_cycle",
   name: "Molting Cycle",
@@ -11,6 +7,8 @@ export default {
   moltThreshold: 7,
   defenseLossPerStack: 3,
   evasionGained: 25,
+  damageBonusPercent: 20,
+  damageModifierId: "zophirox-molted-fangs",
   moltedPortrait: "/assets/portraits/zophirox_transcended.webp",
 
   description(champion) {
@@ -28,10 +26,10 @@ export default {
         };
 
     return {
-      en: `Zophiróx's old skin was never made for this much fighting, and every blow traded rubs it thinner. Whenever he lands a contact hit on an enemy, or an enemy lands one on him, he gains <b>1</b> stack of <b>Worn Skin</b>, and each stack costs him <b>${this.defenseLossPerStack}%</b> of his <b>Defense</b>. At <b>${this.moltThreshold}</b> stacks he sheds it for good: every stack and the <b>Defense</b> it cost are gone, every negative status effect on him comes off with the old skin, and the new scales underneath grant him <b>+${this.evasionGained}</b> permanent <b>Evasion</b>. He molts only once.
+      en: `Zophiróx's old skin was never made for this much fighting, and every blow traded rubs it thinner. Whenever he lands a contact hit on an enemy, or an enemy lands one on him, he gains <b>1</b> stack of <b>Worn Skin</b>, and each stack costs him <b>${this.defenseLossPerStack}%</b> of his <b>Defense</b>. At <b>${this.moltThreshold}</b> stacks he sheds it for good: every stack and the <b>Defense</b> it cost are gone, every negative status effect on him comes off with the old skin, and the new scales underneath grant him <b>+${this.evasionGained}</b> permanent <b>Evasion</b>, while his fresh fangs make all his damage <b>${this.damageBonusPercent}%</b> greater for the rest of the match. He molts only once.
 
       ${status.en}`,
-      pt: `A pele velha de Zophiróx nunca foi feita para tanta briga, e cada golpe trocado a deixa mais fina. Sempre que ele acerta um golpe de contato em um inimigo, ou um inimigo acerta um nele, ele ganha <b>1</b> acúmulo de <b>Pele Gasta</b>, e cada acúmulo lhe custa <b>${this.defenseLossPerStack}%</b> da <b>Defesa</b>. Com <b>${this.moltThreshold}</b> acúmulos ele a troca de vez: os acúmulos e a <b>Defesa</b> que custaram somem, todo efeito de status negativo sobre ele sai junto com a pele velha, e as escamas novas por baixo lhe dão <b>+${this.evasionGained}</b> de <b>Esquiva</b> permanente. Ele só troca de pele uma vez.
+      pt: `A pele velha de Zophiróx nunca foi feita para tanta briga, e cada golpe trocado a deixa mais fina. Sempre que ele acerta um golpe de contato em um inimigo, ou um inimigo acerta um nele, ele ganha <b>1</b> acúmulo de <b>Pele Gasta</b>, e cada acúmulo lhe custa <b>${this.defenseLossPerStack}%</b> da <b>Defesa</b>. Com <b>${this.moltThreshold}</b> acúmulos ele a troca de vez: os acúmulos e a <b>Defesa</b> que custaram somem, todo efeito de status negativo sobre ele sai junto com a pele velha, e as escamas novas por baixo lhe dão <b>+${this.evasionGained}</b> de <b>Esquiva</b> permanente, enquanto as presas recém-nascidas tornam todo o dano dele <b>${this.damageBonusPercent}%</b> maior até o fim da partida. Ele só troca de pele uma vez.
 
       ${status.pt}`,
     };
@@ -42,12 +40,6 @@ export default {
     onAfterDmgTaking: "defender",
   },
 
-  // A blow is a blow: an Absolute contact hit wears the skin like any other.
-  hookPolicies: {
-    onAfterDmgDealing: { allowOnAbsolute: true },
-    onAfterDmgTaking: { allowOnAbsolute: true },
-  },
-
   onAfterDmgDealing({ owner, defender, damage, contact, context }) {
     if (!contact || !(damage > 0)) return;
     if (!defender || defender.team === owner.team) return;
@@ -55,7 +47,7 @@ export default {
   },
 
   onAfterDmgTaking({ owner, attacker, damage, contact, context }) {
-    if (context?.isDot || !contact || !(damage > 0)) return;
+    if (!contact || !(damage > 0)) return;
     if (!attacker || attacker.team === owner.team) return;
     return this._wear({ owner, context });
   },
@@ -70,7 +62,8 @@ export default {
 
     if (stacks >= this.moltThreshold) return this._molt({ owner, context });
 
-    const modifierCount = owner.statModifiers.length;
+    // A new stack replaces the held modifier with a deeper one instead of piling up.
+    const from = owner.statModifiers.length;
 
     owner.modifyStat({
       statName: "Defense",
@@ -81,16 +74,14 @@ export default {
       statModifierSrc: owner,
     });
 
-    if (owner.statModifiers.length > modifierCount) {
-      wornSkinModifiers.set(owner, owner.statModifiers.at(-1));
-    }
+    owner.runtime.zophiroxWornSkinModifiers = owner.statModifiers.slice(from);
   },
 
   _clearDefenseLoss(owner) {
-    const modifier = wornSkinModifiers.get(owner);
-    if (!modifier) return;
-    owner.removeStatModifiers([modifier]);
-    wornSkinModifiers.delete(owner);
+    const held = owner.runtime.zophiroxWornSkinModifiers;
+    if (!held?.length) return;
+    owner.removeStatModifiers(held);
+    delete owner.runtime.zophiroxWornSkinModifiers;
   },
 
   _molt({ owner, context }) {
@@ -109,6 +100,14 @@ export default {
       isPermanent: true,
     });
 
+    owner.addDamageModifier({
+      id: this.damageModifierId,
+      name: "Molting Cycle (Fresh Fangs)",
+      permanent: true,
+      apply: ({ baseDamage }) =>
+        baseDamage * (1 + this.damageBonusPercent / 100),
+    });
+
     context?.registerDialog?.({
       message: {
         en: `${formatChampionName(owner)} sheds his old skin!`,
@@ -121,8 +120,8 @@ export default {
 
     return {
       log: {
-        en: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} molts, shedding his negative effects and gaining +${this.evasionGained} permanent Evasion!`,
-        pt: `[PASSIVA — ${this.name}] ${formatChampionName(owner)} troca de pele, deixando para trás os efeitos negativos e ganhando +${this.evasionGained} de Esquiva permanente!`,
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} molts, shedding his negative effects and gaining +${this.evasionGained} permanent Evasion and +${this.damageBonusPercent}% damage!`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} troca de pele, deixando para trás os efeitos negativos e ganhando +${this.evasionGained} de Esquiva permanente e +${this.damageBonusPercent}% de dano!`,
       },
     };
   },
