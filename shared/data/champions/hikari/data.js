@@ -3,8 +3,6 @@ export default {
   releaseDate: "2026-09-29",
   portrait: "/assets/portraits/hikari.webp",
 
-  unreleased: true,
-
   HP: 275,
   Attack: 285,
   Defense: 40,
