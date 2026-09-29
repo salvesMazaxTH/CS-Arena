@@ -64,6 +64,31 @@ const socket = io({
   reconnectionDelay: 1000,
 });
 
+// A phone's console is out of reach mid-match, so client failures are echoed
+// to the server terminal (deduplicated and capped per session).
+const reportedClientErrors = new Set();
+const MAX_CLIENT_ERROR_REPORTS = 20;
+
+function reportClientError(message, stack) {
+  const text = String(message ?? "Unknown client error");
+  if (reportedClientErrors.has(text)) return;
+  if (reportedClientErrors.size >= MAX_CLIENT_ERROR_REPORTS) return;
+  reportedClientErrors.add(text);
+  socket.emit("clientError", { message: text, stack: stack ?? "" });
+}
+
+window.addEventListener("error", (event) => {
+  reportClientError(event.message, event.error?.stack);
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  const reason = event.reason;
+  reportClientError(
+    `Unhandled rejection: ${reason?.message ?? reason}`,
+    reason?.stack,
+  );
+});
+
 socket.on("playerNamesUpdate", (namesArray) => {
   playerNames.clear();
   namesArray.forEach(([slot, name]) => playerNames.set(parseInt(slot), name));
@@ -224,6 +249,8 @@ const combatAnimations = createCombatAnimationManager({
   onQueueEmpty: () => {
     socket.emit("combatAnimationsFinished");
   },
+
+  onQueueFault: reportClientError,
 
   onGameStateProcessed: () => {
     // While the turn is resolving nothing is clickable yet, and rebuilding the

@@ -80,6 +80,7 @@ const TEAM_SIZE = 8;
 const ACTIVE_PER_TEAM = 3; // max champions on the field per team (roster=8, active=3)
 const FIRST_CHOICE_TIMEOUT = 45 * 1000; // 45s for the 1v1 pick before auto-selecting at random
 const DISCONNECT_TIMEOUT = 30 * 1000; // 30s to reconnect
+const ANIMATION_STRAGGLER_TIMEOUT = 45 * 1000; // 45s for the second client to finish animating a turn
 
 // ============================================================
 //  HTTP SERVER & EXPRESS
@@ -120,6 +121,7 @@ app.get("/", (_req, res) => {
 const match = new GameMatch();
 const envelopeBuilder = new CombatEnvelopeBuilder(match.combat);
 let waitingForAnimations = false;
+let animationStragglerTimer = null;
 let gameOverEmitted = false;
 
 // ============================================================
@@ -1003,6 +1005,19 @@ function handleScheduledEffect(effect, context) {
   }
 }
 
+function cancelAnimationStragglerWatch() {
+  clearTimeout(animationStragglerTimer);
+  animationStragglerTimer = null;
+}
+
+/** Ends the wait for the resolved turn's animations and starts the next turn. */
+function finishAnimationWait() {
+  cancelAnimationStragglerWatch();
+  waitingForAnimations = false;
+  match.clearFinishedAnimationSockets();
+  handleStartTurn();
+}
+
 /** Runs start-of-turn processing: scheduled effects, hooks, purges and global regen. */
 function handleStartTurn() {
   match.combat.phase = "starting";
@@ -1168,6 +1183,8 @@ function handleStartTurn() {
 function resetGameState() {
   revealConcealedSummons();
   match.clearPlayers();
+  waitingForAnimations = false;
+  cancelAnimationStragglerWatch();
   gameOverEmitted = false;
 }
 
@@ -1188,6 +1205,7 @@ function resetCombatState() {
   }
 
   waitingForAnimations = false;
+  cancelAnimationStragglerWatch();
   gameOverEmitted = false;
 }
 
@@ -1226,10 +1244,42 @@ io.on("connection", (socket) => {
     match.addFinishedAnimationSocket(socket.id);
 
     if (match.getFinishedAnimationCount() >= 2) {
-      waitingForAnimations = false;
-      match.clearFinishedAnimationSockets();
-      handleStartTurn();
+      finishAnimationWait();
+      return;
     }
+
+    // A client that never reports back would hold the match forever with no
+    // error anywhere, so the one that did waits a bounded time for it.
+    if (animationStragglerTimer) return;
+
+    const reporterSlot = match.getSlotBySocket(socket.id);
+
+    animationStragglerTimer = setTimeout(() => {
+      animationStragglerTimer = null;
+      if (!waitingForAnimations) return;
+
+      const stragglerSlot = reporterSlot === 0 ? 1 : 0;
+      const straggler = match.getPlayer(stragglerSlot)?.username ?? "?";
+      console.warn(
+        `[watchdog] Player ${stragglerSlot + 1} (${straggler}) never reported the end of the turn's animations; moving on without them.`,
+      );
+
+      finishAnimationWait();
+    }, ANIMATION_STRAGGLER_TIMEOUT);
+  });
+
+  // A phone's console is out of reach mid-match, so client-side failures are
+  // echoed to this terminal.
+  socket.on("clientError", (report) => {
+    const slot = match.getSlotBySocket(socket.id);
+    const who =
+      slot === undefined
+        ? `socket ${socket.id}`
+        : `Player ${slot + 1} (${match.getPlayer(slot)?.username ?? "?"})`;
+    const message = String(report?.message ?? "").slice(0, 500);
+    const stack = String(report?.stack ?? "").slice(0, 2000);
+
+    console.error(`[client] ${who}: ${message}${stack ? `\n${stack}` : ""}`);
   });
 
   // --- Connection-scoped helpers ---

@@ -73,6 +73,11 @@ const TIMING = {
   ARRIVAL_SETTLE: 550,
 
   DEATH_CLAIM_EFFECT: 5600,
+
+  // Failsafe ceiling for one queue item. Far above anything a real action
+  // takes, it only trips when an animation never settles (a render loop that
+  // stopped firing, a promise nobody resolves), so the turn still advances.
+  QUEUE_ITEM_MAX: 30000,
 };
 
 // Snapshot fields copied verbatim onto the champion (no side effects).
@@ -274,9 +279,13 @@ export function createCombatAnimationManager(deps) {
     while (queue.length > 0) {
       const item = queue.shift();
       try {
-        await dispatchQueueItem(item);
+        await runBounded(item);
       } catch (err) {
         console.error("[AnimManager] Queue item error:", err);
+        deps.onQueueFault?.(
+          `Queue item "${item.type}" failed: ${err?.message ?? err}`,
+          err?.stack,
+        );
       }
     }
 
@@ -285,6 +294,29 @@ export function createCombatAnimationManager(deps) {
     if (typeof onQueueEmpty === "function" && currentPhase === "combat") {
       currentPhase = null;
       onQueueEmpty();
+    }
+  }
+
+  // Whatever the item left running carries on in the background; the queue
+  // just stops waiting for it.
+  async function runBounded(item) {
+    let timer;
+    const timedOut = new Promise((resolve) => {
+      timer = setTimeout(() => resolve(true), TIMING.QUEUE_ITEM_MAX);
+    });
+    const stalled = await Promise.race([
+      dispatchQueueItem(item).then(() => false),
+      timedOut,
+    ]);
+    clearTimeout(timer);
+    if (stalled) {
+      console.warn(
+        `[AnimManager] Queue item "${item.type}" did not settle within ${TIMING.QUEUE_ITEM_MAX}ms; moving on.`,
+        item.data,
+      );
+      deps.onQueueFault?.(
+        `Queue item "${item.type}" did not settle within ${TIMING.QUEUE_ITEM_MAX}ms`,
+      );
     }
   }
 
