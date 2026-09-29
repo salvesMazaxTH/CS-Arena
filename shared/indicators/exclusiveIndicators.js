@@ -210,9 +210,9 @@ registerRuntimeCounterIndicator("weyne_steady", "weyneSteady", {
   imageSize: 32,
 });
 
-// Weyne's Cold Zero (runtime.weyneZeroed): the round she has already measured.
+// Weyne's Cold Zero (runtime.weyneZeroedUntilTurn): the round she has already measured.
 // Icon: "Reticule" by Lorc (game-icons.net, CC BY 3.0).
-registerRuntimeCounterIndicator("weyne_cold_zero", "weyneZeroed", {
+registerRuntimeCounterIndicator("weyne_cold_zero", "weyneZeroedUntilTurn", {
   type: "image",
   value: "/assets/indicators/weyne_cold_zero_indicator.svg",
   background: "rgba(70, 120, 160, 0.88)",

@@ -5,6 +5,10 @@ import basicShot from "../generic/basicShot.js";
 import { hitChance, stillnessBonus } from "./passive.js";
 
 const weyneSkills = [
+  // =========================
+  // Basic Shot (global)
+  // =========================
+
   {
     ...basicShot,
 
@@ -24,11 +28,15 @@ const weyneSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
 
-      const zeroed = user.runtime?.weyneZeroed;
-      if (zeroed) user.runtime.weyneZeroed = false;
+      const zeroed =
+        user.runtime.weyneZeroedUntilTurn >= (context.currentTurn ?? 0);
+      delete user.runtime.weyneZeroedUntilTurn;
 
       if (!zeroed && Math.random() * 100 >= hitChance(user)) {
-        const failMessage = `${formatChampionName(user)} breaks her breath a fraction early and the round goes wide of ${formatChampionName(enemy)}.`;
+        const failMessage = {
+          en: `${formatChampionName(user)} breaks her breath a fraction early and the round goes wide of ${formatChampionName(enemy)}.`,
+          pt: `${formatChampionName(user)} solta o ar uma fração cedo demais e o projétil passa longe de ${formatChampionName(enemy)}.`,
+        };
 
         context.registerDialog?.({
           message: failMessage,
@@ -53,24 +61,34 @@ const weyneSkills = [
     },
   },
 
+  // =========================
+  // Special Abilities
+  // =========================
+
   {
     key: "cold_zero",
     name: "Cold Zero",
+
+    zeroedDuration: 1,
 
     priority: 2,
     targetSpec: ["self"],
 
     description() {
       return {
-        en: `Weyne stops being a person for a turn and becomes a measurement: windage, drop, the cold in her own hands. She does nothing else, and her next <b>Basic Shot</b> skips the <b>Held Breath</b> roll: it cannot miss and is always a <b>critical hit</b>.`,
-        pt: `Weyne deixa de ser uma pessoa por um turno e vira uma medição: vento, queda, o frio nas próprias mãos. Ela não faz mais nada, e seu próximo <b>Tiro Básico</b> dispensa a rolagem de <b>Held Breath</b>: não tem como errar e é sempre um <b>acerto crítico</b>.`,
+        en: `Weyne stops being a person for a turn and becomes a measurement: windage, drop, the cold in her own hands. She does nothing else, and her next <b>Basic Shot</b> within <b>${this.zeroedDuration}</b> turn(s) skips the <b>Held Breath</b> roll, so her own aim cannot fail, and is always a <b>critical hit</b>.`,
+        pt: `Weyne deixa de ser uma pessoa por um turno e vira uma medição: vento, queda, o frio nas próprias mãos. Ela não faz mais nada, e seu próximo <b>Tiro Básico</b> dentro de <b>${this.zeroedDuration}</b> turno(s) dispensa a rolagem de <b>Fôlego Contido</b>, então a mira dela não tem como falhar, e é sempre um <b>acerto crítico</b>.`,
       };
     },
 
-    resolve({ user, context }) {
-      user.runtime.weyneZeroed = true;
+    resolve({ user, context = {} }) {
+      user.runtime.weyneZeroedUntilTurn =
+        (context.currentTurn ?? 0) + this.zeroedDuration;
 
-      const message = `${formatChampionName(user)} takes her <b>Cold Zero</b> — the next round is already on its way.`;
+      const message = {
+        en: `${formatChampionName(user)} takes her Cold Zero — the next round is already on its way.`,
+        pt: `${formatChampionName(user)} faz seu Cold Zero — o próximo tiro já está a caminho.`,
+      };
 
       context.registerDialog?.({
         message,
@@ -90,18 +108,18 @@ const weyneSkills = [
     snareDuration: 1,
     chillDuration: 2,
 
+    cannotBeEvaded: true,
+    contact: false,
+    damageMode: "standard",
     element: "ice",
     hitVfx: "cryo_round",
-    contact: false,
-    cannotBeEvaded: true,
-    damageMode: "standard",
     priority: 0,
     targetSpec: ["enemy"],
 
     description() {
       return {
-        en: `She does not aim at the chosen target so much as at the ground they were about to stand on, and the frozen core of the barrel puts a wall of cold there instead. The round never misses. Deals physical damage, applies <b>Snared</b> for <b>${this.snareDuration}</b> turn(s) and <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).`,
-        pt: `Ela não mira tanto no alvo escolhido quanto no chão onde ele estava prestes a pisar, e o núcleo congelado do cano põe uma parede de frio ali no lugar. O projétil nunca erra. Causa dano físico, aplica <b>Enredado</b> por <b>${this.snareDuration}</b> turno(s) e <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).`,
+        en: `She does not aim at the chosen target so much as at the ground they were about to stand on, and the frozen core of the barrel puts a wall of cold there instead. The round <b>cannot be evaded</b>. Deals physical damage, applies <b>Snared</b> for <b>${this.snareDuration}</b> turn(s) and <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).`,
+        pt: `Ela não mira tanto no alvo escolhido quanto no chão onde ele estava prestes a pisar, e o núcleo congelado do cano põe uma parede de frio ali no lugar. O projétil <b>não pode ser esquivado</b>. Causa dano físico, aplica <b>Enredado</b> por <b>${this.snareDuration}</b> turno(s) e <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).`,
       };
     },
 
@@ -118,6 +136,7 @@ const weyneSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
+
       const results = Array.isArray(result) ? result : [result];
 
       if (effectConnected(results[0], "snared")) {
@@ -144,11 +163,11 @@ const weyneSkills = [
     piercingPercentage: 95,
     chillDuration: 2,
 
+    cannotBeEvaded: true,
+    contact: false,
+    damageMode: "piercing",
     element: "ice",
     hitVfx: "cryo_round_big",
-    contact: false,
-    cannotBeEvaded: true,
-    damageMode: "piercing",
     isUltimate: true,
     momentumCost: 55,
     priority: 0,
@@ -157,7 +176,7 @@ const weyneSkills = [
     description() {
       return {
         en: `Weyne has been holding this one since before the chosen target walked into the street, and the whole winter is in the barrel when she finally lets it go. The round <b>cannot be evaded</b> and ignores <b>${this.piercingPercentage}%</b> of their <b>Defense</b>. Deals physical damage and leaves them <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).`,
-        pt: `Weyne segura esse tiro desde antes do alvo escolhido entrar naquela rua, e o inverno inteiro está no cano quando ela finalmente o solta. O projétil <b>não pode ser esquivado</b> e ignora <b>${this.piercingPercentage}%</b> da <b>Defesa</b> do alvo. Causa dano físico e deixa-o <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).`,
+        pt: `Weyne segura esse tiro desde antes do alvo escolhido entrar naquela rua, e o inverno inteiro está no cano quando ela finalmente o solta. O projétil <b>não pode ser esquivado</b> e ignora <b>${this.piercingPercentage}%</b> da <b>Defesa</b> do alvo. Causa dano físico e o deixa <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).`,
       };
     },
 
@@ -176,6 +195,7 @@ const weyneSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
+
       const results = Array.isArray(result) ? result : [result];
 
       if (effectConnected(results[0], "chilled")) {
