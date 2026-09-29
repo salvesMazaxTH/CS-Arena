@@ -262,11 +262,19 @@ const silasSkills = [
               hiddenIndicator: true,
             });
 
+            // The spawn runs under the turn-start context, which names no
+            // stat-modifier source; a copied debuff (Frozen zeroing Speed)
+            // would throw without one, so the double sources its own copies.
+            const mirrorContext =
+              spawnContext.statModifierSrcId != null
+                ? spawnContext
+                : { ...spawnContext, statModifierSrcId: mirage.id };
+
             for (const effect of user.statusEffects.values()) {
               const remaining = effect.expiresAtTurn - spawnContext.currentTurn;
               if (remaining <= 0) continue;
 
-              mirage.applyStatusEffect(effect.key, remaining, spawnContext, {
+              mirage.applyStatusEffect(effect.key, remaining, mirrorContext, {
                 stackCount: effect.stacks ?? 1,
               });
             }
