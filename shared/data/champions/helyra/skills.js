@@ -82,15 +82,15 @@ const helyraSkills = [
         allChampions: context?.allChampions,
       }).execute();
 
-      const resultArray = Array.isArray(result) ? result : [result];
+      const [primary] = Array.isArray(result) ? result : [result];
 
-      if (effectConnected(resultArray[0], "conductor")) {
+      if (effectConnected(primary, "conductor")) {
         enemy.applyStatusEffect("conductor", this.conductorDuration, context, {
           sourceId: user.id,
         });
       }
 
-      return resultArray;
+      return result;
     },
   },
 
@@ -112,8 +112,8 @@ const helyraSkills = [
 
     description() {
       return {
-        en: `Helyra runs the whole length of the hall with both guns open, and every pane and plinth between her and the chosen target comes apart in her wake. The current of this round goes looking for ground: every other <b>Conductor</b> enemy it reaches takes <b>${this.conductorArcPercent}%</b> of the damage dealt as <b>Absolute Damage</b> instead of the usual share, and every enemy it passes through loses <b>Conductor</b>. Deals physical damage.`,
-        pt: `Helyra atravessa o salão de uma ponta à outra, com as duas armas em punho, e cada vitral e cada pedestal entre ela e o alvo escolhido se desfaz por onde passa. A corrente dessa bala procura o chão: cada outro inimigo <b>Condutor</b> que ela alcança recebe <b>${this.conductorArcPercent}%</b> do dano causado como <b>Dano Absoluto</b>, no lugar da parcela de sempre, e todo inimigo por onde ela passa perde o <b>Condutor</b>. Causa dano físico.`,
+        en: `Helyra runs the whole length of the hall with both guns open, and every pane and plinth between her and the chosen target comes apart in her wake. The current of this round goes looking for ground: every other <b>Conductor</b> enemy it reaches takes <b>${this.conductorArcPercent}%</b> of the damage dealt as <b>Absolute Damage</b> instead of the usual share and loses <b>Conductor</b>, and so does the chosen target. Deals physical damage.`,
+        pt: `Helyra atravessa o salão de uma ponta à outra, com as duas armas em punho, e cada vitral e cada pedestal entre ela e o alvo escolhido se desfaz por onde passa. A corrente dessa bala procura o chão: cada outro inimigo <b>Condutor</b> que ela alcança recebe <b>${this.conductorArcPercent}%</b> do dano causado como <b>Dano Absoluto</b>, no lugar da parcela de sempre e perde o <b>Condutor</b>, assim como o próprio alvo escolhido. Causa dano físico.`,
       };
     },
 
