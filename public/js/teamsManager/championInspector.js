@@ -4,6 +4,8 @@ import {
   getChampionSpecies,
   toReadableLabel,
 } from "./championCardMarkup.js";
+import { resolveText } from "/shared/i18n/locale.js";
+import { getLocale } from "../i18n/clientLocale.js";
 
 const STAT_FIELDS = [
   ["HP", "HP"],
@@ -13,9 +15,12 @@ const STAT_FIELDS = [
 ];
 
 function readDescription(entry, champion) {
-  return typeof entry.description === "function"
-    ? entry.description(champion)
-    : entry.description || "";
+  return resolveText(
+    typeof entry.description === "function"
+      ? entry.description(champion)
+      : entry.description || "",
+    getLocale(),
+  );
 }
 
 function renderKitEntry(entry, { kind, champion }) {
@@ -30,21 +35,24 @@ function renderKitEntry(entry, { kind, champion }) {
   let cost = "";
   if (isUlt && Number.isFinite(entry.momentumCost)) {
     cost = `<span class="tm-kit-cost">${entry.momentumCost} Momentum</span>`;
-  } else if (kind === "skill" && Number.isFinite(entry.bf) && entry.bf > 0) {
-    cost = `<span class="tm-kit-cost">${entry.bf} bf</span>`;
+  }
+  // Damage factor shows on every damaging skill, ultimates included.
+  let bf = "";
+  if (kind === "skill" && Number.isFinite(entry.bf) && entry.bf > 0) {
+    bf = `<span class="tm-kit-bf">${entry.bf} bf</span>`;
   } else if (
     kind === "skill" &&
     Number.isFinite(entry.bfPerHit) &&
     entry.bfPerHit > 0
   ) {
-    cost = `<span class="tm-kit-cost">${entry.bfPerHit} bf/hit</span>`;
+    bf = `<span class="tm-kit-bf">${entry.bfPerHit} bf/hit</span>`;
   }
 
   return `
     <article class="tm-kit ${isUlt ? "is-ult" : ""} ${kind === "passive" ? "is-passive" : ""}">
       <div class="tm-kit-head">
         <span class="tm-kit-name">${escapeHtml(entry.name)}</span>
-        ${tag}${cost}
+        ${tag}${bf}${cost}
       </div>
       <p class="tm-kit-body">${readDescription(entry, champion)}</p>
     </article>

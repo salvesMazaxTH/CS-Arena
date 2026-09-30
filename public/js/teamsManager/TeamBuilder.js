@@ -579,6 +579,11 @@ export class TeamBuilder {
     this._markRoster();
   }
 
+  /** Re-draws locale-dependent panels; a no-op while the builder is closed. */
+  refreshLocale() {
+    if (this.refs?.inspector?.isConnected) this._renderInspector();
+  }
+
   _renderInspector() {
     const champion = championDB[this.focusKey];
     if (!champion) {

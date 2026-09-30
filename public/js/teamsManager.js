@@ -8,6 +8,7 @@ import { escapeHtml } from "./teamsManager/championCardMarkup.js";
 import { renderTeamSummary } from "./ui/teamCard.js";
 import { readMirroredEditMode } from "./editModeMirror.js";
 import { getSession } from "./auth/session.js";
+import { getLocale, setLocale } from "./i18n/clientLocale.js";
 
 applyIdentityPaletteCssVariables(document.documentElement);
 
@@ -119,6 +120,13 @@ function onGridClick(event) {
     }
   }
 }
+
+const localeSelect = document.getElementById("tm-locale-select");
+localeSelect.value = getLocale();
+localeSelect.addEventListener("change", (e) => {
+  setLocale(e.target.value);
+  builder.refreshLocale();
+});
 
 prebuiltGrid.addEventListener("click", onGridClick);
 customGrid.addEventListener("click", onGridClick);
