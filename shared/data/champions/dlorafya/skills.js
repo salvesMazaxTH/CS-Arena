@@ -190,7 +190,7 @@ const dlorafyaSkills = [
     isUltimate: true,
     momentumCost: 65,
 
-    cannotBeEvaded: true,
+    cannotMiss: true,
 
     contact: false,
     damageMode: "standard",
@@ -201,8 +201,8 @@ const dlorafyaSkills = [
 
     description() {
       return {
-        en: `A hurricane of divine fire engulfs the arena, dealing <b>Fire magical damage</b> to <b>ALL</b> characters except D'Lorafya himself, who is untouched by it. His <b>allies with Fire Affinity</b> are recognized by the flame and take only <b>${this.reductedDamagePercent}%</b> damage. Every enemy struck is left <b>Burning</b> for <b>${this.burnDuration}</b> turn(s), which takes even when the strike deals no damage. This attack <b>cannot be evaded</b>, and no elemental resistance dims the divine fire.`,
-        pt: `Um furacão de fogo divino engolfa a arena, causando <b>dano mágico de Fogo</b> a <b>TODOS</b> os personagens, exceto o próprio D'Lorafya, que não é atingido. Seus <b>aliados com Afinidade de Fogo</b> são reconhecidos pela chama e sofrem apenas <b>${this.reductedDamagePercent}%</b> do dano. Todo inimigo atingido fica <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s), o que pega mesmo quando o golpe não causa dano. Este ataque <b>não pode ser esquivado</b>, e nenhuma resistência elemental diminui o fogo divino.`,
+        en: `A hurricane of divine fire engulfs the arena, dealing <b>Fire magical damage</b> to <b>ALL</b> characters except D'Lorafya himself, who is untouched by it. His <b>allies with Fire Affinity</b> are recognized by the flame and take only <b>${this.reductedDamagePercent}%</b> damage. Every enemy struck is left <b>Burning</b> for <b>${this.burnDuration}</b> turn(s), which takes even when the strike deals no damage. This attack <b>cannot miss</b>, and no elemental resistance dims the divine fire.`,
+        pt: `Um furacão de fogo divino engolfa a arena, causando <b>dano mágico de Fogo</b> a <b>TODOS</b> os personagens, exceto o próprio D'Lorafya, que não é atingido. Seus <b>aliados com Afinidade de Fogo</b> são reconhecidos pela chama e sofrem apenas <b>${this.reductedDamagePercent}%</b> do dano. Todo inimigo atingido fica <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s), o que pega mesmo quando o golpe não causa dano. Este ataque <b>não pode errar</b>, e nenhuma resistência elemental diminui o fogo divino.`,
       };
     },
 

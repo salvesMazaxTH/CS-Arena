@@ -83,7 +83,7 @@ const theopetraSkills = [
 
     damageMode: "standard",
 
-    cannotBeEvaded: true,
+    cannotMiss: true,
 
     contact: false,
 
@@ -94,8 +94,8 @@ const theopetraSkills = [
 
     description() {
       return {
-        en: `Theópetra commands the earth itself to pass judgment upon all enemies, dealing massive magical damage to them. This attack <b>cannot be evaded</b>.`,
-        pt: `Theópetra convoca a própria terra para julgar todos os inimigos de uma vez, causando dano mágico devastador a todos eles. Este ataque <b>não pode ser esquivado</b>.`,
+        en: `Theópetra commands the earth itself to pass judgment upon all enemies, dealing massive magical damage to them. This attack <b>cannot miss</b>.`,
+        pt: `Theópetra convoca a própria terra para julgar todos os inimigos de uma vez, causando dano mágico devastador a todos eles. Este ataque <b>não pode errar</b>.`,
       };
     },
 

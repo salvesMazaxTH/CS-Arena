@@ -34,7 +34,8 @@ export default {
 
     // These never reach the evade branch anyway; bail early so the once-per-turn
     // read is not spent on a blow it could not have stepped through.
-    if (mode === "absolute" || skill?.cannotBeEvaded) return;
+    if (mode === "absolute" || skill?.cannotBeEvaded || skill?.cannotMiss)
+      return;
     if (context?.isDot || (context?.damageDepth ?? 0) > 0) return;
 
     if (owner.runtime.slowerThanStormTurn === context.currentTurn) return;

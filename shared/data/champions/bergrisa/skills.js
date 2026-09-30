@@ -154,7 +154,7 @@ const bergrisaSkills = [
     damageMode: "standard",
     defenseGapRatio: 0.8,
     maxGapBonus: 110,
-    cannotBeEvaded: true,
+    cannotMiss: true,
     contact: true,
     isUltimate: true,
     momentumCost: 60,
@@ -163,8 +163,8 @@ const bergrisaSkills = [
 
     description() {
       return {
-        en: `Bergrisa takes the floor of the world in both hands and tips it, and everything standing on it goes down with the stone. She strikes every enemy carrying <b>${this.defenseGapRatio * 100}%</b> of the <b>Defense</b> gap as bonus damage, up to <b>${this.maxGapBonus}</b>, rather than <b>Strata</b>'s usual share, and settles <b>${this.sedimentGain}</b> <b>Sediment</b> into herself. Deals physical damage.`,
-        pt: `Bergrisa toma o chão do mundo com as duas mãos e o vira, e tudo que estiver sobre ele desaba junto com a pedra. Ela atinge cada inimigo carregando <b>${this.defenseGapRatio * 100}%</b> da diferença de <b>Defesa</b> como dano bônus, até <b>${this.maxGapBonus}</b>, em vez da parcela usual de <b>Strata</b>, e acumula <b>${this.sedimentGain}</b> de <b>Sedimento</b> em si mesma. Causa dano físico.`,
+        en: `Bergrisa takes the floor of the world in both hands and tips it, and everything standing on it goes down with the stone. She strikes every enemy carrying <b>${this.defenseGapRatio * 100}%</b> of the <b>Defense</b> gap as bonus damage, up to <b>${this.maxGapBonus}</b>, rather than <b>Strata</b>'s usual share, and settles <b>${this.sedimentGain}</b> <b>Sediment</b> into herself. The blow <b>cannot miss</b>. Deals physical damage.`,
+        pt: `Bergrisa toma o chão do mundo com as duas mãos e o vira, e tudo que estiver sobre ele desaba junto com a pedra. Ela atinge cada inimigo carregando <b>${this.defenseGapRatio * 100}%</b> da diferença de <b>Defesa</b> como dano bônus, até <b>${this.maxGapBonus}</b>, em vez da parcela usual de <b>Strata</b>, e acumula <b>${this.sedimentGain}</b> de <b>Sedimento</b> em si mesma. O golpe <b>não pode errar</b>. Causa dano físico.`,
       };
     },
 

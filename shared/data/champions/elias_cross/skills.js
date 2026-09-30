@@ -21,13 +21,13 @@ const eliasCrossSkills = [
     damageMode: "standard",
     damageBonus: 15,
     priority: 0,
-    cannotBeEvaded: true,
+    cannotMiss: true,
     element: "lightning",
 
     description() {
       return {
-        en: `Elias Cross doesn't aim so much as complete a circuit. If the target has <b>Conductor</b>, deals <b>${this.damageBonus}</b> bonus damage. This attack <b>cannot be evaded</b>.`,
-        pt: `Elias Cross não mira tanto quanto completa um circuito. Se o alvo tiver <b>Condutor</b>, causa <b>${this.damageBonus}</b> de dano bônus. Este ataque <b>não pode ser esquivado</b>.`,
+        en: `Elias Cross doesn't aim so much as complete a circuit. If the target has <b>Conductor</b>, deals <b>${this.damageBonus}</b> bonus damage. This attack <b>cannot miss</b>.`,
+        pt: `Elias Cross não mira tanto quanto completa um circuito. Se o alvo tiver <b>Condutor</b>, causa <b>${this.damageBonus}</b> de dano bônus. Este ataque <b>não pode errar</b>.`,
       };
     },
 
@@ -133,7 +133,7 @@ const eliasCrossSkills = [
     reducedDamagePercent: 20,
     recoilDamageMode: "absolute",
 
-    cannotBeEvaded: true,
+    cannotMiss: true,
 
     contact: false,
     priority: 0,
@@ -142,8 +142,8 @@ const eliasCrossSkills = [
 
     description() {
       return {
-        en: `There is no controlling what pours out of an empty vessel — only surviving what it takes on the way through. Elias Cross opens completely, and the storm answers. Deals damage to <b>ALL</b> characters except Elias Cross. Characters with <b>Lightning</b> or <b>Earth Affinity</b> take only <b>${this.reducedDamagePercent}%</b> damage. However, Elias Cross takes <b>Absolute Recoil Damage</b> equal to <b>${this.recoilDamage}%</b> of his <b>Max HP</b>. Targets below <b>17%</b> HP are <b>obliterated</b>, or below <b>25%</b> HP if they have <b>Conductor</b>. This attack <b>cannot be evaded</b>.`,
-        pt: `Não há como controlar o que transborda de um recipiente vazio — só sobreviver ao que ele leva pelo caminho. Elias Cross se abre por completo, e a tempestade responde. Causa dano a <b>TODOS</b> os personagens, exceto Elias Cross. Personagens com <b>Afinidade de Raio</b> ou <b>Terra</b> sofrem apenas <b>${this.reducedDamagePercent}%</b> do dano. Porém, Elias Cross sofre <b>Dano de Recuo Absoluto</b> igual a <b>${this.recoilDamage}%</b> do seu <b>HP Máximo</b>. Alvos abaixo de <b>17%</b> de HP são <b>obliterados</b>, ou abaixo de <b>25%</b> de HP se tiverem <b>Condutor</b>. Este ataque <b>não pode ser esquivado</b>.`,
+        en: `There is no controlling what pours out of an empty vessel — only surviving what it takes on the way through. Elias Cross opens completely, and the storm answers. Deals damage to <b>ALL</b> characters except Elias Cross. Characters with <b>Lightning</b> or <b>Earth Affinity</b> take only <b>${this.reducedDamagePercent}%</b> damage. However, Elias Cross takes <b>Absolute Recoil Damage</b> equal to <b>${this.recoilDamage}%</b> of his <b>Max HP</b>. Targets below <b>17%</b> HP are <b>obliterated</b>, or below <b>25%</b> HP if they have <b>Conductor</b>. This attack <b>cannot miss</b>.`,
+        pt: `Não há como controlar o que transborda de um recipiente vazio — só sobreviver ao que ele leva pelo caminho. Elias Cross se abre por completo, e a tempestade responde. Causa dano a <b>TODOS</b> os personagens, exceto Elias Cross. Personagens com <b>Afinidade de Raio</b> ou <b>Terra</b> sofrem apenas <b>${this.reducedDamagePercent}%</b> do dano. Porém, Elias Cross sofre <b>Dano de Recuo Absoluto</b> igual a <b>${this.recoilDamage}%</b> do seu <b>HP Máximo</b>. Alvos abaixo de <b>17%</b> de HP são <b>obliterados</b>, ou abaixo de <b>25%</b> de HP se tiverem <b>Condutor</b>. Este ataque <b>não pode errar</b>.`,
       };
     },
 

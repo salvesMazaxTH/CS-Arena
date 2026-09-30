@@ -108,7 +108,7 @@ const weyneSkills = [
     snareDuration: 1,
     chillDuration: 2,
 
-    cannotBeEvaded: true,
+    cannotMiss: true,
     contact: false,
     damageMode: "standard",
     element: "ice",
@@ -118,8 +118,8 @@ const weyneSkills = [
 
     description() {
       return {
-        en: `She does not aim at the chosen target so much as at the ground they were about to stand on, and the frozen core of the barrel puts a wall of cold there instead. The round <b>cannot be evaded</b>. Deals physical damage, applies <b>Snared</b> for <b>${this.snareDuration}</b> turn(s) and <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).`,
-        pt: `Ela não mira tanto no alvo escolhido quanto no chão onde ele estava prestes a pisar, e o núcleo congelado do cano põe uma parede de frio ali no lugar. O projétil <b>não pode ser esquivado</b>. Causa dano físico, aplica <b>Enredado</b> por <b>${this.snareDuration}</b> turno(s) e <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).`,
+        en: `She does not aim at the chosen target so much as at the ground they were about to stand on, and the frozen core of the barrel puts a wall of cold there instead. The round <b>cannot miss</b>. Deals physical damage, applies <b>Snared</b> for <b>${this.snareDuration}</b> turn(s) and <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).`,
+        pt: `Ela não mira tanto no alvo escolhido quanto no chão onde ele estava prestes a pisar, e o núcleo congelado do cano põe uma parede de frio ali no lugar. O projétil <b>não pode errar</b>. Causa dano físico, aplica <b>Enredado</b> por <b>${this.snareDuration}</b> turno(s) e <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).`,
       };
     },
 
@@ -163,7 +163,7 @@ const weyneSkills = [
     piercingPercentage: 95,
     chillDuration: 2,
 
-    cannotBeEvaded: true,
+    cannotMiss: true,
     contact: false,
     damageMode: "piercing",
     element: "ice",
@@ -175,8 +175,8 @@ const weyneSkills = [
 
     description() {
       return {
-        en: `Weyne has been holding this one since before the chosen target walked into the street, and the whole winter is in the barrel when she finally lets it go. The round <b>cannot be evaded</b> and ignores <b>${this.piercingPercentage}%</b> of their <b>Defense</b>. Deals physical damage and leaves them <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).`,
-        pt: `Weyne segura esse tiro desde antes do alvo escolhido entrar naquela rua, e o inverno inteiro está no cano quando ela finalmente o solta. O projétil <b>não pode ser esquivado</b> e ignora <b>${this.piercingPercentage}%</b> da <b>Defesa</b> do alvo. Causa dano físico e o deixa <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).`,
+        en: `Weyne has been holding this one since before the chosen target walked into the street, and the whole winter is in the barrel when she finally lets it go. The round <b>cannot miss</b> and ignores <b>${this.piercingPercentage}%</b> of their <b>Defense</b>. Deals physical damage and leaves them <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).`,
+        pt: `Weyne segura esse tiro desde antes do alvo escolhido entrar naquela rua, e o inverno inteiro está no cano quando ela finalmente o solta. O projétil <b>não pode errar</b> e ignora <b>${this.piercingPercentage}%</b> da <b>Defesa</b> do alvo. Causa dano físico e o deixa <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).`,
       };
     },
 
