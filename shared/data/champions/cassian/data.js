@@ -1,9 +1,7 @@
 export default {
   name: "Cassian",
-  releaseDate: "2026-10-01",
+  releaseDate: "2026-09-30",
   portrait: "/assets/portraits/cassian.webp",
-
-  unreleased: true,
 
   HP: 320,
   Attack: 175,
