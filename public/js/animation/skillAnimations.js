@@ -79,6 +79,8 @@ const BIG_ICEBOLT_SKILLS = new Set();
 const BIG_LIGHTNING_SKILLS = new Set();
 const BIG_EARTHBOLT_SKILLS = new Set();
 const BIG_AIRBOLT_SKILLS = new Set();
+// Motifs whose ultimates play their registered `_big` variant.
+const BIG_ULTIMATE_MOTIFS = new Set(["bite"]);
 
 // `hit` is the individual DamageEvent's own element/contact, which override the
 // skill's: one skill can throw hits of different elements, or a ranged sub-hit.
@@ -86,7 +88,11 @@ function resolveDefaultAnimationKey(skill, hit) {
   // A passive's hit carries its own visual data, yet the passive is never a
   // member of champion.skills, so `skill` is legitimately absent here.
   const motif = hit?.hitVfx ?? skill?.hitVfx;
-  if (motif) return `default_${motif}`;
+  if (motif) {
+    return skill?.isUltimate === true && BIG_ULTIMATE_MOTIFS.has(motif)
+      ? `default_${motif}_big`
+      : `default_${motif}`;
+  }
 
   // Authorial motifs and contact win over the element fallback below.
   if ((hit?.contact ?? skill?.contact) === true) return "default_contact";
@@ -210,6 +216,7 @@ registerSkillAnimation("default_multislash", playMultislash);
 registerSkillAnimation("default_claw", createClaw());
 registerSkillAnimation("default_acid_claw", createClaw(CLAW_PALETTES.acid));
 registerSkillAnimation("default_bite", createBite());
+registerSkillAnimation("default_bite_big", createBite(null, 1.35));
 registerSkillAnimation("default_acid_bite", createBite(BITE_PALETTES.acid));
 registerSkillAnimation("default_parry", playParry);
 registerSkillAnimation("default_riposte", playRiposte);

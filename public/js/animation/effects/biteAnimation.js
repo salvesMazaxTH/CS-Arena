@@ -16,6 +16,8 @@ export const BITE_PALETTES = Object.freeze({
   feral: Object.freeze({ core: "#ffffff", mid: "#e8dccb", deep: "#8a2a1c" }),
   // Venom-green fangs whose punctures keep dripping acid.
   acid: Object.freeze({ core: "#f4ffd6", mid: "#9cff2e", deep: "#2f7d0c" }),
+  // Blood-red fangs for a bite that drinks, picked with `hitVfxPalette`.
+  crimson: Object.freeze({ core: "#fff0f0", mid: "#ff6b6b", deep: "#b3121b" }),
 });
 
 function makeGlowSprite(color) {
@@ -290,8 +292,9 @@ class JawSnapEffect {
 const PADDING_SCALE = 1.1;
 const PADDING_FLOOR = 300;
 
-export function createBite(palette = BITE_PALETTES.feral) {
-  return async function playBite({ userEl, targetEl }) {
+// A fixed palette wins; otherwise the hit or skill picks one by `hitVfxPalette`.
+export function createBite(palette = null, scale = 1) {
+  return async function playBite({ userEl, targetEl, skill, hit }) {
     if (!targetEl) return;
 
     const rect = targetEl.getBoundingClientRect();
@@ -299,7 +302,11 @@ export function createBite(palette = BITE_PALETTES.feral) {
       x: rect.left + rect.width / 2,
       y: rect.top + rect.height / 2,
     };
-    const size = Math.max(rect.width, rect.height);
+    const size = Math.max(rect.width, rect.height) * scale;
+    const colors =
+      palette ??
+      BITE_PALETTES[hit?.hitVfxPalette ?? skill?.hitVfxPalette] ??
+      BITE_PALETTES.feral;
 
     // Jaws lie across the approach, tilted slightly toward the attacker.
     let angle = 0;
@@ -314,7 +321,7 @@ export function createBite(palette = BITE_PALETTES.feral) {
     const box = computeEffectBox([center], size * PADDING_SCALE + PADDING_FLOOR);
     await runSoloEffect(
       box,
-      (ctx) => new JawSnapEffect(ctx, center, size, angle, palette),
+      (ctx) => new JawSnapEffect(ctx, center, size, angle, colors),
     );
   };
 }
