@@ -16,7 +16,11 @@ export const assassinsAmbush = {
   },
 
   description() {
-    return `Your Assassin class champions' attacks always deal Piercing Damage, ignoring ${Math.round((this.piercingMultiplier - 1) * 100)}% more Defense than the attack already ignores, and never less than ${this.minimumPiercing}% of it.`;
+    const extraPiercing = Math.round((this.piercingMultiplier - 1) * 100);
+    return {
+      en: `Your Assassin class champions' attacks always deal Piercing Damage, ignoring ${extraPiercing}% more Defense than the attack already ignores, and never less than ${this.minimumPiercing}% of it.`,
+      pt: `Os ataques dos seus campeões da classe Assassino sempre causam Dano Perfurante, ignorando ${extraPiercing}% a mais de Defesa do que o ataque já ignora, e nunca menos que ${this.minimumPiercing}% dela.`,
+    };
   },
 
   hookScope: {

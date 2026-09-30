@@ -36,7 +36,10 @@ export const dragonsFury = {
   },
 
   description() {
-    return `Your Dragon champions deal ${this.bonusDmgPercent}% bonus damage to enemies that have already been damaged by an allied Dragon this turn.`;
+    return {
+      en: `Your Dragon champions deal ${this.bonusDmgPercent}% bonus damage to enemies that have already been damaged by an allied Dragon this turn.`,
+      pt: `Seus campeões Dragão causam ${this.bonusDmgPercent}% de dano adicional a inimigos que já sofreram dano de um Dragão aliado neste turno.`,
+    };
   },
 
   hookScope: {

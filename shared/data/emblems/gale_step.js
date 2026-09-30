@@ -13,7 +13,10 @@ export const galeStep = {
   },
 
   description() {
-    return `Your champions gain +${this.evasionBonus} Evasion when entering combat.`;
+    return {
+      en: `Your champions gain +${this.evasionBonus} Evasion when entering combat.`,
+      pt: `Seus campeões ganham +${this.evasionBonus} de Esquiva ao entrar em combate.`,
+    };
   },
 
   onChampionAdded({ champion, owner, context }) {

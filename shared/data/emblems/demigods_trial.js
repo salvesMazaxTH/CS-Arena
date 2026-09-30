@@ -21,7 +21,10 @@ export const demigodsTrial = {
   },
 
   description() {
-    return `Your demigod champions deal ${this.bonusDmgPercent}% bonus damage to enemies with more current HP than their own, and take ${this.damageReductionPercent}% less damage (except Absolute Damage) from enemies with a higher Max HP than their own.`;
+    return {
+      en: `Your demigod champions deal ${this.bonusDmgPercent}% bonus damage to enemies with more current HP than their own, and take ${this.damageReductionPercent}% less damage (except Absolute Damage) from enemies with a higher Max HP than their own.`,
+      pt: `Seus campeões semideuses causam ${this.bonusDmgPercent}% de dano adicional a inimigos com mais HP atual que o seu e sofrem ${this.damageReductionPercent}% menos dano (exceto Dano Absoluto) de inimigos com HP Máximo maior que o seu.`,
+    };
   },
 
   hookScope: {

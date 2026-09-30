@@ -11,7 +11,10 @@ export const thunderRoar = {
   },
 
   description() {
-    return `Your champions gain +${this.speedBonus} Speed. The thunder's energy makes their attacks harder to evade.`;
+    return {
+      en: `Your champions gain +${this.speedBonus} Speed. The thunder's energy makes their attacks harder to evade.`,
+      pt: `Seus campeões ganham +${this.speedBonus} de Velocidade. A energia do trovão torna seus ataques mais difíceis de esquivar.`,
+    };
   },
 
   onChampionAdded({ champion, owner, context }) {

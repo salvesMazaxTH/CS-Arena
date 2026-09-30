@@ -19,7 +19,10 @@ export const permafrost = {
   },
 
   description() {
-    return `The cold your team carries is the settled kind — old ice that has forgotten how to melt and does not feel a fresh chill land on it. Every allied champion is immune to ${StatusEffectsRegistry[this.immuneStatusKey].name} and takes ${this.baseDamageReductionPercent}% less damage (except Absolute Damage), rising to ${this.iceDamageReductionPercent}% against Ice damage; when Ice damage does land, ${this.iceHitShieldPercent}% of it freezes onto the champion as a Shield.`;
+    return {
+      en: `The cold your team carries is the settled kind — old ice that has forgotten how to melt and does not feel a fresh chill land on it. Every allied champion is immune to ${StatusEffectsRegistry[this.immuneStatusKey].name} and takes ${this.baseDamageReductionPercent}% less damage (except Absolute Damage), rising to ${this.iceDamageReductionPercent}% against Ice damage; when Ice damage does land, ${this.iceHitShieldPercent}% of it freezes onto the champion as a Shield.`,
+      pt: `O frio que sua equipe carrega é o frio assentado — gelo antigo que esqueceu como derreter e nem sente um novo calafrio pousar nele. Todo campeão aliado é imune a Gelado e sofre ${this.baseDamageReductionPercent}% menos dano (exceto Dano Absoluto), subindo para ${this.iceDamageReductionPercent}% contra dano de Gelo; quando o dano de Gelo de fato atinge, ${this.iceHitShieldPercent}% dele congela sobre o campeão como um Escudo.`,
+    };
   },
 
   hookPolicies: {

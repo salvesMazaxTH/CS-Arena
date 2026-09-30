@@ -16,7 +16,10 @@ export const silentBlade = {
   },
 
   description() {
-    return `Your Assassin class champions gain +${this.speedBonus} Speed and +${this.criticalBonus}% Critical Chance.`;
+    return {
+      en: `Your Assassin class champions gain +${this.speedBonus} Speed and +${this.criticalBonus}% Critical Chance.`,
+      pt: `Seus campeões da classe Assassino ganham +${this.speedBonus} de Velocidade e +${this.criticalBonus}% de Chance de Crítico.`,
+    };
   },
 
   onChampionAdded({ champion, owner, context }) {

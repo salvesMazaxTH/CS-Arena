@@ -28,7 +28,11 @@ export const divineMandate = {
   },
 
   description() {
-    return `Your divinity champions deal ${this.bonusDmgPercent}% bonus damage to enemies with a lower HP percentage than their own, and take ${this.damageReductionPercent}% less damage (except Absolute Damage) while at or above ${Math.round(this.unshakenThreshold * 100)}% HP.`;
+    const threshold = Math.round(this.unshakenThreshold * 100);
+    return {
+      en: `Your divinity champions deal ${this.bonusDmgPercent}% bonus damage to enemies with a lower HP percentage than their own, and take ${this.damageReductionPercent}% less damage (except Absolute Damage) while at or above ${threshold}% HP.`,
+      pt: `Seus campeões divinos causam ${this.bonusDmgPercent}% de dano adicional a inimigos com porcentagem de HP menor que a sua e sofrem ${this.damageReductionPercent}% menos dano (exceto Dano Absoluto) enquanto estiverem com ${threshold}% de HP ou mais.`,
+    };
   },
 
   hookScope: {

@@ -13,7 +13,10 @@ export const risingInferno = {
   },
 
   description() {
-    return `Fire that finds fire does not start over — it climbs what is already lit. Your Fire damage against a Burning enemy deals bonus damage equal to ${this.maxHPBonusPercent}% of that enemy's maximum HP.`;
+    return {
+      en: `Fire that finds fire does not start over — it climbs what is already lit. Your Fire damage against a Burning enemy deals bonus damage equal to ${this.maxHPBonusPercent}% of that enemy's maximum HP.`,
+      pt: `O fogo que encontra fogo não recomeça — ele sobe pelo que já está aceso. Seu dano de Fogo contra um inimigo Queimando causa dano adicional igual a ${this.maxHPBonusPercent}% do HP máximo dele.`,
+    };
   },
 
   hookScope: {

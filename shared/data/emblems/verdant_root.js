@@ -16,9 +16,17 @@ export const verdantRoot = {
   },
 
   description() {
-    return `Your champions gain +${this.defenseBonus} Defense when entering combat and are immune to ${this.immuneStatusKeys
+    const namesPt = { poisoned: "Envenenado", rooted: "Enraizado" };
+    const immunitiesEn = this.immuneStatusKeys
       .map((key) => StatusEffectsRegistry[key].name)
-      .join(" and ")}.`;
+      .join(" and ");
+    const immunitiesPt = this.immuneStatusKeys
+      .map((key) => namesPt[key] ?? StatusEffectsRegistry[key].name)
+      .join(" e ");
+    return {
+      en: `Your champions gain +${this.defenseBonus} Defense when entering combat and are immune to ${immunitiesEn}.`,
+      pt: `Seus campeões ganham +${this.defenseBonus} de Defesa ao entrar em combate e são imunes a ${immunitiesPt}.`,
+    };
   },
 
   hookScope: {

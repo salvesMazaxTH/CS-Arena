@@ -16,7 +16,10 @@ export const brawlerFury = {
   },
 
   description() {
-    return `Your Brawler class champions gain +${this.attackBonus} Attack and +${this.criticalBonus}% Critical Chance.`;
+    return {
+      en: `Your Brawler class champions gain +${this.attackBonus} Attack and +${this.criticalBonus}% Critical Chance.`,
+      pt: `Seus campeões da classe Lutador ganham +${this.attackBonus} de Ataque e +${this.criticalBonus}% de Chance de Crítico.`,
+    };
   },
 
   onChampionAdded({ champion, owner, context }) {

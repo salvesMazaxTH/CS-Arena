@@ -41,7 +41,10 @@ export const stormFist = {
   },
 
   description() {
-    return `Your Brawler champions gain +${this.brawlerSpeedBonus} Speed and your Lightning champions gain +${this.lightningSpeedBonus} Speed when entering combat. Both deal ${this.bonusDmgPercent}% bonus damage to enemies slower than them.`;
+    return {
+      en: `Your Brawler champions gain +${this.brawlerSpeedBonus} Speed and your Lightning champions gain +${this.lightningSpeedBonus} Speed when entering combat. Both deal ${this.bonusDmgPercent}% bonus damage to enemies slower than them.`,
+      pt: `Seus campeões Lutadores ganham +${this.brawlerSpeedBonus} de Velocidade e seus campeões de Raio ganham +${this.lightningSpeedBonus} de Velocidade ao entrar em combate. Ambos causam ${this.bonusDmgPercent}% de dano adicional a inimigos mais lentos que eles.`,
+    };
   },
 
   // A champion that is both takes the higher grant, not the sum.

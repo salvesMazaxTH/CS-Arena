@@ -12,7 +12,10 @@ export const impervious_steel = {
   },
 
   description() {
-    return `Your champions gain ${this.dmgReductionPercent}% damage reduction (except Absolute Damage) and Piercing damage against them loses ${this.piercingResistPercent}% of its effectiveness.`;
+    return {
+      en: `Your champions gain ${this.dmgReductionPercent}% damage reduction (except Absolute Damage) and Piercing damage against them loses ${this.piercingResistPercent}% of its effectiveness.`,
+      pt: `Seus campeões ganham ${this.dmgReductionPercent}% de redução de dano (exceto Dano Absoluto) e o dano Perfurante contra eles perde ${this.piercingResistPercent}% de sua eficácia.`,
+    };
   },
 
   hookPolicies: {

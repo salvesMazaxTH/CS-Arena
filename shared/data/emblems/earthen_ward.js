@@ -26,7 +26,10 @@ export const earthenWard = {
   },
 
   description() {
-    return "Your Earth champions are immune to indirect damage.";
+    return {
+      en: "Your Earth champions are immune to indirect damage.",
+      pt: "Seus campeões de Terra são imunes a dano indireto.",
+    };
   },
 
   hookScope: {

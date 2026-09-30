@@ -11,7 +11,10 @@ export const earthshaker = {
   },
 
   description() {
-    return `Your champions gain +${this.defenseBonus} Defense and are immune to control effects.`;
+    return {
+      en: `Your champions gain +${this.defenseBonus} Defense and are immune to control effects.`,
+      pt: `Seus campeões ganham +${this.defenseBonus} de Defesa e são imunes a efeitos de controle.`,
+    };
   },
 
   hookScope: {

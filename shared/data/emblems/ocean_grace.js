@@ -23,7 +23,10 @@ export const oceanGrace = {
       this.maxHPBonusPercent * 100,
     );
 
-    return `Increases all healing performed or received by your team by +${healingBonus}% and grants +${maxHPBonus}% bonus Max HP to allied champions when entering combat.`;
+    return {
+      en: `Increases all healing performed or received by your team by +${healingBonus}% and grants +${maxHPBonus}% bonus Max HP to allied champions when entering combat.`,
+      pt: `Aumenta em +${healingBonus}% toda a cura realizada ou recebida pela sua equipe e concede +${maxHPBonus}% de HP Máximo adicional aos campeões aliados ao entrarem em combate.`,
+    };
   },
 
   onChampionAdded({ champion, owner, context }) {

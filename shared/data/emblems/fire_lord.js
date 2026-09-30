@@ -13,7 +13,10 @@ export const firelord = {
   },
 
   description() {
-    return `Your Fire attacks deal ${this.bonusDmg} bonus damage.`;
+    return {
+      en: `Your Fire attacks deal ${this.bonusDmg} bonus damage.`,
+      pt: `Seus ataques de Fogo causam ${this.bonusDmg} de dano adicional.`,
+    };
   },
 
   onBeforeDmgDealing({ attacker, element, owner }) {

@@ -13,7 +13,10 @@ export const creepingVenom = {
   },
 
   description() {
-    return `Your Poison attacks deal ${this.bonusDmg} bonus damage to Poisoned enemies.`;
+    return {
+      en: `Your Poison attacks deal ${this.bonusDmg} bonus damage to Poisoned enemies.`,
+      pt: `Seus ataques de Veneno causam ${this.bonusDmg} de dano adicional a inimigos Envenenados.`,
+    };
   },
 
   hookScope: {
