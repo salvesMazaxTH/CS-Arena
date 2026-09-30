@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 
 const alexaNeruvyaPrimordialSkills = [
@@ -26,8 +27,8 @@ const alexaNeruvyaPrimordialSkills = [
 
     description() {
       return {
-        en: `Alexa Neruvya's draconic jaw closes on the chosen target like the last thing a current ever carries. What the bite tears away does not knit back together: the target's <b>Defense</b> is reduced by <b>${this.defenseShred}</b> for <b>${this.shredDuration}</b> turn(s). Deals physical damage.`,
-        pt: `A mandíbula draconiana de Alexa Neruvya se fecha sobre o alvo escolhido como a última coisa que uma correnteza ainda carrega. O que a mordida arranca não se refaz: a <b>Defesa</b> do alvo é reduzida em <b>${this.defenseShred}</b> por <b>${this.shredDuration}</b> turno(s). Causa dano físico.`,
+        en: `Alexa Neruvya's draconic jaw closes on the chosen target like the last thing a current ever carries. What the bite tears away does not knit back together: every temporary <b>Defense</b> bonus on the target is torn off, then their <b>Defense</b> is reduced by <b>${this.defenseShred}</b> for <b>${this.shredDuration}</b> turn(s). Deals physical damage.`,
+        pt: `A mandíbula draconiana de Alexa Neruvya se fecha sobre o alvo escolhido como a última coisa que uma correnteza ainda carrega. O que a mordida arranca não se refaz: todo bônus temporário de <b>Defesa</b> do alvo é arrancado, e depois a <b>Defesa</b> dele é reduzida em <b>${this.defenseShred}</b> por <b>${this.shredDuration}</b> turno(s). Causa dano físico.`,
       };
     },
 
@@ -50,6 +51,26 @@ const alexaNeruvyaPrimordialSkills = [
       const results = Array.isArray(result) ? result : [result];
 
       if (!results[0]?.landed) return results;
+
+      // Only timed, standalone Defense bonuses; permanent and status-owned ones stay.
+      const tornBonuses = enemy.statModifiers.filter(
+        (modifier) =>
+          modifier.statName === "Defense" &&
+          modifier.amount > 0 &&
+          !modifier.isPermanent &&
+          !modifier.statusKey,
+      );
+      enemy.removeStatModifiers(tornBonuses);
+
+      if (tornBonuses.length) {
+        const count = tornBonuses.length;
+        results.push({
+          log: {
+            en: `The bite tears ${count} Defense bonus${count === 1 ? "" : "es"} off ${formatChampionName(enemy)}.`,
+            pt: `A mordida arranca ${count} bônus de Defesa de ${formatChampionName(enemy)}.`,
+          },
+        });
+      }
 
       enemy.modifyStat({
         statName: "Defense",
