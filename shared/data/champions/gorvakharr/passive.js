@@ -10,8 +10,8 @@ export default {
 
   description() {
     return {
-      en: `Gorvakharr feeds on what he burns. Every hit he lands against a <b>Burning</b> enemy deals <b>${this.bonusDamagePercent}%</b> bonus damage and heals him for <b>${this.healPercent}%</b> of the damage dealt.`,
-      pt: `Gorvakharr se alimenta do que queima. Todo golpe que acerta contra um inimigo <b>Queimando</b> causa <b>${this.bonusDamagePercent}%</b> de dano bônus e o cura em <b>${this.healPercent}%</b> do dano causado.`,
+      en: `Gorvakharr feeds on what he burns. Every hit he lands against a <b>Burning</b> enemy deals <b>${this.bonusDamagePercent}%</b> increased damage and restores <b>${this.healPercent}%</b> of the damage dealt as <b>HP</b> to him.`,
+      pt: `Gorvakharr se alimenta do que queima. Todo golpe que acerta contra um inimigo <b>Queimando</b> causa dano <b>${this.bonusDamagePercent}%</b> maior e lhe restaura <b>${this.healPercent}%</b> do dano causado como <b>HP</b>.`,
     };
   },
 
@@ -20,15 +20,15 @@ export default {
     onAfterDmgDealing: "attacker",
   },
 
-  onBeforeDmgDealing({ attacker, owner, defender, damage }) {
-    if (attacker !== owner || !damage) return;
+  onBeforeDmgDealing({ defender, damage }) {
+    if (!damage) return;
     if (!defender?.hasStatusEffect?.("burning")) return;
 
     return { damage: Number(damage) * (1 + this.bonusDamagePercent / 100) };
   },
 
-  onAfterDmgDealing({ attacker, owner, defender, actualDmg, context }) {
-    if (attacker !== owner || !(actualDmg > 0)) return;
+  onAfterDmgDealing({ owner, defender, actualDmg, context }) {
+    if (!(actualDmg > 0)) return;
     if (!defender?.hasStatusEffect?.("burning")) return;
 
     const restored = new HealEvent({
@@ -42,8 +42,8 @@ export default {
 
     return {
       log: {
-        en: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} restored ${restored} HP.`,
-        pt: `[PASSIVA — ${this.name}] ${formatChampionName(owner)} restaurou ${restored} de HP.`,
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} restored ${restored} HP.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} restaurou ${restored} de HP.`,
       },
     };
   },

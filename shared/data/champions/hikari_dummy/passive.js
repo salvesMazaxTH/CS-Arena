@@ -8,7 +8,10 @@ function takeOffField(owner, context) {
   owner.alive = false;
 
   context.registerDialog?.({
-    message: `${formatChampionName(owner)} is left behind, a splintered log in empty clothes.`,
+    message: {
+      en: `${formatChampionName(owner)} is left behind, a splintered log in empty clothes.`,
+      pt: `${formatChampionName(owner)} fica para trás, um tronco lascado em roupas vazias.`,
+    },
     sourceId: owner.id,
     targetId: owner.id,
   });

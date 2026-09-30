@@ -30,14 +30,14 @@ function findAimers(hikari, context) {
 }
 
 const hikariSkills = [
-  // ========================
-  // Basic Attack
-  // ========================
+  // =========================
+  // Basic Strike (global)
+  // =========================
   basicStrike,
 
-  // ========================
-  // H1 — Nightshade Edge
-  // ========================
+  // =========================
+  // Special Abilities
+  // =========================
   {
     key: "nightshade_edge",
     name: "Nightshade Edge",
@@ -56,8 +56,8 @@ const hikariSkills = [
 
     description() {
       return {
-        en: `Hikari opens a shallow cut on the chosen target with a blade kept wet with her own venom. Deals physical damage and applies <b>${this.poisonedStacks}</b> stacks of <b>Poisoned</b>, or <b>${this.poisonedStacksIfPoisoned}</b> if the target is already <b>Poisoned</b>.`,
-        pt: `Hikari abre um corte raso no alvo escolhido com uma lâmina sempre úmida do próprio veneno. Causa dano físico e aplica <b>${this.poisonedStacks}</b> acúmulos de <b>Envenenado</b>, ou <b>${this.poisonedStacksIfPoisoned}</b> se o alvo já estiver <b>Envenenado</b>.`,
+        en: `Hikari opens a shallow cut on the chosen target with a blade kept wet with her own venom. If it lands, it applies <b>${this.poisonedStacks}</b> stacks of <b>Poisoned</b>, or <b>${this.poisonedStacksIfPoisoned}</b> if the target is already <b>Poisoned</b>. Deals physical damage.`,
+        pt: `Hikari abre um corte raso no alvo escolhido com uma lâmina sempre úmida do próprio veneno. Se acertar, aplica <b>${this.poisonedStacks}</b> acúmulos de <b>Envenenado</b>, ou <b>${this.poisonedStacksIfPoisoned}</b> se o alvo já estiver <b>Envenenado</b>. Causa dano físico.`,
       };
     },
 
@@ -93,9 +93,6 @@ const hikariSkills = [
     },
   },
 
-  // ========================
-  // H2 — Substitution
-  // ========================
   {
     key: "substitution",
     name: "Substitution",
@@ -118,11 +115,9 @@ const hikariSkills = [
     targetSpec: ["self"],
 
     description() {
-      const counter = SkillHits.spec(this, "counter");
-
       return {
-        en: `Faster than almost any blow, Hikari is already gone, and a wooden decoy in her clothes stands where she was. Every enemy whose attack this turn was aimed at her is <b>Taunted</b> into the decoy instead, and whoever strikes it gets Hikari's blade back from where they least expect it: <b>${counter.bf}%</b> of her <b>Attack</b> plus <b>${counter.bonusDamage}</b> bonus damage. The decoy is fragile and never acts; whatever is left of it is taken off the field at the start of the next turn.`,
-        pt: `Mais rápida que quase qualquer golpe, Hikari já sumiu, e um boneco de madeira com as roupas dela está parado onde ela estava. Todo inimigo cujo ataque neste turno mirava nela é <b>Provocado</b> a golpear o boneco no lugar, e quem o acerta recebe a lâmina de Hikari de volta de onde menos espera: <b>${counter.bf}%</b> do <b>Ataque</b> dela mais <b>${counter.bonusDamage}</b> de dano bônus. O boneco é frágil e nunca age; o que restar dele sai de campo no início do turno seguinte.`,
+        en: `Faster than almost any blow, Hikari is already gone, and a wooden decoy in her clothes stands where she was. Every enemy whose attack this turn was aimed at her is <b>Taunted</b> into the decoy instead, and whoever strikes it gets Hikari's blade back from where they least expect it. The decoy is fragile and never acts; whatever is left of it is taken off the field at the start of the next turn. The counterattack deals physical damage.`,
+        pt: `Mais rápida que quase qualquer golpe, Hikari já sumiu, e um boneco de madeira com as roupas dela está parado onde ela estava. Todo inimigo cujo ataque neste turno mirava nela é <b>Provocado</b> a golpear o boneco no lugar, e quem o acerta recebe a lâmina de Hikari de volta de onde menos espera. O boneco é frágil e nunca age; o que restar dele sai de campo no início do turno seguinte. O contra-ataque causa dano físico.`,
       };
     },
 
@@ -144,8 +139,11 @@ const hikariSkills = [
 
           context.registerDialog({
             message: decoy
-              ? `${formatChampionName(user)} slips away, leaving a decoy in her place!`
-              : "But it failed.",
+              ? {
+                  en: `${formatChampionName(user)} slips away, leaving a decoy in her place!`,
+                  pt: `${formatChampionName(user)} escapa, deixando um boneco no seu lugar!`,
+                }
+              : { en: "But it failed.", pt: "Mas falhou." },
             sourceId: user.id,
           });
         },
@@ -160,6 +158,7 @@ const hikariSkills = [
         {
           type: "buff",
           key: "substitution_counter",
+          name: "Substitution Counter",
           expiresAtTurn: context.currentTurn + 1,
 
           onAfterDmgTaking({ attacker, defender, damage, owner, context }) {
@@ -189,9 +188,6 @@ const hikariSkills = [
     },
   },
 
-  // ========================
-  // Ultimate — Nightshade Bloom
-  // ========================
   {
     key: "nightshade_bloom",
     name: "Nightshade Bloom",
@@ -212,8 +208,8 @@ const hikariSkills = [
 
     description() {
       return {
-        en: `Hikari cuts exactly where her venom has pooled, and all of it opens at once. Deals physical damage, plus bonus damage equal to <b>${this.maxHpRatioPerStack * 100}%</b> of the chosen target's <b>Max HP</b> per <b>Poisoned</b> stack on them. If the strike lands, every <b>Poisoned</b> stack is consumed.`,
-        pt: `Hikari corta exatamente onde o veneno se acumulou, e tudo se abre de uma vez. Causa dano físico, mais dano bônus igual a <b>${this.maxHpRatioPerStack * 100}%</b> do <b>HP Máximo</b> do alvo escolhido por acúmulo de <b>Envenenado</b> nele. Se o golpe acertar, todos os acúmulos de <b>Envenenado</b> são consumidos.`,
+        en: `Hikari cuts exactly where her venom has pooled, and all of it opens at once. The strike deals bonus damage equal to <b>${this.maxHpRatioPerStack * 100}%</b> of the chosen target's <b>Max HP</b> per <b>Poisoned</b> stack on them. If the strike lands, every <b>Poisoned</b> stack is consumed. Deals physical damage.`,
+        pt: `Hikari corta exatamente onde o veneno se acumulou, e tudo se abre de uma vez. O golpe causa dano bônus igual a <b>${this.maxHpRatioPerStack * 100}%</b> do <b>HP Máximo</b> do alvo escolhido por acúmulo de <b>Envenenado</b> nele. Se o golpe acertar, todos os acúmulos de <b>Envenenado</b> são consumidos. Causa dano físico.`,
       };
     },
 

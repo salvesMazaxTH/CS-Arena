@@ -8,8 +8,8 @@ export default {
   Defense: 40,
   Speed: 95,
 
-  classKey: "assassin",
-  species: ["human"],
   // Years of dosing herself with her own venoms.
   elementalAffinities: ["poison"],
+  classKey: "assassin",
+  species: ["human"],
 };

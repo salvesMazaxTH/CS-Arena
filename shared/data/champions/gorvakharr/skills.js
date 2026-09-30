@@ -11,7 +11,6 @@ const gorvakharrSkills = [
   // =========================
   // Special Abilities
   // =========================
-
   {
     key: "chainforged_ambush",
     name: "Chainforged Ambush",
@@ -21,19 +20,18 @@ const gorvakharrSkills = [
 
     contact: true,
     damageMode: "standard",
-    type: "physical",
     element: "fire",
     hitVfx: "chain_lash",
     priority: 0,
 
+    targetSpec: ["enemy"],
+
     description() {
       return {
-        en: `Gorvakharr's burning chain lashes out and wraps around the chosen target. Deals <b>physical damage</b> and applies <b>Snared</b> for <b>${this.snareDuration}</b> turn(s).`,
-        pt: `A corrente flamejante de Gorvakharr avança e se enrola no alvo escolhido. Causa <b>dano físico</b> e aplica <b>Enredado</b> por <b>${this.snareDuration}</b> turno(s).`,
+        en: `Gorvakharr's burning chain lashes out and wraps around the chosen target. If it lands, it applies <b>Snared</b> for <b>${this.snareDuration}</b> turn(s). Deals physical damage.`,
+        pt: `A corrente flamejante de Gorvakharr avança e se enrola no alvo escolhido. Se acertar, aplica <b>Enredado</b> por <b>${this.snareDuration}</b> turno(s). Causa dano físico.`,
       };
     },
-
-    targetSpec: ["enemy"],
 
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
@@ -43,18 +41,19 @@ const gorvakharrSkills = [
         attacker: user,
         defender: enemy,
         skill: this,
-        type: "physical",
-        context,
+            context,
         allChampions: context?.allChampions,
       }).execute();
 
-      if (effectConnected(result, "snared")) {
+      const results = Array.isArray(result) ? result : [result];
+
+      if (effectConnected(results[0], "snared")) {
         enemy.applyStatusEffect("snared", this.snareDuration, context, {
           sourceId: user.id,
         });
       }
 
-      return result;
+      return results;
     },
   },
 
@@ -68,19 +67,18 @@ const gorvakharrSkills = [
 
     contact: true,
     damageMode: "standard",
-    type: "physical",
     element: "fire",
     hitVfx: "multislash",
     priority: 0,
 
+    targetSpec: ["enemy"],
+
     description() {
       return {
-        en: `Gorvakharr drives his fire-wreathed blade into the chosen target, dealing <b>physical damage</b> and applying <b>Burning</b> for <b>${this.burnDuration}</b> turn(s). If the target is <b>Snared</b> or <b>Rooted</b>, this attack instead strikes with <b>${this.bf + this.snaredBonusBf}</b> power.`,
-        pt: `Gorvakharr crava sua lâmina envolta em fogo no alvo escolhido, causando <b>dano físico</b> e aplicando <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s). Se o alvo estiver <b>Enredado</b> ou <b>Enraizado</b>, este ataque golpeia com <b>${this.bf + this.snaredBonusBf}</b> de poder.`,
+        en: `Gorvakharr drives his fire-wreathed blade into the chosen target. Against a <b>Snared</b> or <b>Rooted</b> target it strikes with <b>+${this.snaredBonusBf}</b> power. If it lands, it applies <b>Burning</b> for <b>${this.burnDuration}</b> turn(s). Deals physical damage.`,
+        pt: `Gorvakharr crava sua lâmina envolta em fogo no alvo escolhido. Contra um alvo <b>Enredado</b> ou <b>Enraizado</b>, golpeia com <b>+${this.snaredBonusBf}</b> de poder. Se acertar, aplica <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s). Causa dano físico.`,
       };
     },
-
-    targetSpec: ["enemy"],
 
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
@@ -96,18 +94,19 @@ const gorvakharrSkills = [
         attacker: user,
         defender: enemy,
         skill: this,
-        type: "physical",
-        context,
+            context,
         allChampions: context?.allChampions,
       }).execute();
 
-      if (effectConnected(result, "burning")) {
+      const results = Array.isArray(result) ? result : [result];
+
+      if (effectConnected(results[0], "burning")) {
         enemy.applyStatusEffect("burning", this.burnDuration, context, {
           sourceId: user.id,
         });
       }
 
-      return result;
+      return results;
     },
   },
 
@@ -115,58 +114,45 @@ const gorvakharrSkills = [
     key: "crimson_moon_harvest",
     name: "Crimson Moon Harvest",
 
-    bf: 90,
-
-    contact: true,
-    damageMode: "standard",
-    type: "physical",
-    element: "fire",
-    hitVfx: "multislash",
     isUltimate: true,
     momentumCost: 55,
-    priority: 0,
 
+    bf: 90,
     executeThreshold: 0.25,
     executeFlatThreshold: 85,
     finishingType: "regular",
+
+    contact: true,
+    damageMode: "standard",
+    element: "fire",
+    hitVfx: "multislash",
+    priority: 0,
+
+    targetSpec: ["enemy"],
 
     description() {
       const percent = this.executeThreshold * 100;
 
       return {
-        en: `Gorvakharr drops on the chosen target under a crimson moon, chain and blade together. Deals heavy <b>physical damage</b>. <b>Executes</b> the target if they are critically wounded (≤ <b>${percent}%</b> of their Max HP and ≤ <b>${this.executeFlatThreshold}</b> HP).`,
-        pt: `Gorvakharr desaba sobre o alvo escolhido sob uma lua carmesim, corrente e lâmina juntas. Causa <b>dano físico</b> pesado. <b>Executa</b> o alvo se estiver criticamente ferido (≤ <b>${percent}%</b> do HP Máximo e ≤ <b>${this.executeFlatThreshold}</b> de HP).`,
+        en: `Gorvakharr drops on the chosen target under a crimson moon, chain and blade together. If the blow leaves them at or below <b>${percent}%</b> of their <b>Max HP</b> and at or below <b>${this.executeFlatThreshold}</b> <b>HP</b>, it <b>Executes</b> them. Deals physical damage.`,
+        pt: `Gorvakharr desaba sobre o alvo escolhido sob uma lua carmesim, corrente e lâmina juntas. Se o golpe o deixar com <b>${percent}%</b> ou menos do seu <b>HP Máximo</b> e com <b>${this.executeFlatThreshold}</b> de <b>HP</b> ou menos, ele o <b>Executa</b>. Causa dano físico.`,
       };
     },
 
     finishingRule({ defender }) {
-      const maxHP = defender?.maxHP;
-      const currentHP = defender?.HP;
-
-      if (!Number.isFinite(maxHP) || maxHP <= 0) {
-        return this.executeThreshold;
-      }
-
-      if (!Number.isFinite(currentHP)) return;
-
-      if (currentHP > this.executeFlatThreshold) return;
-
+      if (defender.HP > this.executeFlatThreshold) return;
       return this.executeThreshold;
     },
 
-    targetSpec: ["enemy"],
-
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
-      if (!enemy) return;
 
       return new DamageEvent({
         baseDamage: (user.Attack * this.bf) / 100,
         attacker: user,
         defender: enemy,
         skill: this,
-        type: "physical",
-        context,
+            context,
         allChampions: context?.allChampions,
       }).execute();
     },
