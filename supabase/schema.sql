@@ -181,8 +181,8 @@ join matches m on m.id = p.match_id
 group by p.comp_key
 order by matches_played desc;
 
--- Win rate per player username (no auth in the game, so this is best-effort:
--- two players sharing a display name share a row here).
+-- Win rate per player username. Superseded by migrations/001_auth_profiles_teams.sql,
+-- which regroups it by account; run that migration after this file.
 create or replace view v_player_winrate as
 select
   p.username,

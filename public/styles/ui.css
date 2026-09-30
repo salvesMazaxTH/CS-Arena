@@ -1211,6 +1211,59 @@
   box-shadow: 0 0 8px rgba(0, 255, 150, 0.4);
 }
 
+/* Google's own button spec (light theme) — deliberately not game-styled so
+   players recognise it. Selectors carry .login-container to beat the
+   generic button rules above. */
+.login-container button.gsi-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 16px;
+  background: #ffffff;
+  border: 1px solid #747775;
+  border-radius: 20px;
+  color: #1f1f1f;
+  font-family: "Roboto", Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.25px;
+  box-shadow: none;
+}
+
+.login-container button.gsi-button[hidden] {
+  display: none;
+}
+
+.login-container button.gsi-button:hover {
+  transform: none;
+  background: #f0f4ff;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3);
+}
+
+.login-container button.gsi-button:active {
+  transform: none;
+  background: #e2e8f8;
+  box-shadow: none;
+}
+
+.login-container button.gsi-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.login-container button.gsi-button:focus-visible {
+  outline: 2px solid #00ff99;
+  outline-offset: 3px;
+}
+
+.gsi-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
 #login-message {
   margin-top: 20px;
   font-size: 1.1em;

@@ -43,7 +43,7 @@
 
         <div class="tm-section-head">
           <h2>My teams</h2>
-          <p>Saved to this browser only.</p>
+          <p>Saved to your account.</p>
         </div>
         <div id="tm-custom-grid" class="tm-team-grid"></div>
         <p id="tm-custom-empty" class="tm-empty-note" hidden>
@@ -56,6 +56,14 @@
 
     <div id="tm-toast" class="tm-toast" role="status" hidden></div>
 
+    <script type="importmap">
+      {
+        "imports": {
+          "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2"
+        }
+      }
+    </script>
+    <script src="/config.js"></script>
     <script type="module" src="/js/teamsManager.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>

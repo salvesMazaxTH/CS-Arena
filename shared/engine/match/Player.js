@@ -1,7 +1,8 @@
 export class Player {
-  constructor({ id, username, team }) {
+  constructor({ id, username, team, userId = null }) {
     this.id = id;
     this.username = username;
+    this.userId = userId;
     this.team = team;
     this.socketId = null;
     this.selectedChampionKeys = [];

@@ -233,7 +233,7 @@ O servidor gerencia toda a sessão por meio de uma instância de `GameMatch` (ve
 
 ### 4.2 Hub e escolha de time
 
-1. Após `playerAssigned`, o cliente mostra o **hub** (`#hub-screen` em `index.html`), que lista os times salvos: os prebuilt de `shared/data/teams/` e os custom do `localStorage` do jogador (`csa.teams.custom`, geridos pelo `TeamStore`).
+1. Após `playerAssigned`, o cliente mostra o **hub** (`#hub-screen` em `index.html`), que lista os times salvos: os prebuilt de `shared/data/teams/` e os custom da conta do jogador (tabela `teams` no Supabase, geridos pelo `TeamStore` com cache em memória). O login é Google via Supabase Auth: o socket envia o token no handshake e o servidor (`src/auth/verifyToken.js`) resolve `userId` e nome de exibição (`profiles`).
 2. O jogador seleciona um time e clica **Find match**, emitindo `readyWithTeam` com `{ champions: string[8], emblems: string[0..2] }`.
 3. O servidor valida com `validateTeamComposition(team, { championDB, emblems, editMode })` de `shared/data/teams/validateTeam.js` (tamanho, campeões draftáveis, duplicados, duos inteiros, teto de 2 Emblems e elegibilidade de cada Emblem para a lineup). Em falha emite `readyWithTeamRejected`.
 4. Aceito: `player.setSelectedChampionKeys(...)` + `player.emblems = resolveEmblems(...)`. Quando **ambos** os jogadores estão prontos, `checkAllTeamsSelected()` emite `allTeamsSelected` + `gameStateUpdate`.

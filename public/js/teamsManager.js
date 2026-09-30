@@ -7,6 +7,7 @@ import { TeamBuilder } from "./teamsManager/TeamBuilder.js";
 import { escapeHtml } from "./teamsManager/championCardMarkup.js";
 import { renderTeamSummary } from "./ui/teamCard.js";
 import { readMirroredEditMode } from "./editModeMirror.js";
+import { getSession } from "./auth/session.js";
 
 applyIdentityPaletteCssVariables(document.documentElement);
 
@@ -126,8 +127,31 @@ newTeamBtn.addEventListener("click", () =>
   showBuilder({ name: "", champions: [], emblems: [], derivedFrom: null }),
 );
 
-window.addEventListener("storage", (event) => {
-  if (event.key === "csa.teams.custom" && !listView.hidden) renderList();
+store.onSyncError = () => flashToast("Could not sync with your account. Check your connection.");
+
+// Another device or tab may have changed the account's teams meanwhile.
+async function refreshFromAccount() {
+  if (!store.userId || listView.hidden) return;
+  try {
+    await store.load(store.userId);
+    renderList();
+  } catch {
+    /* keep showing the cached teams */
+  }
+}
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refreshFromAccount();
 });
 
-showList();
+async function start() {
+  const session = await getSession();
+  if (session) {
+    await store.load(session.user.id);
+  } else if (!(clientEditMode.enabled && clientEditMode.autoLogin)) {
+    location.href = "/";
+    return;
+  }
+  showList();
+}
+
+start();

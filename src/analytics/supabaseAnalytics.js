@@ -87,6 +87,7 @@ export async function recordMatchResult({
         match_id: match.id,
         team: p.team,
         username: p.username,
+        user_id: p.userId ?? null,
         champion_keys: p.championKeys,
         emblem_keys: p.emblemKeys,
         comp_key: compKeyFor(p.championKeys),

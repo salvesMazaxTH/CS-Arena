@@ -33,6 +33,15 @@ import { championDB } from "/shared/data/championDB.js";
 import { getDuoForCore } from "/shared/data/duos.js";
 import { validateTeamComposition } from "/shared/data/teams/index.js";
 import { TeamStore } from "./teamsManager/TeamStore.js";
+import {
+  supabase,
+  getSession,
+  getProfile,
+  signInWithGoogle,
+  signOut,
+  saveDisplayName,
+  validateDisplayName,
+} from "./auth/session.js";
 import { renderTeamSummary } from "./ui/teamCard.js";
 import { mirrorEditMode } from "./editModeMirror.js";
 import { Champion } from "/shared/core/Champion.js";
@@ -58,7 +67,12 @@ applyIdentityPaletteCssVariables(document.documentElement);
 //  SOCKET
 // ============================================================
 
+// The access token is re-read on every (re)connect so a refreshed session works.
+let accessToken = null;
+
 const socket = io({
+  autoConnect: false,
+  auth: (deliver) => deliver({ token: accessToken }),
   reconnection: true,
   reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
@@ -176,8 +190,10 @@ let emblemTooltip = null;
 
 // --- Login Screen ---
 const loginScreen = document.getElementById("login-screen");
-const usernameInput = document.getElementById("username-input");
-const joinArenaBtn = document.getElementById("join-arena-btn");
+const googleLoginBtn = document.getElementById("google-login-btn");
+const displayNameStep = document.getElementById("display-name-step");
+const displayNameInput = document.getElementById("display-name-input");
+const displayNameSaveBtn = document.getElementById("display-name-save-btn");
 const loginMessage = document.getElementById("login-message");
 const disconnectionMessage = document.getElementById("disconnection-message");
 
@@ -336,24 +352,116 @@ socket.on("editModeUpdate", (serverEditMode = {}) => {
   }
 });
 
-joinArenaBtn.addEventListener("click", () => {
-  const enteredUsername = usernameInput.value.trim();
-  if (enteredUsername) {
-    username = enteredUsername;
-    socket.emit("requestPlayerSlot", username);
-    loginMessage.textContent = "Connecting...";
-    joinArenaBtn.disabled = true;
-    usernameInput.disabled = true;
-  } else {
-    loginMessage.textContent = "Please enter a username.";
+const NAME_ERRORS = {
+  too_short: "The display name needs at least 3 characters.",
+  too_long: "The display name can have at most 20 characters.",
+  taken: "That display name is already in use.",
+  error: "Could not save the display name. Try again.",
+};
+
+let currentUserId = null;
+let slotRequested = false;
+
+function showLoginStep({ google = false, name = false } = {}) {
+  googleLoginBtn.hidden = !google;
+  displayNameStep.hidden = !name;
+}
+
+function connectSocket() {
+  if (!socket.connected) socket.connect();
+}
+
+// Pulls the account's teams, offers to import pre-account ones, then joins.
+async function enterWithAccount() {
+  loginMessage.textContent = "Connecting...";
+  showLoginStep();
+  try {
+    await teamStore.load(currentUserId);
+    const legacy = teamStore.getLegacyTeams();
+    if (legacy.length > 0) {
+      if (confirm(`Import the ${legacy.length} team(s) saved in this browser into your account?`)) {
+        await teamStore.importLegacyTeams();
+      } else {
+        teamStore.markLegacyHandled();
+      }
+    }
+  } catch (error) {
+    loginMessage.textContent = "Could not load your teams. Reload the page to try again.";
+    reportClientError(`Team load failed: ${error?.message ?? error}`, error?.stack);
+    return;
   }
+  slotRequested = true;
+  socket.emit("requestPlayerSlot");
+}
+
+async function boot() {
+  const session = await getSession();
+  accessToken = session?.access_token ?? null;
+
+  if (session) {
+    currentUserId = session.user.id;
+    const profile = await getProfile(currentUserId);
+    if (!profile) {
+      loginMessage.textContent = "";
+      showLoginStep({ name: true });
+      return;
+    }
+  }
+  // Without a session the server still answers (edit-mode auto login) or
+  // refuses with "unauthorized", which shows the Google button.
+  connectSocket();
+}
+
+supabase?.auth.onAuthStateChange((_event, session) => {
+  accessToken = session?.access_token ?? null;
 });
 
-usernameInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    joinArenaBtn.click();
-  }
+googleLoginBtn.addEventListener("click", () => {
+  googleLoginBtn.disabled = true;
+  signInWithGoogle();
 });
+
+displayNameSaveBtn.addEventListener("click", async () => {
+  const name = displayNameInput.value;
+  const invalid = validateDisplayName(name);
+  if (invalid) {
+    loginMessage.textContent = NAME_ERRORS[invalid];
+    return;
+  }
+  displayNameSaveBtn.disabled = true;
+  const result = await saveDisplayName(currentUserId, name);
+  displayNameSaveBtn.disabled = false;
+  if (!result.ok) {
+    loginMessage.textContent = NAME_ERRORS[result.reason];
+    return;
+  }
+  loginMessage.textContent = "";
+  showLoginStep();
+  connectSocket();
+});
+
+displayNameInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") displayNameSaveBtn.click();
+});
+
+socket.on("connect", () => {
+  if (currentUserId && !slotRequested) enterWithAccount();
+});
+
+socket.on("connect_error", (error) => {
+  if (error.message !== "unauthorized") return;
+  loginMessage.textContent = currentUserId
+    ? "Your session is no longer valid. Sign in again."
+    : "Sign in to play.";
+  googleLoginBtn.disabled = false;
+  showLoginStep({ google: true });
+});
+
+socket.on("alreadyConnected", (message) => {
+  loginMessage.textContent = message || "This account is already connected elsewhere.";
+});
+
+boot();
 
 socket.on("playerAssigned", (data) => {
   playerId = data.playerId;
@@ -382,8 +490,6 @@ socket.on("playerAssigned", (data) => {
 
 socket.on("waitingForOpponent", (message) => {
   loginMessage.textContent = message;
-  joinArenaBtn.disabled = true;
-  usernameInput.disabled = true;
 });
 
 socket.on("serverFull", (message) => {
@@ -449,10 +555,9 @@ socket.on("forceLogout", (message) => {
   document.body.classList.remove("perspective-team2");
 
   // Reset login elements
-  usernameInput.value = "";
-  usernameInput.disabled = false;
-  joinArenaBtn.disabled = false;
-  loginMessage.textContent = "Enter your username to play.";
+  slotRequested = false;
+  loginMessage.textContent = "";
+  if (currentUserId) enterWithAccount();
 
   // Clear disconnection timers
   if (disconnectionCountdownInterval) {
@@ -625,17 +730,43 @@ hubCancelBtn.addEventListener("click", () => {
   socket.emit("cancelReadyWithTeam");
 });
 
-// A team edited in the Team Manager tab reaches the hub through localStorage.
-window.addEventListener("storage", (event) => {
-  if (
-    event.key?.startsWith("csa.teams") &&
-    !hubScreen.classList.contains("hidden")
-  ) {
-    renderHub();
+teamStore.onSyncError = () => {
+  hubStatus.textContent = "Could not sync with your account. Check your connection.";
+};
+
+// Teams edited on another tab or device reach the hub when the window regains focus.
+async function refreshHubTeams() {
+  if (hubScreen.classList.contains("hidden") || matchmaking) return;
+  if (teamStore.userId) {
+    try {
+      await teamStore.load(teamStore.userId);
+    } catch {
+      /* keep showing the cached teams */
+    }
   }
+  renderHub();
+}
+window.addEventListener("focus", refreshHubTeams);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refreshHubTeams();
 });
-window.addEventListener("focus", () => {
-  if (!hubScreen.classList.contains("hidden") && !matchmaking) renderHub();
+
+document.getElementById("hubRenameBtn").addEventListener("click", async () => {
+  if (!currentUserId) {
+    hubStatus.textContent = "Sign in with Google to change your display name.";
+    return;
+  }
+  const entered = prompt("New display name (3–20 characters):", username ?? "");
+  if (entered === null) return;
+  const result = await saveDisplayName(currentUserId, entered);
+  hubStatus.textContent = result.ok
+    ? `Display name saved. "${result.profile.display_name}" applies the next time you sign in.`
+    : NAME_ERRORS[result.reason];
+});
+
+document.getElementById("hubSignOutBtn").addEventListener("click", async () => {
+  await signOut();
+  location.reload();
 });
 
 socket.on("readyWithTeamRejected", (message) => {

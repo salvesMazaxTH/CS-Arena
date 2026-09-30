@@ -55,6 +55,7 @@ import {
   validateTeamComposition,
 } from "../shared/data/teams/index.js";
 import { isEditModeClean, recordMatchResult } from "./analytics/supabaseAnalytics.js";
+import { getPlayerFromToken } from "./auth/verifyToken.js";
 
 // ============================================================
 //  CONFIGURATION
@@ -109,6 +110,17 @@ const staticOpts = process.env.RENDER
 app.use(compression());
 app.use(express.static(path.join(__dirname, "..", "public"), staticOpts));
 app.use("/shared", express.static(path.join(__dirname, "..", "shared"), staticOpts));
+
+// Public Supabase settings for the browser (the anon key is meant to be public).
+app.get("/config.js", (_req, res) => {
+  res.type("application/javascript").set("Cache-Control", "no-cache");
+  res.send(
+    `window.CSA_CONFIG = ${JSON.stringify({
+      supabaseUrl: process.env.SUPABASE_URL || "",
+      supabaseAnonKey: process.env.SUPABASE_ANON_KEY || "",
+    })};`,
+  );
+});
 
 app.get("/", (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "index.html"));
@@ -692,6 +704,7 @@ function emitGameOverIfNeeded({ endOfTurn = false } = {}) {
       players: match.players.map((p) => ({
         team: p.team,
         username: p.username,
+        userId: p.userId,
         championKeys: p.selectedChampionKeys,
         emblemKeys: p.emblems.map((e) => e.key),
       })),
@@ -1213,6 +1226,20 @@ function resetCombatState() {
 //  SOCKET HANDLERS
 // ============================================================
 
+// Every connection carries a Supabase access token; the account behind it, not
+// anything the client types, decides who the player is. editMode.autoLogin is
+// the development shortcut that skips this.
+io.use(async (socket, next) => {
+  if (editMode.enabled && editMode.autoLogin) return next();
+
+  const player = await getPlayerFromToken(socket.handshake.auth?.token);
+  if (!player) return next(new Error("unauthorized"));
+
+  socket.data.userId = player.userId;
+  socket.data.displayName = player.displayName;
+  next();
+});
+
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
   console.log("Total connected users:", io.engine.clientsCount);
@@ -1285,7 +1312,7 @@ io.on("connection", (socket) => {
   // --- Connection-scoped helpers ---
 
   /** Assigns a player slot and notifies the client. */
-  function assignPlayerSlot(username) {
+  function assignPlayerSlot() {
     // If this socket already owns a slot, don't create another (avoids autoLogin + manual-click duplication).
     const existingSlot = match.getSlotBySocket(socket.id);
     if (existingSlot !== undefined) {
@@ -1310,13 +1337,25 @@ io.on("connection", (socket) => {
 
     const playerId = `player${slot + 1}`;
     const team = slot + 1;
-    const finalUsername =
-      editMode.enabled && editMode.autoLogin ? `Player${slot + 1}` : username;
+    const finalUsername = socket.data.displayName ?? `Player${slot + 1}`;
+
+    // The same account can't hold both slots by opening two tabs.
+    const userId = socket.data.userId ?? null;
+    if (
+      userId &&
+      !editMode.enabled &&
+      match.players.some((p) => p?.userId === userId)
+    ) {
+      socket.emit("alreadyConnected", "This account is already in the arena.");
+      socket.disconnect();
+      return null;
+    }
 
     const player = new Player({
       id: playerId,
       team,
       username: finalUsername,
+      userId,
     });
 
     player.emblems = [];
@@ -1364,8 +1403,8 @@ io.on("connection", (socket) => {
   //  requestPlayerSlot
   // =============================
 
-  socket.on("requestPlayerSlot", (username) => {
-    const assignResult = assignPlayerSlot(username);
+  socket.on("requestPlayerSlot", () => {
+    const assignResult = assignPlayerSlot();
     if (!assignResult) return;
 
     const { playerSlot, finalUsername } = assignResult;
@@ -1910,6 +1949,7 @@ io.on("connection", (socket) => {
         players: match.players.map((p) => ({
           team: p.team,
           username: p.username,
+          userId: p.userId,
           championKeys: p.selectedChampionKeys,
           emblemKeys: p.emblems.map((e) => e.key),
         })),

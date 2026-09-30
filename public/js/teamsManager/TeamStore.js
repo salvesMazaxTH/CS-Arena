@@ -1,8 +1,35 @@
 import { PREBUILT_TEAMS, TEAM_SIZE, MAX_TEAM_EMBLEMS } from "/shared/data/teams/index.js";
 import { generateId } from "/shared/utils/id.js";
+import { supabase } from "/js/auth/session.js";
 
-const CUSTOM_KEY = "csa.teams.custom";
-const SELECTED_KEY = "csa.teams.selectedId";
+// Pre-account storage, read once to offer moving old teams into the account.
+const LEGACY_CUSTOM_KEY = "csa.teams.custom";
+const legacyImportedKey = (userId) => `csa.teams.imported.${userId}`;
+
+function teamFromRow(row) {
+  return normalizeCustomTeam({
+    id: row.id,
+    name: row.name,
+    tagline: row.tagline,
+    champions: row.champions,
+    emblems: row.emblems,
+    derivedFrom: row.derived_from,
+    updatedAt: Number(row.updated_at),
+  });
+}
+
+function rowFromTeam(team, userId) {
+  return {
+    id: team.id,
+    user_id: userId,
+    name: team.name,
+    tagline: team.tagline,
+    champions: team.champions,
+    emblems: team.emblems,
+    derived_from: team.derivedFrom,
+    updated_at: team.updatedAt,
+  };
+}
 
 /** Coerces a stored blob into the Team shape; returns null when unusable. */
 function normalizeCustomTeam(raw) {
@@ -26,24 +53,81 @@ function normalizeCustomTeam(raw) {
   };
 }
 
-/** localStorage-backed store: prebuilt teams are read-only, custom ones are CRUD. */
+/**
+ * Account-backed store: prebuilt teams are read-only, custom ones are CRUD.
+ * Reads are synchronous against an in-memory cache filled by `load()`; writes
+ * update the cache at once and reach Supabase in the background, reporting
+ * failures through `onSyncError`. Without an account (edit-mode auto login)
+ * the cache simply lives for the page's lifetime.
+ */
 export class TeamStore {
+  constructor() {
+    this.userId = null;
+    this.custom = [];
+    this.selectedId = null;
+    this.onSyncError = null;
+  }
+
+  /** Binds the store to an account and pulls its teams and selection. */
+  async load(userId) {
+    this.userId = userId ?? null;
+    if (!this.userId || !supabase) return;
+
+    const [teamsResult, profileResult] = await Promise.all([
+      supabase.from("teams").select("*").eq("user_id", this.userId),
+      supabase.from("profiles").select("selected_team_id").eq("id", this.userId).maybeSingle(),
+    ]);
+    if (teamsResult.error) throw teamsResult.error;
+    if (profileResult.error) throw profileResult.error;
+
+    this.custom = teamsResult.data.map(teamFromRow).filter(Boolean);
+    this.selectedId = profileResult.data?.selected_team_id ?? null;
+  }
+
+  /** Teams saved in this browser before accounts existed, not yet imported. */
+  getLegacyTeams() {
+    if (!this.userId) return [];
+    try {
+      if (localStorage.getItem(legacyImportedKey(this.userId))) return [];
+      const parsed = JSON.parse(localStorage.getItem(LEGACY_CUSTOM_KEY) || "[]");
+      return Array.isArray(parsed) ? parsed.map(normalizeCustomTeam).filter(Boolean) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /** Moves the legacy browser teams into the account; safe to call once per account. */
+  async importLegacyTeams() {
+    const legacy = this.getLegacyTeams();
+    if (legacy.length === 0) return 0;
+
+    const known = new Set(this.custom.map((team) => team.id));
+    const fresh = legacy.filter((team) => !known.has(team.id));
+    if (fresh.length > 0) {
+      const { error } = await supabase
+        .from("teams")
+        .insert(fresh.map((team) => rowFromTeam(team, this.userId)));
+      if (error) throw error;
+      this.custom.push(...fresh);
+    }
+    this.markLegacyHandled();
+    return fresh.length;
+  }
+
+  markLegacyHandled() {
+    try {
+      localStorage.setItem(legacyImportedKey(this.userId), "1");
+    } catch {
+      /* storage unavailable — the offer may simply repeat */
+    }
+  }
+
   getPrebuilt() {
     return PREBUILT_TEAMS.map((team) => structuredClone(team));
   }
 
   getCustom() {
-    let parsed;
-    try {
-      parsed = JSON.parse(localStorage.getItem(CUSTOM_KEY) || "[]");
-    } catch {
-      return [];
-    }
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .map(normalizeCustomTeam)
-      .filter(Boolean)
-      .sort((a, b) => b.updatedAt - a.updatedAt);
+    return this.custom.map((team) => structuredClone(team)).sort((a, b) => b.updatedAt - a.updatedAt);
   }
 
   getAll() {
@@ -55,20 +139,17 @@ export class TeamStore {
   }
 
   getSelectedId() {
-    try {
-      return localStorage.getItem(SELECTED_KEY) || null;
-    } catch {
-      return null;
-    }
+    return this.selectedId;
   }
 
   setSelectedId(id) {
-    try {
-      if (id) localStorage.setItem(SELECTED_KEY, id);
-      else localStorage.removeItem(SELECTED_KEY);
-    } catch {
-      /* storage unavailable — selection just won't persist */
-    }
+    this.selectedId = id || null;
+    this._sync(
+      supabase
+        ?.from("profiles")
+        .update({ selected_team_id: this.selectedId })
+        .eq("id", this.userId),
+    );
   }
 
   /** Inserts or replaces a custom team by id; stamps origin and updatedAt. */
@@ -84,18 +165,18 @@ export class TeamStore {
       updatedAt: Date.now(),
     };
 
-    const list = this.getCustom();
-    const index = list.findIndex((entry) => entry.id === stamped.id);
-    if (index >= 0) list[index] = stamped;
-    else list.push(stamped);
+    const index = this.custom.findIndex((entry) => entry.id === stamped.id);
+    if (index >= 0) this.custom[index] = stamped;
+    else this.custom.push(stamped);
 
-    this._writeCustom(list);
+    this._sync(supabase?.from("teams").upsert(rowFromTeam(stamped, this.userId)));
     return stamped;
   }
 
   deleteCustom(id) {
-    this._writeCustom(this.getCustom().filter((team) => team.id !== id));
-    if (this.getSelectedId() === id) this.setSelectedId(null);
+    this.custom = this.custom.filter((team) => team.id !== id);
+    this._sync(supabase?.from("teams").delete().eq("id", id).eq("user_id", this.userId));
+    if (this.selectedId === id) this.setSelectedId(null);
   }
 
   /** Copies any team (prebuilt or custom) into a fresh custom team. */
@@ -114,11 +195,13 @@ export class TeamStore {
     });
   }
 
-  _writeCustom(list) {
-    try {
-      localStorage.setItem(CUSTOM_KEY, JSON.stringify(list));
-    } catch {
-      /* storage unavailable or over quota — surfaced by the caller's re-read */
-    }
+  /** Fire-and-forget persistence; a no-op without an account. */
+  _sync(request) {
+    if (!this.userId || !request) return;
+    Promise.resolve(request)
+      .then(({ error }) => {
+        if (error) throw error;
+      })
+      .catch((error) => this.onSyncError?.(error));
   }
 }

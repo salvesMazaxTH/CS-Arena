@@ -77,6 +77,26 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+button.hub-manage-link {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.hub-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.hub-signout {
+  color: rgba(255, 190, 190, 0.9);
+}
+
+.hub-signout:hover {
+  background: rgba(255, 80, 80, 0.14);
+}
+
 .hub-team-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
