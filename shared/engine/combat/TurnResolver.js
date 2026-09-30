@@ -430,6 +430,12 @@ export class TurnResolver {
       });
 
       this.registerSkillUsageInTurn(user, skill, roleTargets);
+
+      // A skill may keep part of itself when Blind wastes the shot (e.g. a transformation).
+      const missed = skill.onBlindMiss?.({ user, context, resolver: this });
+      const missResults = Array.isArray(missed) ? missed : missed ? [missed] : [];
+      missResults.push(...this.processImmediateChampionMutations(context));
+
       context._intermediateSnapshot = snapshotChampions(
         this.combat.activeChampions,
       );
@@ -440,7 +446,7 @@ export class TurnResolver {
         skill,
         context,
         action,
-        results: [{ log: blindMiss.message, blindMissed: true }],
+        results: [{ log: blindMiss.message, blindMissed: true }, ...missResults],
       };
     }
 

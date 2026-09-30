@@ -2,6 +2,7 @@ import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicShot from "../generic/basicShot.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
+import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 
 const alexaNeruvyaSkills = [
   // ========================
@@ -42,11 +43,13 @@ const alexaNeruvyaSkills = [
 
       const userName = formatChampionName(user);
       const allyName = formatChampionName(ally);
+      const isSelf = ally.id === user.id;
 
       return {
-        log: `${userName} restores ${restored} HP to ${
-          userName === allyName ? "herself" : allyName
-        }. ${allyName} is now at ${ally.HP}/${ally.maxHP} HP.`,
+        log: {
+          en: `${userName} restores ${restored} HP to ${isSelf ? "herself" : allyName}. ${allyName} is now at ${ally.HP}/${ally.maxHP} HP.`,
+          pt: `${userName} restaura ${restored} de HP a ${isSelf ? "si mesma" : allyName}. ${allyName} agora está com ${ally.HP}/${ally.maxHP} de HP.`,
+        },
       };
     },
   },
@@ -87,14 +90,22 @@ const alexaNeruvyaSkills = [
 
       const userName = formatChampionName(user);
       const allyName = formatChampionName(ally);
+      const isSelf = ally.id === user.id;
       const absolutionLog = debuffs.length
-        ? ` and lifts away ${debuffs.length} negative effect(s)`
-        : ", finding nothing on them to dismiss";
+        ? {
+            en: ` and lifts away ${debuffs.length} negative status effect(s)`,
+            pt: ` e dispensa ${debuffs.length} efeito(s) de status negativo(s)`,
+          }
+        : {
+            en: ", finding nothing on them to dismiss",
+            pt: ", sem encontrar nada a dispensar",
+          };
 
       return {
-        log: `${userName} restores ${restored} HP to ${
-          userName === allyName ? "herself" : allyName
-        }${absolutionLog}.`,
+        log: {
+          en: `${userName} restores ${restored} HP to ${isSelf ? "herself" : allyName}${absolutionLog.en}.`,
+          pt: `${userName} restaura ${restored} de HP a ${isSelf ? "si mesma" : allyName}${absolutionLog.pt}.`,
+        },
       };
     },
   },
@@ -121,12 +132,12 @@ const alexaNeruvyaSkills = [
 
     description() {
       return {
-        en: `Alexa Neruvya answers one foe first, calling home through them every drop she has ever spent mending an ally, dealing <b>Water</b> magical damage that ignores <b>${this.piercingPercentage}%</b> of their <b>Defense</b>. The tide that returns from that strike does not disperse: it carries <b>${this.healPercentOfDamage}%</b> of the damage dealt — never less than <b>${this.minHealPerAlly}</b> — back to her and every active ally, restoring <b>HP</b>, and leaves <b>${this.momentumGainPercentOfDamage}%</b> of it behind in her as <b>Momentum</b>.
+        en: `Alexa Neruvya turns on the chosen target and drives the sea straight through them, ignoring <b>${this.piercingPercentage}%</b> of their <b>Defense</b>. If it lands, the tide rolls back over her and every ally, restoring <b>${this.healPercentOfDamage}%</b> of the damage dealt as <b>HP</b>, never less than <b>${this.minHealPerAlly}</b>, and leaves <b>${this.momentumGainPercentOfDamage}%</b> of it in her as <b>Momentum</b>.
 
-      Only then does she stop holding the shape she has been wearing. What surfaces is a blue dragon with the whole ocean hanging off it, her <b>Primordial Form</b>, for <b>${this.transformDuration}</b> turn(s), replacing her skills, her passive and her stats.`,
-        pt: `Alexa Neruvya responde primeiro a um inimigo, chamando de volta por meio dele cada gota que já gastou curando um aliado, causando dano mágico de <b>Água</b> que ignora <b>${this.piercingPercentage}%</b> da <b>Defesa</b> dele. A maré que retorna daquele golpe não se dispersa: ela carrega <b>${this.healPercentOfDamage}%</b> do dano causado — nunca menos que <b>${this.minHealPerAlly}</b> — de volta para ela e todo aliado ativo, restaurando <b>HP</b>, e deixa <b>${this.momentumGainPercentOfDamage}%</b> disso nela mesma como <b>Momentum</b>.
+      Only then does she let go of the shape she has been wearing, and a blue dragon rises with the whole ocean hanging off it: her <b>Primordial Form</b>, for <b>${this.transformDuration}</b> turn(s), replacing her skills, her passive and her stats. Not even a strike lost to <b>Blind</b> holds her back. Deals magical damage.`,
+        pt: `Alexa Neruvya se volta contra o alvo escolhido e faz o mar inteiro atravessá-lo, ignorando <b>${this.piercingPercentage}%</b> da <b>Defesa</b> dele. Se acertar, a maré reflui sobre ela e sobre cada aliado, restaurando em <b>HP</b> <b>${this.healPercentOfDamage}%</b> do dano causado, nunca menos que <b>${this.minHealPerAlly}</b>, e deixa <b>${this.momentumGainPercentOfDamage}%</b> dele com ela como <b>Momentum</b>.
 
-      Só então ela para de segurar a forma que vinha usando. O que emerge é um dragão azul com o oceano inteiro pendurado nele, sua <b>Forma Primordial</b>, por <b>${this.transformDuration}</b> turno(s), substituindo suas habilidades, sua passiva e seus atributos.`,
+      Só então ela abandona a forma que vinha vestindo, e um dragão azul se ergue com o oceano inteiro escorrendo do corpo: sua <b>Forma Primordial</b>, por <b>${this.transformDuration}</b> turno(s), substituindo suas habilidades, sua passiva e seus atributos. Nem um golpe perdido por estar <b>Cega</b> a segura. Causa dano mágico.`,
       };
     },
 
@@ -164,8 +175,10 @@ const alexaNeruvyaSkills = [
 
       // The tide only carries healing back if the strike connected.
       if (mainDamageResult?.landed) {
-        const allies = context.aliveChampions.filter(
-          (champ) => champ.team === user.team,
+        const allies = TargetFilter.candidates(
+          "ally",
+          user,
+          context.aliveChampions ?? [],
         );
 
         allies.forEach((ally) => {
@@ -179,7 +192,10 @@ const alexaNeruvyaSkills = [
           if (restored <= 0) return;
 
           results.push({
-            log: `The tide rolls back and restores ${restored} HP to ${formatChampionName(ally)}.`,
+            log: {
+              en: `The tide rolls back and restores ${restored} HP to ${formatChampionName(ally)}.`,
+              pt: `A maré reflui e restaura ${restored} de HP a ${formatChampionName(ally)}.`,
+            },
           });
         });
       }
@@ -199,10 +215,24 @@ const alexaNeruvyaSkills = [
         });
 
         results.push({
-          log: `The tide leaves ${momentumGain} Momentum behind in ${formatChampionName(user)}.`,
+          log: {
+            en: `The tide leaves ${momentumGain} Momentum behind in ${formatChampionName(user)}.`,
+            pt: `A maré deixa ${momentumGain} de Momentum com ${formatChampionName(user)}.`,
+          },
         });
       }
 
+      results.push(this._awaken(user, context));
+
+      return results;
+    },
+
+    // Blind can waste the strike, never the awakening.
+    onBlindMiss({ user, context }) {
+      return this._awaken(user, context);
+    },
+
+    _awaken(user, context) {
       context.requestChampionMutation({
         mode: "transform",
         targetId: user.id,
@@ -212,11 +242,12 @@ const alexaNeruvyaSkills = [
         statMode: "deltaFromBase",
       });
 
-      results.push({
-        log: `${formatChampionName(user)} awakens her <b>Primordial Form</b> for ${this.transformDuration} turn(s)!`,
-      });
-
-      return results;
+      return {
+        log: {
+          en: `${formatChampionName(user)} awakens her <b>Primordial Form</b> for ${this.transformDuration} turn(s)!`,
+          pt: `${formatChampionName(user)} desperta sua <b>Forma Primordial</b> por ${this.transformDuration} turno(s)!`,
+        },
+      };
     },
   },
 ];

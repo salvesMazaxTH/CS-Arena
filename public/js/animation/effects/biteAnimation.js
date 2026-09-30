@@ -18,6 +18,8 @@ export const BITE_PALETTES = Object.freeze({
   acid: Object.freeze({ core: "#f4ffd6", mid: "#9cff2e", deep: "#2f7d0c" }),
   // Blood-red fangs for a bite that drinks, picked with `hitVfxPalette`.
   crimson: Object.freeze({ core: "#fff0f0", mid: "#ff6b6b", deep: "#b3121b" }),
+  // Sea-blue fangs, the same water the slash and lash palettes use.
+  water: Object.freeze({ core: "#f0feff", mid: "#7fd4ff", deep: "#2e92f6" }),
 });
 
 function makeGlowSprite(color) {
