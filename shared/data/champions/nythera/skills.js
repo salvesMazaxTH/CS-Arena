@@ -24,10 +24,10 @@ const nytheraSkills = [
       return {
         en: `Nythera draws an edge of northern wind across the chosen target, dealing <b>Ice magical damage</b> and leaving them <b>Chilled</b> for <b>${this.chillDuration}</b> turn(s).
 
-        If the cold already holds them, the edge bites for <b>+${this.bonusIfCold}%</b> bonus damage, and a <b>Chilled</b> target is seized outright: <b>Frozen</b> for <b>${this.freezeDuration}</b> turn(s).`,
+        If the cold already holds them, the edge deals <b>${this.bonusIfCold}%</b> increased damage, and a <b>Chilled</b> target is seized outright: <b>Frozen</b> for <b>${this.freezeDuration}</b> turn(s).`,
         pt: `Nythera traça uma lâmina de vento nórdico sobre o alvo escolhido, causando <b>dano mágico de Gelo</b> e deixando-o <b>Gelado</b> por <b>${this.chillDuration}</b> turno(s).
 
-        Se o frio já o dominar, a lâmina corta com <b>+${this.bonusIfCold}%</b> de dano bônus, e um alvo <b>Gelado</b> é dominado de vez: fica <b>Congelado</b> por <b>${this.freezeDuration}</b> turno(s).`,
+        Se o frio já o dominar, a lâmina causa dano <b>${this.bonusIfCold}%</b> maior, e um alvo <b>Gelado</b> é dominado de vez: fica <b>Congelado</b> por <b>${this.freezeDuration}</b> turno(s).`,
       };
     },
     targetSpec: ["enemy"],

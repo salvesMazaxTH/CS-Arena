@@ -23,10 +23,10 @@ const noyreSkills = [
       return {
         en: `Noyre reaches into the energy the chosen target has been hoarding and bends it out of shape, dealing <b>magical damage</b> and stripping <b>${this.momentumDrain}</b> units of <b>Momentum</b>.
 
-        The fuller the reserve, the worse the distortion: against a target holding <b>${this.highMomentumThreshold}</b> Momentum or more, the damage is increased by <b>${this.dmgBonus}%</b>.`,
+        The fuller the reserve, the worse the distortion: against a target holding <b>${this.highMomentumThreshold}</b> Momentum or more, it deals <b>${this.dmgBonus}%</b> increased damage.`,
         pt: `Noyre agarra a energia que o alvo escolhido vem acumulando e a retorce até deformá-la, causando <b>dano mágico</b> e removendo <b>${this.momentumDrain}</b> unidades de <b>Momentum</b>.
 
-        Quanto mais cheia a reserva, pior a distorção: contra um alvo com <b>${this.highMomentumThreshold}</b> ou mais de Momentum, o dano é aumentado em <b>${this.dmgBonus}%</b>.`,
+        Quanto mais cheia a reserva, pior a distorção: contra um alvo com <b>${this.highMomentumThreshold}</b> ou mais de Momentum, causa dano <b>${this.dmgBonus}%</b> maior.`,
       };
     },
     targetSpec: ["enemy"],

@@ -73,7 +73,7 @@ const sabrinaSkills = [
     description() {
       return {
         en: `Conjures a mass of hardened ice around an enemy, dealing <b>Ice magical damage</b>. If the target is already <b>Chilled</b>, this deals <b>${this.chilledBonusPercent}%</b> increased damage and the Chilled effect is consumed and replaced by <b>Frozen</b> for <b>${this.freezeDuration}</b> turn(s).`,
-        pt: `Conjura uma massa de gelo endurecido ao redor de um inimigo, causando <b>dano mágico de Gelo</b>. Se o alvo já estiver <b>Gelado</b>, isso causa <b>${this.chilledBonusPercent}%</b> de dano aumentado e o efeito Gelado é consumido e substituído por <b>Congelado</b> por <b>${this.freezeDuration}</b> turno(s).`,
+        pt: `Conjura uma massa de gelo endurecido ao redor de um inimigo, causando <b>dano mágico de Gelo</b>. Se o alvo já estiver <b>Gelado</b>, isso causa dano <b>${this.chilledBonusPercent}%</b> maior e o efeito Gelado é consumido e substituído por <b>Congelado</b> por <b>${this.freezeDuration}</b> turno(s).`,
       };
     },
 

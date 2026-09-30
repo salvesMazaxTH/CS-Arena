@@ -18,7 +18,7 @@ export default {
       en: `
     The Barão converts damage taken into destructive energy.
 
-    He takes <b>+${this.damageTakenBonusPercent}%</b> bonus damage (does not apply to <b>Absolute Damage</b> and <b>DoT</b>).
+    He takes <b>${this.damageTakenBonusPercent}%</b> increased damage (does not apply to <b>Absolute Damage</b> and <b>DoT</b>).
 
     <b>${this.storageBasePercent}%</b> of the damage taken is stored (Max.: <b>${this.storageCap}</b>). While <b>Reinforced Plating</b> holds, that rate rises to <b>${this.storageShieldPercent}%</b>.
 
@@ -33,7 +33,7 @@ export default {
       pt: `
     O Barão converte o dano sofrido em energia destrutiva.
 
-    Ele sofre <b>+${this.damageTakenBonusPercent}%</b> de dano bônus (não se aplica a <b>Dano Absoluto</b> e <b>DoT</b>).
+    Ele sofre dano <b>${this.damageTakenBonusPercent}%</b> maior (não se aplica a <b>Dano Absoluto</b> e <b>DoT</b>).
 
     <b>${this.storageBasePercent}%</b> do dano sofrido é armazenado (Máx.: <b>${this.storageCap}</b>). Enquanto <b>Blindagem Reforçada</b> estiver ativa, essa taxa sobe para <b>${this.storageShieldPercent}%</b>.
 

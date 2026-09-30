@@ -19,8 +19,8 @@ const farkovethSkills = [
 
     description() {
       return {
-        en: `Four metres of hooded stone settle onto whatever will hold them and stop being a thing anyone thinks to look at. Farkoveth spends his action to become <b>Invisible</b> for <b>${this.effectDuration}</b> turn(s), acting through it without breaking cover, and the next damaging skill he uses deals <b>+${this.nextSkillBonus}%</b> damage.`,
-        pt: `Quatro metros de pedra encapuzada se acomodam sobre o que quer que os sustente e deixam de ser algo em que alguém pensa em reparar. Farkoveth gasta sua ação para ficar <b>Invisível</b> por <b>${this.effectDuration}</b> turno(s), agindo através disso sem quebrar o disfarce, e a próxima habilidade de dano que usar causa <b>+${this.nextSkillBonus}%</b> de dano.`,
+        en: `Four metres of hooded stone settle onto whatever will hold them and stop being a thing anyone thinks to look at. Farkoveth spends his action to become <b>Invisible</b> for <b>${this.effectDuration}</b> turn(s), acting through it without breaking cover, and the next damaging skill he uses deals <b>${this.nextSkillBonus}%</b> increased damage.`,
+        pt: `Quatro metros de pedra encapuzada se acomodam sobre o que quer que os sustente e deixam de ser algo em que alguém pensa em reparar. Farkoveth gasta sua ação para ficar <b>Invisível</b> por <b>${this.effectDuration}</b> turno(s), agindo através disso sem quebrar o disfarce, e a próxima habilidade de dano que usar causa dano <b>${this.nextSkillBonus}%</b> maior.`,
       };
     },
 

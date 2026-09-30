@@ -66,8 +66,8 @@ const lorraineSkills = [
 
     description() {
       return {
-        en: `A duel her family would call proper is decided in the first exchange, and Lorraine has never had the patience for the other kind. Deals <b>+${this.freshDuelBonus}%</b> damage on the turn she names the chosen target and <b>${this.bonusLostPerTurn}%</b> less for every turn her <b>Duel</b> with them has dragged on since, and leaves them <b>Bleeding</b> with <b>${this.bleedingStacks}</b> stack(s). Deals physical damage.`,
-        pt: `Um duelo digno do nome de sua família se resolve na primeira troca, e Lorraine nunca teve paciência para o outro tipo. Causa <b>+${this.freshDuelBonus}%</b> de dano no turno em que nomeia o alvo escolhido, com <b>${this.bonusLostPerTurn}%</b> a menos para cada turno que o <b>Duelo</b> se arrastar depois disso, e o deixa <b>Sangrando</b> com <b>${this.bleedingStacks}</b> acúmulo(s). Causa dano físico.`,
+        en: `A duel her family would call proper is decided in the first exchange, and Lorraine has never had the patience for the other kind. Deals <b>${this.freshDuelBonus}%</b> increased damage on the turn she names the chosen target and <b>${this.bonusLostPerTurn}%</b> less for every turn her <b>Duel</b> with them has dragged on since, and leaves them <b>Bleeding</b> with <b>${this.bleedingStacks}</b> stack(s). Deals physical damage.`,
+        pt: `Um duelo digno do nome de sua família se resolve na primeira troca, e Lorraine nunca teve paciência para o outro tipo. Causa dano <b>${this.freshDuelBonus}%</b> maior no turno em que nomeia o alvo escolhido, com <b>${this.bonusLostPerTurn}%</b> a menos para cada turno que o <b>Duelo</b> se arrastar depois disso, e o deixa <b>Sangrando</b> com <b>${this.bleedingStacks}</b> acúmulo(s). Causa dano físico.`,
       };
     },
 
@@ -121,8 +121,8 @@ const lorraineSkills = [
 
     description() {
       return {
-        en: `Lorraine steps inside the measure one last time and closes the argument the way her family has always closed one. Has an extra <b>${this.extraCritChance}%</b> chance of being a <b>critical hit</b>, deals <b>+${this.openedWoundBonus}%</b> damage if the chosen target is already <b>Bleeding</b>, and leaves them <b>Bleeding</b> with <b>${this.bleedingStacks}</b> stack(s). Deals physical damage.`,
-        pt: `Lorraine avança uma última vez e encerra o argumento do jeito que sua família sempre encerrou. Tem <b>${this.extraCritChance}%</b> de chance adicional de ser <b>acerto crítico</b>, causa <b>+${this.openedWoundBonus}%</b> de dano se o alvo escolhido já estiver <b>Sangrando</b>, e o deixa <b>Sangrando</b> com <b>${this.bleedingStacks}</b> acúmulo(s). Causa dano físico.`,
+        en: `Lorraine steps inside the measure one last time and closes the argument the way her family has always closed one. Has an extra <b>${this.extraCritChance}%</b> chance of being a <b>critical hit</b>, deals <b>${this.openedWoundBonus}%</b> increased damage if the chosen target is already <b>Bleeding</b>, and leaves them <b>Bleeding</b> with <b>${this.bleedingStacks}</b> stack(s). Deals physical damage.`,
+        pt: `Lorraine avança uma última vez e encerra o argumento do jeito que sua família sempre encerrou. Tem <b>${this.extraCritChance}%</b> de chance adicional de ser <b>acerto crítico</b>, causa dano <b>${this.openedWoundBonus}%</b> maior se o alvo escolhido já estiver <b>Sangrando</b>, e o deixa <b>Sangrando</b> com <b>${this.bleedingStacks}</b> acúmulo(s). Causa dano físico.`,
       };
     },
 

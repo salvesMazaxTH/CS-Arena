@@ -14,10 +14,10 @@ export default {
     const stacks = champion.runtime?.emberStacks || 0;
 
     return {
-      en: `Every wound just feeds it. Whenever it takes damage, it gains <b>1 Ember</b> stack (Max: <b>${this.maxStacks}</b>), and each stack adds <b>${this.dmgPerStackPercent}%</b> bonus damage to its own attacks. A blow that would put it out instead burns every Ember it holds and leaves it standing on up to <b>${this.survivalPercentPerEmber}%</b> of its Max HP per Ember spent — but only from <b>${this.minEmbersToSurvive}</b> Embers up, and never on the turn it took this shape.
+      en: `Every wound just feeds it. Whenever it takes damage, it gains <b>1 Ember</b> stack (Max: <b>${this.maxStacks}</b>), and each stack makes its own attacks deal <b>${this.dmgPerStackPercent}%</b> increased damage. A blow that would put it out instead burns every Ember it holds and leaves it standing on up to <b>${this.survivalPercentPerEmber}%</b> of its Max HP per Ember spent — but only from <b>${this.minEmbersToSurvive}</b> Embers up, and never on the turn it took this shape.
 
     <b>Current Embers: ${stacks}/${this.maxStacks}</b>`,
-      pt: `Cada ferimento só o alimenta. Sempre que sofre dano, ganha <b>1 Brasa</b> em estoque (máx.: <b>${this.maxStacks}</b>), e cada Brasa acrescenta <b>${this.dmgPerStackPercent}%</b> de dano adicional aos próprios ataques. Um golpe que o apagaria, em vez disso, consome todas as Brasas acumuladas e o mantém de pé com até <b>${this.survivalPercentPerEmber}%</b> do seu HP Máximo por Brasa gasta — mas só a partir de <b>${this.minEmbersToSurvive}</b> Brasas, e nunca no turno em que assumiu essa forma.
+      pt: `Cada ferimento só o alimenta. Sempre que sofre dano, ganha <b>1 Brasa</b> em estoque (máx.: <b>${this.maxStacks}</b>), e cada Brasa torna o dano dos próprios ataques <b>${this.dmgPerStackPercent}%</b> maior. Um golpe que o apagaria, em vez disso, consome todas as Brasas acumuladas e o mantém de pé com até <b>${this.survivalPercentPerEmber}%</b> do seu HP Máximo por Brasa gasta — mas só a partir de <b>${this.minEmbersToSurvive}</b> Brasas, e nunca no turno em que assumiu essa forma.
 
     <b>Brasas atuais: ${stacks}/${this.maxStacks}</b>`,
     };

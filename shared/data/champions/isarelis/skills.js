@@ -115,8 +115,8 @@ const isarelisSkills = [
       const percent = this.executeThreshold * 100;
 
       return {
-        en: `Isarelis puts the final stroke where it counts, no wasted motion, no witnesses. Deals heavy damage to the chosen target. <b>Executes</b> the target only if they are critically wounded (≤ <b>${percent}%</b> of their Max HP and ≤ <b>${this.executeFlatThreshold}</b> HP). Deals <b>${this.stealthBonus * 100}%</b> bonus damage while <b>Invisible</b>.`,
-        pt: `Isarelis desfere o golpe final onde importa, sem movimento desperdiçado, sem testemunhas. Causa dano pesado ao alvo escolhido. <b>Executa</b> o alvo apenas se estiver criticamente ferido (≤ <b>${percent}%</b> do HP Máximo e ≤ <b>${this.executeFlatThreshold}</b> de HP). Causa <b>${this.stealthBonus * 100}%</b> de dano bônus enquanto <b>Invisível</b>.`,
+        en: `Isarelis puts the final stroke where it counts, no wasted motion, no witnesses. Deals heavy damage to the chosen target. <b>Executes</b> the target only if they are critically wounded (≤ <b>${percent}%</b> of their Max HP and ≤ <b>${this.executeFlatThreshold}</b> HP). Deals <b>${this.stealthBonus * 100}%</b> increased damage while <b>Invisible</b>.`,
+        pt: `Isarelis desfere o golpe final onde importa, sem movimento desperdiçado, sem testemunhas. Causa dano pesado ao alvo escolhido. <b>Executa</b> o alvo apenas se estiver criticamente ferido (≤ <b>${percent}%</b> do HP Máximo e ≤ <b>${this.executeFlatThreshold}</b> de HP). Causa dano <b>${this.stealthBonus * 100}%</b> maior enquanto <b>Invisível</b>.`,
       };
     },
 

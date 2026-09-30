@@ -163,8 +163,8 @@ const sebastianIgnisSkills = [
 
     description() {
       return {
-        en: `Every stack of neglect Sebastian's been banking comes due at once, and for a moment he commits completely — the ground around the chosen enemy goes up with them. Deals <b>physical damage</b>, plus <b>${this.apathyBonusPercent}%</b> more per <b>Apathy</b> stack spent, to them and whoever stands beside them, always setting each one <b>Burning</b> for <b>${this.burnDuration}</b> turn(s).`,
-        pt: `Toda carga de descaso que Sebastian vinha acumulando cobra sua conta de uma vez, e por um instante ele se entrega por completo — o chão ao redor do inimigo escolhido explode junto com ele. Causa <b>dano físico</b>, mais <b>${this.apathyBonusPercent}%</b> a mais por acúmulo de <b>Apatia</b> gasto, nele e em quem estiver ao seu lado, sempre deixando cada um <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s).`,
+        en: `Every stack of neglect Sebastian's been banking comes due at once, and for a moment he commits completely — the ground around the chosen enemy goes up with them. Deals <b>physical damage</b>, <b>${this.apathyBonusPercent}%</b> increased for each <b>Apathy</b> stack spent, to them and whoever stands beside them, always setting each one <b>Burning</b> for <b>${this.burnDuration}</b> turn(s).`,
+        pt: `Toda carga de descaso que Sebastian vinha acumulando cobra sua conta de uma vez, e por um instante ele se entrega por completo — o chão ao redor do inimigo escolhido explode junto com ele. Causa <b>dano físico</b>, <b>${this.apathyBonusPercent}%</b> maior para cada acúmulo de <b>Apatia</b> gasto, nele e em quem estiver ao seu lado, sempre deixando cada um <b>Queimando</b> por <b>${this.burnDuration}</b> turno(s).`,
       };
     },
 

@@ -25,7 +25,7 @@ export default {
 
       Na primeira vez que é atingido a cada turno, seu corpo se reestrutura automaticamente em resposta ao impacto, concedendo um <b>Escudo</b> igual a <b>${this.shieldPercent}%</b> do dano recebido.
 
-      Dano físico endurece seu aço, concedendo um <b>Escudo</b> comum e fortalecendo seu próximo ataque que causar dano, fazendo-o causar <b>${this.bonusDamagePercent}%</b> a mais de dano.
+      Dano físico endurece seu aço, concedendo um <b>Escudo</b> comum e fortalecendo seu próximo ataque que causar dano, fazendo-o causar dano <b>${this.bonusDamagePercent}%</b> maior.
 
       Dano mágico faz seu aço ressoar com a energia recebida, concedendo um <b>Escudo Mágico</b> e fazendo sua próxima habilidade que causar dano ignorar <b>${this.piercingPercentage}%</b> da <b>Defesa</b> do alvo.
 

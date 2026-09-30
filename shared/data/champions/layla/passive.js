@@ -14,10 +14,10 @@ export default {
 
   description() {
     return {
-      en: `Layla learned to survive by watching every door. Layla's fear never stops watching: every time an enemy damages her she banks 1 <b>Static</b>, up to <b>${this.maxStacks}</b>, and her next damaging ability spends all of it for +<b>${this.bonusPerStack}%</b> damage per <b>Static</b>.
+      en: `Layla learned to survive by watching every door. Layla's fear never stops watching: every time an enemy damages her she banks 1 <b>Static</b>, up to <b>${this.maxStacks}</b>, and her next damaging ability spends all of it for <b>${this.bonusPerStack}%</b> increased damage per <b>Static</b>.
 
       She never strikes lucky, only certain. Her observations are precise: any damaging hit she lands on an enemy who is <b>Stunned</b>, <b>Paralyzed</b>, <b>Snared</b>, or <b>Rooted</b> is a guaranteed critical hit, landing at <b>${(1 + this.readCritBonus / 100).toFixed(2)}x</b>.`,
-      pt: `Layla aprendeu a sobreviver vigiando cada porta. O medo de Layla nunca para de vigiar: toda vez que um inimigo a machuca, ela acumula 1 <b>Static</b>, até <b>${this.maxStacks}</b>, e sua próxima habilidade de dano gasta tudo isso para causar +<b>${this.bonusPerStack}%</b> de dano por <b>Static</b>.
+      pt: `Layla aprendeu a sobreviver vigiando cada porta. O medo de Layla nunca para de vigiar: toda vez que um inimigo a machuca, ela acumula 1 <b>Static</b>, até <b>${this.maxStacks}</b>, e sua próxima habilidade de dano gasta tudo isso para causar dano <b>${this.bonusPerStack}%</b> maior por <b>Static</b>.
 
       Ela nunca acerta por sorte, só por certeza. Suas observações são precisas: qualquer golpe de dano que ela desfira contra um inimigo <b>Atordoado</b>, <b>Paralisado</b>, <b>Enredado</b> ou <b>Enraizado</b> é um acerto crítico garantido, com multiplicador de <b>${(1 + this.readCritBonus / 100).toFixed(2)}x</b>.`,
     };
