@@ -13,49 +13,34 @@ import {
 import { resolveText } from "/shared/i18n/locale.js";
 import { getLocale } from "../i18n/clientLocale.js";
 import {
+  championHasAffinity,
+  championHasSpecies,
+} from "/shared/data/championTraits.js";
+import {
   escapeHtml,
   normalizeChampionClassKeys,
-  getChampionSpecies,
 } from "./championCardMarkup.js";
-
-function getChampionAffinityKeys(champion) {
-  const affinities = Array.isArray(champion.elementalAffinities)
-    ? champion.elementalAffinities
-    : typeof champion.elementalAffinities === "string"
-      ? [champion.elementalAffinities]
-      : [];
-  return affinities.map((affinity) => String(affinity).trim().toLowerCase());
-}
 
 // One entry per supported requirement kind: how to read its target value out of
 // the emblem data and how to count the roster champions that satisfy it.
 const EMBLEM_REQUIREMENT_KINDS = Object.freeze([
   {
     kind: "elementalAffinity",
-    readTarget: (requirement) =>
-      requirement.value ?? requirement.element ?? requirement.key,
+    readTarget: (requirement) => requirement.element,
     countMatches: (roster, target) =>
-      roster.filter((champion) =>
-        getChampionAffinityKeys(champion).includes(target),
-      ).length,
+      roster.filter((champion) => championHasAffinity(champion, target)).length,
     describe: (identity) => `${identity.label} affinity`,
   },
   {
     kind: "species",
-    readTarget: (requirement) =>
-      requirement.value ?? requirement.species ?? requirement.key,
+    readTarget: (requirement) => requirement.species,
     countMatches: (roster, target) =>
-      roster.filter((champion) =>
-        getChampionSpecies(champion)
-          .map((entry) => entry.toLowerCase())
-          .includes(target),
-      ).length,
+      roster.filter((champion) => championHasSpecies(champion, target)).length,
     describe: (identity) => `${identity.label} species`,
   },
   {
     kind: "classKey",
-    readTarget: (requirement) =>
-      requirement.value ?? requirement.class ?? requirement.key,
+    readTarget: (requirement) => requirement.key,
     countMatches: (roster, target) =>
       roster.filter((champion) =>
         normalizeChampionClassKeys(champion).includes(target),
@@ -64,10 +49,8 @@ const EMBLEM_REQUIREMENT_KINDS = Object.freeze([
   },
   {
     kind: "baseStat",
-    readTarget: (requirement) =>
-      requirement.stat ?? requirement.key ?? requirement.name,
-    readThreshold: (requirement) =>
-      requirement.min ?? requirement.value ?? requirement.threshold,
+    readTarget: (requirement) => requirement.stat,
+    readThreshold: (requirement) => requirement.min,
     countMatches: (roster, target, threshold) =>
       roster.filter((champion) => {
         const value = Number(champion[target]);

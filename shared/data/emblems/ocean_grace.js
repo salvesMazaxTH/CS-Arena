@@ -1,11 +1,13 @@
 // shared/data/emblems/ocean_grace.js
 
+import { grantMaxHPPercent } from "./emblemGrants.js";
+
 export const oceanGrace = {
   key: "ocean_grace",
   name: "Emblem of the Ocean's Grace",
 
-  healingMultiplier: 1.30,
-  maxHPBonusPercent: 0.05,
+  healingBonusPercent: 30,
+  maxHPBonusPercent: 5,
 
   requirements: {
     elementalAffinity: {
@@ -15,53 +17,17 @@ export const oceanGrace = {
   },
 
   description() {
-    const healingBonus = Math.round(
-      (this.healingMultiplier - 1) * 100,
-    );
-
-    const maxHPBonus = Math.round(
-      this.maxHPBonusPercent * 100,
-    );
-
     return {
-      en: `Increases all healing performed or received by your team by +${healingBonus}% and grants +${maxHPBonus}% bonus Max HP to allied champions when entering combat.`,
-      pt: `Aumenta em +${healingBonus}% toda a cura realizada ou recebida pela sua equipe e concede +${maxHPBonus}% de HP Máximo adicional aos campeões aliados ao entrarem em combate.`,
+      en: `Increases all healing performed or received by your team by +${this.healingBonusPercent}% and grants +${this.maxHPBonusPercent}% bonus Max HP to allied champions when entering combat.`,
+      pt: `Aumenta em +${this.healingBonusPercent}% toda a cura realizada ou recebida pela sua equipe e concede +${this.maxHPBonusPercent}% de HP Máximo adicional aos campeões aliados ao entrarem em combate.`,
     };
   },
 
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (!champion || !owner) return;
     if (champion.team !== owner.team) return;
 
-    // Check if already applied to this champion
-    if (champion.runtime?._oceanGraceApplied) return;
-
-    if (!champion.runtime) champion.runtime = {};
-    champion.runtime._oceanGraceApplied = true;
-
-    // +5% of the Max HP the champion has when entering the field.
-    const hpBonus = Math.max(
-      1,
-      Math.round(
-        (champion.maxHP || champion.baseHP || 100) *
-          this.maxHPBonusPercent,
-      ),
-    );
-
-    if (champion.modifyHP) {
-      champion.modifyHP(hpBonus, {
-        affectMax: true,
-        isPermanent: true,
-        context,
-      });
-    } else {
-      champion.maxHP = (champion.maxHP || 0) + hpBonus;
-      champion.HP = Math.min(
-        (champion.HP || 0) + hpBonus,
-        champion.maxHP,
-      );
-    }
+    grantMaxHPPercent(champion, this.maxHPBonusPercent, context);
   },
 
   onBeforeHealing({ healSrc, healTarget, amount, owner }) {
@@ -73,7 +39,7 @@ export const oceanGrace = {
     ) {
       return {
         amount: Math.round(
-          amount * this.healingMultiplier,
+          amount * (1 + this.healingBonusPercent / 100),
         ),
       };
     }

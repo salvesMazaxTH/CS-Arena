@@ -1,11 +1,6 @@
 // shared/data/emblems/demigods_trial.js
 
-function isDemigod(champion) {
-  if (!champion || !Array.isArray(champion.species)) return false;
-  return champion.species.some(
-    (s) => typeof s === "string" && s.toLowerCase() === "demigod",
-  );
-}
+import { championHasSpecies } from "../championTraits.js";
 
 export const demigodsTrial = {
   key: "demigods_trial",
@@ -27,15 +22,14 @@ export const demigodsTrial = {
     };
   },
 
-  hookScope: {
-    onBeforeDmgDealing: "attacker",
-    onDamageIncoming: "defender",
+  hookPolicies: {
+    onBeforeDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
   },
 
   onBeforeDmgDealing({ attacker, defender, damage, owner }) {
     if (!attacker || !defender || !owner) return;
     if (attacker.team !== owner.team) return;
-    if (!isDemigod(attacker)) return;
+    if (!championHasSpecies(attacker, "demigod")) return;
 
     // The trial is always a fight against something greater.
     if (Number(defender.HP) <= Number(attacker.HP)) return;
@@ -44,10 +38,11 @@ export const demigodsTrial = {
     return { damage: Number(damage) + bonusDamage };
   },
 
-  onDamageIncoming({ defender, attacker, damage, owner }) {
+  onBeforeDmgTaking({ defender, attacker, damage, owner }) {
     if (!defender || !attacker || !owner) return;
     if (defender.team !== owner.team) return;
-    if (!isDemigod(defender)) return;
+    if (!championHasSpecies(defender, "demigod")) return;
+    if (!(damage > 0)) return;
 
     if (Number(attacker.maxHP) <= Number(defender.maxHP)) return;
 

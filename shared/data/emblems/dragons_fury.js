@@ -1,13 +1,6 @@
 // shared/data/emblems/dragons_fury.js
 
-function isDragon(champion) {
-  if (!champion || !Array.isArray(champion.species)) return false;
-
-  return champion.species.some(
-    (species) =>
-      typeof species === "string" && species.toLowerCase() === "dragon",
-  );
-}
+import { championHasSpecies } from "../championTraits.js";
 
 // Only a direct hit that reached HP primes the target: DoT ticks and
 // hits the shield fully absorbed do not.
@@ -24,7 +17,7 @@ function wasDamagedByAlliedDragon(defender, owner, context) {
       !entry.isDot &&
       entry.amount > 0 &&
       entry.sourceTeam === owner.team &&
-      isDragon(championsById.get(entry.sourceId)),
+      championHasSpecies(championsById.get(entry.sourceId), "dragon"),
   );
 }
 
@@ -47,13 +40,10 @@ export const dragonsFury = {
     };
   },
 
-  hookScope: {
-    onBeforeDmgDealing: "attacker",
-  },
-
   onBeforeDmgDealing({ attacker, defender, damage, owner, context }) {
     if (!attacker || !defender || !owner) return;
-    if (attacker.team !== owner.team || !isDragon(attacker)) return;
+    if (attacker.team !== owner.team) return;
+    if (!championHasSpecies(attacker, "dragon")) return;
 
     if (!wasDamagedByAlliedDragon(defender, owner, context)) return;
 

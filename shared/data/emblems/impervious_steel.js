@@ -22,28 +22,15 @@ export const impervious_steel = {
     onBeforeDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
   },
 
-  hookScope: {
-    onBeforeDmgTaking: "defender",
-  },
-
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (!champion || !owner) return;
     if (champion.team !== owner.team) return;
-    if (!champion.applyDamageReduction) return;
 
-    // Check if already applied to this champion
-    if (champion.runtime?._impervious_steelApplied) return;
-
-    if (!champion.runtime) champion.runtime = {};
-    champion.runtime._impervious_steelApplied = true;
-
-    // Apply buff only to this specific champion
     champion.applyDamageReduction({
       amount: this.dmgReductionPercent,
       type: "percent",
       duration: 9999,
-      source: "Emblem of Impervious Steel",
+      source: this.name,
       context,
     });
   },

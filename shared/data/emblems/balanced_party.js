@@ -35,11 +35,6 @@ export const balancedParty = {
     onBeforeDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
   },
 
-  hookScope: {
-    onBeforeDmgDealing: "attacker",
-    onBeforeDmgTaking: "defender",
-  },
-
   onBeforeDmgDealing({ attacker, owner, damage, context }) {
     if (!attacker || !owner || attacker.team !== owner.team) return;
     if (!(damage > 0) || !this._partyStands(owner.team, context)) return;

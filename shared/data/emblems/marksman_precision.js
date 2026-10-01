@@ -1,6 +1,7 @@
 // shared/data/emblems/marksman_precision.js
 
 import { championHasClass } from "../championClasses.js";
+import { grantStats } from "./emblemGrants.js";
 
 export const marksmanPrecision = {
   key: "marksman_precision",
@@ -21,30 +22,13 @@ export const marksmanPrecision = {
 
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (!champion || !owner) return;
     if (champion.team !== owner.team) return;
     if (!championHasClass(champion, "marksman")) return;
 
-    // Mark that this champion has already received the emblem buff
-    if (champion.runtime?._marksmanPrecisionApplied) return;
-
-    if (!champion.runtime) champion.runtime = {};
-    champion.runtime._marksmanPrecisionApplied = true;
-
-    // Apply buff only to this specific champion
-    if (champion.modifyStat) {
-      champion.modifyStat({
-        statName: "Attack",
-        amount: this.attackBonus,
-        context,
-        isPermanent: true,
-      });
-      champion.modifyStat({
-        statName: "Critical",
-        amount: this.criticalBonus,
-        context,
-        isPermanent: true,
-      });
-    }
+    grantStats(
+      champion,
+      { Attack: this.attackBonus, Critical: this.criticalBonus },
+      context,
+    );
   },
 };

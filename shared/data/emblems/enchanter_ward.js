@@ -1,6 +1,7 @@
 // shared/data/emblems/enchanter_ward.js
 
 import { championHasClass } from "../championClasses.js";
+import { grantStats } from "./emblemGrants.js";
 
 export const enchanterWard = {
   key: "enchanter_ward",
@@ -21,25 +22,10 @@ export const enchanterWard = {
 
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (!champion || !owner) return;
     if (champion.team !== owner.team) return;
     if (!championHasClass(champion, "enchanter")) return;
 
-    // Mark that this champion has already received the emblem buff
-    if (champion.runtime?._enchanterWardApplied) return;
-
-    if (!champion.runtime) champion.runtime = {};
-    champion.runtime._enchanterWardApplied = true;
-
-    // Apply buff only to this specific champion
-    if (champion.modifyStat) {
-      champion.modifyStat({
-        statName: "Evasion",
-        amount: this.evasionBonus,
-        context,
-        isPermanent: true,
-      });
-    }
+    grantStats(champion, { Evasion: this.evasionBonus }, context);
   },
 
   onBeforeHealing({ healSrc, amount, owner }) {

@@ -19,10 +19,6 @@ export const mageArcana = {
     };
   },
 
-  hookScope: {
-    onBeforeDmgDealing: "attacker",
-  },
-
   onBeforeDmgDealing({ attacker, skill, owner }) {
     if (!attacker || !skill) return;
     if (attacker.team !== owner?.team) return;

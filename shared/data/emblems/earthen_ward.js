@@ -1,15 +1,6 @@
 // shared/data/emblems/earthen_ward.js
 
-function hasEarthAffinity(champion) {
-  const affinities = Array.isArray(champion?.elementalAffinities)
-    ? champion.elementalAffinities
-    : typeof champion?.elementalAffinities === "string"
-      ? [champion.elementalAffinities]
-      : [];
-  return affinities.some(
-    (affinity) => String(affinity).trim().toLowerCase() === "earth",
-  );
-}
+import { championHasAffinity } from "../championTraits.js";
 
 export const earthenWard = {
   key: "earthen_ward",
@@ -32,13 +23,9 @@ export const earthenWard = {
     };
   },
 
-  hookScope: {
-    onDamageIncoming: "defender",
-  },
-
   onDamageIncoming({ defender, damage, context, owner }) {
     if (!defender || !owner || defender.team !== owner.team) return;
-    if (!hasEarthAffinity(defender)) return;
+    if (!championHasAffinity(defender, "earth")) return;
     if (!Number.isFinite(Number(damage)) || Number(damage) <= 0) return;
     if ((context?.damageDepth ?? 0) <= 0) return;
 

@@ -1,11 +1,6 @@
 // shared/data/emblems/humanitys_defiance.js
 
-function isHuman(champion) {
-  if (!champion || !Array.isArray(champion.species)) return false;
-  return champion.species.some(
-    (s) => typeof s === "string" && s.toLowerCase() === "human",
-  );
-}
+import { championHasSpecies } from "../championTraits.js";
 
 export const humanitysDefiance = {
   key: "humanitys_defiance",
@@ -27,9 +22,8 @@ export const humanitysDefiance = {
     };
   },
 
-  hookScope: {
-    onBeforeDmgDealing: "attacker",
-    onDamageIncoming: "defender",
+  hookPolicies: {
+    onBeforeDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
   },
 
   onBeforeDmgDealing({ attacker, defender, damage, owner }) {
@@ -38,10 +32,10 @@ export const humanitysDefiance = {
     if (attacker.team !== owner.team) return;
 
     // Only Human champions benefit from the Emblem.
-    if (!isHuman(attacker)) return;
+    if (!championHasSpecies(attacker, "human")) return;
 
     // Only apply bonus if defender is non-human
-    if (isHuman(defender)) return;
+    if (championHasSpecies(defender, "human")) return;
 
     const bonusDamage = Number(damage) * (this.bonusDmgPercent / 100);
     const newDamage = Number(damage) + bonusDamage;
@@ -51,12 +45,13 @@ export const humanitysDefiance = {
     };
   },
 
-  onDamageIncoming({ defender, attacker, damage, owner }) {
+  onBeforeDmgTaking({ defender, attacker, damage, owner }) {
     if (!defender || !attacker || !owner) return;
+    if (!(damage > 0)) return;
 
     if (defender.team !== owner.team) return;
 
-    if (!isHuman(defender)) return;
+    if (!championHasSpecies(defender, "human")) return;
 
     // Only apply reduction if attacker has higher Attack stat
     if (attacker.Attack <= defender.Attack) return;

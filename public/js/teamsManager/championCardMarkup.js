@@ -3,6 +3,7 @@ import {
   CLASS_IDENTITIES,
 } from "/shared/ui/identityPalette.js";
 import { getChampionClassKeys } from "/shared/data/championClasses.js";
+import { getChampionAffinityKeys } from "/shared/data/championTraits.js";
 
 export function escapeHtml(value) {
   return String(value ?? "")
@@ -30,29 +31,11 @@ export function normalizeChampionClassKeys(champion) {
 }
 
 export function getChampionSpecies(champion) {
-  if (Array.isArray(champion.species)) {
-    return champion.species.map((item) => String(item || "").trim()).filter(Boolean);
-  }
-
-  if (typeof champion.speciesTag === "string") {
-    return champion.speciesTag
-      .replace(/^species\s*:\s*/i, "")
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-
-  return [];
+  return champion.species.map((item) => item.trim());
 }
 
 function getChampionFrontBadges(champion) {
-  const affinityKeys = Array.isArray(champion.elementalAffinities)
-    ? champion.elementalAffinities
-        .map((item) => String(item || "").trim().toLowerCase())
-        .filter(Boolean)
-    : typeof champion.elementalAffinities === "string"
-      ? [champion.elementalAffinities.trim().toLowerCase()].filter(Boolean)
-      : [];
+  const affinityKeys = getChampionAffinityKeys(champion);
   const badges = [];
 
   normalizeChampionClassKeys(champion).forEach((classKey) => {

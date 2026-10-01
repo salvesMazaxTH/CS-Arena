@@ -117,9 +117,18 @@ export class DamageEvent {
     // ranged sub-hit that must not answer contact-gated retaliations.
     this.contact = params.contact ?? skill?.contact ?? false;
     // Same override for evasion (cannotMiss implies it): a dodgeable skill can
-    // still throw a guaranteed hit when its resolve decides so.
+    // still throw a guaranteed hit when its resolve decides so. A champion-wide
+    // runtime grant covers only the attacker's own current skills, never the
+    // passive-driven hits that borrow another object as their skill.
     this.cannotBeEvaded =
-      params.cannotBeEvaded ?? Boolean(skill?.cannotMiss || skill?.cannotBeEvaded);
+      params.cannotBeEvaded ??
+      Boolean(
+        skill?.cannotMiss ||
+          skill?.cannotBeEvaded ||
+          (attacker?.runtime?.ownSkillsCannotBeEvaded &&
+            skill?.key &&
+            attacker.skills?.some((own) => own?.key === skill?.key)),
+      );
     this.hitVfx = params.hitVfx ?? skill?.hitVfx ?? null;
     this.hitLabel = params.hitLabel ?? null;
     // Identity of the declared hit within the skill. Loop guards compare this

@@ -1,3 +1,5 @@
+import { grantStats } from "./emblemGrants.js";
+
 export const earthshaker = {
   key: "earthshaker",
   name: "Emblem of the Earthshaker",
@@ -17,29 +19,11 @@ export const earthshaker = {
     };
   },
 
-  hookScope: {
-    onStatusEffectIncoming: "target",
-  },
-
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (!champion || !owner) return;
     if (champion.team !== owner.team) return;
-    if (!champion.modifyStat) return;
 
-    // Check if already applied to this champion
-    if (champion.runtime?._earthShakerApplied) return;
-
-    if (!champion.runtime) champion.runtime = {};
-    champion.runtime._earthShakerApplied = true;
-
-    // Apply buff only to this specific champion
-    champion.modifyStat({
-      statName: "Defense",
-      amount: this.defenseBonus,
-      context,
-      isPermanent: true,
-    });
+    grantStats(champion, { Defense: this.defenseBonus }, context);
   },
 
   onStatusEffectIncoming({ target, statusEffect, owner }) {

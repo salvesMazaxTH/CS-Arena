@@ -1,6 +1,7 @@
 // shared/data/emblems/silent_blade.js
 
 import { championHasClass } from "../championClasses.js";
+import { grantStats } from "./emblemGrants.js";
 
 export const silentBlade = {
   key: "silent_blade",
@@ -21,30 +22,13 @@ export const silentBlade = {
 
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (!champion || !owner) return;
     if (champion.team !== owner.team) return;
     if (!championHasClass(champion, "assassin")) return;
 
-    // Mark that this champion has already received the emblem buff
-    if (champion.runtime?._silentBladeApplied) return;
-
-    if (!champion.runtime) champion.runtime = {};
-    champion.runtime._silentBladeApplied = true;
-
-    // Apply buff only to this specific champion
-    if (champion.modifyStat) {
-      champion.modifyStat({
-        statName: "Speed",
-        amount: this.speedBonus,
-        context,
-        isPermanent: true,
-      });
-      champion.modifyStat({
-        statName: "Critical",
-        amount: this.criticalBonus,
-        context,
-        isPermanent: true,
-      });
-    }
+    grantStats(
+      champion,
+      { Speed: this.speedBonus, Critical: this.criticalBonus },
+      context,
+    );
   },
 };

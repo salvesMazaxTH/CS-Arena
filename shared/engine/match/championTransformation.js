@@ -94,18 +94,26 @@ function transferDerivedStats({ sourceChampion, nextChampion, statMode }) {
   }
 }
 
-function transferHP({ sourceChampion, nextChampion, hpMode }) {
+function transferHP({ sourceChampion, nextChampion, hpMode, statMode }) {
   const oldHP = asNumber(sourceChampion?.HP, 0);
   const oldMaxHP = Math.max(
     1,
     asNumber(sourceChampion?.maxHP, asNumber(sourceChampion?.baseHP, 1)),
   );
-  const nextMaxHP = Math.max(
+  const nextBaseHP = Math.max(
     1,
     roundStat(
       asNumber(nextChampion?.baseHP, asNumber(nextChampion?.maxHP, oldMaxHP)),
     ),
   );
+  // Max HP gained or lost on top of the base (emblems, passives, debuffs) is a
+  // modifier like any other stat's: it lives in statModifiers, which carry over,
+  // so the new form must start from its own base plus that same delta.
+  const maxHPDelta =
+    statMode === "baseOnly"
+      ? 0
+      : oldMaxHP - asNumber(sourceChampion?.baseHP, oldMaxHP);
+  const nextMaxHP = Math.max(1, roundStat(nextBaseHP + maxHPDelta));
 
   let nextHP = nextMaxHP;
   if (hpMode === "preserveFlat") {
@@ -117,7 +125,7 @@ function transferHP({ sourceChampion, nextChampion, hpMode }) {
     nextHP = Math.round(nextMaxHP * ratio);
   }
 
-  nextChampion.baseHP = nextMaxHP;
+  nextChampion.baseHP = nextBaseHP;
   nextChampion.maxHP = nextMaxHP;
   nextChampion.HP = clamp(roundStat(nextHP), 0, nextMaxHP);
 }
@@ -190,7 +198,12 @@ export function applyChampionTransformation({
     nextChampion: transformedChampion,
     statMode,
   });
-  transferHP({ sourceChampion, nextChampion: transformedChampion, hpMode });
+  transferHP({
+    sourceChampion,
+    nextChampion: transformedChampion,
+    hpMode,
+    statMode,
+  });
   transferCombatState({ sourceChampion, nextChampion: transformedChampion });
 
   transformedChampion.championKey = newChampionKey;
@@ -257,6 +270,7 @@ export function revertChampionTransformation({
     sourceChampion,
     nextChampion: revertedChampion,
     hpMode: transformation.hpMode ?? "preserveRatio",
+    statMode: transformation.statMode ?? "deltaFromBase",
   });
   transferCombatState({ sourceChampion, nextChampion: revertedChampion });
 

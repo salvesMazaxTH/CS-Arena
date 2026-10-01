@@ -1,6 +1,7 @@
 // shared/data/emblems/verdant_root.js
 
 import { StatusEffectsRegistry } from "../statusEffects/effectsRegistry.js";
+import { grantStats } from "./emblemGrants.js";
 
 export const verdantRoot = {
   key: "verdant_root",
@@ -29,26 +30,11 @@ export const verdantRoot = {
     };
   },
 
-  hookScope: {
-    onStatusEffectIncoming: "target",
-  },
-
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (!champion || !owner) return;
     if (champion.team !== owner.team) return;
 
-    if (champion.runtime?._verdantRootApplied) return;
-
-    if (!champion.runtime) champion.runtime = {};
-    champion.runtime._verdantRootApplied = true;
-
-    champion.modifyStat?.({
-      statName: "Defense",
-      amount: this.defenseBonus,
-      context,
-      isPermanent: true,
-    });
+    grantStats(champion, { Defense: this.defenseBonus }, context);
   },
 
   onStatusEffectIncoming({ target, statusEffect, owner }) {

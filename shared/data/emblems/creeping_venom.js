@@ -21,10 +21,6 @@ export const creepingVenom = {
     };
   },
 
-  hookScope: {
-    onBeforeDmgDealing: "attacker",
-  },
-
   onBeforeDmgDealing({ attacker, defender, element, owner }) {
     if (!attacker || !defender || !owner) return;
     if (attacker.team !== owner.team) return;

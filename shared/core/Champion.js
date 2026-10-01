@@ -74,7 +74,7 @@ export class Champion {
     this.species = Array.isArray(identity.species)
       ? Array.from(identity.species)
       : [];
-    this.elementalAffinities = Array.from(identity.elementalAffinities) || [];
+    this.elementalAffinities = Array.from(identity.elementalAffinities);
     this.entityType = identity.entityType ?? "champion";
 
     // STATS

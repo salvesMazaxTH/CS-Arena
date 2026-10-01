@@ -31,12 +31,6 @@ export const permafrost = {
     onAfterDmgTaking: { allowOnDot: true, allowOnNestedDamage: true },
   },
 
-  hookScope: {
-    onStatusEffectIncoming: "target",
-    onBeforeDmgTaking: "defender",
-    onAfterDmgTaking: "defender",
-  },
-
   // Ice champions already shrug off Chilled and Frozen natively; this extends
   // only the Chilled half to the rest of the team, never Frozen.
   onStatusEffectIncoming({ target, statusEffect, owner }) {

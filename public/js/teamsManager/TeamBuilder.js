@@ -3,6 +3,10 @@ import { DuoLayout, duoDB, getDuoForCore } from "/shared/data/duos.js";
 import { isChampionDraftable } from "/shared/data/draftEligibility.js";
 import { EMBLEMS } from "/shared/data/emblems/index.js";
 import {
+  championHasAffinity,
+  championHasSpecies,
+} from "/shared/data/championTraits.js";
+import {
   ELEMENT_IDENTITIES,
   CLASS_IDENTITIES,
   renderIdentityIconMarkup,
@@ -68,15 +72,6 @@ function getRecentChampionKeys() {
         .map(([key]) => key),
     ],
   );
-}
-
-function championAffinityKeys(champion) {
-  const raw = Array.isArray(champion.elementalAffinities)
-    ? champion.elementalAffinities
-    : champion.elementalAffinities
-      ? [champion.elementalAffinities]
-      : [];
-  return raw.map((entry) => String(entry).trim().toLowerCase());
 }
 
 /**
@@ -384,39 +379,29 @@ export class TeamBuilder {
     if (text && !champion.name.toLowerCase().includes(text.toLowerCase())) {
       return false;
     }
-    if (element && !championAffinityKeys(champion).includes(element)) return false;
+    if (element && !championHasAffinity(champion, element)) return false;
     if (klass && !normalizeChampionClassKeys(champion).includes(klass)) {
       return false;
     }
-    if (
-      species &&
-      !getChampionSpecies(champion).some((s) => s.toLowerCase() === species)
-    ) {
-      return false;
-    }
+    if (species && !championHasSpecies(champion, species)) return false;
     return true;
   }
 
   // A duo tile stands for all of its cores at once, so it matches a filter
   // whenever any core does — the same "some" semantics a multi-species
-  // champion already gets from getChampionSpecies.
+  // champion already gets from championHasSpecies.
   _duoPassesFilters(duo) {
     const { element, klass, species, text } = this.filters;
     if (text && !duo.name.toLowerCase().includes(text.toLowerCase())) return false;
 
     const cores = duo.cores.map((key) => championDB[key]);
-    if (element && !cores.some((c) => championAffinityKeys(c).includes(element))) {
+    if (element && !cores.some((c) => championHasAffinity(c, element))) {
       return false;
     }
     if (klass && !cores.some((c) => normalizeChampionClassKeys(c).includes(klass))) {
       return false;
     }
-    if (
-      species &&
-      !cores.some((c) =>
-        getChampionSpecies(c).some((s) => s.toLowerCase() === species),
-      )
-    ) {
+    if (species && !cores.some((c) => championHasSpecies(c, species))) {
       return false;
     }
     return true;

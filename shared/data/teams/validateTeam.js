@@ -58,6 +58,11 @@ export function validateTeamComposition(
     errors.push(`A team may carry at most ${MAX_TEAM_EMBLEMS} Emblems.`);
   }
 
+  // Emblem hooks run once per carried copy, so a repeat would stack its bonus.
+  if (new Set(emblemKeys).size !== emblemKeys.length) {
+    errors.push("A team may not carry the same Emblem twice.");
+  }
+
   const rosterKeys = champions.filter(Boolean);
   for (const emblemKey of emblemKeys) {
     const emblem = emblems.find((entry) => entry.key === emblemKey);

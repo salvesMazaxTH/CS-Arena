@@ -2,27 +2,7 @@
 // championDB is injected so this module stays decoupled from the data layer.
 
 import { championHasClass } from "../championClasses.js";
-
-/** Champion species as a normalized lowercase list, from either shape it may take. */
-function getChampionSpecies(champion) {
-  if (!champion) return [];
-
-  if (Array.isArray(champion.species)) {
-    return champion.species
-      .map((item) => String(item || "").trim().toLowerCase())
-      .filter(Boolean);
-  }
-
-  if (typeof champion.speciesTag === "string") {
-    return champion.speciesTag
-      .replace(/^species\s*:\s*/i, "")
-      .split(",")
-      .map((item) => item.trim().toLowerCase())
-      .filter(Boolean);
-  }
-
-  return [];
-}
+import { championHasAffinity, championHasSpecies } from "../championTraits.js";
 
 /** An emblem's class requirements as `{ key, count }` entries, keys lowercased. */
 export function readClassRequirements(requirements) {
@@ -101,37 +81,19 @@ export function evaluateEmblemEligibilityForRoster(
   const checks = [];
 
   if (requirements.elementalAffinity) {
-    const targetElement = String(requirements.elementalAffinity.element || "")
-      .trim()
-      .toLowerCase();
-    const requiredCount = Number(requirements.elementalAffinity.count || 0);
-    const actualCount = roster.filter((champion) => {
-      const affinities = Array.isArray(champion.elementalAffinities)
-        ? champion.elementalAffinities
-        : typeof champion.elementalAffinities === "string"
-          ? [champion.elementalAffinities]
-          : [];
-      return affinities.some(
-        (affinity) => String(affinity).trim().toLowerCase() === targetElement,
-      );
-    }).length;
-    checks.push(actualCount >= requiredCount);
+    const { element, count } = requirements.elementalAffinity;
+    const actualCount = roster.filter((champion) =>
+      championHasAffinity(champion, element),
+    ).length;
+    checks.push(actualCount >= count);
   }
 
   if (requirements.species) {
-    const targetSpecies = String(
-      requirements.species.value ??
-        requirements.species.species ??
-        requirements.species.key ??
-        "",
-    )
-      .trim()
-      .toLowerCase();
-    const requiredCount = Number(requirements.species.count || 0);
+    const { species, count } = requirements.species;
     const actualCount = roster.filter((champion) =>
-      getChampionSpecies(champion).includes(targetSpecies),
+      championHasSpecies(champion, species),
     ).length;
-    checks.push(actualCount >= requiredCount);
+    checks.push(actualCount >= count);
   }
 
   if (requirements.classKey) {
@@ -142,27 +104,16 @@ export function evaluateEmblemEligibilityForRoster(
     );
   }
 
+  // Not used by any emblem yet: `min` is optional, so a bare stat only asks
+  // that the champion has it.
   if (requirements.baseStat) {
-    const statKey = String(
-      requirements.baseStat.stat ??
-        requirements.baseStat.key ??
-        requirements.baseStat.name ??
-        "",
-    ).trim();
-    const requiredCount = Number(requirements.baseStat.count || 0);
-    const threshold =
-      requirements.baseStat.min ??
-      requirements.baseStat.value ??
-      requirements.baseStat.threshold;
-
+    const { stat, min, count } = requirements.baseStat;
     const actualCount = roster.filter((champion) => {
-      const value = Number(champion[statKey]);
+      const value = Number(champion[stat]);
       if (!Number.isFinite(value)) return false;
-      if (threshold == null) return true;
-      return value >= Number(threshold);
+      return min == null || value >= min;
     }).length;
-
-    checks.push(actualCount >= requiredCount);
+    checks.push(actualCount >= count);
   }
 
   return checks.length === 0 || checks.every(Boolean);

@@ -1,6 +1,7 @@
 // shared/data/emblems/brawler_fury.js
 
 import { championHasClass } from "../championClasses.js";
+import { grantStats } from "./emblemGrants.js";
 
 export const brawlerFury = {
   key: "brawler_fury",
@@ -21,30 +22,13 @@ export const brawlerFury = {
 
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (!champion || !owner) return;
     if (champion.team !== owner.team) return;
     if (!championHasClass(champion, "brawler")) return;
 
-    // Mark that this champion has already received the emblem buff
-    if (champion.runtime?._brawlerFuryApplied) return;
-
-    if (!champion.runtime) champion.runtime = {};
-    champion.runtime._brawlerFuryApplied = true;
-
-    // Apply buff only to this specific champion
-    if (champion.modifyStat) {
-      champion.modifyStat({
-        statName: "Attack",
-        amount: this.attackBonus,
-        context,
-        isPermanent: true,
-      });
-      champion.modifyStat({
-        statName: "Critical",
-        amount: this.criticalBonus,
-        context,
-        isPermanent: true,
-      });
-    }
+    grantStats(
+      champion,
+      { Attack: this.attackBonus, Critical: this.criticalBonus },
+      context,
+    );
   },
 };
