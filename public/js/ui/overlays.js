@@ -42,37 +42,62 @@ export function createOverlays({
 
   // --- Glossary ---
 
-  // Every key and alias, longest first, so "Absolute Immunity" claims the whole
-  // phrase before "absolute" can take its first word.
-  const GLOSSARY_TERMS = Object.entries(GAME_GLOSSARY)
-    .flatMap(([key, data]) =>
-      [key, ...(data.aliases || [])].map((term) => ({ key, term })),
-    )
-    .sort((a, b) => b.term.length - a.term.length);
-
+  // Every term the reader's language uses for an entry (its title and aliases,
+  // plus the bare key in English), longest first, so "Absolute Immunity" claims
+  // the whole phrase before "absolute" can take its first word.
+  //
   // One alternation rather than one regex per term: matching the whole glossary
   // in a single pass is what stops a shorter term from claiming text a longer
   // one already took, and what keeps the markup below out of its own way.
-  const GLOSSARY_PATTERN = new RegExp(
-    GLOSSARY_TERMS.map(
-      ({ term }) => `\\b(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})\\w*`,
-    ).join("|"),
-    "gi",
-  );
+  const glossaryMatchers = new Map();
+
+  function getGlossaryMatcher(locale = getLocale()) {
+    let matcher = glossaryMatchers.get(locale);
+    if (matcher) return matcher;
+
+    const terms = Object.entries(GAME_GLOSSARY)
+      .flatMap(([key, data]) => {
+        const words = [
+          resolveText(data.title, locale),
+          ...(data.aliases?.[locale] || []),
+        ];
+        if (locale === "en") words.unshift(key);
+        return [...new Set(words.filter(Boolean))].map((term) => ({
+          key,
+          term,
+        }));
+      })
+      .sort((a, b) => b.term.length - a.term.length);
+
+    const pattern = new RegExp(
+      terms
+        .map(
+          ({ term }) =>
+            `\\b(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})\\w*`,
+        )
+        .join("|"),
+      "gi",
+    );
+
+    matcher = { terms, pattern };
+    glossaryMatchers.set(locale, matcher);
+    return matcher;
+  }
 
   /** The key behind a match, found through whichever alternative filled a group. */
-  function matchedKey(match) {
+  function matchedKey(match, terms) {
     for (let i = 1; i < match.length; i++) {
-      if (match[i] !== undefined) return GLOSSARY_TERMS[i - 1].key;
+      if (match[i] !== undefined) return terms[i - 1].key;
     }
     return null;
   }
 
   function extractGlossaryKeys(text) {
+    const { terms, pattern } = getGlossaryMatcher();
     const keys = new Set();
 
-    for (const match of String(text ?? "").matchAll(GLOSSARY_PATTERN)) {
-      const key = matchedKey(match);
+    for (const match of String(text ?? "").matchAll(pattern)) {
+      const key = matchedKey(match, terms);
       if (key) keys.add(key);
     }
 
@@ -81,10 +106,11 @@ export function createOverlays({
 
   function renderGlossaryStatusEffects(text) {
     if (!text) return text;
+    const { terms, pattern } = getGlossaryMatcher();
 
-    return text.replace(GLOSSARY_PATTERN, (...args) => {
+    return text.replace(pattern, (...args) => {
       const match = args.slice(0, -2);
-      const key = matchedKey(match);
+      const key = matchedKey(match, terms);
       if (!key) return match[0];
 
       return `<span class="glossary-statusEffect" data-key="${key}">${match[0]}</span>`;
@@ -96,6 +122,7 @@ export function createOverlays({
     container.className = "skill-glossary-panel";
     // Non-interactive, so it never steals hover and flickers (see showSkillOverlay).
     container.style.pointerEvents = "none";
+    const locale = getLocale();
 
     keys.forEach((key) => {
       const entry = GAME_GLOSSARY[key];
@@ -104,8 +131,8 @@ export function createOverlays({
       const item = document.createElement("div");
       item.className = "glossary-item";
       item.innerHTML = `
-      <span class="glossary-title">${entry.title}:</span>
-      <span class="glossary-desc">${entry.description}</span>
+      <span class="glossary-title">${resolveText(entry.title, locale)}:</span>
+      <span class="glossary-desc">${resolveText(entry.description, locale)}</span>
     `;
       container.appendChild(item);
     });
