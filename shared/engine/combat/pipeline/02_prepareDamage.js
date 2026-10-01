@@ -49,6 +49,11 @@ const ELEMENTAL_MATRIX = {
   },
 };
 
+const WEAK_FACTOR = 1.675;
+const RESIST_FACTOR = 0.6;
+// Weaknesses and resistances cancel one-for-one; the net saturates at +/-2.
+const MAX_NET_AFFINITY = 2;
+
 function applyAffinity(event, debugMode) {
   const skillElement = event.element ?? event.skill?.element;
 
@@ -69,7 +74,6 @@ function applyAffinity(event, debugMode) {
   const ignoresResistance =
     event.ignoreAffinityResistance && event.damageDepth === 0;
 
-  let multiplier = 1;
   let weakCount = 0;
   let resistCount = 0;
 
@@ -79,30 +83,36 @@ function applyAffinity(event, debugMode) {
     if (!relation) continue;
 
     if (relation.weakTo?.includes(skillElement)) {
-      multiplier *= 1.675;
       weakCount++;
     }
 
     if (!ignoresResistance && relation.resists?.includes(skillElement)) {
-      multiplier *= 0.6;
       resistCount++;
     }
   }
 
-  const EPSILON = 0.01;
+  const net = Math.max(
+    -MAX_NET_AFFINITY,
+    Math.min(MAX_NET_AFFINITY, weakCount - resistCount),
+  );
+  if (net === 0) return;
 
-  if (Math.abs(multiplier - 1) < EPSILON) return;
+  const multiplier = net > 0 ? WEAK_FACTOR ** net : RESIST_FACTOR ** -net;
 
   event.damage *= multiplier;
-  if (multiplier > 1) {
+  if (net > 0) {
     event.affinityDialog = {
-      message: "✨ É SUPER-EFETIVO!",
+      message:
+        net === MAX_NET_AFFINITY ? "💥 É DEVASTADOR!" : "✨ É SUPER-EFETIVO!",
       duration: 1000,
       timing: "post",
     };
-  } else if (multiplier < 1) {
+  } else {
     event.affinityDialog = {
-      message: "🛡️ Não é muito efetivo...",
+      message:
+        net === -MAX_NET_AFFINITY
+          ? "🛡️ Quase não faz efeito..."
+          : "🛡️ Não é muito efetivo...",
       duration: 1000,
       timing: "post",
     };
