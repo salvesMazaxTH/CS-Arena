@@ -1541,6 +1541,8 @@ export class TurnResolver {
         targetId = null,
         duration = null,
         dedupeKey = null,
+        // Held back by the client until every hit of the action has played.
+        endOfAction = false,
       } = {}) {
         if (!message) return;
 
@@ -1554,6 +1556,7 @@ export class TurnResolver {
           sourceId,
           targetId,
           duration,
+          endOfAction,
         };
 
         if (this._lastEventRef) {

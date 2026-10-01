@@ -80,9 +80,14 @@ export function applyDamage(event) {
     reaction: (event.context.damageDepth || 0) > 0,
   });
 
-  // Agora _lastEventRef está correto, registre o dialog de afinidade se existir
+  // _lastEventRef now points at this hit. The affinity line is said once per
+  // target in the action and held until the action's last hit has played.
   if (event.affinityDialog) {
-    event.context.registerDialog(event.affinityDialog);
+    event.context.registerDialog({
+      ...event.affinityDialog,
+      dedupeKey: `affinity:${event.defender.id}`,
+      endOfAction: true,
+    });
     delete event.affinityDialog;
   }
 

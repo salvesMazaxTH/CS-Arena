@@ -395,8 +395,9 @@ export function createCombatAnimationManager(deps) {
     // Plays a whole wave at once: animations overlap and share one canvas
     // via canvasBatch. PreDialogs run sequentially before animations (they
     // gate the action). PostDialogs run in parallel after animations fire,
-    // so AoE hits complete visually before their effects (like affinity
-    // effectiveness) queue into the dialog bubble.
+    // so AoE hits complete visually before their effects queue into the
+    // dialog bubble. Affinity effectiveness waits for the whole action (see
+    // takeEndOfActionDialogs).
     async function runBatch(batch, handler) {
       for (const event of batch) {
         if (event.preDialogs?.length) await runDialogs(event.preDialogs);
@@ -547,11 +548,34 @@ export function createCombatAnimationManager(deps) {
       return chunks;
     }
 
+    // Pulls the dialogs flagged endOfAction (affinity effectiveness) off their
+    // events, so a multi-wave action is not paused between its waves.
+    function takeEndOfActionDialogs(chunks) {
+      const held = [];
+
+      for (const { events } of chunks) {
+        for (const event of events) {
+          for (const key of ["preDialogs", "postDialogs"]) {
+            const dialogs = event[key];
+            if (!dialogs?.length) continue;
+            held.push(...dialogs.filter((d) => d.endOfAction));
+            event[key] = dialogs.filter((d) => !d.endOfAction);
+          }
+        }
+      }
+
+      return held;
+    }
+
     async function runOrdered(envelope) {
       const chunks = buildOrderedChunks(envelope);
+      const endOfActionDialogs = takeEndOfActionDialogs(chunks);
+
       for (const chunk of chunks) {
         await runGroup(chunk.key, chunk.events);
       }
+
+      if (endOfActionDialogs.length) await runDialogs(endOfActionDialogs);
     }
 
     return {
