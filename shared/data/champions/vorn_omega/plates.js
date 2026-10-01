@@ -11,6 +11,7 @@ export const CC_IMMUNE_AT = 1;
 export const IGNORES_REDUCTION_AT = 2;
 export const DAMAGE_CAP_AT = 3;
 export const DAMAGE_CAP_PERCENT = 12;
+export const LAST_PLATE_SHIELD = 35;
 
 export function platesShed(champion) {
   return champion.runtime.vornPlatesShed ?? 0;
@@ -38,9 +39,14 @@ export function shedPlates(champion, count, context) {
     isPercent: true,
   });
 
+  // He can never heal, so the last plate coming off leaves a one-time buffer.
+  if (already < DAMAGE_CAP_AT && already + shedding >= DAMAGE_CAP_AT) {
+    champion.addShield(LAST_PLATE_SHIELD, 0, context, "regular");
+  }
+
   return shedding;
 }
 
-export const PLATE_TEXT_EN = `Each of the <b>${MAX_PLATES}</b> plates is worth <b>+${ATTACK_PERCENT_PER_PLATE}%</b> <b>Attack</b>, permanently. The first leaves nothing on him for a Control effect to seize; the second lets his blows past any damage reduction; the third means no single source can take more than <b>${DAMAGE_CAP_PERCENT}%</b> of his Max HP from him at once (except <b>Absolute Damage</b>).`;
+export const PLATE_TEXT_EN = `Each of the <b>${MAX_PLATES}</b> plates is worth <b>+${ATTACK_PERCENT_PER_PLATE}%</b> <b>Attack</b>, permanently. The first leaves nothing on him for a Control effect to seize; the second lets his blows past any damage reduction; the third means no single source can take more than <b>${DAMAGE_CAP_PERCENT}%</b> of his Max HP from him at once (except <b>Absolute Damage</b>), and its fall leaves him a <b>${LAST_PLATE_SHIELD}</b> <b>Shield</b>.`;
 
-export const PLATE_TEXT_PT = `Cada uma das <b>${MAX_PLATES}</b> placas vale <b>+${ATTACK_PERCENT_PER_PLATE}%</b> de <b>Ataque</b>, permanentemente. A primeira não deixa nada nele para um efeito de Controle agarrar; a segunda faz seus golpes ignorarem qualquer redução de dano; a terceira garante que nenhuma fonte sozinha tire mais de <b>${DAMAGE_CAP_PERCENT}%</b> do seu HP Máximo de uma vez (exceto <b>Dano Absoluto</b>).`;
+export const PLATE_TEXT_PT = `Cada uma das <b>${MAX_PLATES}</b> placas vale <b>+${ATTACK_PERCENT_PER_PLATE}%</b> de <b>Ataque</b>, permanentemente. A primeira não deixa nada nele para um efeito de Controle agarrar; a segunda faz seus golpes ignorarem qualquer redução de dano; a terceira garante que nenhuma fonte sozinha tire mais de <b>${DAMAGE_CAP_PERCENT}%</b> do seu HP Máximo de uma vez (exceto <b>Dano Absoluto</b>), e sua queda lhe deixa um <b>Escudo</b> de <b>${LAST_PLATE_SHIELD}</b>.`;
