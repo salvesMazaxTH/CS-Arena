@@ -25,8 +25,8 @@ const killerMeowSkills = [
 
     description() {
       return {
-        en: `Killer Meow drops off the ledge behind the chosen target and opens them on the way down, four lines drawn so cleanly they take a moment to start bleeding. Deals physical damage and leaves them <b>Bleeding</b> for <b>${this.bleedingStacks}</b> stack(s).`,
-        pt: `Killer Meow salta da beirada atrás do alvo escolhido e o abre na queda, quatro linhas traçadas com tamanha limpeza que demoram um instante para começar a sangrar. Causa dano físico e o deixa <b>Sangrando</b> por <b>${this.bleedingStacks}</b> stack(s).`,
+        en: `Killer Meow drops off the ledge behind the chosen target and opens them on the way down, four lines drawn so cleanly they take a moment to start bleeding, and leaves them <b>Bleeding</b> for <b>${this.bleedingStacks}</b> stack(s). Deals physical damage.`,
+        pt: `Killer Meow salta da beirada atrás do alvo escolhido e o abre na queda, quatro linhas traçadas com tamanha limpeza que demoram um instante para começar a sangrar, e o deixa <b>Sangrando</b> por <b>${this.bleedingStacks}</b> acúmulo(s). Causa dano físico.`,
       };
     },
 
@@ -79,8 +79,8 @@ const killerMeowSkills = [
 
     description() {
       return {
-        en: `Killer Meow offers the chosen target the shoulder they were expecting, lets them commit to it, and puts the claw in under the guard instead. Deals physical damage that ignores <b>${this.piercingPercentage}%</b> of their <b>Defense</b>, and he keeps the low, sideways footing the feint left him in for <b>+${this.evasionBuff}%</b> <b>Evasion</b> for the rest of the turn.`,
-        pt: `Killer Meow oferece ao alvo escolhido o ombro que ele esperava, deixa que se comprometa com o golpe, e enfia a garra sob a guarda em seu lugar. Causa dano físico que ignora <b>${this.piercingPercentage}%</b> da <b>Defesa</b> do alvo, e mantém a postura baixa e de lado que a finta lhe deu por <b>+${this.evasionBuff}%</b> de <b>Esquiva</b> pelo resto do turno.`,
+        en: `Killer Meow offers the chosen target the shoulder they were expecting, lets them commit to it, and puts the claw in under the guard instead, ignoring <b>${this.piercingPercentage}%</b> of their <b>Defense</b>. He keeps the low, sideways footing the feint left him in for <b>+${this.evasionBuff}%</b> <b>Evasion</b> for the rest of the turn. Deals physical damage.`,
+        pt: `Killer Meow oferece ao alvo escolhido o ombro que ele esperava, deixa que se comprometa com o golpe, e enfia a garra sob a guarda em seu lugar, ignorando <b>${this.piercingPercentage}%</b> da <b>Defesa</b> do alvo. Ele mantém a postura baixa e de lado que a finta lhe deu por <b>+${this.evasionBuff}%</b> de <b>Esquiva</b> pelo resto do turno. Causa dano físico.`,
       };
     },
 
@@ -132,8 +132,8 @@ const killerMeowSkills = [
 
     description() {
       return {
-        en: `Killer Meow spends every life he has not spent yet in one fall, and whatever is left of the cat lands on the chosen target with all of it at once. Deals physical damage, striking <b>${this.bfPerLife}%</b> of his <b>Attack</b> harder for every life he had to his name before paying for this one.`,
-        pt: `Killer Meow gasta todas as vidas que ainda não gastou em uma única queda, e o que restar do gato cai sobre o alvo escolhido com tudo de uma vez. Causa dano físico, golpeando <b>${this.bfPerLife}%</b> do seu <b>Ataque</b> mais forte para cada vida que possuía em seu nome antes de pagar por esta.`,
+        en: `Killer Meow throws everything the cat has survived into one fall and lands on the chosen target with all of it at once, striking <b>${this.bfPerLife}%</b> of his <b>Attack</b> harder for every life he came into the turn with. Deals physical damage.`,
+        pt: `Killer Meow lança tudo o que o gato já sobreviveu em uma única queda e cai sobre o alvo escolhido com tudo de uma vez, golpeando <b>${this.bfPerLife}%</b> do seu <b>Ataque</b> mais forte para cada vida com que entrou no turno. Causa dano físico.`,
       };
     },
 
