@@ -1210,6 +1210,7 @@ img.tm-filter-chip-icon {
    edge and a hollow check say it is ready to switch on. */
 .tm-emblem-overlay .emblem-option.eligible:not(.selected) {
   border-color: rgba(110, 224, 140, 0.45);
+  border-width: 5px;
 }
 
 .tm-emblem-overlay .emblem-option.selected.blocked {
