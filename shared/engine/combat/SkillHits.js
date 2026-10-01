@@ -32,6 +32,7 @@ export class SkillHits {
       contact: inherit("contact"),
       mode: inherit("damageMode"),
       hitVfx: inherit("hitVfx"),
+      hitVfxPalette: inherit("hitVfxPalette"),
       bonusDamage: spec.bonusDamage ?? skill.bonusDamage,
       piercingPercentage: spec.piercingPercentage,
       ignoreDamageReduction: spec.ignoreDamageReduction,

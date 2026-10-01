@@ -1,8 +1,41 @@
-// Close-range fire punch: Kai's quick_hook and blazing_fist_barrage, plus the shared
-// fire_punch motif. Three.js + bloom in the shared #webgl-container. The ultimate
-// throws a bigger, much faster hit.
+// Fiery punch: Kai's quick_hook and blazing_fist_barrage (thrown at the air, so
+// its swipe flies the whole way), plus the shared fire_punch motif. Three.js +
+// bloom in the shared #webgl-container. The ultimate throws a bigger hit; speed
+// is its own choice, from PUNCH_TIMINGS. Colours come from PUNCH_PALETTES, picked
+// per hit with `hitVfxPalette` (default: fire); a palette only swaps uniforms.
 
 import { getElementCenter } from "../core/animationUtils.js";
+
+// RGB triples fed straight to the shaders; values above 1 drive the bloom.
+export const PUNCH_PALETTES = Object.freeze({
+  // A fist wrapped in flame: orange swipe, white-hot print, embers turning to smoke.
+  fire: Object.freeze({
+    swipe: [5.0, 2.0, 0.0],
+    core: [3.0, 2.4, 0.6],
+    edge: [1.5, 0.15, 0.0],
+    hot: [1.0, 0.3, 0.0],
+  }),
+  // A bare steel-white blow with only a thin ember rim and a few orange sparks.
+  steel: Object.freeze({
+    swipe: [2.6, 2.8, 3.2],
+    core: [2.2, 2.3, 2.5],
+    edge: [1.2, 0.4, 0.05],
+    hot: [0.9, 0.35, 0.05],
+  }),
+});
+
+// Seconds: `travel` is the swipe reaching the target, `fade` the print and smoke
+// clearing after it.
+export const PUNCH_TIMINGS = Object.freeze({
+  standard: Object.freeze({ travel: 0.16, fade: 0.6 }),
+  quick: Object.freeze({ travel: 0.07, fade: 0.3 }),
+});
+
+function resolvePalette(key) {
+  return PUNCH_PALETTES[key] ?? PUNCH_PALETTES.fire;
+}
+
+const vec3Uniform = (rgb) => ({ value: new THREE.Vector3(...rgb) });
 
 const snoiseGLSL = `
   vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
@@ -44,6 +77,7 @@ const swipeFragmentShader = `
   ${snoiseGLSL}
   varying vec2 vUv;
   uniform float uProgress;
+  uniform vec3 uSwipeColor;
 
   void main() {
     float noise = snoise(vec2(vUv.x * 10.0, vUv.y * 3.0 - uProgress * 20.0));
@@ -53,7 +87,7 @@ const swipeFragmentShader = `
     float fire = mask * width * (noise * 0.5 + 0.5);
     float alpha = fire * (1.0 - uProgress);
 
-    vec3 color = vec3(1.0, 0.4, 0.0) * 5.0;
+    vec3 color = uSwipeColor;
     gl_FragColor = vec4(color, alpha);
   }
 `;
@@ -63,6 +97,8 @@ const fistPrintFragmentShader = `
   varying vec2 vUv;
   uniform float uAge;
   uniform sampler2D uTexture;
+  uniform vec3 uCoreColor;
+  uniform vec3 uEdgeColor;
 
   void main() {
     vec2 uv = vUv;
@@ -75,9 +111,7 @@ const fistPrintFragmentShader = `
     float heatFade = max(0.0, 1.0 - (uAge / 0.95));
     float glow = shape * 0.5;
 
-    vec3 coreColor = vec3(1.0, 0.8, 0.2) * 3.0;
-    vec3 edgeColor = vec3(1.0, 0.1, 0.0) * 1.5;
-    vec3 finalColor = mix(edgeColor, coreColor, shape);
+    vec3 finalColor = mix(uEdgeColor, uCoreColor, shape);
 
     float alpha = (shape + glow) * heatFade;
     gl_FragColor = vec4(finalColor, alpha);
@@ -99,6 +133,7 @@ const smokeVertexShader = `
 
 const smokeFragmentShader = `
   uniform float uTime;
+  uniform vec3 uHotColor;
 
   void main() {
     float dist = distance(gl_PointCoord, vec2(0.5));
@@ -106,10 +141,9 @@ const smokeFragmentShader = `
 
     float alpha = smoothstep(0.5, 0.2, dist);
     vec3 smokeColor = vec3(0.05);
-    vec3 fireColor = vec3(1.0, 0.3, 0.0);
 
     float mixFactor = smoothstep(0.0, 0.25, uTime);
-    vec3 finalColor = mix(fireColor, smokeColor, mixFactor);
+    vec3 finalColor = mix(uHotColor, smokeColor, mixFactor);
 
     float globalAlpha = alpha * (1.0 - (uTime / 0.95));
     gl_FragColor = vec4(finalColor, globalAlpha * 0.8);
@@ -135,7 +169,7 @@ function screenToWorld(screenX, screenY, camera) {
 }
 
 class MeleePunchEffect {
-  constructor(scene, userPos, targetPos, big) {
+  constructor(scene, userPos, targetPos, big, palette, timing) {
     this.scene = scene;
     this.age = 0;
     this.big = big;
@@ -148,8 +182,8 @@ class MeleePunchEffect {
     const angle = Math.atan2(dy, dx);
 
     const sizeScale = big ? 1.5 : 1;
-    this.travelDur = big ? 0.07 : 0.16;
-    this.postDur = big ? 0.3 : 0.6;
+    this.travelDur = timing.travel;
+    this.postDur = timing.fade;
     this.lifetime = this.travelDur + this.postDur;
     this.fadeScale = 0.95 / this.postDur;
 
@@ -161,7 +195,10 @@ class MeleePunchEffect {
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
-      uniforms: { uProgress: { value: 0 } },
+      uniforms: {
+        uProgress: { value: 0 },
+        uSwipeColor: vec3Uniform(palette.swipe),
+      },
     });
     this.swipe = new THREE.Mesh(swipeGeo, this.swipeMat);
     this.swipe.rotation.z = angle;
@@ -180,6 +217,8 @@ class MeleePunchEffect {
       uniforms: {
         uAge: { value: 0 },
         uTexture: { value: punchTexture },
+        uCoreColor: vec3Uniform(palette.core),
+        uEdgeColor: vec3Uniform(palette.edge),
       },
     });
     this.fistPrint = new THREE.Mesh(printGeo, this.printMat);
@@ -221,7 +260,10 @@ class MeleePunchEffect {
       transparent: true,
       blending: THREE.NormalBlending,
       depthWrite: false,
-      uniforms: { uTime: { value: 0 } },
+      uniforms: {
+        uTime: { value: 0 },
+        uHotColor: vec3Uniform(palette.hot),
+      },
     });
     this.particles = new THREE.Points(pGeo, this.smokeMat);
     this.particles.visible = false;
@@ -266,11 +308,23 @@ class MeleePunchEffect {
   }
 }
 
-export async function playMeleePunch({ targetEl, userEl, skill }) {
+/** A punch player at the given PUNCH_TIMINGS speed. */
+export function createMeleePunch(timing = PUNCH_TIMINGS.standard) {
+  return (opts) => playMeleePunch({ ...opts, timing });
+}
+
+export async function playMeleePunch({
+  targetEl,
+  userEl,
+  skill,
+  hit,
+  timing = PUNCH_TIMINGS.standard,
+}) {
   const container = document.getElementById("webgl-container");
   if (!container || !targetEl) return;
 
   const big = skill?.isUltimate === true;
+  const palette = resolvePalette(hit?.hitVfxPalette ?? skill?.hitVfxPalette);
 
   const [{ EffectComposer }, { RenderPass }, { UnrealBloomPass }] =
     await Promise.all([
@@ -322,7 +376,14 @@ export async function playMeleePunch({ targetEl, userEl, skill }) {
   composer.addPass(renderScene);
   composer.addPass(bloomPass);
 
-  const effect = new MeleePunchEffect(scene, worldUser, worldTarget, big);
+  const effect = new MeleePunchEffect(
+    scene,
+    worldUser,
+    worldTarget,
+    big,
+    palette,
+    timing,
+  );
 
   const clock = new THREE.Clock();
 

@@ -82,6 +82,7 @@ export function preChecks(event) {
         element: event.element,
         contact: event.contact,
         hitVfx: event.hitVfx,
+        hitVfxPalette: event.hitVfxPalette,
         skillKey: event.skill?.key ?? null,
         flags: { evaded: true },
       });
@@ -124,6 +125,7 @@ export function preChecks(event) {
         element: event.element,
         contact: event.contact,
         hitVfx: event.hitVfx,
+        hitVfxPalette: event.hitVfxPalette,
         skillKey: event.skill?.key ?? null,
         flags: { shieldBlocked: true },
       });
@@ -210,6 +212,7 @@ function _buildBlockedResult(
       element: event.element,
       contact: event.contact,
       hitVfx: event.hitVfx,
+      hitVfxPalette: event.hitVfxPalette,
       skillKey: event.skill?.key ?? null,
       flags: { [kind]: true, immuneMessage: customMessage, immuneQuiet: quiet },
     });

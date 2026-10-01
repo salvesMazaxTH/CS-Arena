@@ -673,6 +673,7 @@ export function createCombatAnimationManager(deps) {
       element,
       contact,
       hitVfx,
+      hitVfxPalette,
       defenseVfx,
     } = effect;
 
@@ -691,7 +692,7 @@ export function createCombatAnimationManager(deps) {
         targetEl: championEl,
         userEl,
         skill,
-        hit: { element, contact, hitVfx },
+        hit: { element, contact, hitVfx, hitVfxPalette },
         canvasBatch,
       });
     }

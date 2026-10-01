@@ -130,6 +130,7 @@ export class DamageEvent {
             attacker.skills?.some((own) => own?.key === skill?.key)),
       );
     this.hitVfx = params.hitVfx ?? skill?.hitVfx ?? null;
+    this.hitVfxPalette = params.hitVfxPalette ?? skill?.hitVfxPalette ?? null;
     this.hitLabel = params.hitLabel ?? null;
     // Identity of the declared hit within the skill. Loop guards compare this
     // rather than the skill key, which every hit of a skill shares.

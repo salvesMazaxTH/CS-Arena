@@ -28,7 +28,11 @@ import { playRibbonLash } from "./effects/ribbonLashAnimation.js";
 import { playVineLash } from "./effects/vineLashAnimation.js";
 import { playEmberFlick } from "./effects/emberFlickAnimation.js";
 import { playLash } from "./effects/lashAnimation.js";
-import { playMeleePunch } from "./effects/meleePunchAnimation.js";
+import {
+  createMeleePunch,
+  playMeleePunch,
+  PUNCH_TIMINGS,
+} from "./effects/meleePunchAnimation.js";
 import { playRonanPunch } from "./effects/ronanPunchAnimation.js";
 import { CLAW_PALETTES, createClaw } from "./effects/clawAnimation.js";
 import { BITE_PALETTES, createBite } from "./effects/biteAnimation.js";
@@ -177,7 +181,7 @@ export async function animateSkill(skillKey, opts = {}) {
 registerSkillAnimation("default_contact", playContactLunge);
 registerSkillAnimation("default_arcane_bolt", createArcaneBoltGL(1));
 registerSkillAnimation("default_arcane_bolt_big", createArcaneBoltGL(1.4));
-registerSkillAnimation("quick_hook", playMeleePunch);
+registerSkillAnimation("quick_hook", createMeleePunch(PUNCH_TIMINGS.quick));
 registerSkillAnimation("blazing_fist_barrage", playMeleePunch);
 registerSkillAnimation("default_fire_punch", playMeleePunch);
 registerSkillAnimation("knuckle_flare", playRonanPunch);

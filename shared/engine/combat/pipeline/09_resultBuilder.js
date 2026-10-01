@@ -44,6 +44,7 @@ export function buildFinalResult(event) {
     element: event.element,
     contact: event.contact,
     hitVfx: event.hitVfx,
+    hitVfxPalette: event.hitVfxPalette,
     hitId: event.hitId,
     shieldBroken: event.shieldBroken,
     // Entries stay unjoined so bilingual { en, pt } logs survive to the client.
