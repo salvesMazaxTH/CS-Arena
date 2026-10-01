@@ -5,7 +5,17 @@ import basicStrike from "../generic/basicStrike.js";
 import kindledFists from "./passive.js";
 
 const kaiSkills = [
-  basicStrike,
+  {
+    ...basicStrike,
+    element: "fire",
+    hitVfx: "fire_punch",
+    description() {
+      return {
+        en: `Kai throws a plain blow with a fist wrapped in flame, carrying <b>${this.bonusDamage}</b> bonus damage on top. Deals physical damage.`,
+        pt: `Kai desfere um golpe simples com o punho envolto em chamas, que carrega <b>${this.bonusDamage}</b> de dano bônus. Causa dano físico.`,
+      };
+    },
+  },
   {
     key: "quick_hook",
     name: "Quick Hook",
@@ -13,6 +23,9 @@ const kaiSkills = [
     contact: true,
     damageMode: "standard",
     priority: 1,
+    // A bare hook throws only a few sparks; under Living Ember it is all flame.
+    hitVfxPalette: "steel",
+    livingEmberHitVfxPalette: "fire",
     description() {
       return {
         en: `Kai snaps a short hook into the chosen target before they can set their guard, dealing <b>Physical Damage</b>.`,
@@ -23,12 +36,18 @@ const kaiSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const baseDamage = (user.Attack * this.bf) / 100;
+      // Read at hit time: the client's copy of the stance is end-of-turn state.
+      const hitVfxPalette =
+        user.runtime?.fireStance === "livingEmber"
+          ? this.livingEmberHitVfxPalette
+          : this.hitVfxPalette;
       const result = new DamageEvent({
         baseDamage,
         attacker: user,
         defender: enemy,
         skill: this,
         type: "physical",
+        hitVfxPalette,
         context,
         allChampions: context?.allChampions,
       }).execute();
@@ -53,7 +72,7 @@ const kaiSkills = [
         id: "counter",
         label: "Living Ember Counter",
         type: "physical",
-        element: null,
+        element: "fire",
         contact: true,
         damageMode: "absolute",
       },
@@ -213,7 +232,7 @@ const kaiSkills = [
     damageMode: "standard",
     punches: 6,
     burningBonus: 10,
-    contact: true,
+    contact: false,
 
     priority: 0,
     element: "fire",
@@ -221,12 +240,12 @@ const kaiSkills = [
     momentumCost: 50,
     description() {
       return {
-        en: `Kai throws himself forward and lets go of everything at once: <b>${this.punches}</b> blazing punches scatter at random across all enemies, each one dealing <b>${this.damagePerHit}</b> physical damage.
+        en: `Kai plants his feet and punches the empty air: <b>${this.punches}</b> blasts of scorching wind leave his fists like blazing punches and scatter at random across all enemies, each one dealing <b>${this.damagePerHit}</b> physical damage.
 
-        Targets already <b>Burning</b> take <b>${this.burningBonus}</b> bonus damage per punch as the fire finds its way in.`,
-        pt: `Kai se lança para frente e solta tudo de uma vez: <b>${this.punches}</b> socos flamejantes se espalham aleatoriamente entre todos os inimigos, cada um causando <b>${this.damagePerHit}</b> de dano físico.
+        Targets already <b>Burning</b> take <b>${this.burningBonus}</b> bonus damage per blast as the fire finds its way in.`,
+        pt: `Kai firma os pés e soca o ar vazio: <b>${this.punches}</b> rajadas de vento escaldante saem dos seus punhos como socos flamejantes e se espalham aleatoriamente entre todos os inimigos, cada uma causando <b>${this.damagePerHit}</b> de dano físico.
 
-        Alvos já <b>Queimando</b> sofrem <b>${this.burningBonus}</b> de dano bônus por soco conforme o fogo encontra caminho.`,
+        Alvos já <b>Queimando</b> sofrem <b>${this.burningBonus}</b> de dano bônus por rajada conforme o fogo encontra caminho.`,
       };
     },
     targetSpec: ["all:enemy"],
