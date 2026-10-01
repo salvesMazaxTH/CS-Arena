@@ -3,7 +3,7 @@ export default {
   releaseDate: "2026-09-04",
   portrait: "/assets/portraits/vorn_omega.webp",
 
-  HP: 380,
+  HP: 370,
   Attack: 215,
   Defense: 145,
   Speed: 40,
