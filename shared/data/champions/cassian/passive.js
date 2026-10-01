@@ -121,8 +121,8 @@ export default {
 
     return {
       log: {
-        en: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} shifts into ${enteringOffense ? "offense" : "defense"}.`,
-        pt: `[PASSIVA — ${this.name}] ${formatChampionName(owner)} muda para ${enteringOffense ? "ofensiva" : "defensiva"}.`,
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} shifts into ${enteringOffense ? "offense" : "defense"}.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} muda para ${enteringOffense ? "ofensiva" : "defesa"}.`,
       },
     };
   },

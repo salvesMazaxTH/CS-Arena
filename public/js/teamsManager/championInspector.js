@@ -37,9 +37,12 @@ function renderKitEntry(entry, { kind, champion }) {
     cost = `<span class="tm-kit-cost">${entry.momentumCost} Momentum</span>`;
   }
   // Damage factor shows on every damaging skill, ultimates included.
+  // A form-shifting skill declares bf(champion) instead of a number.
+  const entryBf =
+    typeof entry.bf === "function" ? entry.bf(champion) : entry.bf;
   let bf = "";
-  if (kind === "skill" && Number.isFinite(entry.bf) && entry.bf > 0) {
-    bf = `<span class="tm-kit-bf">${entry.bf} bf</span>`;
+  if (kind === "skill" && Number.isFinite(entryBf) && entryBf > 0) {
+    bf = `<span class="tm-kit-bf">${entryBf} bf</span>`;
   } else if (
     kind === "skill" &&
     Number.isFinite(entry.bfPerHit) &&

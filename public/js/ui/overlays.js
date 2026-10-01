@@ -145,6 +145,9 @@ export function createOverlays({
     );
 
     const parsedDesc = renderGlossaryStatusEffects(rawDesc);
+    // A form-shifting skill declares bf(champion) instead of a number.
+    const skillBf =
+      typeof skill.bf === "function" ? skill.bf(champion) : skill.bf;
     const glossaryKeys = extractGlossaryKeys(rawDesc);
 
     const isClaim = skill?.key === CLAIM_ACTION_KEY;
@@ -200,12 +203,12 @@ export function createOverlays({
           }
 
           ${
-            skill.bf || skill.bfPerHit
+            skillBf || skill.bfPerHit
               ? `
             <div class="skill-meta-item">
               <span class="meta-label">BF:</span>
               <span class="meta-value">${
-                skill.bf ? `${skill.bf}%` : `${skill.bfPerHit}% per hit`
+                skillBf ? `${skillBf}%` : `${skill.bfPerHit}% per hit`
               }</span>
             </div>
           `

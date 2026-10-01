@@ -53,6 +53,7 @@ const cassianSkills = [
           amount: this.attackBuff,
           duration: this.buffDuration,
           context,
+          statModifierSrc: user,
         });
 
         user.modifyStat({
@@ -60,6 +61,7 @@ const cassianSkills = [
           amount: this.critBuff,
           duration: this.buffDuration,
           context,
+          statModifierSrc: user,
         });
 
         return {
@@ -103,23 +105,29 @@ const cassianSkills = [
     offenseBf: 55,
     slowAmount: 20,
     slowDuration: 2,
-    bleedDuration: 2,
+    bleedingStacks: 2,
 
     damageMode: "standard",
     hitVfxPalette: "crimson",
     priority: 0,
 
+    bf(champion) {
+      return champion?.runtime?.cassianForm === "offense"
+        ? this.offenseBf
+        : this.defenseBf;
+    },
+
     description(champion) {
       if (champion?.runtime?.cassianForm === "offense") {
         return {
-          en: `Cassian's hand hardens into a claw and tears into the target, dealing <b>physical damage</b> and setting them <b>Bleeding</b> for <b>${this.bleedDuration}</b> turn(s).`,
-          pt: `A mão de Cassian endurece em garra e rasga o alvo, causando <b>dano físico</b> e deixando-o <b>Sangrando</b> por <b>${this.bleedDuration}</b> turno(s).`,
+          en: `Cassian's hand hardens into a claw and tears into the target, leaving them <b>Bleeding</b> for <b>${this.bleedingStacks}</b> stack(s). Deals physical damage.`,
+          pt: `A mão de Cassian endurece em garra e rasga o alvo, deixando-o <b>Sangrando</b> por <b>${this.bleedingStacks}</b> acúmulo(s). Causa dano físico.`,
         };
       }
 
       return {
-        en: `A whip of living blood lashes out from Cassian's hand, dealing <b>magical damage</b> and slowing the target by <b>${this.slowAmount} Speed</b> for <b>${this.slowDuration}</b> turn(s).`,
-        pt: `Um chicote de sangue vivo dispara da mão de Cassian, causando <b>dano mágico</b> e reduzindo em <b>${this.slowAmount}</b> a <b>Velocidade</b> do alvo por <b>${this.slowDuration}</b> turno(s).`,
+        en: `A whip of living blood lashes out from Cassian's hand, slowing the target by <b>${this.slowAmount} Speed</b> for <b>${this.slowDuration}</b> turn(s). Deals magical damage.`,
+        pt: `Um chicote de sangue vivo dispara da mão de Cassian, reduzindo em <b>${this.slowAmount}</b> a <b>Velocidade</b> do alvo por <b>${this.slowDuration}</b> turno(s). Causa dano mágico.`,
       };
     },
 
@@ -128,8 +136,7 @@ const cassianSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const isOffense = user.runtime?.cassianForm === "offense";
-      const bf = isOffense ? this.offenseBf : this.defenseBf;
-      const baseDamage = (user.Attack * bf) / 100;
+      const baseDamage = (user.Attack * this.bf(user)) / 100;
 
       const result = new DamageEvent({
         baseDamage,
@@ -148,7 +155,9 @@ const cassianSkills = [
 
       if (isOffense) {
         if (effectConnected(mainDamage, "bleeding")) {
-          enemy.applyStatusEffect("bleeding", this.bleedDuration, context);
+          enemy.applyStatusEffect("bleeding", this.bleedingStacks, context, {
+            sourceId: user.id,
+          });
         }
       } else if (mainDamage?.landed) {
         enemy.modifyStat({
@@ -173,7 +182,7 @@ const cassianSkills = [
 
     bf: 65,
     bonusDamage: 60,
-    bleedDuration: 3,
+    bleedingStacks: 3,
     shieldRatio: 0.5,
 
     damageMode: "standard",
@@ -184,14 +193,14 @@ const cassianSkills = [
     description(champion) {
       if (champion?.runtime?.cassianForm !== "offense") {
         return {
-          en: `Cassian forces the tide early, his blood exploding outward into claws: he deals <b>magical damage</b> to the target with <b>${this.bonusDamage}</b> bonus damage and sets them <b>Bleeding</b> for <b>${this.bleedDuration}</b> turn(s), immediately turning to <b>offense</b>.`,
-          pt: `Cassian força a maré antes da hora, seu sangue explodindo para fora em garras: causa <b>dano mágico</b> ao alvo com <b>${this.bonusDamage}</b> de dano bônus e o deixa <b>Sangrando</b> por <b>${this.bleedDuration}</b> turno(s), virando imediatamente para <b>ofensiva</b>.`,
+          en: `Cassian forces the tide early, his blood exploding outward into claws: he strikes the target with <b>${this.bonusDamage}</b> bonus damage and leaves them <b>Bleeding</b> for <b>${this.bleedingStacks}</b> stack(s), immediately turning to <b>offense</b>. Deals magical damage.`,
+          pt: `Cassian força a maré antes da hora, seu sangue explodindo para fora em garras: atinge o alvo com <b>${this.bonusDamage}</b> de dano bônus e o deixa <b>Sangrando</b> por <b>${this.bleedingStacks}</b> acúmulo(s), virando imediatamente para <b>ofensiva</b>. Causa dano mágico.`,
         };
       }
 
       return {
-        en: `Cassian forces the tide early, calling his blood back into a living shield: he deals <b>physical damage</b> to the target, and if the strike lands, gains a <b>Shield</b> worth <b>${this.shieldRatio * 100}%</b> of his <b>Max HP</b>, immediately turning to <b>defense</b>.`,
-        pt: `Cassian força a maré antes da hora, chamando o sangue de volta num escudo vivo: causa <b>dano físico</b> ao alvo e, se o golpe acertar, ganha um <b>Escudo</b> equivalente a <b>${this.shieldRatio * 100}%</b> de seu <b>HP Máximo</b>, virando imediatamente para <b>defesa</b>.`,
+        en: `Cassian forces the tide early, calling his blood back into a living shield: he strikes the target, and if the strike lands, gains a <b>Shield</b> worth <b>${this.shieldRatio * 100}%</b> of his <b>Max HP</b>, immediately turning to <b>defense</b>. Deals physical damage.`,
+        pt: `Cassian força a maré antes da hora, chamando o sangue de volta num escudo vivo: golpeia o alvo e, se o golpe acertar, ganha um <b>Escudo</b> equivalente a <b>${this.shieldRatio * 100}%</b> de seu <b>HP Máximo</b>, virando imediatamente para <b>defesa</b>. Causa dano físico.`,
       };
     },
 
@@ -219,7 +228,9 @@ const cassianSkills = [
 
       if (enteringOffense) {
         if (effectConnected(mainDamage, "bleeding")) {
-          enemy.applyStatusEffect("bleeding", this.bleedDuration, context);
+          enemy.applyStatusEffect("bleeding", this.bleedingStacks, context, {
+            sourceId: user.id,
+          });
         }
       } else if (mainDamage?.landed) {
         const shieldAmount = Math.round(user.maxHP * this.shieldRatio);
@@ -228,7 +239,12 @@ const cassianSkills = [
         });
       }
 
-      user.passive.flipForm(user, context);
+      // The hit itself can fill the tide and flip him already; only flip if
+      // he is still in the form he cast this from.
+      const formBefore = enteringOffense ? "defense" : "offense";
+      if ((user.runtime?.cassianForm ?? "defense") === formBefore) {
+        user.passive.flipForm(user, context);
+      }
 
       return hitResults;
     },
