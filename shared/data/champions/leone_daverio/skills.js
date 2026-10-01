@@ -49,9 +49,13 @@ const leoneSkills = [
       const results = Array.isArray(result) ? result : [result];
 
       if (effectConnected(results[0], "bleeding")) {
-        enemy.applyStatusEffect("bleeding", this.bleedingStacks, context, {
-          sourceId: user.id,
-        });
+        enemy.applyStatusEffect(
+          "bleeding",
+          undefined,
+          context,
+          { sourceId: user.id },
+          this.bleedingStacks,
+        );
       }
 
       return results;

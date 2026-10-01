@@ -155,9 +155,13 @@ const cassianSkills = [
 
       if (isOffense) {
         if (effectConnected(mainDamage, "bleeding")) {
-          enemy.applyStatusEffect("bleeding", this.bleedingStacks, context, {
-            sourceId: user.id,
-          });
+          enemy.applyStatusEffect(
+            "bleeding",
+            undefined,
+            context,
+            { sourceId: user.id },
+            this.bleedingStacks,
+          );
         }
       } else if (mainDamage?.landed) {
         enemy.modifyStat({
@@ -228,9 +232,13 @@ const cassianSkills = [
 
       if (enteringOffense) {
         if (effectConnected(mainDamage, "bleeding")) {
-          enemy.applyStatusEffect("bleeding", this.bleedingStacks, context, {
-            sourceId: user.id,
-          });
+          enemy.applyStatusEffect(
+            "bleeding",
+            undefined,
+            context,
+            { sourceId: user.id },
+            this.bleedingStacks,
+          );
         }
       } else if (mainDamage?.landed) {
         const shieldAmount = Math.round(user.maxHP * this.shieldRatio);

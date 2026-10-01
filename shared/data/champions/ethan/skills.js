@@ -61,9 +61,13 @@ const ethanSkills = [
       }
 
       if (effectConnected(arr[0], "bleeding")) {
-        enemy.applyStatusEffect("bleeding", this.bleedingStacks, context, {
-          sourceId: user.id,
-        });
+        enemy.applyStatusEffect(
+          "bleeding",
+          undefined,
+          context,
+          { sourceId: user.id },
+          this.bleedingStacks,
+        );
       }
 
       return arr;

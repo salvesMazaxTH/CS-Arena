@@ -10,6 +10,7 @@ import {
 import { emitCombatEvent } from "../engine/combat/combatEvents.js";
 import { formatChampionName } from "../ui/formatters.js";
 import { SpawnProtection } from "../engine/combat/spawnProtection.js";
+import { addStackBatch } from "./stackLifetime.js";
 
 function resolveStatusEffectDuration(duration, metadata = {}) {
   if (metadata?.persistent) return Infinity;
@@ -153,6 +154,7 @@ function applyStatusEffectCore({
   if (isStackable && existingInstance) {
     return applyStackUpdate({
       champion,
+      definition,
       existingInstance,
       statusEffectKey,
       context,
@@ -194,6 +196,13 @@ function applyStatusEffectCore({
   if (durationFromStacks) {
     // Stack-bound effects only expire when stacks reach zero in onTurnStart.
     effectInstance.expiresAtTurn = Infinity;
+  }
+
+  if (definition.stackLifetime) {
+    effectInstance.stackBatches = [];
+    addStackBatch(effectInstance, normalizedStackCount, definition);
+    effectInstance.metadata.stacks = effectInstance.stacks;
+    effectInstance.metadata.stackCount = effectInstance.stacks;
   }
 
   stampStatusSource(effectInstance, context, metadata);
@@ -257,6 +266,7 @@ function applyStatusEffectCore({
 
 function applyStackUpdate({
   champion,
+  definition,
   existingInstance,
   statusEffectKey,
   context,
@@ -265,10 +275,9 @@ function applyStackUpdate({
   resolvedDuration,
   durationFromStacks,
 }) {
-  const newStacks = Math.max(
-    1,
-    (Number(existingInstance.stacks) || 1) + normalizedStackCount,
-  );
+  const newStacks = definition.stackLifetime
+    ? addStackBatch(existingInstance, normalizedStackCount, definition)
+    : Math.max(1, (Number(existingInstance.stacks) || 1) + normalizedStackCount);
 
   existingInstance.stacks = newStacks;
   existingInstance.stackCount = newStacks;

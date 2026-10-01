@@ -102,9 +102,13 @@ const claySkills = [
       const arr = Array.isArray(result) ? result : [result];
 
       if (effectConnected(arr[0], "bleeding")) {
-        enemy.applyStatusEffect("bleeding", this.bleedingStacks, context, {
-          sourceId: user.id,
-        });
+        enemy.applyStatusEffect(
+          "bleeding",
+          undefined,
+          context,
+          { sourceId: user.id },
+          this.bleedingStacks,
+        );
       }
 
       const recoilDamage = Math.floor(

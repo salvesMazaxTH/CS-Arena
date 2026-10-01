@@ -1,6 +1,7 @@
 import { DamageEvent } from "../../engine/combat/DamageEvent.js";
 import { StatusEffect } from "../../core/StatusEffect.js";
 import { formatChampionName } from "../../ui/formatters.js";
+import { ageStackBatches } from "../../core/stackLifetime.js";
 
 const poisoned = {
   key: "poisoned",
@@ -9,6 +10,8 @@ const poisoned = {
   subtypes: ["dot", "magical", "poison"],
   isStackable: true,
   durationFromStacks: true,
+  stackLifetime: 2,
+  maxStacks: 12,
 
   onTurnStart({ owner, context }) {
     const stacks = this.stacks;
@@ -34,13 +37,7 @@ const poisoned = {
       allChampions: context.allChampions,
     }).execute();
 
-    const next = stacks - 1;
-    this.stacks = next;
-    this.stackCount = next;
-
-    if (next === 0) {
-      this.expiresAtTurn = context.currentTurn;
-    }
+    if (ageStackBatches(this) === 0) this.expiresAtTurn = context.currentTurn;
 
     const label = formatChampionName(owner);
 
