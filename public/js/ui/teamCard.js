@@ -1,28 +1,8 @@
 import { championDB } from "/shared/data/championDB.js";
 import { EMBLEMS } from "/shared/data/emblems/index.js";
 import { TEAM_SIZE } from "/shared/data/teams/index.js";
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function emblemShortCode(emblem) {
-  const name = emblem?.name?.replace(/^Emblem of(?: the)?\s+/i, "").trim();
-  if (!name) return "EM";
-  return (
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((word) => word[0]?.toUpperCase() || "")
-      .join("") || "EM"
-  );
-}
+import { escapeHtml } from "../teamsManager/championCardMarkup.js";
+import { getEmblemShortCode } from "../teamsManager/emblemPanel.js";
 
 function portraitStrip(champions) {
   const cells = Array.from({ length: TEAM_SIZE }, (_, index) => {
@@ -40,7 +20,7 @@ function emblemChips(emblems) {
   return emblems
     .map((key) => {
       const emblem = EMBLEMS.find((entry) => entry.key === key) || { name: key };
-      return `<span class="team-emblem-chip" title="${escapeHtml(emblem.name)}">${escapeHtml(emblemShortCode(emblem))}</span>`;
+      return `<span class="team-emblem-chip" title="${escapeHtml(emblem.name)}">${escapeHtml(getEmblemShortCode(emblem))}</span>`;
     })
     .join("");
 }
