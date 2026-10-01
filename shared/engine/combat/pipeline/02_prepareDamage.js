@@ -1,3 +1,5 @@
+import { elementsOf } from "../elements.js";
+
 // ============================================================================
 // AFFINITY SYSTEM
 // ============================================================================
@@ -55,16 +57,18 @@ const RESIST_FACTOR = 0.6;
 const MAX_NET_AFFINITY = 2;
 
 function applyAffinity(event, debugMode) {
-  const skillElement = event.element ?? event.skill?.element;
+  // A hit may carry several elements; each one is checked against every
+  // defender affinity and the counts add up before the net cap applies.
+  const skillElements = elementsOf(event.element ?? event.skill?.element);
 
-  if (!skillElement) return;
+  if (!skillElements.length) return;
 
   const defenderElements = event.defender?.elementalAffinities || [];
   if (!defenderElements.length) return;
 
   if (debugMode) {
     console.log("🔥 _applyAffinity chamado:", {
-      skillElement,
+      skillElements,
       defender: event.defender.name,
       affinities: event.defender.elementalAffinities,
       damage: event.damage,
@@ -82,12 +86,14 @@ function applyAffinity(event, debugMode) {
 
     if (!relation) continue;
 
-    if (relation.weakTo?.includes(skillElement)) {
-      weakCount++;
-    }
+    for (const skillElement of skillElements) {
+      if (relation.weakTo?.includes(skillElement)) {
+        weakCount++;
+      }
 
-    if (!ignoresResistance && relation.resists?.includes(skillElement)) {
-      resistCount++;
+      if (!ignoresResistance && relation.resists?.includes(skillElement)) {
+        resistCount++;
+      }
     }
   }
 
@@ -120,7 +126,7 @@ function applyAffinity(event, debugMode) {
 
   if (debugMode) {
     console.log("🔥 applyAffinity RESULT:", {
-      skillElement,
+      skillElements,
       defender: event.defender.name,
       multiplier,
       weakCount,

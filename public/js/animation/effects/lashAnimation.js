@@ -1,3 +1,4 @@
+import { primaryElement } from "../../../../shared/engine/combat/elements.js";
 // ============================================================
 //  Lash Animation
 //
@@ -358,7 +359,7 @@ export async function playLash({ userEl, targetEl, skill, hit, canvasBatch }) {
   if (!targetEl) return;
 
   const requested =
-    hit?.hitVfxPalette || skill?.hitVfxPalette || hit?.element || skill?.element;
+    hit?.hitVfxPalette || skill?.hitVfxPalette || primaryElement(hit?.element || skill?.element);
   const paletteKey = requested in PALETTES ? requested : "steel";
 
   const rect = targetEl.getBoundingClientRect();

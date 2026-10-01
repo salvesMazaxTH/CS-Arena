@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
+import { hasElement } from "../../../engine/combat/elements.js";
 
 export default {
   key: "thermal_convergence",
@@ -32,7 +33,7 @@ export default {
   onAfterDmgDealing({ attacker, owner, defender, damage, element, context }) {
     if (attacker !== owner) return;
     if (!damage || damage <= 0) return;
-    if (element !== "water") return;
+    if (!hasElement(element, "water")) return;
     if (!defender?.alive) return;
     if (!defender.hasStatusEffect("chilled")) return;
 

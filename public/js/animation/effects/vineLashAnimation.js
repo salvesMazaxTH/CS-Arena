@@ -1,3 +1,4 @@
+import { primaryElement } from "../../../../shared/engine/combat/elements.js";
 // ============================================================
 //  Vine Lash Animation
 //
@@ -33,7 +34,7 @@ export async function playVineLash({
   if (!targetEl) return;
 
   const requested =
-    hit?.hitVfxPalette || skill?.hitVfxPalette || hit?.element || skill?.element;
+    hit?.hitVfxPalette || skill?.hitVfxPalette || primaryElement(hit?.element || skill?.element);
   const paletteKey = requested in CHAIN_LASH_PALETTES ? requested : "verdant";
 
   const rect = targetEl.getBoundingClientRect();

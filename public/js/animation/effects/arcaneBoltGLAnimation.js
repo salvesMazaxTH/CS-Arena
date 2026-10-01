@@ -1,3 +1,4 @@
+import { primaryElement } from "../../../../shared/engine/combat/elements.js";
 // Arcane bolt: a Three.js orb conjured inside a spinning sigil in the shared
 // #webgl-container, same light recipe as the elemental bolts (persistent
 // renderer, pixelRatio 1, no post-processing). It is the magical Basic Shot's
@@ -386,7 +387,7 @@ export function createArcaneBoltGL(scale) {
     if (!st) return;
     bakeTextures();
 
-    const requested = skill?.hitVfxPalette || skill?.element;
+    const requested = skill?.hitVfxPalette || primaryElement(skill?.element);
     const paletteKey = requested in PALETTES ? requested : DEFAULT_PALETTE;
 
     const tc = getElementCenter(targetEl);

@@ -6,6 +6,7 @@ import {
   CLAIM_ACTION_KEY,
   getClaimPoints,
 } from "../../../shared/engine/combat/claim.js";
+import { elementsOf } from "../../../shared/engine/combat/elements.js";
 import { GAME_GLOSSARY } from "../gameGlossary.js";
 import { resolveText } from "../../../shared/i18n/locale.js";
 import { getLocale } from "../i18n/clientLocale.js";
@@ -219,10 +220,14 @@ export function createOverlays({
           <div class="skill-overlay-element-row">
             <span class="meta-label">Element:</span>
             <span class="meta-value">
-              ${renderIdentityIconMarkup(getElementIdentity(skill.element), {
-                className: "skill-overlay-element-icon",
-                alt: skill.element,
-              })}
+              ${elementsOf(skill.element)
+                .map((el) =>
+                  renderIdentityIconMarkup(getElementIdentity(el), {
+                    className: "skill-overlay-element-icon",
+                    alt: el,
+                  }),
+                )
+                .join("")}
             </span>
           </div>
         `

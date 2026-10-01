@@ -1,3 +1,5 @@
+import { hasElement } from "../../engine/combat/elements.js";
+
 // shared/data/emblems/rising_inferno.js
 
 export const risingInferno = {
@@ -26,7 +28,7 @@ export const risingInferno = {
   onBeforeDmgDealing({ attacker, defender, element, owner }) {
     if (!attacker || !defender || !owner) return;
     if (attacker.team !== owner.team) return;
-    if (element !== "fire") return;
+    if (!hasElement(element, "fire")) return;
     if (!defender.hasStatusEffect("burning")) return;
 
     const bonus = Math.floor(defender.maxHP * (this.maxHPBonusPercent / 100));

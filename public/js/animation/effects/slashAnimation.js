@@ -1,3 +1,4 @@
+import { primaryElement } from "../../../../shared/engine/combat/elements.js";
 // ============================================================
 //  Slash Animation
 //
@@ -435,7 +436,7 @@ export async function playSlash({
   // Authorial override first, then the element, then plain steel for the
   // physical cuts that carry no element at all.
   const requested =
-    hit?.hitVfxPalette || skill?.hitVfxPalette || hit?.element || skill?.element;
+    hit?.hitVfxPalette || skill?.hitVfxPalette || primaryElement(hit?.element || skill?.element);
   const paletteKey = requested in PALETTES ? requested : "steel";
 
   const rect = targetEl.getBoundingClientRect();
@@ -458,7 +459,7 @@ export async function playSlash({
       size,
       baseAngle,
       paletteKey,
-      ELEMENT_DETAILS[hit?.element ?? skill?.element],
+      ELEMENT_DETAILS[primaryElement(hit?.element ?? skill?.element)],
     );
   const padding = size * PADDING_SCALE + PADDING_FLOOR;
 

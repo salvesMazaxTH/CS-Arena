@@ -1,5 +1,6 @@
 import { DamageEvent } from "./DamageEvent.js";
 import { formatChampionName } from "../../ui/formatters.js";
+import { hasElement } from "./elements.js";
 
 // Reactions between an element and a status effect of an opposing one.
 export class ElementalInteractions {
@@ -12,7 +13,7 @@ export class ElementalInteractions {
   static OPPOSING_STATUSES = { burning: "frozen", frozen: "burning" };
 
   static onFrozenBroken({ target, element, context }) {
-    if (element === "fire") return this.vaporize({ target, context });
+    if (hasElement(element, "fire")) return this.vaporize({ target, context });
 
     return this._react({
       target,

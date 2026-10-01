@@ -1,6 +1,7 @@
 // shared/data/emblems/permafrost.js
 
 import { StatusEffectsRegistry } from "../statusEffects/effectsRegistry.js";
+import { hasElement } from "../../engine/combat/elements.js";
 
 export const permafrost = {
   key: "permafrost",
@@ -53,7 +54,7 @@ export const permafrost = {
     if (!(damage > 0)) return;
 
     const percent =
-      element === "ice"
+      hasElement(element, "ice")
         ? this.iceDamageReductionPercent
         : this.baseDamageReductionPercent;
 
@@ -62,7 +63,7 @@ export const permafrost = {
 
   onAfterDmgTaking({ defender, owner, element, actualDmg, context }) {
     if (!defender || !owner || defender.team !== owner.team) return;
-    if (element !== "ice" || !(actualDmg > 0)) return;
+    if (!hasElement(element, "ice") || !(actualDmg > 0)) return;
 
     const shield = Math.floor(actualDmg * (this.iceHitShieldPercent / 100));
     if (shield <= 0) return;

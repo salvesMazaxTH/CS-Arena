@@ -2,6 +2,7 @@ import { DamageEvent } from "../../engine/combat/DamageEvent.js";
 import { StatusEffect } from "../../core/StatusEffect.js";
 import { formatChampionName } from "../../ui/formatters.js";
 import { ElementalInteractions } from "../../engine/combat/ElementalInteractions.js";
+import { hasElement } from "../../engine/combat/elements.js";
 
 const burning = {
   key: "burning",
@@ -25,7 +26,7 @@ const burning = {
   },
 
   onAfterDmgTaking({ defender, damage, element, context }) {
-    if (damage <= 0 || element !== "water") return;
+    if (damage <= 0 || !hasElement(element, "water")) return;
 
     return ElementalInteractions.onBurningDoused({ target: defender, context });
   },

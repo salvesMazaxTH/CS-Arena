@@ -1,3 +1,4 @@
+import { primaryElement } from "../../../shared/engine/combat/elements.js";
 // ============================================================
 //  Skill Animation System
 //
@@ -103,7 +104,7 @@ function resolveDefaultAnimationKey(skill, hit) {
     return "default_arcane_bolt";
   }
 
-  const element = hit?.element ?? skill?.element;
+  const element = primaryElement(hit?.element ?? skill?.element);
 
   // No damage gate here: this only runs from the DamageEvent handler.
   const key = DEFAULT_ELEMENT_ANIMATIONS[element] || null;

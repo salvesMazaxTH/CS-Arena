@@ -122,7 +122,7 @@ const azhkharonSkills = [
     bf: 70,
     contact: false,
     damageMode: "standard",
-    element: "poison",
+    element: ["ice", "poison"],
     freezeDuration: 1,
     isUltimate: true,
     momentumCost: 55,

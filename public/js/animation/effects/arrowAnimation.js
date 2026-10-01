@@ -1,3 +1,4 @@
+import { primaryElement } from "../../../../shared/engine/combat/elements.js";
 // Plain ranged arrow motif, opted into with `hitVfx: "arrow"`. The
 // flaming upgrade a fire archer wants lives in flamingArrowAnimation.js.
 
@@ -331,7 +332,7 @@ const PADDING = 220;
 export async function playArrowShot({ userEl, targetEl, skill, canvasBatch }) {
   if (!targetEl) return;
 
-  const requested = skill?.hitVfxPalette || skill?.element;
+  const requested = skill?.hitVfxPalette || primaryElement(skill?.element);
   const paletteKey = requested in PALETTES ? requested : "steel";
 
   const targetCenter = getElementCenter(targetEl);

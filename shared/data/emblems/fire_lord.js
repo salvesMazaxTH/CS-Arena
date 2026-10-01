@@ -1,3 +1,5 @@
+import { hasElement } from "../../engine/combat/elements.js";
+
 // shared/data/emblems/fire_lord.js
 
 export const firelord = {
@@ -24,7 +26,7 @@ export const firelord = {
 
     if (attacker.team !== owner.team) return;
 
-    if (element !== "fire") return;
+    if (!hasElement(element, "fire")) return;
 
     return {
       bonusDamage: this.bonusDmg,

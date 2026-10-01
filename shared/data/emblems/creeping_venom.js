@@ -1,3 +1,5 @@
+import { hasElement } from "../../engine/combat/elements.js";
+
 // shared/data/emblems/creeping_venom.js
 
 export const creepingVenom = {
@@ -26,7 +28,7 @@ export const creepingVenom = {
   onBeforeDmgDealing({ attacker, defender, element, owner }) {
     if (!attacker || !defender || !owner) return;
     if (attacker.team !== owner.team) return;
-    if (element !== "poison") return;
+    if (!hasElement(element, "poison")) return;
     if (!defender.hasStatusEffect("poisoned")) return;
 
     return {

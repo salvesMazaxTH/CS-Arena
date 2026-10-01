@@ -1,5 +1,6 @@
 import { StatusEffect } from "../../core/StatusEffect.js";
 import { ElementalInteractions } from "../../engine/combat/ElementalInteractions.js";
+import { hasElement } from "../../engine/combat/elements.js";
 
 const conductor = {
   key: "conductor",
@@ -13,7 +14,7 @@ const conductor = {
   },
 
   onBeforeDmgTaking({ defender, damage, context, skill }) {
-    if (skill.element !== "lightning") return;
+    if (!hasElement(skill.element, "lightning")) return;
 
     damage = Math.round(damage * 1.2);
 
@@ -21,7 +22,7 @@ const conductor = {
   },
 
   onAfterDmgTaking({ defender, damage, element, context }) {
-    if (damage <= 0 || element !== "water") return;
+    if (damage <= 0 || !hasElement(element, "water")) return;
 
     return ElementalInteractions.onConductorSoaked({ target: defender, context });
   },

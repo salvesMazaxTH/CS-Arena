@@ -1,3 +1,4 @@
+import { primaryElement } from "../../../../shared/engine/combat/elements.js";
 // ============================================================
 //  Ribbon Lash Animation
 //
@@ -43,7 +44,7 @@ export async function playRibbonLash({
     : { x: target.x - 280, y: target.y - 60 };
 
   const requested =
-    hit?.hitVfxPalette || skill?.hitVfxPalette || hit?.element || skill?.element;
+    hit?.hitVfxPalette || skill?.hitVfxPalette || primaryElement(hit?.element || skill?.element);
   const paletteKey = requested in CHAIN_LASH_PALETTES ? requested : "steel";
 
   const buildEffect = (ctx) =>

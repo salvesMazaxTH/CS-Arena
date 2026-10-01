@@ -2,6 +2,7 @@ import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
+import { hasElement } from "../../../engine/combat/elements.js";
 
 const naelthosSkills = [
   // ========================
@@ -139,7 +140,7 @@ const naelthosSkills = [
           owner.runtime.form = null;
         },
         onDamageIncoming({ defender, damage, skill }) {
-          if (skill?.element === "lightning") {
+          if (hasElement(skill?.element, "lightning")) {
             defender.runtime.hookEffects = defender.runtime.hookEffects.filter(
               (e) => e.key !== "aquatic_form_hook",
             );

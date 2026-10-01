@@ -1,3 +1,4 @@
+import { primaryElement } from "../../../../shared/engine/combat/elements.js";
 // ============================================================
 //  Multislash Animation
 //
@@ -261,7 +262,7 @@ export async function playMultislash({ userEl, targetEl, skill, canvasBatch }) {
 
   // Authorial override first, then the element, then plain steel for the
   // physical cuts that carry no element at all.
-  const requested = skill?.hitVfxPalette || skill?.element;
+  const requested = skill?.hitVfxPalette || primaryElement(skill?.element);
   const paletteKey = requested in PALETTES ? requested : "steel";
 
   const rect = targetEl.getBoundingClientRect();
