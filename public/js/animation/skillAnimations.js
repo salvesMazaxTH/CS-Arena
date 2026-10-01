@@ -2,8 +2,9 @@ import { primaryElement } from "../../../shared/engine/combat/elements.js";
 // ============================================================
 //  Skill Animation System
 //
-//  Pure registry: it maps skill keys to animation factories and
-//  resolves the generic per-element fallbacks. Every animation
+//  Pure registry: it maps motif keys (a skill's `hitVfx`, played
+//  as `default_${hitVfx}`) to animation factories and resolves the
+//  generic per-element fallbacks. Every animation
 //  itself lives in its own module under this folder.
 //
 //  To add a new animation: write its module, export a play
@@ -31,11 +32,10 @@ import { playLash } from "./effects/lashAnimation.js";
 import {
   createMeleePunch,
   playMeleePunch,
-  PUNCH_TIMINGS,
+  PUNCH_WEIGHTS,
 } from "./effects/meleePunchAnimation.js";
-import { playRonanPunch } from "./effects/ronanPunchAnimation.js";
-import { CLAW_PALETTES, createClaw } from "./effects/clawAnimation.js";
-import { BITE_PALETTES, createBite } from "./effects/biteAnimation.js";
+import { createClaw } from "./effects/clawAnimation.js";
+import { createBite } from "./effects/biteAnimation.js";
 import { playMultislash } from "./effects/multislashAnimation.js";
 import { playParry, playRiposte } from "./effects/parryAnimation.js";
 import { playSlash } from "./effects/slashAnimation.js";
@@ -181,12 +181,15 @@ export async function animateSkill(skillKey, opts = {}) {
 registerSkillAnimation("default_contact", playContactLunge);
 registerSkillAnimation("default_arcane_bolt", createArcaneBoltGL(1));
 registerSkillAnimation("default_arcane_bolt_big", createArcaneBoltGL(1.4));
-registerSkillAnimation("quick_hook", createMeleePunch(PUNCH_TIMINGS.quick));
-registerSkillAnimation("blazing_fist_barrage", playMeleePunch);
 registerSkillAnimation("default_fire_punch", playMeleePunch);
-registerSkillAnimation("knuckle_flare", playRonanPunch);
-registerSkillAnimation("say_that_again", playRonanPunch);
-registerSkillAnimation("ignisars_temper", createClaw(CLAW_PALETTES.dragon));
+registerSkillAnimation(
+  "default_quick_fire_punch",
+  createMeleePunch(PUNCH_WEIGHTS.quick),
+);
+registerSkillAnimation(
+  "default_heavy_fire_punch",
+  createMeleePunch(PUNCH_WEIGHTS.heavy),
+);
 registerSkillAnimation("default_lightning", createLightningBolt());
 registerSkillAnimation("default_lightning_big", createLightningBolt(true));
 registerSkillAnimation("default_fire", createFireBoltGL(1));
@@ -223,10 +226,8 @@ registerSkillAnimation("default_radiant_beam", createRadiantBeamGL(1));
 registerSkillAnimation("default_slash", playSlash);
 registerSkillAnimation("default_multislash", playMultislash);
 registerSkillAnimation("default_claw", createClaw());
-registerSkillAnimation("default_acid_claw", createClaw(CLAW_PALETTES.acid));
 registerSkillAnimation("default_bite", createBite());
-registerSkillAnimation("default_bite_big", createBite(null, 1.35));
-registerSkillAnimation("default_acid_bite", createBite(BITE_PALETTES.acid));
+registerSkillAnimation("default_bite_big", createBite(1.35));
 registerSkillAnimation("default_parry", playParry);
 registerSkillAnimation("default_riposte", playRiposte);
 registerSkillAnimation("default_lash", playLash);
@@ -236,4 +237,4 @@ registerSkillAnimation("default_vine_lash", playVineLash);
 registerSkillAnimation("default_ember_flick", playEmberFlick);
 registerSkillAnimation("default_flaming_arrow", playFlamingArrow);
 registerSkillAnimation("default_poisoned_arrow", playPoisonedArrow);
-registerSkillAnimation("crushing_grip", playCrushingGrip);
+registerSkillAnimation("default_crushing_grip", playCrushingGrip);

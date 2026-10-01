@@ -23,6 +23,7 @@ const kaiSkills = [
     contact: true,
     damageMode: "standard",
     priority: 1,
+    hitVfx: "quick_fire_punch",
     // A bare hook throws only a few sparks; under Living Ember it is all flame.
     hitVfxPalette: "steel",
     livingEmberHitVfxPalette: "fire",
@@ -236,6 +237,7 @@ const kaiSkills = [
 
     priority: 0,
     element: "fire",
+    hitVfx: "fire_punch",
     isUltimate: true,
     momentumCost: 50,
     description() {

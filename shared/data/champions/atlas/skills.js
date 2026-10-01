@@ -103,6 +103,7 @@ const atlasSkills = [
 
     contact: false,
     damageMode: "piercing",
+    hitVfx: "crushing_grip",
     priority: 3,
 
     description() {

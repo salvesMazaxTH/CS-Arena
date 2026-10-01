@@ -12,6 +12,7 @@ const SPRITE_SIZE = 48;
 export const CLAW_PALETTES = Object.freeze({
   // Bared steel-bright claws: the default any champion's rake falls back to.
   feral: Object.freeze({ core: "#ffffff", mid: "#cfe2f2", deep: "#5d7f9c" }),
+  // Dragon-fire claws for a rake thrown in a fit of draconic temper.
   dragon: Object.freeze({ core: "#fff1d6", mid: "#ff801f", deep: "#c11606" }),
   // Venom-green rake that reads as acid still eating at the wound.
   acid: Object.freeze({ core: "#f4ffd6", mid: "#9cff2e", deep: "#2f7d0c" }),
@@ -255,9 +256,14 @@ class ClawRakeEffect {
 const PADDING_SCALE = 1.1;
 const PADDING_FLOOR = 300;
 
-export function createClaw(palette = CLAW_PALETTES.feral) {
-  return async function playClaw({ userEl, targetEl }) {
+// The hit or skill picks a palette by `hitVfxPalette`; feral otherwise.
+export function createClaw() {
+  return async function playClaw({ userEl, targetEl, skill, hit }) {
     if (!targetEl) return;
+
+    const palette =
+      CLAW_PALETTES[hit?.hitVfxPalette ?? skill?.hitVfxPalette] ??
+      CLAW_PALETTES.feral;
 
     const rect = targetEl.getBoundingClientRect();
     const center = {

@@ -14,6 +14,8 @@ const ronanSkills = [
     contact: true,
     damageMode: "standard",
     element: "fire",
+    hitVfx: "heavy_fire_punch",
+    hitVfxPalette: "ember",
     priority: 0,
 
     description() {
@@ -51,6 +53,8 @@ const ronanSkills = [
     contact: true,
     damageMode: "standard",
     element: "fire",
+    hitVfx: "heavy_fire_punch",
+    hitVfxPalette: "ember",
     priority: 0,
 
     description() {
@@ -94,6 +98,8 @@ const ronanSkills = [
     contact: true,
     damageMode: "standard",
     element: "fire",
+    hitVfx: "claw",
+    hitVfxPalette: "dragon",
     isUltimate: true,
     momentumCost: 55,
     priority: 0,

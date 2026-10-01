@@ -35,7 +35,8 @@ const zophiroxSkills = [
     contact: true,
     damageMode: "standard",
     element: "poison",
-    hitVfx: "acid_claw",
+    hitVfx: "claw",
+    hitVfxPalette: "acid",
     priority: 0,
 
     targetSpec: ["enemy"],
@@ -185,7 +186,8 @@ const zophiroxSkills = [
     contact: true,
     damageMode: "standard",
     element: "poison",
-    hitVfx: "acid_bite",
+    hitVfx: "bite",
+    hitVfxPalette: "acid",
     priority: 0,
 
     targetSpec: ["enemy"],

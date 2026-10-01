@@ -294,8 +294,8 @@ class JawSnapEffect {
 const PADDING_SCALE = 1.1;
 const PADDING_FLOOR = 300;
 
-// A fixed palette wins; otherwise the hit or skill picks one by `hitVfxPalette`.
-export function createBite(palette = null, scale = 1) {
+// The hit or skill picks a palette by `hitVfxPalette`; feral otherwise.
+export function createBite(scale = 1) {
   return async function playBite({ userEl, targetEl, skill, hit }) {
     if (!targetEl) return;
 
@@ -306,7 +306,6 @@ export function createBite(palette = null, scale = 1) {
     };
     const size = Math.max(rect.width, rect.height) * scale;
     const colors =
-      palette ??
       BITE_PALETTES[hit?.hitVfxPalette ?? skill?.hitVfxPalette] ??
       BITE_PALETTES.feral;
 
