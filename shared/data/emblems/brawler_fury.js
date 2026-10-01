@@ -9,10 +9,7 @@ export const brawlerFury = {
   criticalBonus: 5,
 
   requirements: {
-    classKey: {
-      key: "brawler",
-      count: 3,
-    },
+    classKey: [{ key: "brawler", count: 3 }],
   },
 
   description() {

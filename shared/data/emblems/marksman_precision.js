@@ -9,10 +9,7 @@ export const marksmanPrecision = {
   criticalBonus: 8,
 
   requirements: {
-    classKey: {
-      key: "marksman",
-      count: 3,
-    },
+    classKey: [{ key: "marksman", count: 3 }],
   },
 
   description() {

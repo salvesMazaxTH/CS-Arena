@@ -7,10 +7,7 @@ export const mageArcana = {
   name: "Emblem of High Arcana",
 
   requirements: {
-    classKey: {
-      key: "mage",
-      count: 5,
-    },
+    classKey: [{ key: "mage", count: 5 }],
   },
 
   bonusDamage: 20,

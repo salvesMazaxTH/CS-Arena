@@ -6,6 +6,10 @@ import {
   renderIdentityIconMarkup,
 } from "/shared/ui/identityPalette.js";
 import { MAX_TEAM_EMBLEMS } from "/shared/data/teams/index.js";
+import {
+  readClassRequirements,
+  countClassRequirementSlots,
+} from "/shared/data/emblems/eligibility.js";
 import { resolveText } from "/shared/i18n/locale.js";
 import { getLocale } from "../i18n/clientLocale.js";
 import {
@@ -82,34 +86,43 @@ function getEmblemRequirementTokens(requirements) {
     const requirement = requirements[descriptor.kind];
     if (!requirement) return [];
 
-    const rawTarget = String(descriptor.readTarget(requirement) ?? "").trim();
-    const target =
-      descriptor.kind === "baseStat" ? rawTarget : rawTarget.toLowerCase();
-    const threshold = descriptor.readThreshold?.(requirement) ?? null;
-    const identity = getRequirementIdentity(descriptor.kind, target);
+    // classKey is a list of { key, count }: one token per class.
+    const entries = Array.isArray(requirement) ? requirement : [requirement];
 
-    return [
-      {
+    return entries.map((entry) => {
+      const rawTarget = String(descriptor.readTarget(entry) ?? "").trim();
+      const target =
+        descriptor.kind === "baseStat" ? rawTarget : rawTarget.toLowerCase();
+      const threshold = descriptor.readThreshold?.(entry) ?? null;
+      const identity = getRequirementIdentity(descriptor.kind, target);
+
+      return {
         descriptor,
         target,
         threshold,
         identity,
-        required: Number(requirement.count || 0),
+        required: Number(entry.count || 0),
         label: descriptor.describe(identity, threshold),
-      },
-    ];
+      };
+    });
   });
 }
 
 export function evaluateEmblemRequirements(emblem, rosterKeys = []) {
   const roster = rosterKeys.map((key) => championDB[key]).filter(Boolean);
 
+  // A champion fills one class slot only, so class counts come from matching.
+  const classCounts = countClassRequirementSlots(
+    readClassRequirements(emblem?.requirements),
+    roster,
+  );
+  let classIndex = 0;
+
   const checks = getEmblemRequirementTokens(emblem?.requirements).map((token) => {
-    const actual = token.descriptor.countMatches(
-      roster,
-      token.target,
-      token.threshold,
-    );
+    const actual =
+      token.descriptor.kind === "classKey"
+        ? classCounts[classIndex++]
+        : token.descriptor.countMatches(roster, token.target, token.threshold);
     return { ...token, actual, pass: actual >= token.required };
   });
 

@@ -21,6 +21,7 @@ import { risingInferno } from "./rising_inferno.js";
 import { verdantRoot } from "./verdant_root.js";
 import { galeStep } from "./gale_step.js";
 import { creepingVenom } from "./creeping_venom.js";
+import { balancedParty } from "./balanced_party.js";
 
 export { evaluateEmblemEligibilityForRoster } from "./eligibility.js";
 
@@ -48,4 +49,5 @@ export const EMBLEMS = [
   verdantRoot,
   galeStep,
   creepingVenom,
+  balancedParty,
 ];

@@ -9,10 +9,7 @@ export const silentBlade = {
   criticalBonus: 10,
 
   requirements: {
-    classKey: {
-      key: "assassin",
-      count: 3,
-    },
+    classKey: [{ key: "assassin", count: 3 }],
   },
 
   description() {

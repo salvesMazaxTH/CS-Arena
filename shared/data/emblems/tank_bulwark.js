@@ -9,10 +9,7 @@ export const tankBulwark = {
   maxHPBonusPercent: 5,
 
   requirements: {
-    classKey: {
-      key: "tank",
-      count: 5,
-    },
+    classKey: [{ key: "tank", count: 5 }],
   },
 
   description() {

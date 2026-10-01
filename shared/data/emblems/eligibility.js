@@ -24,6 +24,66 @@ function getChampionSpecies(champion) {
   return [];
 }
 
+/** An emblem's class requirements as `{ key, count }` entries, keys lowercased. */
+export function readClassRequirements(requirements) {
+  const entries = requirements?.classKey;
+  if (!Array.isArray(entries)) return [];
+
+  return entries.map((entry) => ({
+    key: String(entry.key || "").trim().toLowerCase(),
+    count: Number(entry.count || 0),
+  }));
+}
+
+/**
+ * How many champions each class requirement gets when every champion fills at
+ * most one slot, so a dual-class champion counts toward one class, never two.
+ * Slots are assigned by maximum matching; champions left unassigned still add
+ * to every class they hold, which can only happen once that class is full.
+ */
+export function countClassRequirementSlots(classRequirements, roster) {
+  const slots = classRequirements.flatMap((requirement, index) =>
+    Array.from({ length: requirement.count }, () => index),
+  );
+  const slotHolder = new Array(slots.length).fill(-1);
+
+  const tryAssign = (championIndex, visited) => {
+    const champion = roster[championIndex];
+
+    for (let slot = 0; slot < slots.length; slot += 1) {
+      if (visited[slot]) continue;
+      if (!championHasClass(champion, classRequirements[slots[slot]].key)) continue;
+      visited[slot] = true;
+
+      if (slotHolder[slot] < 0 || tryAssign(slotHolder[slot], visited)) {
+        slotHolder[slot] = championIndex;
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  roster.forEach((_, championIndex) =>
+    tryAssign(championIndex, new Array(slots.length).fill(false)),
+  );
+
+  const counts = classRequirements.map(() => 0);
+  slotHolder.forEach((holder, slot) => {
+    if (holder >= 0) counts[slots[slot]] += 1;
+  });
+
+  const assigned = new Set(slotHolder);
+  roster.forEach((champion, championIndex) => {
+    if (assigned.has(championIndex)) return;
+    classRequirements.forEach((requirement, index) => {
+      if (championHasClass(champion, requirement.key)) counts[index] += 1;
+    });
+  });
+
+  return counts;
+}
+
 /**
  * True when every requirement of `emblem` is met by the champions in `rosterKeys`.
  * An emblem with no requirements is always eligible.
@@ -75,19 +135,11 @@ export function evaluateEmblemEligibilityForRoster(
   }
 
   if (requirements.classKey) {
-    const targetClass = String(
-      requirements.classKey.value ??
-        requirements.classKey.class ??
-        requirements.classKey.key ??
-        "",
-    )
-      .trim()
-      .toLowerCase();
-    const requiredCount = Number(requirements.classKey.count || 0);
-    const actualCount = roster.filter((champion) =>
-      championHasClass(champion, targetClass),
-    ).length;
-    checks.push(actualCount >= requiredCount);
+    const classRequirements = readClassRequirements(requirements);
+    const counts = countClassRequirementSlots(classRequirements, roster);
+    classRequirements.forEach((requirement, index) =>
+      checks.push(counts[index] >= requirement.count),
+    );
   }
 
   if (requirements.baseStat) {

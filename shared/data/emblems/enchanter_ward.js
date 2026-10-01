@@ -9,10 +9,7 @@ export const enchanterWard = {
   healingBonusPercent: 15,
 
   requirements: {
-    classKey: {
-      key: "enchanter",
-      count: 3,
-    },
+    classKey: [{ key: "enchanter", count: 3 }],
   },
 
   description() {

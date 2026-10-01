@@ -30,10 +30,7 @@ export const stormFist = {
   lightningSpeedBonus: 5,
 
   requirements: {
-    classKey: {
-      key: "brawler",
-      count: 3,
-    },
+    classKey: [{ key: "brawler", count: 3 }],
     elementalAffinity: {
       element: "lightning",
       count: 3,

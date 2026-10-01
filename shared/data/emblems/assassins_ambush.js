@@ -9,10 +9,7 @@ export const assassinsAmbush = {
   minimumPiercing: 25,
 
   requirements: {
-    classKey: {
-      key: "assassin",
-      count: 5,
-    },
+    classKey: [{ key: "assassin", count: 5 }],
   },
 
   description() {
