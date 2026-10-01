@@ -4,13 +4,13 @@ export default {
   key: "cold_reckoning",
   name: "Cold Reckoning",
 
-  bonusDmgPercent: 20,
+  damageBonusPercent: 20,
   corruptsInto: "lord_of_the_shadowflame",
 
   description() {
     return {
-      en: `Ethan doesn't need luck, just an opening — and a debuffed enemy is nothing but openings. Every hit he lands deals <b>${this.bonusDmgPercent}%</b> increased damage against a target already carrying a negative status effect. The first time an ally falls in battle while he's still standing, whatever composure he had left goes down with them, and — if nothing else has already claimed that hunger — he rises as the <b>Lord of the Shadowflame</b>.`,
-      pt: `Ethan não precisa de sorte, só de uma abertura — e um inimigo debilitado é só abertura. Todo golpe que ele acerta causa dano <b>${this.bonusDmgPercent}%</b> maior contra um alvo já sob um efeito de status negativo. Na primeira vez que um aliado cai em batalha enquanto ele ainda está de pé, o que restava de sua compostura vai junto — e, se nada mais já tiver reclamado essa fome, ele ressurge como o <b>Lorde da Chama Sombria</b>.`,
+      en: `Ethan doesn't need luck, just an opening — and a debuffed enemy is nothing but openings. Every hit he lands deals <b>${this.damageBonusPercent}%</b> increased damage against a target already carrying a negative status effect. The first time an ally falls in battle while he's still standing, whatever composure he had left goes down with them, and — if nothing else has already claimed that hunger — he rises as the <b>Lord of the Shadowflame</b>.`,
+      pt: `Ethan não precisa de sorte, só de uma abertura — e um inimigo debilitado é só abertura. Todo golpe que ele acerta causa dano <b>${this.damageBonusPercent}%</b> maior contra um alvo já sob um efeito de status negativo. Na primeira vez que um aliado cai em batalha enquanto ele ainda está de pé, o que restava de sua compostura vai junto — e, se nada mais já tiver reclamado essa fome, ele ressurge como o <b>Lorde da Chama Sombria</b>.`,
     };
   },
 
@@ -26,7 +26,7 @@ export default {
     if (!hasDebuff) return;
 
     return {
-      damage: Number(damage) * (1 + this.bonusDmgPercent / 100),
+      damage: Number(damage) * (1 + this.damageBonusPercent / 100),
     };
   },
 

@@ -2,13 +2,13 @@ export default {
   key: "blood_owed",
   name: "Blood Owed",
 
-  bonusDmgPercent: 45,
+  damageBonusPercent: 45,
   piercingPercentage: 50,
 
   description() {
     return {
-      en: `Everything the divine bloodline took from Clay, it now pays back with interest. He deals <b>${this.bonusDmgPercent}%</b> increased damage against enemies of <b>divine</b> or <b>demigod</b> blood, and <b>${this.piercingPercentage}%</b> of that damage goes straight past their <b>Defense</b>.`,
-      pt: `Tudo que a linhagem divina tirou de Clay, ele agora cobra de volta com juros. Ele causa dano <b>${this.bonusDmgPercent}%</b> maior contra inimigos de sangue <b>divino</b> ou <b>semideus</b>, e <b>${this.piercingPercentage}%</b> desse dano passa direto pela <b>Defesa</b> deles.`,
+      en: `Everything the divine bloodline took from Clay, it now pays back with interest. He deals <b>${this.damageBonusPercent}%</b> increased damage against enemies of <b>divine</b> or <b>demigod</b> blood, and <b>${this.piercingPercentage}%</b> of that damage goes straight past their <b>Defense</b>.`,
+      pt: `Tudo que a linhagem divina tirou de Clay, ele agora cobra de volta com juros. Ele causa dano <b>${this.damageBonusPercent}%</b> maior contra inimigos de sangue <b>divino</b> ou <b>semidivino</b>, e <b>${this.piercingPercentage}%</b> desse dano passa direto pela <b>Defesa</b> deles.`,
     };
   },
 
@@ -23,7 +23,7 @@ export default {
       return;
 
     const boosted =
-      Number(baseDamage ?? damage ?? 0) * (1 + this.bonusDmgPercent / 100);
+      Number(baseDamage ?? damage ?? 0) * (1 + this.damageBonusPercent / 100);
 
     return {
       baseDamage: boosted,
