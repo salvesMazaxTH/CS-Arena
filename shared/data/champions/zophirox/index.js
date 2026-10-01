@@ -1,11 +1,5 @@
-import zophiroxData from "./data.js";
-import zophiroxSkills from "./skills.js";
-import zophiroxPassive from "./passive.js";
+import data from "./data.js";
+import passive from "./passive.js";
+import skills from "./skills.js";
 
-const zophirox = {
-  ...zophiroxData,
-  skills: zophiroxSkills,
-  passive: zophiroxPassive,
-};
-
-export default zophirox;
+export default { ...data, skills, passive };

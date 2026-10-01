@@ -1,11 +1,5 @@
-import yresaColossusData from "./data.js";
-import yresaColossusSkills from "./skills.js";
-import yresaColossusPassive from "./passive.js";
+import data from "./data.js";
+import passive from "./passive.js";
+import skills from "./skills.js";
 
-const yresaColossus = {
-  ...yresaColossusData,
-  skills: yresaColossusSkills,
-  passive: yresaColossusPassive,
-};
-
-export default yresaColossus;
+export default { ...data, skills, passive };

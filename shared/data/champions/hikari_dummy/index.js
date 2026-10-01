@@ -1,11 +1,5 @@
-import hikariDummyData from "./data.js";
-import hikariDummySkills from "./skills.js";
-import hikariDummyPassive from "./passive.js";
+import data from "./data.js";
+import passive from "./passive.js";
+import skills from "./skills.js";
 
-const hikariDummy = {
-  ...hikariDummyData,
-  skills: hikariDummySkills,
-  passive: hikariDummyPassive,
-};
-
-export default hikariDummy;
+export default { ...data, skills, passive };

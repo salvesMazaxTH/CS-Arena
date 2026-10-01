@@ -1,11 +1,5 @@
-import yresaPetronikaPrimordialData from "./data.js";
-import yresaPetronikaPrimordialSkills from "./skills.js";
-import yresaPetronikaPrimordialPassive from "./passive.js";
+import data from "./data.js";
+import passive from "./passive.js";
+import skills from "./skills.js";
 
-const yresaPetronikaPrimordial = {
-  ...yresaPetronikaPrimordialData,
-  skills: yresaPetronikaPrimordialSkills,
-  passive: yresaPetronikaPrimordialPassive,
-};
-
-export default yresaPetronikaPrimordial;
+export default { ...data, skills, passive };
