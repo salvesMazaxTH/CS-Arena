@@ -9,18 +9,23 @@ function isDragon(champion) {
   );
 }
 
-function damagedTargetsThisTurn(owner, currentTurn) {
-  owner.runtime ??= {};
+// Only a direct hit that reached HP primes the target: DoT ticks and
+// hits the shield fully absorbed do not.
+function wasDamagedByAlliedDragon(defender, owner, context) {
+  const entries = context?.getDamageTakenThisTurn?.(defender.id) ?? [];
+  if (!entries.length) return false;
 
-  const previous = owner.runtime.dragonsFury;
-  if (previous?.turn !== currentTurn) {
-    owner.runtime.dragonsFury = {
-      turn: currentTurn,
-      targetIds: new Set(),
-    };
-  }
+  const championsById = new Map(
+    (context.matchChampions ?? []).map((champion) => [champion.id, champion]),
+  );
 
-  return owner.runtime.dragonsFury.targetIds;
+  return entries.some(
+    (entry) =>
+      !entry.isDot &&
+      entry.amount > 0 &&
+      entry.sourceTeam === owner.team &&
+      isDragon(championsById.get(entry.sourceId)),
+  );
 }
 
 export const dragonsFury = {
@@ -44,28 +49,16 @@ export const dragonsFury = {
 
   hookScope: {
     onBeforeDmgDealing: "attacker",
-    onAfterDmgDealing: "attacker",
   },
 
   onBeforeDmgDealing({ attacker, defender, damage, owner, context }) {
     if (!attacker || !defender || !owner) return;
     if (attacker.team !== owner.team || !isDragon(attacker)) return;
 
-    const targetIds = damagedTargetsThisTurn(owner, context?.currentTurn ?? 0);
-    if (!targetIds.has(defender.id)) return;
+    if (!wasDamagedByAlliedDragon(defender, owner, context)) return;
 
     return {
       damage: Number(damage) * (1 + this.bonusDmgPercent / 100),
     };
-  },
-
-  onAfterDmgDealing({ attacker, defender, actualDmg, owner, context }) {
-    // A missed, blocked, immune, or fully absorbed hit does not prime the
-    // target for Dragon's Fury. `actualDmg` is available only after the damage
-    // pipeline has applied shields and HP changes.
-    if (!attacker || !defender || !owner || !(Number(actualDmg) > 0)) return;
-    if (attacker.team !== owner.team || !isDragon(attacker)) return;
-
-    damagedTargetsThisTurn(owner, context?.currentTurn ?? 0).add(defender.id);
   },
 };

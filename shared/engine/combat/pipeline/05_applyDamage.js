@@ -68,6 +68,17 @@ export function applyDamage(event) {
     },
   });
 
+  event.context.recordDamageInTurn?.({
+    targetId: event.defender.id,
+    sourceId: event.attacker?.id ?? null,
+    sourceTeam: event.attacker?.team ?? null,
+    amount: event.actualDmg,
+    absorbed: absorbedByShield,
+    skillKey: event.skill?.key ?? null,
+    isDot: !!event.context.isDot,
+    reaction: (event.context.damageDepth || 0) > 0,
+  });
+
   // Agora _lastEventRef está correto, registre o dialog de afinidade se existir
   if (event.affinityDialog) {
     event.context.registerDialog(event.affinityDialog);

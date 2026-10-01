@@ -156,11 +156,56 @@ class CombatState {
         events: [],
         championsDeadThisTurn: [],
         skillsUsedThisTurn: {},
-        damageDealtThisTurn: {},
+        // All three keyed by the champion on the receiving end.
+        damageTakenThisTurn: {},
+        healsReceivedThisTurn: {},
+        statusesReceivedThisTurn: {},
       });
     }
 
     return this.turnHistory.get(this.currentTurn);
+  }
+
+  _pushTurnEntry(field, targetId, entry) {
+    const byTarget = this.ensureTurnEntry()[field];
+    byTarget[targetId] ??= [];
+    byTarget[targetId].push(entry);
+  }
+
+  _readTurnEntries(field, targetId) {
+    return this.turnHistory.get(this.currentTurn)?.[field][targetId] ?? [];
+  }
+
+  /**
+   * A hit counts once it connects: HP lost in `amount`, shield eaten in `absorbed`.
+   * Misses, Total Block and immunity leave no trace.
+   */
+  recordDamageInTurn({ targetId, sourceId = null, sourceTeam = null, amount = 0, absorbed = 0, skillKey = null, isDot = false, reaction = false }) {
+    if (!targetId || !(Number(amount) > 0 || Number(absorbed) > 0)) return;
+    this._pushTurnEntry("damageTakenThisTurn", targetId, { sourceId, sourceTeam, amount, absorbed, skillKey, isDot, reaction });
+  }
+
+  recordHealInTurn({ targetId, sourceId = null, sourceTeam = null, amount, isLifesteal = false }) {
+    if (!targetId || !(Number(amount) > 0)) return;
+    this._pushTurnEntry("healsReceivedThisTurn", targetId, { sourceId, sourceTeam, amount, isLifesteal });
+  }
+
+  /** Only statuses that actually landed; a refreshed stackable status logs the stacks it now holds. */
+  recordStatusInTurn({ targetId, sourceId = null, sourceTeam = null, statusEffectKey, type = null, stacks = 1 }) {
+    if (!targetId || !statusEffectKey) return;
+    this._pushTurnEntry("statusesReceivedThisTurn", targetId, { sourceId, sourceTeam, statusEffectKey, type, stacks });
+  }
+
+  getDamageTakenThisTurn(targetId) {
+    return this._readTurnEntries("damageTakenThisTurn", targetId);
+  }
+
+  getHealsReceivedThisTurn(targetId) {
+    return this._readTurnEntries("healsReceivedThisTurn", targetId);
+  }
+
+  getStatusesReceivedThisTurn(targetId) {
+    return this._readTurnEntries("statusesReceivedThisTurn", targetId);
   }
 
   logTurnEvent(eventType, eventData) {

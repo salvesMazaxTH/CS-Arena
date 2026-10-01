@@ -1159,6 +1159,13 @@ export class TurnResolver {
           ...combat.deadChampions.values(),
         ];
       },
+      // What happened to a champion this turn, in the order it happened.
+      recordDamageInTurn: (entry) => combat.recordDamageInTurn(entry),
+      recordHealInTurn: (entry) => combat.recordHealInTurn(entry),
+      recordStatusInTurn: (entry) => combat.recordStatusInTurn(entry),
+      getDamageTakenThisTurn: (targetId) => combat.getDamageTakenThisTurn(targetId),
+      getHealsReceivedThisTurn: (targetId) => combat.getHealsReceivedThisTurn(targetId),
+      getStatusesReceivedThisTurn: (targetId) => combat.getStatusesReceivedThisTurn(targetId),
       // eventIndex: 0, // internal control for event ordering within a single action's resolution
       players: this.match.players,
 

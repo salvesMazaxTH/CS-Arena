@@ -81,6 +81,14 @@ export class HealEvent {
   }
 
   register() {
+    this.context.recordHealInTurn?.({
+      targetId: this.target.id,
+      sourceId: this.source?.id ?? null,
+      sourceTeam: this.source?.team ?? null,
+      amount: this.healed,
+      isLifesteal: this.isLifesteal,
+    });
+
     if (this.isLifesteal && this.context.registerLifesteal) {
       this.context.registerLifesteal({
         target: this.target,

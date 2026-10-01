@@ -107,6 +107,18 @@ function assertStatusPreconditions(champion, statusEffectKey, context) {
   return definition;
 }
 
+function recordStatusInTurn({ champion, statusEffectKey, context, metadata, stacks }) {
+  const source = resolveStatusEffectSource(context, metadata);
+  context?.recordStatusInTurn?.({
+    targetId: champion.id,
+    sourceId: metadata?.sourceId ?? context?.actionSource?.id ?? null,
+    sourceTeam: source?.team ?? null,
+    statusEffectKey,
+    type: StatusEffectsRegistry[statusEffectKey]?.type ?? null,
+    stacks,
+  });
+}
+
 function applyStatusEffectCore({
   champion,
   definition,
@@ -202,6 +214,14 @@ function applyStatusEffectCore({
     }
   }
 
+  recordStatusInTurn({
+    champion,
+    statusEffectKey,
+    context,
+    metadata,
+    stacks: normalizedStackCount,
+  });
+
   emitCombatEvent(
     "onStatusEffectApplied",
     {
@@ -259,6 +279,14 @@ function applyStackUpdate({
   };
 
   champion.statusEffects.set(statusEffectKey, existingInstance);
+
+  recordStatusInTurn({
+    champion,
+    statusEffectKey,
+    context,
+    metadata,
+    stacks: newStacks,
+  });
 
   emitCombatEvent(
     "onStatusEffectApplied",
