@@ -9,7 +9,7 @@ export const impervious_steel = {
   requirements: {
     elementalAffinity: {
       element: "steel",
-      count: 3,
+      count: 5,
     },
   },
 

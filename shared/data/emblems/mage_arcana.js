@@ -10,7 +10,7 @@ export const mageArcana = {
     classKey: [{ key: "mage", count: 5 }],
   },
 
-  bonusDamage: 20,
+  bonusDamage: 30,
 
   description() {
     return {

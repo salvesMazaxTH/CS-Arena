@@ -5,7 +5,7 @@ import { hasElement } from "../../engine/combat/elements.js";
 export const firelord = {
   key: "fire_lord",
   name: "Emblem of the Fire Lord",
-  bonusDmg: 35,
+  bonusDmg: 20,
 
   requirements: {
     elementalAffinity: {

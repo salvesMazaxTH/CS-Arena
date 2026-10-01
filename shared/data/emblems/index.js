@@ -1,6 +1,7 @@
 import { firelord } from "./fire_lord.js";
 import { thunderRoar } from "./thunder_roar.js";
 import { impervious_steel } from "./impervious_steel.js";
+import { temperedSteel } from "./tempered_steel.js";
 import { earthshaker } from "./earthshaker.js";
 import { earthenWard } from "./earthen_ward.js";
 import { oceanGrace } from "./ocean_grace.js";
@@ -29,6 +30,7 @@ export const EMBLEMS = [
   firelord,
   thunderRoar,
   impervious_steel,
+  temperedSteel,
   earthshaker,
   earthenWard,
   oceanGrace,

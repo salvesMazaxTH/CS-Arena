@@ -4,7 +4,7 @@ export const ironlads = {
   tagline: "A steel core that shrugs off Piercing, moving faster than it looks.",
   origin: "prebuilt",
   derivedFrom: null,
-  emblems: ["impervious_steel", "storm_fist"],
+  emblems: ["tempered_steel", "storm_fist"],
   champions: [
     "morakhan",
     "rakhana",
