@@ -22,8 +22,8 @@ const akaneSkills = [
 
     description() {
       return {
-        en: `Akane unsheathes a single katana and draws it across the chosen target in one clean violet arc, the blade back at her hip before the cut is even felt, dealing damage and leaving them <b>Bleeding</b> for <b>${this.bleedingStacks}</b> acúmulo(s).`,
-        pt: `Akane desembainha uma única katana e a arrasta pelo alvo escolhido num único arco violeta limpo, a lâmina de volta ao quadril antes mesmo de o corte ser sentido, causando dano e deixando-o <b>Sangrando</b> por <b>${this.bleedingStacks}</b> acúmulo(s).`,
+        en: `Akane unsheathes a single katana and draws it across the chosen target in one clean violet arc, the blade back at her hip before the cut is even felt. Deals physical damage and leaves them <b>Bleeding</b> for <b>${this.bleedingStacks}</b> stack(s).`,
+        pt: `Akane desembainha uma única katana e a arrasta pelo alvo escolhido num único arco violeta limpo, a lâmina de volta ao quadril antes mesmo de o corte ser sentido. Causa dano físico e o deixa <b>Sangrando</b> por <b>${this.bleedingStacks}</b> acúmulo(s).`,
       };
     },
 
@@ -85,10 +85,7 @@ const akaneSkills = [
 
       const edgeDamagePercent = this.edgeDamagePercent;
 
-      user.runtime.hookEffects ??= [];
-      user.runtime.hookEffects = user.runtime.hookEffects.filter(
-        (hook) => hook.key !== "bloodbath_edge",
-      );
+      user.removeHookEffects((hook) => hook.key === "bloodbath_edge");
 
       user.addHookEffect(
         {
@@ -98,9 +95,7 @@ const akaneSkills = [
           expiresAtTurn: context.currentTurn + this.buffDuration,
           hookScope: { onBeforeDmgDealing: "attacker" },
           onBeforeDmgDealing({ attacker }) {
-            attacker.runtime.hookEffects = attacker.runtime.hookEffects.filter(
-              (hook) => hook.key !== "bloodbath_edge",
-            );
+            attacker.removeHookEffects((hook) => hook.key === "bloodbath_edge");
 
             return { bonusDamage: (attacker.Attack * edgeDamagePercent) / 100 };
           },
@@ -131,8 +126,8 @@ const akaneSkills = [
 
     description() {
       return {
-        en: `Akane draws both katanas and falls upon the chosen target in a furious, perfectly synchronized cadence, every cut and thrust flowing into the next like steps of a dance too fast to follow, dealing heavy damage.`,
-        pt: `Akane saca as duas katanas e desce sobre o alvo escolhido numa cadência furiosa e perfeitamente sincronizada, cada corte e estocada fluindo para o próximo como passos de uma dança rápida demais para acompanhar, causando dano pesado.`,
+        en: `Akane draws both katanas and falls upon the chosen target in a furious, perfectly synchronized cadence, every cut and thrust flowing into the next like steps of a dance too fast to follow. Deals physical damage.`,
+        pt: `Akane saca as duas katanas e desce sobre o alvo escolhido numa cadência furiosa e perfeitamente sincronizada, cada corte e estocada fluindo para o próximo como passos de uma dança rápida demais para acompanhar. Causa dano físico.`,
       };
     },
 
@@ -141,7 +136,7 @@ const akaneSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
 
-      return new DamageEvent({
+      const result = new DamageEvent({
         baseDamage: (user.Attack * this.bf) / 100,
         attacker: user,
         defender: enemy,
@@ -150,6 +145,8 @@ const akaneSkills = [
         context,
         allChampions: context?.allChampions,
       }).execute();
+
+      return Array.isArray(result) ? result : [result];
     },
   },
 ];
