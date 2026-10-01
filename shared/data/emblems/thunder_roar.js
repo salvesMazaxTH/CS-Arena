@@ -1,4 +1,4 @@
-import { grantStats } from "./emblemGrants.js";
+import { grantStats, isEmblemBeneficiary } from "./emblemGrants.js";
 
 export const thunderRoar = {
   key: "thunder_roar",
@@ -21,7 +21,7 @@ export const thunderRoar = {
 
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (champion.team !== owner.team) return;
+    if (!isEmblemBeneficiary(champion, owner)) return;
 
     grantStats(champion, { Speed: this.speedBonus }, context);
 

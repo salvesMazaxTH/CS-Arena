@@ -1,6 +1,7 @@
 // shared/data/emblems/balanced_party.js
 
-import { countClassRequirementSlots } from "./eligibility.js";
+import { countClassRequirementSlots } from "./eligibility.js";
+import { isEmblemBeneficiary } from "./emblemGrants.js";
 
 export const balancedParty = {
   key: "balanced_party",
@@ -36,14 +37,14 @@ export const balancedParty = {
   },
 
   onBeforeDmgDealing({ attacker, owner, damage, context }) {
-    if (!attacker || !owner || attacker.team !== owner.team) return;
+    if (!attacker || !owner || !isEmblemBeneficiary(attacker, owner)) return;
     if (!(damage > 0) || !this._partyStands(owner.team, context)) return;
 
     return { damage: damage * (1 + this.damageBonusPercent / 100) };
   },
 
   onBeforeDmgTaking({ defender, owner, damage, context }) {
-    if (!defender || !owner || defender.team !== owner.team) return;
+    if (!defender || !owner || !isEmblemBeneficiary(defender, owner)) return;
     if (!(damage > 0) || !this._partyStands(owner.team, context)) return;
 
     return { damage: damage * (1 - this.damageReductionPercent / 100) };

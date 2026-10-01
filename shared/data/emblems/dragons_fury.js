@@ -1,6 +1,7 @@
 // shared/data/emblems/dragons_fury.js
 
-import { championHasSpecies } from "../championTraits.js";
+import { championHasSpecies } from "../championTraits.js";
+import { isEmblemBeneficiary } from "./emblemGrants.js";
 
 // Only a direct hit that reached HP primes the target: DoT ticks and
 // hits the shield fully absorbed do not.
@@ -42,7 +43,7 @@ export const dragonsFury = {
 
   onBeforeDmgDealing({ attacker, defender, damage, owner, context }) {
     if (!attacker || !defender || !owner) return;
-    if (attacker.team !== owner.team) return;
+    if (!isEmblemBeneficiary(attacker, owner)) return;
     if (!championHasSpecies(attacker, "dragon")) return;
 
     if (!wasDamagedByAlliedDragon(defender, owner, context)) return;

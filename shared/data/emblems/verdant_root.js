@@ -1,7 +1,7 @@
 // shared/data/emblems/verdant_root.js
 
 import { StatusEffectsRegistry } from "../statusEffects/effectsRegistry.js";
-import { grantStats } from "./emblemGrants.js";
+import { grantStats, isEmblemBeneficiary } from "./emblemGrants.js";
 import { formatChampionName } from "../../ui/formatters.js";
 
 export const verdantRoot = {
@@ -19,7 +19,7 @@ export const verdantRoot = {
 
   description() {
     const immunitiesEn = this.immuneStatusKeys
-      .map((key) => StatusEffectsRegistry[key].name)
+      .map((key) => `<b>${StatusEffectsRegistry[key].name}</b>`)
       .join(" and ");
     const immunitiesPt = this.immuneStatusKeys
       .map((key) => `<b>${StatusEffectsRegistry[key].namePt}</b>`)
@@ -32,7 +32,7 @@ export const verdantRoot = {
 
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (champion.team !== owner.team) return;
+    if (!isEmblemBeneficiary(champion, owner)) return;
 
     grantStats(champion, { Defense: this.defenseBonus }, context);
 
@@ -40,7 +40,7 @@ export const verdantRoot = {
   },
 
   onStatusEffectIncoming({ target, statusEffect, owner }) {
-    if (!target || !owner || target.team !== owner.team) return;
+    if (!target || !owner || !isEmblemBeneficiary(target, owner)) return;
     if (!this.immuneStatusKeys.includes(statusEffect?.key)) return;
 
     const status = StatusEffectsRegistry[statusEffect.key];

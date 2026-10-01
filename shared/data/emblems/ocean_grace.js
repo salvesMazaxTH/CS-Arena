@@ -1,6 +1,6 @@
 // shared/data/emblems/ocean_grace.js
 
-import { grantMaxHPPercent } from "./emblemGrants.js";
+import { grantMaxHPPercent, isEmblemBeneficiary } from "./emblemGrants.js";
 
 export const oceanGrace = {
   key: "ocean_grace",
@@ -25,7 +25,7 @@ export const oceanGrace = {
 
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (champion.team !== owner.team) return;
+    if (!isEmblemBeneficiary(champion, owner)) return;
 
     grantMaxHPPercent(champion, this.maxHPBonusPercent, context);
 

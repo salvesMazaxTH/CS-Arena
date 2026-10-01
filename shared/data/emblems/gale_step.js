@@ -1,6 +1,6 @@
 // shared/data/emblems/gale_step.js
 
-import { grantStats } from "./emblemGrants.js";
+import { grantStats, isEmblemBeneficiary } from "./emblemGrants.js";
 
 export const galeStep = {
   key: "gale_step",
@@ -23,7 +23,7 @@ export const galeStep = {
 
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (champion.team !== owner.team) return;
+    if (!isEmblemBeneficiary(champion, owner)) return;
 
     grantStats(champion, { Evasion: this.evasionBonus }, context);
 

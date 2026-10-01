@@ -1,7 +1,7 @@
 // shared/data/emblems/marksman_precision.js
 
 import { championHasClass } from "../championClasses.js";
-import { grantStats } from "./emblemGrants.js";
+import { grantStats, isEmblemBeneficiary } from "./emblemGrants.js";
 
 export const marksmanPrecision = {
   key: "marksman_precision",
@@ -22,7 +22,7 @@ export const marksmanPrecision = {
 
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (champion.team !== owner.team) return;
+    if (!isEmblemBeneficiary(champion, owner)) return;
     if (!championHasClass(champion, "marksman")) return;
 
     grantStats(

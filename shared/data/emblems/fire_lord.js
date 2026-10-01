@@ -1,4 +1,5 @@
 import { hasElement } from "../../engine/combat/elements.js";
+import { isEmblemBeneficiary } from "./emblemGrants.js";
 
 // shared/data/emblems/fire_lord.js
 
@@ -24,7 +25,7 @@ export const firelord = {
   onBeforeDmgDealing({ attacker, element, owner }) {
     if (!attacker || !owner) return;
 
-    if (attacker.team !== owner.team) return;
+    if (!isEmblemBeneficiary(attacker, owner)) return;
 
     if (!hasElement(element, "fire")) return;
 

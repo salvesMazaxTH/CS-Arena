@@ -1,6 +1,7 @@
 // shared/data/emblems/demigods_trial.js
 
-import { championHasSpecies } from "../championTraits.js";
+import { championHasSpecies } from "../championTraits.js";
+import { isEmblemBeneficiary } from "./emblemGrants.js";
 
 export const demigodsTrial = {
   key: "demigods_trial",
@@ -28,7 +29,7 @@ export const demigodsTrial = {
 
   onBeforeDmgDealing({ attacker, defender, damage, owner }) {
     if (!attacker || !defender || !owner) return;
-    if (attacker.team !== owner.team) return;
+    if (!isEmblemBeneficiary(attacker, owner)) return;
     if (!championHasSpecies(attacker, "demigod")) return;
 
     // The trial is always a fight against something greater.
@@ -40,7 +41,7 @@ export const demigodsTrial = {
 
   onBeforeDmgTaking({ defender, attacker, damage, owner }) {
     if (!defender || !attacker || !owner) return;
-    if (defender.team !== owner.team) return;
+    if (!isEmblemBeneficiary(defender, owner)) return;
     if (!championHasSpecies(defender, "demigod")) return;
     if (!(damage > 0)) return;
 

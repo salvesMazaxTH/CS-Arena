@@ -17,7 +17,10 @@ function stripPositiveEffects(target, max) {
   let mods = [];
   if (statuses.length < max) {
     mods = target.statModifiers
-      .filter((mod) => mod.amount > 0 && !mod.statusKey)
+      .filter(
+          (mod) =>
+            mod.amount > 0 && !mod.statusKey && mod.origin?.kind !== "emblem",
+        )
       .slice(0, max - statuses.length);
     target.removeStatModifiers(mods);
   }

@@ -6,7 +6,7 @@
 // half, since Lightning champions are already fast and Brawlers usually are not.
 
 import { championHasClass } from "../championClasses.js";
-import { grantStats } from "./emblemGrants.js";
+import { grantStats, isEmblemBeneficiary } from "./emblemGrants.js";
 import { championHasAffinity } from "../championTraits.js";
 
 function carriesTheStorm(champion) {
@@ -33,8 +33,8 @@ export const stormFist = {
 
   description() {
     return {
-      en: `Your Brawler champions gain <b>+${this.brawlerSpeedBonus}</b> <b>Speed</b> and your Lightning champions gain <b>+${this.lightningSpeedBonus}</b> <b>Speed</b> when entering combat. Both deal <b>${this.damageBonusPercent}%</b> increased damage to enemies slower than them.`,
-      pt: `Seus campeões Lutadores ganham <b>+${this.brawlerSpeedBonus}</b> de <b>Velocidade</b> e seus campeões de Raio ganham <b>+${this.lightningSpeedBonus}</b> de <b>Velocidade</b> ao entrar em combate. Ambos causam dano <b>${this.damageBonusPercent}%</b> maior a inimigos mais lentos que eles.`,
+      en: `Your Brawler class champions gain <b>+${this.brawlerSpeedBonus}</b> <b>Speed</b> and your Lightning champions gain <b>+${this.lightningSpeedBonus}</b> <b>Speed</b> when entering combat. Both deal <b>${this.damageBonusPercent}%</b> increased damage to enemies slower than them.`,
+      pt: `Seus campeões da classe Lutador ganham <b>+${this.brawlerSpeedBonus}</b> de <b>Velocidade</b> e seus campeões de Raio ganham <b>+${this.lightningSpeedBonus}</b> de <b>Velocidade</b> ao entrar em combate. Ambos causam dano <b>${this.damageBonusPercent}%</b> maior a inimigos mais lentos que eles.`,
     };
   },
 
@@ -48,7 +48,7 @@ export const stormFist = {
 
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (champion.team !== owner.team) return;
+    if (!isEmblemBeneficiary(champion, owner)) return;
 
     const speedBonus = this.speedGrant(champion);
     if (!speedBonus) return;
@@ -61,7 +61,7 @@ export const stormFist = {
   onBeforeDmgDealing({ attacker, defender, damage, owner }) {
     if (!attacker || !defender || !owner) return;
 
-    if (attacker.team !== owner.team) return;
+    if (!isEmblemBeneficiary(attacker, owner)) return;
 
     // Either half of the emblem carries the storm.
     if (!carriesTheStorm(attacker)) return;

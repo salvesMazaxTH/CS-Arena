@@ -1,5 +1,5 @@
 import { StatusEffectsRegistry } from "../statusEffects/effectsRegistry.js";
-import { grantStats } from "./emblemGrants.js";
+import { grantStats, isEmblemBeneficiary } from "./emblemGrants.js";
 import { formatChampionName } from "../../ui/formatters.js";
 
 export const earthshaker = {
@@ -32,7 +32,7 @@ export const earthshaker = {
 
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (champion.team !== owner.team) return;
+    if (!isEmblemBeneficiary(champion, owner)) return;
 
     grantStats(champion, { Defense: this.defenseBonus }, context);
 
@@ -40,7 +40,7 @@ export const earthshaker = {
   },
 
   onStatusEffectIncoming({ target, statusEffect, owner }) {
-    if (!target || !owner || target.team !== owner.team) return;
+    if (!target || !owner || !isEmblemBeneficiary(target, owner)) return;
     if (!statusEffect?.subtypes) return;
     if (statusEffect.subtypes.includes("systemic")) return;
 

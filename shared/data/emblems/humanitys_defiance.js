@@ -1,6 +1,7 @@
 // shared/data/emblems/humanitys_defiance.js
 
-import { championHasSpecies } from "../championTraits.js";
+import { championHasSpecies } from "../championTraits.js";
+import { isEmblemBeneficiary } from "./emblemGrants.js";
 
 export const humanitysDefiance = {
   key: "humanitys_defiance",
@@ -29,7 +30,7 @@ export const humanitysDefiance = {
   onBeforeDmgDealing({ attacker, defender, damage, owner }) {
     if (!attacker || !defender) return;
 
-    if (attacker.team !== owner.team) return;
+    if (!isEmblemBeneficiary(attacker, owner)) return;
 
     // Only Human champions benefit from the Emblem.
     if (!championHasSpecies(attacker, "human")) return;
@@ -49,7 +50,7 @@ export const humanitysDefiance = {
     if (!defender || !attacker || !owner) return;
     if (!(damage > 0)) return;
 
-    if (defender.team !== owner.team) return;
+    if (!isEmblemBeneficiary(defender, owner)) return;
 
     if (!championHasSpecies(defender, "human")) return;
 

@@ -1,6 +1,9 @@
-import { formatChampionName } from "../../ui/formatters.js";
+// shared/data/emblems/impervious_steel.js
 
-export const impervious_steel = {
+import { formatChampionName } from "../../ui/formatters.js";
+import { isEmblemBeneficiary } from "./emblemGrants.js";
+
+export const imperviousSteel = {
   key: "impervious_steel",
   name: "Emblem of Impervious Steel",
   dmgReductionPercent: 15,
@@ -26,12 +29,11 @@ export const impervious_steel = {
 
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (champion.team !== owner.team) return;
+    if (!isEmblemBeneficiary(champion, owner)) return;
 
     champion.applyDamageReduction({
       amount: this.dmgReductionPercent,
       type: "percent",
-      duration: 9999,
       source: this.name,
       context,
     });
@@ -40,7 +42,7 @@ export const impervious_steel = {
   },
 
   onBeforeDmgTaking({ defender, owner, mode, piercingPercentage }) {
-    if (!defender || !owner || defender.team !== owner.team) return;
+    if (!defender || !owner || !isEmblemBeneficiary(defender, owner)) return;
     if (mode !== "piercing") return;
 
     const resistedPiercing =
@@ -49,8 +51,8 @@ export const impervious_steel = {
     return {
       piercingPercentage: resistedPiercing,
       log: {
-        en: `<b>[Emblem — Impervious Steel]</b> ${formatChampionName(defender)}'s steel resists the piercing strike, cutting its effectiveness by ${this.piercingResistPercent}%!`,
-        pt: `<b>[Emblema — Impervious Steel]</b> o aço de ${formatChampionName(defender)} resiste ao golpe perfurante e corta ${this.piercingResistPercent}% da sua eficácia!`,
+        en: `<b>[Emblem — Impervious Steel]</b> ${formatChampionName(defender)}'s steel resists the piercing strike, cutting its effectiveness by <b>${this.piercingResistPercent}%</b>!`,
+        pt: `<b>[Emblema — Impervious Steel]</b> o aço de ${formatChampionName(defender)} resiste ao golpe perfurante e corta <b>${this.piercingResistPercent}%</b> da sua eficácia!`,
       },
     };
   },

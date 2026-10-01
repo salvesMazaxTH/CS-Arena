@@ -2,6 +2,7 @@
 
 import { championHasClass } from "../championClasses.js";
 import { formatChampionName } from "../../ui/formatters.js";
+import { isEmblemBeneficiary } from "./emblemGrants.js";
 
 export const assassinsAmbush = {
   key: "assassins_ambush",
@@ -21,7 +22,7 @@ export const assassinsAmbush = {
   },
 
   onBeforeDmgDealing({ attacker, defender, owner, mode }) {
-    if (!attacker || !owner || attacker.team !== owner.team) return;
+    if (!attacker || !owner || !isEmblemBeneficiary(attacker, owner)) return;
     if (!championHasClass(attacker, "assassin")) return;
 
     // Absolute damage already ignores Defense entirely — never downgrade it.
@@ -32,8 +33,8 @@ export const assassinsAmbush = {
       piercingMultiplier: 1 + this.extraPiercingPercent / 100,
       piercingFloor: this.minimumPiercing,
       log: {
-        en: `<b>[Emblem — Assassin's Ambush]</b> ${defender ? formatChampionName(defender) : "the target"} is caught in the ambush: the strike ignores ${this.extraPiercingPercent}% more of their Defense.`,
-        pt: `<b>[Emblema — Assassin's Ambush]</b> ${defender ? formatChampionName(defender) : "o alvo"} cai na emboscada: o golpe ignora ${this.extraPiercingPercent}% a mais da sua Defesa.`,
+        en: `<b>[Emblem — Assassin's Ambush]</b> ${defender ? formatChampionName(defender) : "the target"} is caught in the ambush: the strike ignores <b>${this.extraPiercingPercent}%</b> more of their Defense.`,
+        pt: `<b>[Emblema — Assassin's Ambush]</b> ${defender ? formatChampionName(defender) : "o alvo"} cai na emboscada: o golpe ignora <b>${this.extraPiercingPercent}%</b> a mais da sua Defesa.`,
       },
     };
   },

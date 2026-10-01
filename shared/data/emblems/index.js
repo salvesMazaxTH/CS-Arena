@@ -1,6 +1,6 @@
 import { firelord } from "./fire_lord.js";
 import { thunderRoar } from "./thunder_roar.js";
-import { impervious_steel } from "./impervious_steel.js";
+import { imperviousSteel } from "./impervious_steel.js";
 import { temperedSteel } from "./tempered_steel.js";
 import { earthshaker } from "./earthshaker.js";
 import { earthenWard } from "./earthen_ward.js";
@@ -29,7 +29,7 @@ export { evaluateEmblemEligibilityForRoster } from "./eligibility.js";
 export const EMBLEMS = [
   firelord,
   thunderRoar,
-  impervious_steel,
+  imperviousSteel,
   temperedSteel,
   earthshaker,
   earthenWard,

@@ -1,7 +1,7 @@
 // shared/data/emblems/tank_bulwark.js
 
 import { championHasClass } from "../championClasses.js";
-import { grantStats, grantMaxHPPercent } from "./emblemGrants.js";
+import { grantStats, grantMaxHPPercent, isEmblemBeneficiary } from "./emblemGrants.js";
 
 export const tankBulwark = {
   key: "tank_bulwark",
@@ -22,7 +22,7 @@ export const tankBulwark = {
 
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (champion.team !== owner.team) return;
+    if (!isEmblemBeneficiary(champion, owner)) return;
     if (!championHasClass(champion, "tank")) return;
 
     grantStats(champion, { Defense: this.defenseBonus }, context);

@@ -1,4 +1,4 @@
-import { grantStats } from "./emblemGrants.js";
+import { grantStats, isEmblemBeneficiary } from "./emblemGrants.js";
 import { formatChampionName } from "../../ui/formatters.js";
 
 // The 3-steel tier below Impervious Steel: flat Defense instead of Damage
@@ -7,7 +7,7 @@ export const temperedSteel = {
   key: "tempered_steel",
   name: "Emblem of Tempered Steel",
   defenseBonus: 10,
-  piercingResistPercent: 30,
+  piercingResistPercent: 25,
 
   requirements: {
     elementalAffinity: {
@@ -29,7 +29,7 @@ export const temperedSteel = {
 
   onChampionAdded({ champion, owner, context }) {
     // `owner` is the Player carrying the emblem; `champion` is the one entering.
-    if (champion.team !== owner.team) return;
+    if (!isEmblemBeneficiary(champion, owner)) return;
 
     grantStats(champion, { Defense: this.defenseBonus }, context);
 
@@ -37,7 +37,7 @@ export const temperedSteel = {
   },
 
   onBeforeDmgTaking({ defender, owner, mode, piercingPercentage }) {
-    if (!defender || !owner || defender.team !== owner.team) return;
+    if (!defender || !owner || !isEmblemBeneficiary(defender, owner)) return;
     if (mode !== "piercing") return;
 
     const resistedPiercing =

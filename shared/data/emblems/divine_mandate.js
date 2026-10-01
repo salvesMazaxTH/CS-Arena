@@ -1,6 +1,7 @@
 // shared/data/emblems/divine_mandate.js
 
-import { championHasSpecies } from "../championTraits.js";
+import { championHasSpecies } from "../championTraits.js";
+import { isEmblemBeneficiary } from "./emblemGrants.js";
 
 function hpPercent(champion) {
   return (champion.HP / champion.maxHP) * 100;
@@ -34,7 +35,7 @@ export const divineMandate = {
   onBeforeDmgDealing({ attacker, defender, damage, owner }) {
     if (!attacker || !defender || !owner) return;
 
-    if (attacker.team !== owner.team) return;
+    if (!isEmblemBeneficiary(attacker, owner)) return;
 
     // Only Divinity champions benefit from the Emblem.
     if (!championHasSpecies(attacker, "divinity")) return;
@@ -54,7 +55,7 @@ export const divineMandate = {
     if (!defender || !owner) return;
     if (!(damage > 0)) return;
 
-    if (defender.team !== owner.team) return;
+    if (!isEmblemBeneficiary(defender, owner)) return;
 
     if (!championHasSpecies(defender, "divinity")) return;
 

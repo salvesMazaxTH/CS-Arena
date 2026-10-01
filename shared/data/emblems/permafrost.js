@@ -3,6 +3,7 @@
 import { StatusEffectsRegistry } from "../statusEffects/effectsRegistry.js";
 import { hasElement } from "../../engine/combat/elements.js";
 import { formatChampionName } from "../../ui/formatters.js";
+import { isEmblemBeneficiary } from "./emblemGrants.js";
 
 export const permafrost = {
   key: "permafrost",
@@ -22,7 +23,7 @@ export const permafrost = {
 
   description() {
     return {
-      en: `The cold your team carries is the settled kind — old ice that has forgotten how to melt and does not feel a fresh chill land on it. Every allied champion is immune to ${StatusEffectsRegistry[this.immuneStatusKey].name} and takes <b>${this.baseDamageReductionPercent}%</b> less damage (except <b>Absolute Damage</b>), rising to <b>${this.iceDamageReductionPercent}%</b> against Ice damage; when Ice damage does land, <b>${this.iceHitShieldPercent}%</b> of it freezes onto the champion as a <b>Shield</b>.`,
+      en: `The cold your team carries is the settled kind — old ice that has forgotten how to melt and does not feel a fresh chill land on it. Every allied champion is immune to <b>${StatusEffectsRegistry[this.immuneStatusKey].name}</b> and takes <b>${this.baseDamageReductionPercent}%</b> less damage (except <b>Absolute Damage</b>), rising to <b>${this.iceDamageReductionPercent}%</b> against Ice damage; when Ice damage does land, <b>${this.iceHitShieldPercent}%</b> of it freezes onto the champion as a <b>Shield</b>.`,
       pt: `O frio que sua equipe carrega é o frio assentado — gelo antigo que esqueceu como derreter e nem sente um novo calafrio pousar nele. Todo campeão aliado é imune a <b>${StatusEffectsRegistry[this.immuneStatusKey].namePt}</b> e sofre <b>${this.baseDamageReductionPercent}%</b> menos dano (exceto <b>Dano Absoluto</b>), subindo para <b>${this.iceDamageReductionPercent}%</b> contra dano de Gelo; quando o dano de Gelo de fato atinge, <b>${this.iceHitShieldPercent}%</b> dele congela sobre o campeão como um <b>Escudo</b>.`,
     };
   },
@@ -35,7 +36,7 @@ export const permafrost = {
   // Ice champions already shrug off Chilled and Frozen natively; this extends
   // only the Chilled half to the rest of the team, never Frozen.
   onStatusEffectIncoming({ target, statusEffect, owner }) {
-    if (!target || !owner || target.team !== owner.team) return;
+    if (!target || !owner || !isEmblemBeneficiary(target, owner)) return;
     if (statusEffect?.key !== this.immuneStatusKey) return;
 
     return {
@@ -48,7 +49,7 @@ export const permafrost = {
   },
 
   onBeforeDmgTaking({ defender, owner, element, damage }) {
-    if (!defender || !owner || defender.team !== owner.team) return;
+    if (!defender || !owner || !isEmblemBeneficiary(defender, owner)) return;
     if (!(damage > 0)) return;
 
     const percent =
@@ -60,7 +61,7 @@ export const permafrost = {
   },
 
   onAfterDmgTaking({ defender, owner, element, actualDmg, context }) {
-    if (!defender || !owner || defender.team !== owner.team) return;
+    if (!defender?.alive || !owner || !isEmblemBeneficiary(defender, owner)) return;
     if (!hasElement(element, "ice") || !(actualDmg > 0)) return;
 
     const shield = Math.floor(actualDmg * (this.iceHitShieldPercent / 100));
@@ -72,8 +73,8 @@ export const permafrost = {
 
     return {
       log: {
-        en: `<b>[Emblem — Permafrost]</b> the Ice that struck ${formatChampionName(defender)} freezes into a ${shield} HP Shield.`,
-        pt: `<b>[Emblema — Permafrost]</b> o Gelo que atingiu ${formatChampionName(defender)} congela em um Escudo de ${shield} de HP.`,
+        en: `<b>[Emblem — Permafrost]</b> the Ice that struck ${formatChampionName(defender)} freezes into a <b>${shield}</b> HP Shield.`,
+        pt: `<b>[Emblema — Permafrost]</b> o Gelo que atingiu ${formatChampionName(defender)} congela em um Escudo de <b>${shield}</b> de HP.`,
       },
     };
   },

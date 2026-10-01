@@ -2,6 +2,7 @@
 
 import { championHasAffinity } from "../championTraits.js";
 import { formatChampionName } from "../../ui/formatters.js";
+import { isEmblemBeneficiary } from "./emblemGrants.js";
 
 export const earthenWard = {
   key: "earthen_ward",
@@ -25,7 +26,7 @@ export const earthenWard = {
   },
 
   onDamageIncoming({ defender, damage, context, owner }) {
-    if (!defender || !owner || defender.team !== owner.team) return;
+    if (!defender || !owner || !isEmblemBeneficiary(defender, owner)) return;
     if (!championHasAffinity(defender, "earth")) return;
     if (!Number.isFinite(Number(damage)) || Number(damage) <= 0) return;
     if ((context?.damageDepth ?? 0) <= 0) return;
