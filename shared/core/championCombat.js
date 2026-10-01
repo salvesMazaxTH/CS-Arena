@@ -780,6 +780,22 @@ export function removeStatModifiers(champion, modifiers) {
   return _recomputeStats(champion, champion.statModifiers, affectedStats);
 }
 
+/**
+ * Remove the stat reductions others imposed on the champion. Status-linked
+ * modifiers leave with their status and self-imposed ones are a cost, not an
+ * affliction, so both stay.
+ */
+export function removeStatReductions(champion) {
+  const reductions = champion.statModifiers.filter(
+    (modifier) =>
+      modifier.amount < 0 &&
+      !modifier.statusKey &&
+      modifier.origin?.ownerId !== champion.id,
+  );
+  removeStatModifiers(champion, reductions);
+  return reductions;
+}
+
 export function revertStatModifiersFromStatus(champion, statusKey) {
   const affectedStats = new Set();
   const remaining = [];
@@ -899,13 +915,14 @@ export function purgeExpiredHookEffects(champion, currentTurn) {
 /** Drop the hook effects matching predicate, letting each undo what it granted. */
 export function removeHookEffects(champion, predicate) {
   const effects = champion.runtime?.hookEffects;
-  if (!Array.isArray(effects)) return;
+  if (!Array.isArray(effects)) return [];
 
   const removed = effects.filter(predicate);
-  if (removed.length === 0) return;
+  if (removed.length === 0) return removed;
 
   champion.runtime.hookEffects = effects.filter((e) => !removed.includes(e));
   for (const effect of removed) effect.onRemoved?.({ owner: champion });
+  return removed;
 }
 
 /** All damage modifiers on the champion (empty array if none). */

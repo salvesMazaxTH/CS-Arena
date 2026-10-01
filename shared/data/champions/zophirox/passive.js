@@ -92,11 +92,8 @@ export default {
     for (const effect of owner.getStatusEffects({ type: "debuff" })) {
       owner.removeStatusEffect(effect.key);
     }
-    if (owner.runtime.hookEffects?.length) {
-      owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
-        (e) => e.type !== "debuff",
-      );
-    }
+    owner.removeHookEffects((e) => e.type === "debuff");
+    owner.removeStatReductions();
 
     owner.modifyStat({
       statName: "Evasion",

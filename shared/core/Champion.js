@@ -31,6 +31,7 @@ import {
   wouldBeLethal,
   heal,
   removeStatModifiers,
+  removeStatReductions,
   purgeExpiredStatModifiers,
   purgeExpiredHookEffects,
   removeHookEffects,
@@ -627,6 +628,10 @@ export class Champion {
 
   removeStatModifiers(modifiers) {
     return removeStatModifiers(this, modifiers);
+  }
+
+  removeStatReductions() {
+    return removeStatReductions(this);
   }
 
   purgeExpiredStatModifiers(currentTurn) {

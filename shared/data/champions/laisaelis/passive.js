@@ -68,15 +68,11 @@ export default {
     const shedStatuses = owner.getStatusEffects({ type: "debuff" });
     shedStatuses.forEach((effect) => owner.removeStatusEffect(effect.key));
 
-    const shedHooks =
-      owner.runtime.hookEffects?.filter((e) => e.type === "debuff") ?? [];
-    if (shedHooks.length) {
-      owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
-        (e) => e.type !== "debuff",
-      );
-    }
+    const shedHooks = owner.removeHookEffects((e) => e.type === "debuff");
+    const shedReductions = owner.removeStatReductions();
 
-    const cleansed = shedStatuses.length + shedHooks.length > 0;
+    const cleansed =
+      shedStatuses.length + shedHooks.length + shedReductions.length > 0;
 
     context.registerDialog({
       message: {
