@@ -262,11 +262,7 @@ function getGameState(extraChampions = [], { viewerTeam = null } = {}) {
     lineups[player.team] = player.selectedChampionKeys || [];
     lineupSummons[player.team] = getLineupSummonAvailability(player.team);
     lineupStatus[player.team] = getLineupStatuses(player.team, viewerTeam);
-    playerEmblems[player.team] = Array.isArray(player.emblems)
-      ? player.emblems
-          .map((emblem) => (typeof emblem === "string" ? emblem : emblem?.key))
-          .filter(Boolean)
-      : [];
+    playerEmblems[player.team] = getVisibleEmblemKeys(player, viewerTeam);
   }
 
   return {
@@ -277,6 +273,21 @@ function getGameState(extraChampions = [], { viewerTeam = null } = {}) {
     lineupSummons,
     lineupStatus,
   };
+}
+
+/**
+ * The emblems of a player this viewer may know about: all of them for their own
+ * team, otherwise only those that already acted. An emblem first triggered by a
+ * champion still concealed waits for that champion's reveal.
+ */
+function getVisibleEmblemKeys(player, viewerTeam) {
+  const keys = player.emblems.map((emblem) => emblem.key);
+  if (viewerTeam != null && viewerTeam === player.team) return keys;
+
+  return keys.filter((key) => {
+    if (!player.revealedEmblems.has(key)) return false;
+    return !concealedSummonIds.has(player.revealedEmblems.get(key));
+  });
 }
 
 /** Where each of a team's line-up champions stands, as this viewer may see it. */
@@ -389,18 +400,11 @@ function emitCombatAction(envelope) {
 /**
  * Sends the game state to every connected socket, tailored to what that viewer
  * is allowed to know. Use this instead of io.emit("gameStateUpdate", ...) so a
- * concealed summon can never leak through an unrelated broadcast.
+ * concealed summon or an emblem that has not acted yet can never leak through
+ * an unrelated broadcast. Always per viewer: each side knows only its own
+ * emblems in full.
  */
 function broadcastGameState(extraChampions = []) {
-  const hasDisguise = [...match.combat.activeChampions.values()].some(
-    (champion) => champion.runtime?.disguise,
-  );
-
-  if (concealedSummonIds.size === 0 && !hasDisguise) {
-    io.emit("gameStateUpdate", getGameState(extraChampions));
-    return;
-  }
-
   for (const [socketId, socket] of io.sockets.sockets) {
     socket.emit(
       "gameStateUpdate",
@@ -1358,8 +1362,6 @@ io.on("connection", (socket) => {
       userId,
     });
 
-    player.emblems = [];
-
     player.setSocket(socket.id);
     player.clearChampionSelection();
 
@@ -1371,9 +1373,7 @@ io.on("connection", (socket) => {
       playerId,
       team,
       username: finalUsername,
-      emblems: player.emblems.map((emblem) =>
-        typeof emblem === "string" ? emblem : emblem.key,
-      ),
+      emblems: player.emblems.map((emblem) => emblem.key),
     });
     io.emit("playerCountUpdate", match.getConnectedCount());
     io.emit("playerNamesUpdate", match.getPlayerNamesEntries());
@@ -1393,7 +1393,7 @@ io.on("connection", (socket) => {
     for (const player of match.players) {
       if (!player || player.isTeamSelected()) continue;
       player.setSelectedChampionKeys([...team.champions]);
-      player.emblems = resolveEmblems(team.emblems);
+      player.setEmblems(resolveEmblems(team.emblems));
     }
 
     if (checkAllTeamsSelected()) startGameIfReady();
@@ -1640,7 +1640,7 @@ io.on("connection", (socket) => {
     }
 
     player.setSelectedChampionKeys([...team.champions]);
-    player.emblems = resolveEmblems(team.emblems);
+    player.setEmblems(resolveEmblems(team.emblems));
 
     broadcastGameState();
     startGameIfReady();
@@ -1652,7 +1652,7 @@ io.on("connection", (socket) => {
     if (!player || match.isCombatStarted()) return;
 
     player.clearChampionSelection();
-    player.emblems = [];
+    player.setEmblems([]);
     broadcastGameState();
   });
 

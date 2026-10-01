@@ -3,11 +3,7 @@ import {
   CLAIM_DESCRIPTION,
 } from "../../shared/engine/combat/claim.js";
 import { getChampionClassKeys } from "../../shared/data/championClasses.js";
-import {
-  getChampionAffinityKeys,
-  championHasAffinity,
-  championHasSpecies,
-} from "../../shared/data/championTraits.js";
+import { getChampionAffinityKeys } from "../../shared/data/championTraits.js";
 import { resolveText } from "../../shared/i18n/locale.js";
 import { getLocale, setLocale } from "./i18n/clientLocale.js";
 
@@ -58,15 +54,16 @@ import { syncChampionVFX } from "../../shared/vfx/vfxManager.js";
 import { audioManager } from "./utils/AudioManager.js";
 import { EMBLEMS } from "/shared/data/emblems/index.js";
 import {
-  readClassRequirements,
-  countClassRequirementSlots,
-} from "/shared/data/emblems/eligibility.js";
+  evaluateEmblemRequirements,
+  getEmblemShortCode,
+  showEmblemTooltip,
+  hideEmblemTooltip,
+} from "./teamsManager/emblemPanel.js";
 import { createOverlays } from "./ui/overlays.js";
 import { createTargeting } from "./ui/targeting.js";
 import {
   ELEMENT_IDENTITIES,
   CLASS_IDENTITIES,
-  getRequirementIdentity,
   applyIdentityPaletteCssVariables,
 } from "../../shared/ui/identityPalette.js";
 
@@ -191,7 +188,8 @@ const { collectClientTargets } = createTargeting({
 });
 
 let playerEmblems = [];
-let emblemTooltip = null;
+// Only the opponent emblems that have already acted; the server holds back the rest.
+let opponentEmblems = [];
 
 // ============================================================
 //  DOM REFERENCES
@@ -862,189 +860,26 @@ function getPlayerRosterForEmblemEligibility() {
   return (playerRoster || []).filter(Boolean);
 }
 
-function getEmblemShortCode(emblem) {
-  if (!emblem?.name) return "EM";
-
-  const realName = emblem.name.replace(/^Emblem of(?: the)?\s+/i, "").trim();
-
-  if (!realName) return "EM";
-
-  const words = realName.split(/\s+/).filter(Boolean).slice(0, 2);
-
-  return words.map((word) => word[0]?.toUpperCase() || "").join("") || "EM";
-}
-
-// One entry per supported requirement kind: how to read its target value out of
-// the emblem data and how to count the roster champions that satisfy it.
-// Emblems may combine several kinds (mixed emblems); all of them must pass.
-const EMBLEM_REQUIREMENT_KINDS = Object.freeze([
-  {
-    kind: "elementalAffinity",
-    readTarget: (requirement) => requirement.element,
-    countMatches: (roster, target) =>
-      roster.filter((champion) => championHasAffinity(champion, target)).length,
-    describe: (identity) => `${identity.label} affinity`,
-  },
-  {
-    kind: "species",
-    readTarget: (requirement) => requirement.species,
-    countMatches: (roster, target) =>
-      roster.filter((champion) => championHasSpecies(champion, target)).length,
-    describe: (identity) => `${identity.label} species`,
-  },
-  {
-    kind: "classKey",
-    readTarget: (requirement) => requirement.key,
-    countMatches: (roster, target) =>
-      roster.filter((champion) =>
-        normalizeChampionClassKeys(champion).includes(target),
-      ).length,
-    describe: (identity) => `${identity.label} class`,
-  },
-  {
-    kind: "baseStat",
-    readTarget: (requirement) => requirement.stat,
-    readThreshold: (requirement) => requirement.min,
-    countMatches: (roster, target, threshold) =>
-      roster.filter((champion) => {
-        const value = Number(champion[target]);
-        if (!Number.isFinite(value)) return false;
-        return threshold == null || value >= Number(threshold);
-      }).length,
-    describe: (identity, threshold) =>
-      `${identity.label}${threshold == null ? "" : ` ≥ ${threshold}`}`,
-  },
-]);
-
-/**
- * Flattens an emblem's requirements into renderable tokens, each carrying the
- * visual identity (emoji + color) the UI paints it with.
- */
-function getEmblemRequirementTokens(requirements) {
-  if (!requirements || typeof requirements !== "object") return [];
-
-  return EMBLEM_REQUIREMENT_KINDS.flatMap((descriptor) => {
-    const requirement = requirements[descriptor.kind];
-    if (!requirement) return [];
-
-    // classKey is a list of { key, count }: one token per class.
-    const entries = Array.isArray(requirement) ? requirement : [requirement];
-
-    return entries.map((entry) => {
-      // baseStat targets a stat name (case-sensitive lookup); the others target
-      // a normalized key.
-      const rawTarget = String(descriptor.readTarget(entry) ?? "").trim();
-      const target =
-        descriptor.kind === "baseStat" ? rawTarget : rawTarget.toLowerCase();
-      const threshold = descriptor.readThreshold?.(entry) ?? null;
-      const identity = getRequirementIdentity(descriptor.kind, target);
-
-      return {
-        descriptor,
-        target,
-        threshold,
-        identity,
-        required: Number(entry.count || 0),
-        label: descriptor.describe(identity, threshold),
-      };
-    });
-  });
-}
-
-function evaluateEmblemRequirements(emblem, rosterKeys = []) {
-  const roster = rosterKeys.map((key) => championDB[key]).filter(Boolean);
-
-  // A champion fills one class slot only, so class counts come from matching.
-  const classCounts = countClassRequirementSlots(
-    readClassRequirements(emblem?.requirements),
-    roster,
-  );
-  let classIndex = 0;
-
-  const checks = getEmblemRequirementTokens(emblem?.requirements).map(
-    (token) => {
-      const actual =
-        token.descriptor.kind === "classKey"
-          ? classCounts[classIndex++]
-          : token.descriptor.countMatches(roster, token.target, token.threshold);
-
-      return {
-        ...token,
-        actual,
-        pass: actual >= token.required,
-      };
-    },
-  );
-
-  return {
-    allMet: checks.every((check) => check.pass),
-    checks,
-  };
-}
-
-/**
- * Requirement marker: the emoji when the identity has one, otherwise the name
- * spelled out (species are far too numerous to all have a symbol).
- */
-function renderRequirementMarkerMarkup({ identity, label }) {
-  const marker = identity.icon ?? identity.label ?? label;
-  return `<span class="emblem-requirement-marker" title="${escapeHtml(label)}">${escapeHtml(marker)}</span>`;
-}
-
-/** e.g. `🥊 2/3 · ⚡ 1/2` — one marker + progress per requirement. */
-function renderRequirementCountsMarkup(checks) {
-  if (!checks.length) return "No requirements";
-
-  return checks
-    .map(
-      (check) =>
-        `${renderRequirementMarkerMarkup(check)} ${check.actual}/${check.required}`,
-    )
-    .join(" · ");
-}
-
-function showEmblemTooltip(target, emblem, requirementStatus = { checks: [] }) {
-  hideEmblemTooltip();
-
-  const tooltip = document.createElement("div");
-  tooltip.className = "emblem-tooltip";
-  tooltip.innerHTML = `
-    <div class="emblem-tooltip-title">${escapeHtml(emblem.name || emblem.key)}</div>
-    <div class="emblem-tooltip-copy">${escapeHtml(resolveText(typeof emblem.description === "function" ? emblem.description() : emblem.description || "", getLocale()))}</div>
-    <div class="emblem-tooltip-meta">
-      <span class="emblem-tooltip-meta-label">Requirements</span>
-      <strong>${renderRequirementCountsMarkup(requirementStatus.checks ?? [])}</strong>
-    </div>
-  `;
-  document.body.appendChild(tooltip);
-  emblemTooltip = tooltip;
-
-  const rect = target.getBoundingClientRect();
-  const tooltipRect = tooltip.getBoundingClientRect();
-  const left = Math.max(
-    12,
-    Math.min(
-      rect.left + rect.width / 2 - tooltipRect.width / 2,
-      window.innerWidth - tooltipRect.width - 12,
-    ),
-  );
-  const top = Math.max(12, rect.top - tooltipRect.height - 12);
-  tooltip.style.left = `${left}px`;
-  tooltip.style.top = `${top}px`;
-}
-
-function hideEmblemTooltip() {
-  if (emblemTooltip) {
-    emblemTooltip.remove();
-    emblemTooltip = null;
-  }
-}
-
 function renderPlayerEmblemStrip() {
-  const strip = document.getElementById("playerLineupEmblems");
+  renderEmblemStrip("playerLineupEmblems", playerEmblems, (emblem) =>
+    evaluateEmblemRequirements(emblem, getPlayerRosterForEmblemEligibility()),
+  );
+}
+
+/**
+ * The opponent's emblems the server has revealed so far. Their requirement
+ * counts stay out: read against their roster they would expose champions the
+ * line-up still keeps hidden.
+ */
+function renderOpponentEmblemStrip() {
+  renderEmblemStrip("opponentLineupEmblems", opponentEmblems, () => null);
+}
+
+function renderEmblemStrip(stripId, emblemKeys, getRequirementStatus) {
+  const strip = document.getElementById(stripId);
   if (!strip) return;
 
-  const emblems = Array.isArray(playerEmblems) ? playerEmblems : [];
+  const emblems = Array.isArray(emblemKeys) ? emblemKeys : [];
   if (!emblems.length) {
     strip.classList.add("hidden");
     strip.innerHTML = "";
@@ -1070,10 +905,7 @@ function renderPlayerEmblemStrip() {
     const emblem = EMBLEMS.find((entry) => entry.key === emblemKey);
     if (!emblem) return;
 
-    const requirementStatus = evaluateEmblemRequirements(
-      emblem,
-      getPlayerRosterForEmblemEligibility(),
-    );
+    const requirementStatus = getRequirementStatus(emblem);
     button.addEventListener("mouseenter", () =>
       showEmblemTooltip(button, emblem, requirementStatus),
     );
@@ -1853,6 +1685,8 @@ socket.on("gameStateUpdate", (gameState) => {
     };
 
     lineupStatuses = gameState?.lineupStatus?.[playerTeam] ?? {};
+    opponentEmblems =
+      gameState?.playerEmblems?.[playerTeam === 1 ? 2 : 1] ?? [];
     enemyLineupStatuses =
       gameState?.lineupStatus?.[playerTeam === 1 ? 2 : 1] ?? {};
   }
@@ -1863,6 +1697,7 @@ socket.on("gameStateUpdate", (gameState) => {
   // the champion is still standing on the board.
   if (!isResolvingTurn) renderLineupBanners(lastLineupsByTeam);
   renderPlayerEmblemStrip();
+  renderOpponentEmblemStrip();
   combatAnimations.handleGameStateUpdate(gameState);
 
   if (

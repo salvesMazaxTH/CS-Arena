@@ -135,8 +135,11 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
           }),
         );
 
+        // An emblem hook returns something only when it acted, and that first
+        // act is what shows the emblem to the opponent.
         if (res) {
           results.push(res);
+          player.revealEmblem(source.key, payload.champion?.id ?? null);
         }
       } catch (err) {
         console.error(
