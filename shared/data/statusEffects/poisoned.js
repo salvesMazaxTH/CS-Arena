@@ -13,7 +13,14 @@ const poisoned = {
   onTurnStart({ owner, context }) {
     const stacks = this.stacks;
     const dmgPerStack = Math.floor(owner.maxHP * 0.04);
-    const dotContext = { ...context, isDot: true };
+    // The tick stays attackerless, so nothing reacts to it as "dealt damage";
+    // only the turn history learns who poisoned the target.
+    const dotContext = {
+      ...context,
+      isDot: true,
+      dotSourceId: this.sourceId ?? null,
+      dotSourceTeam: this.sourceTeam ?? null,
+    };
 
     const result = new DamageEvent({
       attacker: null,

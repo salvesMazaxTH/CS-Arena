@@ -70,8 +70,8 @@ export function applyDamage(event) {
 
   event.context.recordDamageInTurn?.({
     targetId: event.defender.id,
-    sourceId: event.attacker?.id ?? null,
-    sourceTeam: event.attacker?.team ?? null,
+    sourceId: event.attacker?.id ?? event.context.dotSourceId ?? null,
+    sourceTeam: event.attacker?.team ?? event.context.dotSourceTeam ?? null,
     amount: event.actualDmg,
     absorbed: absorbedByShield,
     skillKey: event.skill?.key ?? null,

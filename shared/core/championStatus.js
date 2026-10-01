@@ -107,6 +107,15 @@ function assertStatusPreconditions(champion, statusEffectKey, context) {
   return definition;
 }
 
+// The active status remembers who last applied it, so a reader can ask "who
+// put this on him?" turns after the application left the turn history.
+function stampStatusSource(instance, context, metadata) {
+  const source = resolveStatusEffectSource(context, metadata);
+  instance.sourceId =
+    metadata?.sourceId ?? context?.actionSource?.id ?? source?.id ?? null;
+  instance.sourceTeam = source?.team ?? null;
+}
+
 function recordStatusInTurn({ champion, statusEffectKey, context, metadata, stacks }) {
   const source = resolveStatusEffectSource(context, metadata);
   context?.recordStatusInTurn?.({
@@ -187,6 +196,7 @@ function applyStatusEffectCore({
     effectInstance.expiresAtTurn = Infinity;
   }
 
+  stampStatusSource(effectInstance, context, metadata);
   champion.statusEffects.set(statusEffectKey, effectInstance);
 
   if (typeof effectInstance.onStatusEffectAdded === "function") {
@@ -278,6 +288,7 @@ function applyStackUpdate({
     stackCount: newStacks,
   };
 
+  stampStatusSource(existingInstance, context, metadata);
   champion.statusEffects.set(statusEffectKey, existingInstance);
 
   recordStatusInTurn({
