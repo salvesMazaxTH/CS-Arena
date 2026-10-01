@@ -6,107 +6,35 @@ import {
   renderIdentityIconMarkup,
 } from "/shared/ui/identityPalette.js";
 import { MAX_TEAM_EMBLEMS } from "/shared/data/teams/index.js";
-import {
-  readClassRequirements,
-  countClassRequirementSlots,
-} from "/shared/data/emblems/eligibility.js";
+import { countEmblemRequirements } from "/shared/data/emblems/eligibility.js";
 import { resolveText } from "/shared/i18n/locale.js";
 import { getLocale } from "../i18n/clientLocale.js";
-import {
-  championHasAffinity,
-  championHasSpecies,
-} from "/shared/data/championTraits.js";
-import {
-  escapeHtml,
-  normalizeChampionClassKeys,
-} from "./championCardMarkup.js";
+import { escapeHtml } from "./championCardMarkup.js";
 
-// One entry per supported requirement kind: how to read its target value out of
-// the emblem data and how to count the roster champions that satisfy it.
-const EMBLEM_REQUIREMENT_KINDS = Object.freeze([
-  {
-    kind: "elementalAffinity",
-    readTarget: (requirement) => requirement.element,
-    countMatches: (roster, target) =>
-      roster.filter((champion) => championHasAffinity(champion, target)).length,
-    describe: (identity) => `${identity.label} affinity`,
-  },
-  {
-    kind: "species",
-    readTarget: (requirement) => requirement.species,
-    countMatches: (roster, target) =>
-      roster.filter((champion) => championHasSpecies(champion, target)).length,
-    describe: (identity) => `${identity.label} species`,
-  },
-  {
-    kind: "classKey",
-    readTarget: (requirement) => requirement.key,
-    countMatches: (roster, target) =>
-      roster.filter((champion) =>
-        normalizeChampionClassKeys(champion).includes(target),
-      ).length,
-    describe: (identity) => `${identity.label} class`,
-  },
-  {
-    kind: "baseStat",
-    readTarget: (requirement) => requirement.stat,
-    readThreshold: (requirement) => requirement.min,
-    countMatches: (roster, target, threshold) =>
-      roster.filter((champion) => {
-        const value = Number(champion[target]);
-        if (!Number.isFinite(value)) return false;
-        return threshold == null || value >= Number(threshold);
-      }).length,
-    describe: (identity, threshold) =>
-      `${identity.label}${threshold == null ? "" : ` ≥ ${threshold}`}`,
-  },
-]);
+// How each requirement kind names itself in the UI.
+const DESCRIBE_REQUIREMENT = Object.freeze({
+  elementalAffinity: (identity) => `${identity.label} affinity`,
+  species: (identity) => `${identity.label} species`,
+  classKey: (identity) => `${identity.label} class`,
+  baseStat: (identity, threshold) =>
+    `${identity.label}${threshold == null ? "" : ` ≥ ${threshold}`}`,
+});
 
-function getEmblemRequirementTokens(requirements) {
-  if (!requirements || typeof requirements !== "object") return [];
-
-  return EMBLEM_REQUIREMENT_KINDS.flatMap((descriptor) => {
-    const requirement = requirements[descriptor.kind];
-    if (!requirement) return [];
-
-    // classKey is a list of { key, count }: one token per class.
-    const entries = Array.isArray(requirement) ? requirement : [requirement];
-
-    return entries.map((entry) => {
-      const rawTarget = String(descriptor.readTarget(entry) ?? "").trim();
-      const target =
-        descriptor.kind === "baseStat" ? rawTarget : rawTarget.toLowerCase();
-      const threshold = descriptor.readThreshold?.(entry) ?? null;
-      const identity = getRequirementIdentity(descriptor.kind, target);
-
-      return {
-        descriptor,
-        target,
-        threshold,
-        identity,
-        required: Number(entry.count || 0),
-        label: descriptor.describe(identity, threshold),
-      };
-    });
-  });
-}
-
+/**
+ * The emblem's requirement checks against the roster, each with the visual
+ * identity (emoji + colour) and the label the UI paints it with.
+ */
 export function evaluateEmblemRequirements(emblem, rosterKeys = []) {
   const roster = rosterKeys.map((key) => championDB[key]).filter(Boolean);
 
-  // A champion fills one class slot only, so class counts come from matching.
-  const classCounts = countClassRequirementSlots(
-    readClassRequirements(emblem?.requirements),
-    roster,
-  );
-  let classIndex = 0;
-
-  const checks = getEmblemRequirementTokens(emblem?.requirements).map((token) => {
-    const actual =
-      token.descriptor.kind === "classKey"
-        ? classCounts[classIndex++]
-        : token.descriptor.countMatches(roster, token.target, token.threshold);
-    return { ...token, actual, pass: actual >= token.required };
+  const checks = countEmblemRequirements(emblem, roster).map((check) => {
+    const { kind } = check.descriptor;
+    const identity = getRequirementIdentity(kind, check.target);
+    return {
+      ...check,
+      identity,
+      label: DESCRIBE_REQUIREMENT[kind](identity, check.threshold),
+    };
   });
 
   return { allMet: checks.every((check) => check.pass), checks };
@@ -126,7 +54,7 @@ export function getUnmetEmblemChecks(emblemKeys = [], rosterKeys = []) {
 /** True when adding `champion` would count toward `check`. */
 export function championFillsCheck(champion, check) {
   if (!champion) return false;
-  return check.descriptor.countMatches([champion], check.target, check.threshold) > 0;
+  return check.descriptor.matches(champion, check.target, check.threshold);
 }
 
 export function getEmblemShortCode(emblem) {
@@ -145,7 +73,7 @@ function renderRequirementMarkerMarkup({ identity, label }) {
   return `<span class="emblem-requirement-marker" title="${escapeHtml(label)}">${marker}</span>`;
 }
 
-function renderRequirementCountsMarkup(checks) {
+export function renderRequirementCountsMarkup(checks) {
   if (!checks.length) return "No requirements";
   return checks
     .map(
@@ -186,25 +114,37 @@ function renderEmblemStateMarkup(isSelected, allMet) {
 
 let emblemTooltip = null;
 
-function hideEmblemTooltip() {
+export function hideEmblemTooltip() {
   if (emblemTooltip) {
     emblemTooltip.remove();
     emblemTooltip = null;
   }
 }
 
-function showEmblemTooltip(target, emblem, requirementStatus = { checks: [] }) {
+/**
+ * Emblem descriptions are trusted static data carrying `<b>` markup, so they
+ * render as HTML. `requirementStatus` null leaves the requirement counts out.
+ */
+export function showEmblemTooltip(target, emblem, requirementStatus = { checks: [] }) {
   hideEmblemTooltip();
+
+  const description =
+    typeof emblem.description === "function"
+      ? emblem.description()
+      : emblem.description || "";
+  const requirementMarkup = requirementStatus
+    ? `
+    <div class="emblem-tooltip-meta">
+      <span class="emblem-tooltip-meta-label">Requirements</span>
+      <strong>${renderRequirementCountsMarkup(requirementStatus.checks ?? [])}</strong>
+    </div>`
+    : "";
 
   const tooltip = document.createElement("div");
   tooltip.className = "emblem-tooltip";
   tooltip.innerHTML = `
     <div class="emblem-tooltip-title">${escapeHtml(emblem.name || emblem.key)}</div>
-    <div class="emblem-tooltip-copy">${escapeHtml(resolveText(typeof emblem.description === "function" ? emblem.description() : emblem.description || "", getLocale()))}</div>
-    <div class="emblem-tooltip-meta">
-      <span class="emblem-tooltip-meta-label">Requirements</span>
-      <strong>${renderRequirementCountsMarkup(requirementStatus.checks ?? [])}</strong>
-    </div>
+    <div class="emblem-tooltip-copy">${resolveText(description, getLocale())}</div>${requirementMarkup}
   `;
   document.body.appendChild(tooltip);
   emblemTooltip = tooltip;
