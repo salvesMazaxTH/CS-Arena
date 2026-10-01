@@ -1,18 +1,21 @@
-// Venom frost hit: the magma bomb's arc and blast, but the thing in flight is
-// a jagged shard of winter ice veined with venom, shedding frost motes and
-// dripping poison, and it bursts into ice splinters and a venom splash.
+// Venom frost hit: a wave of magical cold rolls from the caster to the target,
+// carrying small ice crystals and globs of viscous purple toxin. On arrival the
+// cold blooms over the target and the toxin splatters, clings and oozes down.
 
 import { getElementCenter } from "../core/animationUtils.js";
 import { getParticleScale } from "../core/effectQuality.js";
 import { ensureStage, startLoop, screenToWorld } from "../core/glStage.js";
+import { makeShardTexture } from "./venomShardGLAnimation.js";
 
-const TRAVEL_DUR = 0.32;
-const POST_DUR = 0.5;
-const CHARGE_DUR = 0.16;
+const TRAVEL_DUR = 0.42;
+const POST_DUR = 0.62;
+const SWELL_DUR = 0.14;
 
-const HALO_TINT = 0x8fd8ff;
-const VENOM_TINT = 0x9a3fd0;
-const MIST_TINT = 0x5a2a78;
+const COLD_TINT = 0xbfe8ff;
+const HAZE_TINT = 0x6a3f8c;
+const GOO_COUNT = 7;
+const SPLAT_COUNT = 9;
+const SHARD_COUNT = 5;
 
 function canvasTex(canvas) {
   const tex = new THREE.CanvasTexture(canvas);
@@ -20,129 +23,80 @@ function canvasTex(canvas) {
   return tex;
 }
 
-function makeShardTexture() {
+// The wave front: a tall soft crescent, brightest on its leading edge (+x).
+function makeFrontTexture() {
   const c = document.createElement("canvas");
-  c.width = c.height = 128;
+  c.width = 128;
+  c.height = 256;
   const ctx = c.getContext("2d");
 
-  // A long crystal pointing right (+x), so it can be rotated to the flight angle.
-  const outline = [
-    [122, 64],
-    [86, 44],
-    [62, 30],
-    [40, 42],
-    [8, 56],
-    [24, 66],
-    [6, 78],
-    [42, 88],
-    [64, 98],
-    [88, 84],
-  ];
-  ctx.beginPath();
-  outline.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-  ctx.closePath();
-
-  const body = ctx.createLinearGradient(8, 30, 122, 98);
-  body.addColorStop(0, "rgba(120,170,215,0.92)");
-  body.addColorStop(0.45, "rgba(196,232,255,0.98)");
-  body.addColorStop(1, "rgba(236,250,255,1)");
-  ctx.fillStyle = body;
-  ctx.fill();
-
-  ctx.save();
-  ctx.clip();
-
-  // Facets: darker lower faces, one bright upper ridge.
-  ctx.fillStyle = "rgba(70,110,160,0.35)";
-  ctx.beginPath();
-  ctx.moveTo(122, 64);
-  ctx.lineTo(88, 84);
-  ctx.lineTo(64, 98);
-  ctx.lineTo(42, 88);
-  ctx.lineTo(60, 66);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = "rgba(255,255,255,0.85)";
-  ctx.lineWidth = 1.6;
-  ctx.beginPath();
-  ctx.moveTo(122, 64);
-  ctx.lineTo(60, 62);
-  ctx.lineTo(24, 66);
-  ctx.stroke();
-
-  // Venom veins running through the ice.
-  const veins = [
-    [16, 70, 40, 64, 62, 72, 92, 68],
-    [36, 50, 54, 58, 70, 52],
-    [48, 84, 66, 80, 80, 88],
-  ];
-  for (const path of veins) {
-    ctx.beginPath();
-    ctx.moveTo(path[0], path[1]);
-    for (let i = 2; i < path.length; i += 2) ctx.lineTo(path[i], path[i + 1]);
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "rgba(110,30,160,0.5)";
-    ctx.lineWidth = 6;
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(170,70,230,0.85)";
-    ctx.lineWidth = 2.6;
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(226,170,255,0.9)";
-    ctx.lineWidth = 1;
-    ctx.stroke();
+  for (let i = 0; i < 3; i++) {
+    const inset = i * 14;
+    const g = ctx.createRadialGradient(4 - inset, 128, 40, 4 - inset, 128, 126);
+    g.addColorStop(0, "rgba(160,215,255,0)");
+    g.addColorStop(0.72, "rgba(160,215,255,0)");
+    g.addColorStop(0.88, `rgba(205,238,255,${0.22 + i * 0.12})`);
+    g.addColorStop(0.95, `rgba(245,252,255,${0.35 + i * 0.2})`);
+    g.addColorStop(1, "rgba(245,252,255,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 128, 256);
   }
 
-  ctx.restore();
+  // Fade the tips so the crescent has no hard top and bottom.
+  ctx.globalCompositeOperation = "destination-in";
+  const fade = ctx.createLinearGradient(0, 0, 0, 256);
+  fade.addColorStop(0, "rgba(0,0,0,0)");
+  fade.addColorStop(0.22, "rgba(0,0,0,1)");
+  fade.addColorStop(0.78, "rgba(0,0,0,1)");
+  fade.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = fade;
+  ctx.fillRect(0, 0, 128, 256);
+  return canvasTex(c);
+}
 
-  ctx.strokeStyle = "rgba(230,248,255,0.9)";
-  ctx.lineWidth = 1.4;
+// Cold haze behind the front, frosty at the head and soured purple at the tail.
+function makeHazeTexture() {
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 128;
+  const ctx = c.getContext("2d");
+  const h = ctx.createLinearGradient(0, 0, 256, 0);
+  h.addColorStop(0, "rgba(90,40,120,0)");
+  h.addColorStop(0.35, "rgba(110,60,150,0.4)");
+  h.addColorStop(0.75, "rgba(150,200,240,0.45)");
+  h.addColorStop(1, "rgba(200,236,255,0)");
+  ctx.fillStyle = h;
+  ctx.fillRect(0, 0, 256, 128);
+  ctx.globalCompositeOperation = "destination-in";
+  const v = ctx.createLinearGradient(0, 0, 0, 128);
+  v.addColorStop(0, "rgba(0,0,0,0)");
+  v.addColorStop(0.5, "rgba(0,0,0,1)");
+  v.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = v;
+  ctx.fillRect(0, 0, 256, 128);
+  return canvasTex(c);
+}
+
+function makeCrystalTexture() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 32;
+  const ctx = c.getContext("2d");
+  const glow = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+  glow.addColorStop(0, "rgba(220,244,255,0.6)");
+  glow.addColorStop(1, "rgba(220,244,255,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, 32, 32);
   ctx.beginPath();
-  outline.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+  ctx.moveTo(16, 3);
+  ctx.lineTo(21, 16);
+  ctx.lineTo(16, 29);
+  ctx.lineTo(11, 16);
   ctx.closePath();
+  ctx.fillStyle = "rgba(236,250,255,1)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(140,200,255,0.9)";
+  ctx.lineWidth = 1;
   ctx.stroke();
-
-  return canvasTex(c);
-}
-
-function makeHaloTexture() {
-  const c = document.createElement("canvas");
-  c.width = c.height = 128;
-  const ctx = c.getContext("2d");
-  const g = ctx.createRadialGradient(64, 64, 16, 64, 64, 64);
-  g.addColorStop(0, "rgba(200,236,255,0.5)");
-  g.addColorStop(0.45, "rgba(120,190,255,0.3)");
-  g.addColorStop(0.75, "rgba(140,60,200,0.14)");
-  g.addColorStop(1, "rgba(90,30,140,0)");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 128, 128);
-  return canvasTex(c);
-}
-
-function makeMistTexture() {
-  const c = document.createElement("canvas");
-  c.width = c.height = 128;
-  const ctx = c.getContext("2d");
-  const g = ctx.createRadialGradient(64, 64, 6, 64, 64, 64);
-  g.addColorStop(0, "rgba(150,90,190,0.55)");
-  g.addColorStop(0.5, "rgba(100,50,140,0.3)");
-  g.addColorStop(1, "rgba(60,24,90,0)");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 128, 128);
-  return canvasTex(c);
-}
-
-function makeFlashTexture() {
-  const c = document.createElement("canvas");
-  c.width = c.height = 128;
-  const ctx = c.getContext("2d");
-  const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-  g.addColorStop(0, "rgba(255,255,255,1)");
-  g.addColorStop(0.25, "rgba(210,240,255,0.95)");
-  g.addColorStop(0.55, "rgba(120,180,255,0.5)");
-  g.addColorStop(0.8, "rgba(130,50,190,0.18)");
-  g.addColorStop(1, "rgba(60,20,110,0)");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 128, 128);
   return canvasTex(c);
 }
 
@@ -152,58 +106,74 @@ function makeMoteTexture() {
   const ctx = c.getContext("2d");
   const g = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
   g.addColorStop(0, "rgba(255,255,255,1)");
-  g.addColorStop(0.5, "rgba(190,230,255,0.7)");
+  g.addColorStop(0.5, "rgba(190,230,255,0.6)");
   g.addColorStop(1, "rgba(190,230,255,0)");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, 32, 32);
   return canvasTex(c);
 }
 
-function makeDropTexture() {
+// A glossy glob of toxin: dark rim, saturated body, a wet highlight.
+function makeGooTexture() {
   const c = document.createElement("canvas");
-  c.width = c.height = 32;
+  c.width = c.height = 64;
   const ctx = c.getContext("2d");
-  const g = ctx.createRadialGradient(14, 13, 0, 16, 16, 15);
-  g.addColorStop(0, "rgba(240,200,255,1)");
-  g.addColorStop(0.35, "rgba(170,70,230,0.95)");
-  g.addColorStop(0.8, "rgba(90,20,140,0.6)");
-  g.addColorStop(1, "rgba(90,20,140,0)");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 32, 32);
+  ctx.beginPath();
+  const pts = 11;
+  for (let i = 0; i <= pts; i++) {
+    const a = (i / pts) * Math.PI * 2;
+    const r = 25 + Math.sin(i * 2.3) * 3 + Math.cos(i * 3.1) * 2;
+    const x = 32 + Math.cos(a) * r;
+    const y = 32 + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  const body = ctx.createRadialGradient(26, 24, 2, 32, 32, 28);
+  body.addColorStop(0, "rgba(214,120,255,1)");
+  body.addColorStop(0.45, "rgba(140,40,200,1)");
+  body.addColorStop(0.85, "rgba(70,12,110,1)");
+  body.addColorStop(1, "rgba(40,6,70,0.9)");
+  ctx.fillStyle = body;
+  ctx.fill();
+  const hi = ctx.createRadialGradient(23, 20, 0, 23, 20, 9);
+  hi.addColorStop(0, "rgba(255,240,255,0.95)");
+  hi.addColorStop(1, "rgba(255,240,255,0)");
+  ctx.fillStyle = hi;
+  ctx.fillRect(10, 8, 26, 26);
   return canvasTex(c);
 }
 
-function makeRingTexture() {
+function makeBloomTexture() {
   const c = document.createElement("canvas");
   c.width = c.height = 128;
   const ctx = c.getContext("2d");
   const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-  g.addColorStop(0, "rgba(200,236,255,0)");
-  g.addColorStop(0.62, "rgba(200,236,255,0)");
-  g.addColorStop(0.78, "rgba(236,250,255,0.95)");
-  g.addColorStop(0.88, "rgba(160,80,220,0.4)");
-  g.addColorStop(1, "rgba(160,80,220,0)");
+  g.addColorStop(0, "rgba(255,255,255,0.95)");
+  g.addColorStop(0.3, "rgba(200,236,255,0.7)");
+  g.addColorStop(0.65, "rgba(120,170,230,0.25)");
+  g.addColorStop(1, "rgba(120,170,230,0)");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, 128, 128);
   return canvasTex(c);
 }
 
-let shardTex = null;
-let haloTex = null;
-let mistTex = null;
-let flashTex = null;
+let frontTex = null;
+let hazeTex = null;
+let crystalTex = null;
 let moteTex = null;
-let dropTex = null;
-let ringTex = null;
+let gooTex = null;
+let bloomTex = null;
+let shardTex = null;
 
 function bakeTextures() {
-  if (!shardTex) shardTex = makeShardTexture();
-  if (!haloTex) haloTex = makeHaloTexture();
-  if (!mistTex) mistTex = makeMistTexture();
-  if (!flashTex) flashTex = makeFlashTexture();
+  if (!frontTex) frontTex = makeFrontTexture();
+  if (!hazeTex) hazeTex = makeHazeTexture();
+  if (!crystalTex) crystalTex = makeCrystalTexture();
   if (!moteTex) moteTex = makeMoteTexture();
-  if (!dropTex) dropTex = makeDropTexture();
-  if (!ringTex) ringTex = makeRingTexture();
+  if (!gooTex) gooTex = makeGooTexture();
+  if (!bloomTex) bloomTex = makeBloomTexture();
+  if (!shardTex) shardTex = makeShardTexture();
 }
 
 function billboard(w, h, opacity, tex, color, blending) {
@@ -243,118 +213,91 @@ class VenomFrostGL {
     this.age = 0;
     this.impacted = false;
     this.onImpact = onImpact;
+    this.from = from.clone();
     this.to = to.clone();
-    this.lifetime = CHARGE_DUR + TRAVEL_DUR + POST_DUR + 0.2;
+    this.lifetime = SWELL_DUR + TRAVEL_DUR + POST_DUR + 0.2;
 
-    this.p0 = from.clone();
-    this.p2 = to.clone();
-    const dist = this.p0.distanceTo(this.p2);
-    this.ctrl = new THREE.Vector3(
-      (from.x + to.x) / 2,
-      (from.y + to.y) / 2 + Math.min(dist * 0.22, 3.2),
+    this.dir = new THREE.Vector3().subVectors(to, from);
+    this.dist = Math.max(0.001, this.dir.length());
+    this.dir.divideScalar(this.dist);
+    this.normal = new THREE.Vector3(-this.dir.y, this.dir.x, 0);
+    this.angle = Math.atan2(this.dir.y, this.dir.x);
+    this.halfSpan = 1.5 * scale;
+
+    this.front = billboard(1.6 * scale, 3.4 * scale, 0, frontTex, COLD_TINT);
+    this.front.rotation.z = this.angle;
+    scene.add(this.front);
+
+    this.haze = billboard(
+      4.2 * scale,
+      2.6 * scale,
       0,
-    );
-
-    this.core = new THREE.Group();
-    this.halo = billboard(2.6 * scale, 2.6 * scale, 0.8, haloTex, HALO_TINT);
-    this.shard = billboard(
-      2 * scale,
-      2 * scale,
-      1,
-      shardTex,
+      hazeTex,
       undefined,
       THREE.NormalBlending,
     );
-    this.shard.position.z = 0.02;
-    this.core.add(this.halo);
-    this.core.add(this.shard);
-    scene.add(this.core);
-
-    this.wake = billboard(
-      3.2 * scale,
-      1.4 * scale,
-      0.5,
-      mistTex,
-      MIST_TINT,
-      THREE.NormalBlending,
-    );
-    scene.add(this.wake);
-
-    this.charge = billboard(1.5 * scale, 1.5 * scale, 0, haloTex, VENOM_TINT);
-    this.charge.position.copy(this.p0);
-    scene.add(this.charge);
+    this.haze.rotation.z = this.angle;
+    scene.add(this.haze);
 
     const ps = getParticleScale();
-    this.moteN = Math.max(6, Math.round(30 * ps));
-    this.motes = particlePoints(this.moteN, 0.26 * scale, 0xd8f2ff, moteTex);
+    this.crystalN = Math.max(6, Math.round(26 * ps));
+    this.crystals = particlePoints(this.crystalN, 0.34 * scale, 0xffffff, crystalTex);
+    this.crystalP = [];
+    scene.add(this.crystals);
+
+    this.moteN = Math.max(8, Math.round(40 * ps));
+    this.motes = particlePoints(this.moteN, 0.22 * scale, 0xd8f2ff, moteTex);
     this.moteP = [];
     scene.add(this.motes);
 
-    this.dripN = Math.max(4, Math.round(16 * ps));
-    this.drips = particlePoints(
-      this.dripN,
-      0.3 * scale,
-      0xffffff,
-      dropTex,
-      THREE.NormalBlending,
-    );
-    this.dripP = [];
-    scene.add(this.drips);
+    // Globs are a handful of meshes so each one can stretch as it moves.
+    this.goo = [];
+    for (let i = 0; i < GOO_COUNT; i++) {
+      const m = billboard(
+        0.42 * scale,
+        0.42 * scale,
+        0,
+        gooTex,
+        undefined,
+        THREE.NormalBlending,
+      );
+      m.userData.offset = (i / (GOO_COUNT - 1) - 0.5) * 2;
+      m.userData.lag = 0.08 + Math.random() * 0.18;
+      m.userData.size = 0.7 + Math.random() * 0.6;
+      scene.add(m);
+      this.goo.push(m);
+    }
+    this.splats = [];
 
-    this.splinterN = Math.max(6, Math.round(26 * ps));
-    this.splinters = particlePoints(
-      this.splinterN,
-      0.36 * scale,
-      0xe6f6ff,
-      moteTex,
-    );
-    this.splinterP = [];
-    scene.add(this.splinters);
+    // Solid ice shards ride inside the wave so it reads as ice, not only cold.
+    this.shards = [];
+    for (let i = 0; i < SHARD_COUNT; i++) {
+      const m = billboard(
+        0.9 * scale,
+        0.9 * scale,
+        0,
+        shardTex,
+        undefined,
+        THREE.NormalBlending,
+      );
+      m.position.z = 0.02;
+      m.userData.offset = (i / (SHARD_COUNT - 1) - 0.5) * 1.6;
+      m.userData.lead = (Math.random() - 0.5) * 0.06;
+      m.userData.size = 0.65 + Math.random() * 0.5;
+      m.userData.tilt = (Math.random() - 0.5) * 0.5;
+      m.userData.spin = (Math.random() - 0.5) * 3;
+      scene.add(m);
+      this.shards.push(m);
+    }
 
-    this.splashN = Math.max(6, Math.round(24 * ps));
-    this.splash = particlePoints(
-      this.splashN,
-      0.4 * scale,
-      0xffffff,
-      dropTex,
-      THREE.NormalBlending,
-    );
-    this.splashP = [];
-    scene.add(this.splash);
-
-    this.mistN = Math.max(3, Math.round(10 * ps));
-    this.mist = particlePoints(
-      this.mistN,
-      1.1 * scale,
-      MIST_TINT,
-      mistTex,
-      THREE.NormalBlending,
-    );
-    this.mistP = [];
-    scene.add(this.mist);
-
-    this.flash = billboard(5 * scale, 5 * scale, 0, flashTex);
-    this.flash.position.copy(this.to);
-    this.flash.visible = false;
-    scene.add(this.flash);
+    this.bloom = billboard(4.2 * scale, 4.2 * scale, 0, bloomTex);
+    this.bloom.position.copy(this.to);
+    this.bloom.visible = false;
+    scene.add(this.bloom);
   }
 
-  bezier(t) {
-    const u = 1 - t;
-    return new THREE.Vector3(
-      u * u * this.p0.x + 2 * u * t * this.ctrl.x + t * t * this.p2.x,
-      u * u * this.p0.y + 2 * u * t * this.ctrl.y + t * t * this.p2.y,
-      0,
-    );
-  }
-
-  bezierAngle(t) {
-    const u = 1 - t;
-    const dx =
-      2 * u * (this.ctrl.x - this.p0.x) + 2 * t * (this.p2.x - this.ctrl.x);
-    const dy =
-      2 * u * (this.ctrl.y - this.p0.y) + 2 * t * (this.p2.y - this.ctrl.y);
-    return Math.atan2(dy, dx);
+  frontPos(t) {
+    return new THREE.Vector3().copy(this.from).addScaledVector(this.dir, this.dist * t);
   }
 
   writePoints(points, obj) {
@@ -384,162 +327,172 @@ class VenomFrostGL {
     }
   }
 
+  spawnAlongFront(points, max, pos, speed, life) {
+    if (points.length >= max) return;
+    const off = (Math.random() * 2 - 1) * this.halfSpan;
+    points.push({
+      x: pos.x + this.normal.x * off,
+      y: pos.y + this.normal.y * off,
+      vx: this.dir.x * speed + (Math.random() - 0.5) * 1.2,
+      vy: this.dir.y * speed + (Math.random() - 0.5) * 1.2,
+      life,
+    });
+  }
+
+  impact() {
+    this.impacted = true;
+    this.bloom.visible = true;
+
+    for (const m of this.goo) m.visible = false;
+    for (const m of this.shards) m.visible = false;
+    for (let i = 0; i < SPLAT_COUNT; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const r = (0.3 + Math.random() * 0.8) * this.scale;
+      const m = billboard(
+        0.36 * this.scale,
+        0.36 * this.scale,
+        1,
+        gooTex,
+        undefined,
+        THREE.NormalBlending,
+      );
+      m.position.set(
+        this.to.x + Math.cos(a) * r,
+        this.to.y + Math.sin(a) * r * 0.8,
+        0.03,
+      );
+      m.userData = {
+        size: 0.6 + Math.random() * 0.8,
+        vy: -(0.25 + Math.random() * 0.45),
+        delay: Math.random() * 0.12,
+      };
+      this.scene.add(m);
+      this.splats.push(m);
+    }
+
+    for (let i = 0; i < this.crystalN; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 2 + Math.random() * 5;
+      this.crystalP.push({
+        x: this.to.x,
+        y: this.to.y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp,
+        life: 0.25 + Math.random() * 0.3,
+      });
+    }
+    this.onImpact?.();
+  }
+
   update(dt) {
     this.age += dt;
 
-    if (this.age < CHARGE_DUR) {
-      const cp = this.age / CHARGE_DUR;
-      this.core.position.copy(this.p0);
-      this.core.scale.setScalar(0.2 + cp * 0.6);
-      this.halo.material.opacity = 0.4 + cp * 0.4;
-      this.wake.visible = false;
-      this.charge.material.opacity = Math.sin(cp * Math.PI) * 0.85;
-      this.charge.scale.setScalar(0.4 + cp * 1.6);
-      this.charge.rotation.z -= dt * 4;
+    if (this.age < SWELL_DUR) {
+      // The cold gathers in front of the caster before it rolls out.
+      const sp = this.age / SWELL_DUR;
+      this.front.position.copy(this.from);
+      this.front.scale.set(0.5 + sp * 0.5, 0.3 + sp * 0.7, 1);
+      this.front.material.opacity = sp * 0.9;
+      this.spawnAlongFront(this.moteP, this.moteN, this.from, 0.4, 0.3);
+      this.integratePoints(this.moteP, dt, 0.9, 0);
+      this.writePoints(this.moteP, this.motes);
       return true;
     }
-    this.charge.visible = false;
 
-    const flightAge = this.age - CHARGE_DUR;
+    const flightAge = this.age - SWELL_DUR;
     const t = Math.min(flightAge / TRAVEL_DUR, 1);
-    const eased = t < 0.82 ? t : 0.82 + (1 - (1 - (t - 0.82) / 0.18) ** 2) * 0.18;
+    const eased = 1 - (1 - t) ** 1.6;
 
     if (t < 1) {
-      this.core.scale.setScalar(1);
-      this.wake.visible = true;
-      const pos = this.bezier(eased);
-      const ang = this.bezierAngle(eased);
-      this.core.position.copy(pos);
-      // The shard points along its path instead of tumbling like the rock.
-      this.shard.rotation.z = ang;
-      this.halo.scale.setScalar(1 + 0.08 * Math.sin(flightAge * 26));
-      this.wake.position.set(
-        pos.x - Math.cos(ang) * 1.6 * this.scale,
-        pos.y - Math.sin(ang) * 1.6 * this.scale,
-        0,
-      );
-      this.wake.rotation.z = ang;
+      const pos = this.frontPos(eased);
+      const swell = 1 + 0.06 * Math.sin(flightAge * 22);
+      this.front.position.copy(pos);
+      this.front.scale.set(1, swell, 1);
+      this.front.material.opacity = 0.9;
+      this.haze.position.copy(pos).addScaledVector(this.dir, -1.9 * this.scale);
+      this.haze.material.opacity = Math.min(0.85, t * 3);
 
-      if (this.moteP.length < this.moteN) {
-        this.moteP.push({
-          x: pos.x,
-          y: pos.y,
-          vx: (Math.random() - 0.5) * 1.4,
-          vy: (Math.random() - 0.5) * 1.4,
-          life: 0.25 + Math.random() * 0.3,
-        });
+      const speed = this.dist / TRAVEL_DUR;
+      this.spawnAlongFront(this.moteP, this.moteN, pos, speed * 0.25, 0.3);
+      this.spawnAlongFront(this.moteP, this.moteN, pos, speed * 0.1, 0.4);
+      if (Math.random() < 0.7) {
+        this.spawnAlongFront(this.crystalP, this.crystalN, pos, speed * 0.55, 0.35);
       }
-      if (this.dripP.length < this.dripN && Math.random() < 0.6) {
-        this.dripP.push({
-          x: pos.x - Math.cos(ang) * 0.4 * this.scale,
-          y: pos.y - Math.sin(ang) * 0.4 * this.scale,
-          vx: (Math.random() - 0.5) * 0.6,
-          vy: -0.4 - Math.random() * 0.6,
-          life: 0.35 + Math.random() * 0.3,
-        });
+
+      for (const m of this.shards) {
+        const d = m.userData;
+        const sp = this.frontPos(Math.min(1, eased + d.lead)).addScaledVector(
+          this.normal,
+          d.offset * this.halfSpan * 0.6,
+        );
+        m.position.set(sp.x, sp.y, 0.02);
+        m.rotation.z = this.angle + d.tilt + Math.sin(flightAge * d.spin) * 0.2;
+        m.scale.setScalar(d.size);
+        m.material.opacity = Math.min(1, t * 8);
+      }
+
+      // Globs ride just behind the front, sagging and stretched by the push.
+      for (const m of this.goo) {
+        const gt = Math.max(0, eased - m.userData.lag);
+        const gp = this.frontPos(gt).addScaledVector(
+          this.normal,
+          m.userData.offset * this.halfSpan * 0.75,
+        );
+        gp.y -= Math.sin(gt * Math.PI) * 0.25 * this.scale;
+        m.position.copy(gp);
+        m.rotation.z = this.angle;
+        const s = m.userData.size;
+        m.scale.set(s * 1.5, s * 0.8, 1);
+        m.material.opacity = Math.min(1, gt * 6);
       }
     } else if (!this.impacted) {
-      this.impacted = true;
-      this.core.position.copy(this.to);
-      this.flash.visible = true;
-
-      this.ring = billboard(2, 2, 0.9, ringTex);
-      this.ring.position.copy(this.to);
-      this.scene.add(this.ring);
-
-      for (let i = 0; i < this.splinterN; i++) {
-        const a = Math.random() * Math.PI * 2;
-        const sp = 3 + Math.random() * 8;
-        this.splinterP.push({
-          x: this.to.x,
-          y: this.to.y,
-          vx: Math.cos(a) * sp,
-          vy: Math.sin(a) * sp,
-          life: 0.22 + Math.random() * 0.3,
-        });
-      }
-      for (let i = 0; i < this.splashN; i++) {
-        const a = Math.random() * Math.PI * 2;
-        const sp = 2.5 + Math.random() * 5.5;
-        this.splashP.push({
-          x: this.to.x,
-          y: this.to.y,
-          vx: Math.cos(a) * sp,
-          vy: Math.abs(Math.sin(a)) * sp * 0.7 + 2.4,
-          life: 0.42 + Math.random() * 0.36,
-        });
-      }
-      for (let i = 0; i < this.mistN; i++) {
-        this.mistP.push({
-          x: this.to.x + (Math.random() - 0.5) * 1.2 * this.scale,
-          y: this.to.y + (Math.random() - 0.5) * 0.8 * this.scale,
-          vx: (Math.random() - 0.5) * 1.2,
-          vy: 0.2 + Math.random() * 0.5,
-          life: 0.4 + Math.random() * 0.3,
-        });
-      }
-      this.onImpact?.();
+      this.impact();
     }
 
     if (this.impacted) {
       const e = (flightAge - TRAVEL_DUR) / POST_DUR;
-      this.shard.material.opacity = Math.max(0, this.shard.material.opacity - dt * 10);
-      this.shard.scale.setScalar(Math.max(0.05, 1 - e * 2.4));
-      this.halo.material.opacity = Math.max(0, this.halo.material.opacity - dt * 5);
-      this.wake.material.opacity = Math.max(0, this.wake.material.opacity - dt * 2);
-      this.flash.material.opacity = Math.max(0, 0.9 * (1 - e * e));
-      this.flash.scale.setScalar(1 + e * 1.6);
-      if (this.ring) {
-        const re = Math.min(e * 1.4, 1);
-        this.ring.scale.setScalar((0.5 + re * 4.6) * this.scale);
-        this.ring.material.opacity = Math.max(0, 0.9 * (1 - re) * (1 - re));
-        this.ring.rotation.z -= dt * 1.2;
+      this.front.position.copy(this.to);
+      this.front.scale.set(1 + e * 1.2, 1 + e * 0.4, 1);
+      this.front.material.opacity = Math.max(0, 0.9 * (1 - e * 2));
+      this.haze.position.copy(this.to);
+      this.haze.material.opacity = Math.max(0, 0.85 * (1 - e * 1.3));
+      this.bloom.material.opacity = Math.max(0, 0.85 * (1 - e) * (1 - e));
+      this.bloom.scale.setScalar(0.6 + e * 0.9);
+
+      // Splatter: squashes on contact, then clings and oozes down slowly.
+      const age = flightAge - TRAVEL_DUR;
+      for (const m of this.splats) {
+        const d = m.userData;
+        const local = Math.max(0, age - d.delay);
+        const squash = Math.min(1, local / 0.08);
+        const drip = Math.min(1, local / POST_DUR);
+        m.scale.set(d.size * (1.4 - squash * 0.4), d.size * (0.6 + drip * 0.7), 1);
+        m.position.y += d.vy * dt * squash;
+        m.material.opacity = Math.max(0, 1 - Math.max(0, e - 0.55) / 0.45);
       }
     }
 
-    this.integratePoints(this.moteP, dt, 0.9, 0.4);
-    this.integratePoints(this.dripP, dt, 0.96, -9);
-    this.integratePoints(this.splinterP, dt, 0.86, -2);
-    this.integratePoints(this.splashP, dt, 0.94, -13);
-    this.integratePoints(this.mistP, dt, 0.95, 0.6);
+    this.integratePoints(this.moteP, dt, 0.9, -0.3);
+    this.integratePoints(this.crystalP, dt, 0.9, -3);
     this.writePoints(this.moteP, this.motes);
-    this.writePoints(this.dripP, this.drips);
-    this.writePoints(this.splinterP, this.splinters);
-    this.writePoints(this.splashP, this.splash);
-    this.writePoints(this.mistP, this.mist);
+    this.writePoints(this.crystalP, this.crystals);
 
     return this.age < this.lifetime;
   }
 
   dispose(scene) {
-    const objs = [
-      this.core,
-      this.wake,
-      this.charge,
+    const meshes = [
+      this.front,
+      this.haze,
+      this.crystals,
       this.motes,
-      this.drips,
-      this.splinters,
-      this.splash,
-      this.mist,
-      this.flash,
+      this.bloom,
+      ...this.goo,
+      ...this.splats,
+      ...this.shards,
     ];
-    if (this.ring) objs.push(this.ring);
-    for (const o of objs) scene.remove(o);
-
-    for (const m of [
-      this.halo,
-      this.shard,
-      this.wake,
-      this.charge,
-      this.motes,
-      this.drips,
-      this.splinters,
-      this.splash,
-      this.mist,
-      this.flash,
-      this.ring,
-    ]) {
-      if (!m) continue;
+    for (const m of meshes) {
+      scene.remove(m);
       m.geometry.dispose();
       m.material.dispose();
     }
