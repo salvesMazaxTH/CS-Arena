@@ -116,6 +116,23 @@ export function evaluateEmblemRequirements(emblem, rosterKeys = []) {
   return { allMet: checks.every((check) => check.pass), checks };
 }
 
+/** Every requirement check the chosen emblems still fail against the roster. */
+export function getUnmetEmblemChecks(emblemKeys = [], rosterKeys = []) {
+  return emblemKeys.flatMap((key) => {
+    const emblem = EMBLEMS.find((entry) => entry.key === key);
+    if (!emblem) return [];
+    return evaluateEmblemRequirements(emblem, rosterKeys)
+      .checks.filter((check) => !check.pass)
+      .map((check) => ({ ...check, emblem }));
+  });
+}
+
+/** True when adding `champion` would count toward `check`. */
+export function championFillsCheck(champion, check) {
+  if (!champion) return false;
+  return check.descriptor.countMatches([champion], check.target, check.threshold) > 0;
+}
+
 export function getEmblemShortCode(emblem) {
   if (!emblem?.name) return "EM";
   const realName = emblem.name.replace(/^Emblem of(?: the)?\s+/i, "").trim();
@@ -144,6 +161,31 @@ function renderRequirementCountsMarkup(checks) {
 
 function getEmblemRequirementGradient(checks) {
   return buildIdentityGradient(checks.map((check) => check.identity));
+}
+
+const STATE_ICON_PATHS = Object.freeze({
+  met: "M5 12.5l4.5 4.5L19 7.5",
+  unmet: "M7 7l10 10M17 7L7 17",
+});
+
+// Off: an empty socket. On: a lit seal — a check once the line-up meets the
+// requirements, a cross while it still does not.
+function renderEmblemStateMarkup(isSelected, allMet) {
+  if (!isSelected && allMet) {
+    // Ready: the line-up already qualifies, the emblem only needs switching on.
+    const title = "Not selected — your line-up already meets the requirements";
+    return `<span class="emblem-option-state" data-state="ready" title="${title}" aria-label="${title}">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="${STATE_ICON_PATHS.met}"/></svg>
+  </span>`;
+  }
+  if (!isSelected) {
+    return `<span class="emblem-option-state" data-state="off" title="Not selected"></span>`;
+  }
+  const state = allMet ? "met" : "unmet";
+  const title = allMet ? "Active — requirements met" : "Active — requirements not met yet";
+  return `<span class="emblem-option-state" data-state="${state}" title="${title}" aria-label="${title}">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="${STATE_ICON_PATHS[state]}"/></svg>
+  </span>`;
 }
 
 let emblemTooltip = null;
@@ -202,13 +244,14 @@ export function renderEmblemPanel({
   EMBLEMS.forEach((emblem) => {
     const isSelected = selectedKeys.includes(emblem.key);
     const requirementStatus = evaluateEmblemRequirements(emblem, rosterKeys);
+    // Unmet emblems stay selectable: choosing one narrows the roster grid to
+    // the champions that fill it, and saving waits until it is met.
     const isLocked = !isSelected && selectedKeys.length >= MAX_TEAM_EMBLEMS;
-    const isBlocked = !requirementStatus.allMet && !isSelected;
 
     const item = document.createElement("button");
     item.type = "button";
     item.className = `emblem-option ${isSelected ? "selected" : ""} ${requirementStatus.allMet ? "eligible" : "blocked"}`;
-    item.disabled = isLocked || isBlocked;
+    item.disabled = isLocked;
     item.dataset.emblemKey = emblem.key;
 
     const gradient = getEmblemRequirementGradient(requirementStatus.checks);
@@ -220,8 +263,9 @@ export function renderEmblemPanel({
         <strong>${escapeHtml(emblem.name || emblem.key)}</strong>
         <small>Requirements ${renderRequirementCountsMarkup(requirementStatus.checks)}</small>
       </span>
-      <span class="emblem-option-state">${isSelected ? "ON" : requirementStatus.allMet ? "OK" : "REQ"}</span>
+      ${renderEmblemStateMarkup(isSelected, requirementStatus.allMet)}
     `;
+    item.setAttribute("aria-pressed", String(isSelected));
 
     item.addEventListener("click", () => {
       const next = [...selectedKeys];

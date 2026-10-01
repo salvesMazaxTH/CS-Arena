@@ -20,7 +20,11 @@ import {
   renderChampionInspector,
   renderInspectorEmpty,
 } from "./championInspector.js";
-import { renderEmblemPanel } from "./emblemPanel.js";
+import {
+  renderEmblemPanel,
+  getUnmetEmblemChecks,
+  championFillsCheck,
+} from "./emblemPanel.js";
 
 const ZONES = ["roster", "inspector", "team"];
 const MIN_RECENT_CHAMPIONS_COUNT = 4;
@@ -165,6 +169,7 @@ export class TeamBuilder {
               <div class="tm-filter-row" data-facet="element"></div>
               <div class="tm-filter-row" data-facet="klass"></div>
             </div>
+            <p class="tm-emblem-guide hidden" data-ref="emblemGuide"></p>
             <div class="tm-roster-grid" data-ref="roster"></div>
           </aside>
 
@@ -417,11 +422,46 @@ export class TeamBuilder {
     return true;
   }
 
+  _unmetChecks() {
+    return getUnmetEmblemChecks(
+      this.draft.emblems,
+      this.draft.champions.filter(Boolean),
+    );
+  }
+
+  // While a chosen emblem is unmet, the grid only offers champions that count
+  // toward one of its missing requirements. Line-up members stay visible so
+  // they can still be removed from here.
+  _passesEmblemGuide(coreKeys, unmetChecks) {
+    if (!unmetChecks.length) return true;
+    if (coreKeys.some((key) => this.draft.champions.includes(key))) return true;
+    return coreKeys.some((key) =>
+      unmetChecks.some((check) => championFillsCheck(championDB[key], check)),
+    );
+  }
+
+  _renderEmblemGuide(unmetChecks) {
+    const guide = this.refs.emblemGuide;
+    guide.classList.toggle("hidden", !unmetChecks.length);
+    guide.innerHTML = unmetChecks.length
+      ? `Showing only champions that fill ${unmetChecks
+          .map(
+            (check) =>
+              `<strong>${escapeHtml(check.label)}</strong> (${check.actual}/${check.required})`,
+          )
+          .join(", ")}.`
+      : "";
+  }
+
   _renderRoster() {
     const grid = this.refs.roster;
+    const unmetChecks = this._unmetChecks();
+    this._guideSignature = this._checksSignature(unmetChecks);
+    this._renderEmblemGuide(unmetChecks);
 
     const championEntries = this._rosterKeys()
       .filter((key) => this._passesFilters(championDB[key]))
+      .filter((key) => this._passesEmblemGuide([key], unmetChecks))
       .map((key) => ({
         name: championDB[key].name,
         releaseDate: championDB[key].releaseDate,
@@ -429,7 +469,12 @@ export class TeamBuilder {
       }));
 
     const duoEntries = Object.values(duoDB)
-      .filter((duo) => this._isDuoOffered(duo) && this._duoPassesFilters(duo))
+      .filter(
+        (duo) =>
+          this._isDuoOffered(duo) &&
+          this._duoPassesFilters(duo) &&
+          this._passesEmblemGuide(duo.cores, unmetChecks),
+      )
       .map((duo) => ({
         name: duo.name,
         releaseDate: duo.releaseDate,
@@ -776,7 +821,16 @@ export class TeamBuilder {
     };
   }
 
+  _checksSignature(checks) {
+    return checks.map((check) => `${check.emblem.key}:${check.label}:${check.actual}`).join("|");
+  }
+
   _refresh() {
+    // Rebuilding the grid resets its scroll, so only do it when the set of
+    // unmet emblem requirements actually changed.
+    if (this._checksSignature(this._unmetChecks()) !== this._guideSignature) {
+      this._renderRoster();
+    }
     this._renderLineup();
     this._renderEmblemsColumn();
     this._renderValidation();
