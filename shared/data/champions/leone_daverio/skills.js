@@ -121,7 +121,7 @@ const leoneSkills = [
     isUltimate: true,
     momentumCost: 55,
 
-    bf: 100,
+    bf: 95,
 
     contact: true,
     damageMode: "standard",
