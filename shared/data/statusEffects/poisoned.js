@@ -6,6 +6,7 @@ import { ageStackBatches } from "../../core/stackLifetime.js";
 const poisoned = {
   key: "poisoned",
   name: "Poisoned",
+  namePt: "Envenenado",
   type: "debuff",
   subtypes: ["dot", "magical", "poison"],
   isStackable: true,

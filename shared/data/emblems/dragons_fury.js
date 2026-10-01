@@ -24,7 +24,7 @@ function wasDamagedByAlliedDragon(defender, owner, context) {
 export const dragonsFury = {
   key: "dragons_fury",
   name: "Emblem of the Dragon's Fury",
-  bonusDmgPercent: 20,
+  damageBonusPercent: 20,
 
   requirements: {
     species: {
@@ -35,8 +35,8 @@ export const dragonsFury = {
 
   description() {
     return {
-      en: `Your Dragon champions deal ${this.bonusDmgPercent}% bonus damage to enemies that have already been damaged by an allied Dragon this turn.`,
-      pt: `Seus campeões Dragão causam ${this.bonusDmgPercent}% de dano adicional a inimigos que já sofreram dano de um Dragão aliado neste turno.`,
+      en: `Your Dragon champions deal <b>${this.damageBonusPercent}%</b> increased damage to enemies that have already been damaged by an allied Dragon this turn.`,
+      pt: `Seus campeões Dragão causam dano <b>${this.damageBonusPercent}%</b> maior a inimigos que já sofreram dano de um Dragão aliado neste turno.`,
     };
   },
 
@@ -48,7 +48,7 @@ export const dragonsFury = {
     if (!wasDamagedByAlliedDragon(defender, owner, context)) return;
 
     return {
-      damage: Number(damage) * (1 + this.bonusDmgPercent / 100),
+      damage: Number(damage) * (1 + this.damageBonusPercent / 100),
     };
   },
 };

@@ -14,8 +14,8 @@ export const mageArcana = {
 
   description() {
     return {
-      en: `Skill attacks used by your Mage class champions deal ${this.bonusDamage} bonus damage.`,
-      pt: `Ataques de habilidade usados pelos seus campeões da classe Mago causam ${this.bonusDamage} de dano adicional.`,
+      en: `Skill attacks used by your Mage class champions deal <b>${this.bonusDamage}</b> bonus damage.`,
+      pt: `Ataques de habilidade usados pelos seus campeões da classe Mago causam <b>${this.bonusDamage}</b> de dano bônus.`,
     };
   },
 

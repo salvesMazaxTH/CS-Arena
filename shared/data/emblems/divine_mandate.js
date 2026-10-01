@@ -9,7 +9,7 @@ function hpPercent(champion) {
 export const divineMandate = {
   key: "divine_mandate",
   name: "Emblem of the Divine Mandate",
-  bonusDmgPercent: 12,
+  damageBonusPercent: 12,
   damageReductionPercent: 15,
   unshakenThresholdPercent: 60,
 
@@ -22,8 +22,8 @@ export const divineMandate = {
 
   description() {
     return {
-      en: `Your divinity champions deal ${this.bonusDmgPercent}% bonus damage to enemies with a lower HP percentage than their own, and take ${this.damageReductionPercent}% less damage (except Absolute Damage) while at or above ${this.unshakenThresholdPercent}% HP.`,
-      pt: `Seus campeões divinos causam ${this.bonusDmgPercent}% de dano adicional a inimigos com porcentagem de HP menor que a sua e sofrem ${this.damageReductionPercent}% menos dano (exceto Dano Absoluto) enquanto estiverem com ${this.unshakenThresholdPercent}% de HP ou mais.`,
+      en: `Your divinity champions deal <b>${this.damageBonusPercent}%</b> increased damage to enemies with a lower <b>HP</b> percentage than their own, and take <b>${this.damageReductionPercent}%</b> less damage (except <b>Absolute Damage</b>) while at or above <b>${this.unshakenThresholdPercent}%</b> <b>HP</b>.`,
+      pt: `Seus campeões divinos causam dano <b>${this.damageBonusPercent}%</b> maior a inimigos com porcentagem de <b>HP</b> menor que a sua e sofrem <b>${this.damageReductionPercent}%</b> menos dano (exceto <b>Dano Absoluto</b>) enquanto estiverem com <b>${this.unshakenThresholdPercent}%</b> de <b>HP</b> ou mais.`,
     };
   },
 
@@ -42,7 +42,7 @@ export const divineMandate = {
     // Judgement only falls on those already faltering.
     if (hpPercent(defender) >= hpPercent(attacker)) return;
 
-    const bonusDamage = Number(damage) * (this.bonusDmgPercent / 100);
+    const bonusDamage = Number(damage) * (this.damageBonusPercent / 100);
     const newDamage = Number(damage) + bonusDamage;
 
     return {

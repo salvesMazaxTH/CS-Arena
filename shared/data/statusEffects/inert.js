@@ -4,6 +4,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 const inert = {
   key: "inert",
   name: "Inert",
+  namePt: "Inerte",
   type: "debuff",
   subtypes: ["hardCC", "systemic"],
 

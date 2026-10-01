@@ -5,6 +5,7 @@ import { hasElement } from "../../engine/combat/elements.js";
 const conductor = {
   key: "conductor",
   name: "Conductor",
+  namePt: "Condutor",
   type: "debuff",
   subtypes: ["damageMod", "lightning"],
 

@@ -5,7 +5,7 @@ import { championHasSpecies } from "../championTraits.js";
 export const demigodsTrial = {
   key: "demigods_trial",
   name: "Emblem of the Demigod's Trial",
-  bonusDmgPercent: 14,
+  damageBonusPercent: 14,
   damageReductionPercent: 16,
 
   requirements: {
@@ -17,8 +17,8 @@ export const demigodsTrial = {
 
   description() {
     return {
-      en: `Your demigod champions deal ${this.bonusDmgPercent}% bonus damage to enemies with more current HP than their own, and take ${this.damageReductionPercent}% less damage (except Absolute Damage) from enemies with a higher Max HP than their own.`,
-      pt: `Seus campeões semideuses causam ${this.bonusDmgPercent}% de dano adicional a inimigos com mais HP atual que o seu e sofrem ${this.damageReductionPercent}% menos dano (exceto Dano Absoluto) de inimigos com HP Máximo maior que o seu.`,
+      en: `Your demigod champions deal <b>${this.damageBonusPercent}%</b> increased damage to enemies with more current <b>HP</b> than their own, and take <b>${this.damageReductionPercent}%</b> less damage (except <b>Absolute Damage</b>) from enemies with a higher <b>Max HP</b> than their own.`,
+      pt: `Seus campeões semideuses causam dano <b>${this.damageBonusPercent}%</b> maior a inimigos com mais <b>HP</b> atual que o seu e sofrem <b>${this.damageReductionPercent}%</b> menos dano (exceto <b>Dano Absoluto</b>) de inimigos com <b>HP Máximo</b> maior que o seu.`,
     };
   },
 
@@ -34,7 +34,7 @@ export const demigodsTrial = {
     // The trial is always a fight against something greater.
     if (Number(defender.HP) <= Number(attacker.HP)) return;
 
-    const bonusDamage = Number(damage) * (this.bonusDmgPercent / 100);
+    const bonusDamage = Number(damage) * (this.damageBonusPercent / 100);
     return { damage: Number(damage) + bonusDamage };
   },
 

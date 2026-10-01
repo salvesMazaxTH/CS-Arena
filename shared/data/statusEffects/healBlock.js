@@ -4,6 +4,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 const healBlock = {
   key: "healBlock",
   name: "Heal Block",
+  namePt: "Bloqueio de Cura",
   type: "debuff",
   subtypes: ["healBlock"],
   requiresDamage: true,

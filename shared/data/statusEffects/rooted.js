@@ -4,6 +4,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 const rooted = {
   key: "rooted",
   name: "Rooted",
+  namePt: "Enraizado",
   type: "debuff",
   subtypes: ["softCC"],
 

@@ -10,6 +10,7 @@ export const BLEEDING_DAMAGE_PER_STACK_RATIO = 0.04;
 const bleeding = {
   key: "bleeding",
   name: "Bleeding",
+  namePt: "Sangrando",
   type: "debuff",
   subtypes: ["dot", "physical"],
   // A wound has to be opened: an attack that deals no damage does not bleed,

@@ -16,8 +16,8 @@ export const galeStep = {
 
   description() {
     return {
-      en: `Your champions gain +${this.evasionBonus} Evasion when entering combat.`,
-      pt: `Seus campeões ganham +${this.evasionBonus} de Esquiva ao entrar em combate.`,
+      en: `Your champions gain <b>+${this.evasionBonus}</b> <b>Evasion</b> when entering combat.`,
+      pt: `Seus campeões ganham <b>+${this.evasionBonus}</b> de <b>Esquiva</b> ao entrar em combate.`,
     };
   },
 
@@ -26,5 +26,7 @@ export const galeStep = {
     if (champion.team !== owner.team) return;
 
     grantStats(champion, { Evasion: this.evasionBonus }, context);
+
+    return true;
   },
 };

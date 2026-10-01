@@ -15,8 +15,8 @@ export const enchanterWard = {
 
   description() {
     return {
-      en: `Your Enchanter class champions gain +${this.evasionBonus} Evasion and their healing effectiveness is increased by +${this.healingBonusPercent}%.`,
-      pt: `Seus campeões da classe Encantador ganham +${this.evasionBonus} de Esquiva e a eficácia de suas curas aumenta em +${this.healingBonusPercent}%.`,
+      en: `Your Enchanter class champions gain <b>+${this.evasionBonus}</b> <b>Evasion</b> and their healing effectiveness is increased by <b>${this.healingBonusPercent}%</b>.`,
+      pt: `Seus campeões da classe Encantador ganham <b>+${this.evasionBonus}</b> de <b>Esquiva</b> e a eficácia de suas curas aumenta em <b>${this.healingBonusPercent}%</b>.`,
     };
   },
 
@@ -26,6 +26,8 @@ export const enchanterWard = {
     if (!championHasClass(champion, "enchanter")) return;
 
     grantStats(champion, { Evasion: this.evasionBonus }, context);
+
+    return true;
   },
 
   onBeforeHealing({ healSrc, amount, owner }) {

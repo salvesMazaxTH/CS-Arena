@@ -1,4 +1,5 @@
 import { hasElement } from "../../engine/combat/elements.js";
+import { formatChampionName } from "../../ui/formatters.js";
 
 // shared/data/emblems/rising_inferno.js
 
@@ -16,8 +17,8 @@ export const risingInferno = {
 
   description() {
     return {
-      en: `Fire that finds fire does not start over — it climbs what is already lit. Your Fire damage against a Burning enemy deals bonus damage equal to ${this.maxHPBonusPercent}% of that enemy's maximum HP.`,
-      pt: `O fogo que encontra fogo não recomeça — ele sobe pelo que já está aceso. Seu dano de Fogo contra um inimigo Queimando causa dano adicional igual a ${this.maxHPBonusPercent}% do HP máximo dele.`,
+      en: `Fire that finds fire does not start over — it climbs what is already lit. Your Fire damage against a Burning enemy deals bonus damage equal to <b>${this.maxHPBonusPercent}%</b> of that enemy's <b>Max HP</b>.`,
+      pt: `O fogo que encontra fogo não recomeça — ele sobe pelo que já está aceso. Seu dano de Fogo contra um inimigo <b>Queimando</b> causa dano bônus igual a <b>${this.maxHPBonusPercent}%</b> do <b>HP Máximo</b> dele.`,
     };
   },
 
@@ -32,7 +33,10 @@ export const risingInferno = {
 
     return {
       bonusDamage: bonus,
-      log: `<b>[Emblem — Rising Inferno]</b> the flames already on ${defender.name} feed the strike for ${bonus} bonus damage.`,
+      log: {
+        en: `<b>[Emblem — Rising Inferno]</b> the flames already on ${formatChampionName(defender)} feed the strike for ${bonus} bonus damage.`,
+        pt: `<b>[Emblema — Rising Inferno]</b> as chamas que já ardem em ${formatChampionName(defender)} alimentam o golpe com ${bonus} de dano adicional.`,
+      },
     };
   },
 };

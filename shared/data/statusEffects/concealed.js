@@ -4,6 +4,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 const concealed = {
   key: "concealed",
   name: "Concealed",
+  namePt: "Oculto",
   type: "state",
   subtypes: ["stealth"],
 

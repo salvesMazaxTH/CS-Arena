@@ -18,8 +18,8 @@ export const oceanGrace = {
 
   description() {
     return {
-      en: `Increases all healing performed or received by your team by +${this.healingBonusPercent}% and grants +${this.maxHPBonusPercent}% bonus Max HP to allied champions when entering combat.`,
-      pt: `Aumenta em +${this.healingBonusPercent}% toda a cura realizada ou recebida pela sua equipe e concede +${this.maxHPBonusPercent}% de HP Máximo adicional aos campeões aliados ao entrarem em combate.`,
+      en: `Increases all healing performed or received by your team by <b>${this.healingBonusPercent}%</b> and grants <b>+${this.maxHPBonusPercent}%</b> bonus <b>Max HP</b> to allied champions when entering combat.`,
+      pt: `Aumenta em <b>${this.healingBonusPercent}%</b> toda a cura realizada ou recebida pela sua equipe e concede <b>+${this.maxHPBonusPercent}%</b> de <b>HP Máximo</b> adicional aos campeões aliados ao entrarem em combate.`,
     };
   },
 
@@ -28,6 +28,8 @@ export const oceanGrace = {
     if (champion.team !== owner.team) return;
 
     grantMaxHPPercent(champion, this.maxHPBonusPercent, context);
+
+    return true;
   },
 
   onBeforeHealing({ healSrc, healTarget, amount, owner }) {

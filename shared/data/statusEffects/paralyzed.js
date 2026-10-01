@@ -4,6 +4,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 const paralyzed = {
   key: "paralyzed",
   name: "Paralyzed",
+  namePt: "Paralisado",
   type: "debuff",
   subtypes: ["softCC", "statMod", "lightning"],
   requiresDamage: true,

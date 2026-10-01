@@ -4,6 +4,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 const absoluteImmunity = {
   key: "absoluteImmunity",
   name: "Absolute Immunity",
+  namePt: "Imunidade Absoluta",
   type: "buff",
   subtypes: ["immunity"],
 

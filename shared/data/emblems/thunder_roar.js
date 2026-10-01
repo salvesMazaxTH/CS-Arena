@@ -14,8 +14,8 @@ export const thunderRoar = {
 
   description() {
     return {
-      en: `Your champions gain +${this.speedBonus} Speed, and the thunder's energy makes their skills impossible to evade.`,
-      pt: `Seus campeões ganham +${this.speedBonus} de Velocidade, e a energia do trovão torna suas habilidades impossíveis de esquivar.`,
+      en: `Your champions gain <b>+${this.speedBonus}</b> <b>Speed</b>, and the thunder's energy makes their skills impossible to evade.`,
+      pt: `Seus campeões ganham <b>+${this.speedBonus}</b> de <b>Velocidade</b>, e a energia do trovão torna suas habilidades impossíveis de esquivar.`,
     };
   },
 
@@ -28,5 +28,7 @@ export const thunderRoar = {
     // Kept on the runtime, not stamped on the skills: a transformation swaps the
     // skill objects but carries the runtime, so the new form keeps it too.
     champion.runtime.ownSkillsCannotBeEvaded = true;
+
+    return true;
   },
 };

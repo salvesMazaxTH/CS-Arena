@@ -3,6 +3,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 const chilled = {
   key: "chilled",
   name: "Chilled",
+  namePt: "Gelado",
   type: "debuff",
   subtypes: ["statMod", "ice"],
 

@@ -2,6 +2,7 @@
 
 import { StatusEffectsRegistry } from "../statusEffects/effectsRegistry.js";
 import { grantStats } from "./emblemGrants.js";
+import { formatChampionName } from "../../ui/formatters.js";
 
 export const verdantRoot = {
   key: "verdant_root",
@@ -17,16 +18,15 @@ export const verdantRoot = {
   },
 
   description() {
-    const namesPt = { poisoned: "Envenenado", rooted: "Enraizado" };
     const immunitiesEn = this.immuneStatusKeys
       .map((key) => StatusEffectsRegistry[key].name)
       .join(" and ");
     const immunitiesPt = this.immuneStatusKeys
-      .map((key) => namesPt[key] ?? StatusEffectsRegistry[key].name)
+      .map((key) => `<b>${StatusEffectsRegistry[key].namePt}</b>`)
       .join(" e ");
     return {
-      en: `Your champions gain +${this.defenseBonus} Defense when entering combat and are immune to ${immunitiesEn}.`,
-      pt: `Seus campeões ganham +${this.defenseBonus} de Defesa ao entrar em combate e são imunes a ${immunitiesPt}.`,
+      en: `Your champions gain <b>+${this.defenseBonus}</b> <b>Defense</b> when entering combat and are immune to ${immunitiesEn}.`,
+      pt: `Seus campeões ganham <b>+${this.defenseBonus}</b> de <b>Defesa</b> ao entrar em combate e são imunes a ${immunitiesPt}.`,
     };
   },
 
@@ -35,15 +35,21 @@ export const verdantRoot = {
     if (champion.team !== owner.team) return;
 
     grantStats(champion, { Defense: this.defenseBonus }, context);
+
+    return true;
   },
 
   onStatusEffectIncoming({ target, statusEffect, owner }) {
     if (!target || !owner || target.team !== owner.team) return;
     if (!this.immuneStatusKeys.includes(statusEffect?.key)) return;
 
+    const status = StatusEffectsRegistry[statusEffect.key];
     return {
       cancel: true,
-      message: `<b>[Emblem — Verdant Root]</b> ${target.name}'s roots shrug off the ${statusEffect.name ?? statusEffect.key}.`,
+      message: {
+        en: `<b>[Emblem — Verdant Root]</b> ${formatChampionName(target)}'s roots shrug off <b>${status.name}</b>.`,
+        pt: `<b>[Emblema — Verdant Root]</b> as raízes de ${formatChampionName(target)} repelem o efeito <b>${status.namePt}</b>.`,
+      },
     };
   },
 };

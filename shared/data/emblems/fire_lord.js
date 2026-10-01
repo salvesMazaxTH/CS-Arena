@@ -16,8 +16,8 @@ export const firelord = {
 
   description() {
     return {
-      en: `Your Fire attacks deal ${this.bonusDmg} bonus damage.`,
-      pt: `Seus ataques de Fogo causam ${this.bonusDmg} de dano adicional.`,
+      en: `Your Fire attacks deal <b>${this.bonusDmg}</b> bonus damage.`,
+      pt: `Seus ataques de Fogo causam <b>${this.bonusDmg}</b> de dano bônus.`,
     };
   },
 

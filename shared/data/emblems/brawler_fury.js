@@ -15,8 +15,8 @@ export const brawlerFury = {
 
   description() {
     return {
-      en: `Your Brawler class champions gain +${this.attackBonus} Attack and +${this.criticalBonus}% Critical Chance.`,
-      pt: `Seus campeões da classe Lutador ganham +${this.attackBonus} de Ataque e +${this.criticalBonus}% de Chance de Crítico.`,
+      en: `Your Brawler class champions gain <b>+${this.attackBonus}</b> <b>Attack</b> and <b>+${this.criticalBonus}%</b> <b>Critical Chance</b>.`,
+      pt: `Seus campeões da classe Lutador ganham <b>+${this.attackBonus}</b> de <b>Ataque</b> e <b>+${this.criticalBonus}%</b> de <b>Chance de Crítico</b>.`,
     };
   },
 
@@ -30,5 +30,7 @@ export const brawlerFury = {
       { Attack: this.attackBonus, Critical: this.criticalBonus },
       context,
     );
+
+    return true;
   },
 };

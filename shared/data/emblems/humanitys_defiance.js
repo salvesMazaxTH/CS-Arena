@@ -5,7 +5,7 @@ import { championHasSpecies } from "../championTraits.js";
 export const humanitysDefiance = {
   key: "humanitys_defiance",
   name: "Emblem of Humanity's Defiance",
-  bonusDmgPercent: 10,
+  damageBonusPercent: 10,
   damageReductionPercent: 15,
 
   requirements: {
@@ -17,8 +17,8 @@ export const humanitysDefiance = {
 
   description() {
     return {
-      en: `Your human champions deal ${this.bonusDmgPercent}% bonus damage to non-human enemies and take ${this.damageReductionPercent}% less damage (except Absolute Damage) from enemies with higher Attack than them.`,
-      pt: `Seus campeões humanos causam ${this.bonusDmgPercent}% de dano adicional a inimigos não humanos e sofrem ${this.damageReductionPercent}% menos dano (exceto Dano Absoluto) de inimigos com Ataque maior que o seu.`,
+      en: `Your human champions deal <b>${this.damageBonusPercent}%</b> increased damage to non-human enemies and take <b>${this.damageReductionPercent}%</b> less damage (except <b>Absolute Damage</b>) from enemies with higher <b>Attack</b> than them.`,
+      pt: `Seus campeões humanos causam dano <b>${this.damageBonusPercent}%</b> maior a inimigos não humanos e sofrem <b>${this.damageReductionPercent}%</b> menos dano (exceto <b>Dano Absoluto</b>) de inimigos com <b>Ataque</b> maior que o seu.`,
     };
   },
 
@@ -37,7 +37,7 @@ export const humanitysDefiance = {
     // Only apply bonus if defender is non-human
     if (championHasSpecies(defender, "human")) return;
 
-    const bonusDamage = Number(damage) * (this.bonusDmgPercent / 100);
+    const bonusDamage = Number(damage) * (this.damageBonusPercent / 100);
     const newDamage = Number(damage) + bonusDamage;
 
     return {

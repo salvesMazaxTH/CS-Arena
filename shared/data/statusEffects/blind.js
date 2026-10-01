@@ -27,6 +27,7 @@ export function getBlindMiss(user, skill, targets, context) {
 const blind = {
   key: "blind",
   name: "Blind",
+  namePt: "Cego",
   type: "debuff",
   subtypes: ["softCC"],
   missChance: BLIND_MISS_CHANCE,

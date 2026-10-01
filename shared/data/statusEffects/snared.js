@@ -4,6 +4,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 const snared = {
   key: "snared",
   name: "Snared",
+  namePt: "Enredado",
   type: "debuff",
   subtypes: ["softCC"],
 

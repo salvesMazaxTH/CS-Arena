@@ -4,6 +4,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 const stunned = {
   key: "stunned",
   name: "Stunned",
+  namePt: "Atordoado",
   type: "debuff",
   subtypes: ["hardCC"],
 

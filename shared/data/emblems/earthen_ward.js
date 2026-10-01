@@ -1,6 +1,7 @@
 // shared/data/emblems/earthen_ward.js
 
 import { championHasAffinity } from "../championTraits.js";
+import { formatChampionName } from "../../ui/formatters.js";
 
 export const earthenWard = {
   key: "earthen_ward",
@@ -18,8 +19,8 @@ export const earthenWard = {
 
   description() {
     return {
-      en: "Your Earth champions are immune to indirect damage.",
-      pt: "Seus campeões de Terra são imunes a dano indireto.",
+      en: `Your Earth champions are immune to <b>indirect damage</b>.`,
+      pt: `Seus campeões de Terra são imunes a <b>dano indireto</b>.`,
     };
   },
 
@@ -32,7 +33,10 @@ export const earthenWard = {
     return {
       cancel: true,
       immune: true,
-      message: `<b>[Emblem — Earthen Ward]</b> ${defender.name} is immune to indirect damage!`,
+      message: {
+        en: `<b>[Emblem — Earthen Ward]</b> ${formatChampionName(defender)} is immune to indirect damage!`,
+        pt: `<b>[Emblema — Earthen Ward]</b> ${formatChampionName(defender)} é imune a dano indireto!`,
+      },
     };
   },
 };

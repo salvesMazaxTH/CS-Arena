@@ -1,3 +1,5 @@
+import { formatChampionName } from "../../ui/formatters.js";
+
 export const impervious_steel = {
   key: "impervious_steel",
   name: "Emblem of Impervious Steel",
@@ -13,8 +15,8 @@ export const impervious_steel = {
 
   description() {
     return {
-      en: `Your champions gain ${this.dmgReductionPercent}% damage reduction (except Absolute Damage) and Piercing damage against them loses ${this.piercingResistPercent}% of its effectiveness.`,
-      pt: `Seus campeões ganham ${this.dmgReductionPercent}% de redução de dano (exceto Dano Absoluto) e o dano Perfurante contra eles perde ${this.piercingResistPercent}% de sua eficácia.`,
+      en: `Your champions gain <b>${this.dmgReductionPercent}%</b> <b>Damage Reduction</b> (except <b>Absolute Damage</b>) and <b>Piercing</b> damage against them loses <b>${this.piercingResistPercent}%</b> of its effectiveness.`,
+      pt: `Seus campeões ganham <b>${this.dmgReductionPercent}%</b> de <b>Redução de Dano</b> (exceto <b>Dano Absoluto</b>) e o dano <b>Perfurante</b> contra eles perde <b>${this.piercingResistPercent}%</b> de sua eficácia.`,
     };
   },
 
@@ -33,6 +35,8 @@ export const impervious_steel = {
       source: this.name,
       context,
     });
+
+    return true;
   },
 
   onBeforeDmgTaking({ defender, owner, mode, piercingPercentage }) {
@@ -44,7 +48,10 @@ export const impervious_steel = {
 
     return {
       piercingPercentage: resistedPiercing,
-      log: `<b>[Emblem — Impervious Steel]</b> ${defender.name}'s steel resists the piercing strike, cutting its effectiveness by ${this.piercingResistPercent}%!`,
+      log: {
+        en: `<b>[Emblem — Impervious Steel]</b> ${formatChampionName(defender)}'s steel resists the piercing strike, cutting its effectiveness by ${this.piercingResistPercent}%!`,
+        pt: `<b>[Emblema — Impervious Steel]</b> o aço de ${formatChampionName(defender)} resiste ao golpe perfurante e corta ${this.piercingResistPercent}% da sua eficácia!`,
+      },
     };
   },
 };

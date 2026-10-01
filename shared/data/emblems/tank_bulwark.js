@@ -15,8 +15,8 @@ export const tankBulwark = {
 
   description() {
     return {
-      en: `Your Tank class champions gain +${this.defenseBonus} Defense and +${this.maxHPBonusPercent}% Max HP.`,
-      pt: `Seus campeões da classe Tanque ganham +${this.defenseBonus} de Defesa e +${this.maxHPBonusPercent}% de HP Máximo.`,
+      en: `Your Tank class champions gain <b>+${this.defenseBonus}</b> <b>Defense</b> and <b>+${this.maxHPBonusPercent}%</b> <b>Max HP</b>.`,
+      pt: `Seus campeões da classe Tanque ganham <b>+${this.defenseBonus}</b> de <b>Defesa</b> e <b>+${this.maxHPBonusPercent}%</b> de <b>HP Máximo</b>.`,
     };
   },
 
@@ -27,5 +27,7 @@ export const tankBulwark = {
 
     grantStats(champion, { Defense: this.defenseBonus }, context);
     grantMaxHPPercent(champion, this.maxHPBonusPercent, context);
+
+    return true;
   },
 };

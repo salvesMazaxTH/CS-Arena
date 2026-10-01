@@ -19,7 +19,7 @@ function carriesTheStorm(champion) {
 export const stormFist = {
   key: "storm_fist",
   name: "Emblem of the Storm Fist",
-  bonusDmgPercent: 15,
+  damageBonusPercent: 15,
   brawlerSpeedBonus: 12,
   lightningSpeedBonus: 5,
 
@@ -33,8 +33,8 @@ export const stormFist = {
 
   description() {
     return {
-      en: `Your Brawler champions gain +${this.brawlerSpeedBonus} Speed and your Lightning champions gain +${this.lightningSpeedBonus} Speed when entering combat. Both deal ${this.bonusDmgPercent}% bonus damage to enemies slower than them.`,
-      pt: `Seus campeões Lutadores ganham +${this.brawlerSpeedBonus} de Velocidade e seus campeões de Raio ganham +${this.lightningSpeedBonus} de Velocidade ao entrar em combate. Ambos causam ${this.bonusDmgPercent}% de dano adicional a inimigos mais lentos que eles.`,
+      en: `Your Brawler champions gain <b>+${this.brawlerSpeedBonus}</b> <b>Speed</b> and your Lightning champions gain <b>+${this.lightningSpeedBonus}</b> <b>Speed</b> when entering combat. Both deal <b>${this.damageBonusPercent}%</b> increased damage to enemies slower than them.`,
+      pt: `Seus campeões Lutadores ganham <b>+${this.brawlerSpeedBonus}</b> de <b>Velocidade</b> e seus campeões de Raio ganham <b>+${this.lightningSpeedBonus}</b> de <b>Velocidade</b> ao entrar em combate. Ambos causam dano <b>${this.damageBonusPercent}%</b> maior a inimigos mais lentos que eles.`,
     };
   },
 
@@ -54,6 +54,8 @@ export const stormFist = {
     if (!speedBonus) return;
 
     grantStats(champion, { Speed: speedBonus }, context);
+
+    return true;
   },
 
   onBeforeDmgDealing({ attacker, defender, damage, owner }) {
@@ -67,7 +69,7 @@ export const stormFist = {
     // The strike only lands as a storm on those it can outpace.
     if (Number(attacker.Speed) <= Number(defender.Speed)) return;
 
-    const bonusDamage = Number(damage) * (this.bonusDmgPercent / 100);
+    const bonusDamage = Number(damage) * (this.damageBonusPercent / 100);
     const newDamage = Number(damage) + bonusDamage;
 
     return {

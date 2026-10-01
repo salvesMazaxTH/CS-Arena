@@ -7,6 +7,7 @@ import { hasElement } from "../../engine/combat/elements.js";
 const burning = {
   key: "burning",
   name: "Burning",
+  namePt: "Queimando",
   type: "debuff",
   subtypes: ["dot", "fire"],
   // An attack that deals no damage does not set the target alight, unless the

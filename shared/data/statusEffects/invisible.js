@@ -4,6 +4,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 const invisible = {
   key: "invisible",
   name: "Invisible",
+  namePt: "Invisível",
   type: "buff",
   subtypes: ["stealth"],
 

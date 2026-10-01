@@ -1,4 +1,5 @@
 import { grantStats } from "./emblemGrants.js";
+import { formatChampionName } from "../../ui/formatters.js";
 
 export const earthshaker = {
   key: "earthshaker",
@@ -14,8 +15,8 @@ export const earthshaker = {
 
   description() {
     return {
-      en: `Your champions gain +${this.defenseBonus} Defense and are immune to control effects.`,
-      pt: `Seus campeões ganham +${this.defenseBonus} de Defesa e são imunes a efeitos de controle.`,
+      en: `Your champions gain <b>+${this.defenseBonus}</b> <b>Defense</b> and are immune to <b>control effects</b>.`,
+      pt: `Seus campeões ganham <b>+${this.defenseBonus}</b> de <b>Defesa</b> e são imunes a <b>efeitos de controle</b>.`,
     };
   },
 
@@ -24,6 +25,8 @@ export const earthshaker = {
     if (champion.team !== owner.team) return;
 
     grantStats(champion, { Defense: this.defenseBonus }, context);
+
+    return true;
   },
 
   onStatusEffectIncoming({ target, statusEffect, owner }) {
@@ -39,7 +42,10 @@ export const earthshaker = {
 
     return {
       cancel: true,
-      message: `<b>[Emblem — Earthshaker]</b> ${target.name} is immune to control effects!`,
+      message: {
+        en: `<b>[Emblem — Earthshaker]</b> ${formatChampionName(target)} is immune to control effects!`,
+        pt: `<b>[Emblema — Earthshaker]</b> ${formatChampionName(target)} é imune a efeitos de controle!`,
+      },
     };
   },
 };

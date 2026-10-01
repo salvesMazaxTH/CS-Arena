@@ -4,6 +4,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 const afflictionWard = {
   key: "afflictionWard",
   name: "Affliction Ward",
+  namePt: "Proteção contra Aflição",
   type: "buff",
   subtypes: ["immunity"],
 

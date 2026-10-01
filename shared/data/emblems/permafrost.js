@@ -2,6 +2,7 @@
 
 import { StatusEffectsRegistry } from "../statusEffects/effectsRegistry.js";
 import { hasElement } from "../../engine/combat/elements.js";
+import { formatChampionName } from "../../ui/formatters.js";
 
 export const permafrost = {
   key: "permafrost",
@@ -21,8 +22,8 @@ export const permafrost = {
 
   description() {
     return {
-      en: `The cold your team carries is the settled kind — old ice that has forgotten how to melt and does not feel a fresh chill land on it. Every allied champion is immune to ${StatusEffectsRegistry[this.immuneStatusKey].name} and takes ${this.baseDamageReductionPercent}% less damage (except Absolute Damage), rising to ${this.iceDamageReductionPercent}% against Ice damage; when Ice damage does land, ${this.iceHitShieldPercent}% of it freezes onto the champion as a Shield.`,
-      pt: `O frio que sua equipe carrega é o frio assentado — gelo antigo que esqueceu como derreter e nem sente um novo calafrio pousar nele. Todo campeão aliado é imune a Gelado e sofre ${this.baseDamageReductionPercent}% menos dano (exceto Dano Absoluto), subindo para ${this.iceDamageReductionPercent}% contra dano de Gelo; quando o dano de Gelo de fato atinge, ${this.iceHitShieldPercent}% dele congela sobre o campeão como um Escudo.`,
+      en: `The cold your team carries is the settled kind — old ice that has forgotten how to melt and does not feel a fresh chill land on it. Every allied champion is immune to ${StatusEffectsRegistry[this.immuneStatusKey].name} and takes <b>${this.baseDamageReductionPercent}%</b> less damage (except <b>Absolute Damage</b>), rising to <b>${this.iceDamageReductionPercent}%</b> against Ice damage; when Ice damage does land, <b>${this.iceHitShieldPercent}%</b> of it freezes onto the champion as a <b>Shield</b>.`,
+      pt: `O frio que sua equipe carrega é o frio assentado — gelo antigo que esqueceu como derreter e nem sente um novo calafrio pousar nele. Todo campeão aliado é imune a <b>${StatusEffectsRegistry[this.immuneStatusKey].namePt}</b> e sofre <b>${this.baseDamageReductionPercent}%</b> menos dano (exceto <b>Dano Absoluto</b>), subindo para <b>${this.iceDamageReductionPercent}%</b> contra dano de Gelo; quando o dano de Gelo de fato atinge, <b>${this.iceHitShieldPercent}%</b> dele congela sobre o campeão como um <b>Escudo</b>.`,
     };
   },
 
@@ -39,7 +40,10 @@ export const permafrost = {
 
     return {
       cancel: true,
-      message: `<b>[Emblem — Permafrost]</b> ${target.name}'s cold is too old to feel the chill.`,
+      message: {
+        en: `<b>[Emblem — Permafrost]</b> ${formatChampionName(target)}'s cold is too old to feel the chill.`,
+        pt: `<b>[Emblema — Permafrost]</b> o frio de ${formatChampionName(target)} é antigo demais para sentir o calafrio.`,
+      },
     };
   },
 
@@ -67,7 +71,10 @@ export const permafrost = {
     });
 
     return {
-      log: `<b>[Emblem — Permafrost]</b> the Ice that struck ${defender.name} freezes into a ${shield} HP Shield.`,
+      log: {
+        en: `<b>[Emblem — Permafrost]</b> the Ice that struck ${formatChampionName(defender)} freezes into a ${shield} HP Shield.`,
+        pt: `<b>[Emblema — Permafrost]</b> o Gelo que atingiu ${formatChampionName(defender)} congela em um Escudo de ${shield} de HP.`,
+      },
     };
   },
 };

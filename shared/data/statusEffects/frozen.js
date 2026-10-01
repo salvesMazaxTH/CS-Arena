@@ -6,6 +6,7 @@ import { ElementalInteractions } from "../../engine/combat/ElementalInteractions
 const frozen = {
   key: "frozen",
   name: "Frozen",
+  namePt: "Congelado",
   type: "debuff",
   subtypes: ["hardCC", "ice"],
   locksStats: ["Speed", "Attack"],
