@@ -124,6 +124,7 @@ const azhkharonSkills = [
     damageMode: "standard",
     element: ["ice", "poison"],
     freezeDuration: 1,
+    hitVfx: "venom_frost",
     isUltimate: true,
     momentumCost: 55,
     poisonStacks: 2,
