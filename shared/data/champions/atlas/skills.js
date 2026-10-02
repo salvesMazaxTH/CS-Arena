@@ -1,6 +1,7 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
+import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 import totalBlock from "../generic/totalBlock.js";
 
 const atlasSkills = [
@@ -57,7 +58,10 @@ const atlasSkills = [
         const broken = enemy.breakShields(this.shredAmount);
         if (broken > 0) {
           results.push({
-            log: `${formatChampionName(enemy)} loses ${broken} Shield to the blow.`,
+            log: {
+              en: `${formatChampionName(enemy)} loses ${broken} Shield to the blow.`,
+              pt: `${formatChampionName(enemy)} perde ${broken} de Escudo com o golpe.`,
+            },
           });
         }
       }
@@ -83,7 +87,10 @@ const atlasSkills = [
           const broken = adjacent.breakShields(this.adjacentShredAmount);
           if (broken > 0) {
             results.push({
-              log: `${formatChampionName(adjacent)} loses ${broken} Shield to the tremor.`,
+              log: {
+                en: `${formatChampionName(adjacent)} loses ${broken} Shield to the tremor.`,
+                pt: `${formatChampionName(adjacent)} perde ${broken} de Escudo com o tremor.`,
+              },
             });
           }
         }
@@ -163,7 +170,7 @@ const atlasSkills = [
     targetSpec: ["all:enemy"],
 
     resolve({ user, targets, context = {} }) {
-      const enemies = targets.filter((c) => c.team !== user.team && c.alive);
+      const enemies = TargetFilter.candidates("enemy", user, targets);
       const baseDamage = (user.Defense * this.defenseScaling) / 100;
       const results = [];
 
@@ -185,7 +192,10 @@ const atlasSkills = [
           const broken = enemy.breakShields(this.shredAmount);
           if (broken > 0) {
             results.push({
-              log: `${formatChampionName(enemy)} loses ${broken} Shield to the collapse.`,
+              log: {
+                en: `${formatChampionName(enemy)} loses ${broken} Shield to the collapse.`,
+                pt: `${formatChampionName(enemy)} perde ${broken} de Escudo com o desabamento.`,
+              },
             });
           }
         }

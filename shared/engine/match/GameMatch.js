@@ -328,12 +328,13 @@ class CombatState {
 
     const slot = champion.combatSlot;
     const column = slot % ARENA_ROW_SIZE;
-    const left =
-      column > 0 ? this.getChampionAtSlot(champion.team, slot - 1) : null;
-    const right =
-      column < ARENA_ROW_SIZE - 1
-        ? this.getChampionAtSlot(champion.team, slot + 1)
-        : null;
+    // A fallen champion still holding its slot is not a neighbour.
+    const aliveAt = (at) => {
+      const neighbour = this.getChampionAtSlot(champion.team, at);
+      return neighbour?.alive ? neighbour : null;
+    };
+    const left = column > 0 ? aliveAt(slot - 1) : null;
+    const right = column < ARENA_ROW_SIZE - 1 ? aliveAt(slot + 1) : null;
 
     if (side === "left") return left ? [left] : [];
     if (side === "right") return right ? [right] : [];

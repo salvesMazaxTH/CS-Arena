@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
+import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 
 export default {
   key: "absolute_weight",
@@ -21,14 +22,17 @@ export default {
     onActionResolved: "actionSource",
   },
 
-  onAfterDmgDealing({ owner, defender, damage, contact }) {
+  onAfterDmgDealing({ defender, damage, contact }) {
     if (!(damage > 0) || !contact || !defender) return;
 
     const broken = defender.breakShields(this.contactShredAmount);
     if (!(broken > 0)) return;
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(defender)} loses ${broken} Shield to Atlas's crushing weight.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(defender)} loses ${broken} Shield to Atlas's crushing weight.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(defender)} perde ${broken} de Escudo sob o peso esmagador de Atlas.`,
+      },
     };
   },
 
@@ -38,15 +42,20 @@ export default {
     return {
       mode: "standard",
       piercingPercentage: 0,
-      log: `<b>[Passive — ${this.name}]</b> There is no gap in ${formatChampionName(owner)} to slip through — the hit lands as standard damage.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> There is no gap in ${formatChampionName(owner)} to slip through — the hit lands as standard damage.`,
+        pt: `<b>[Passiva — ${this.name}]</b> Não há brecha em ${formatChampionName(owner)} por onde passar — o golpe acerta como dano padrão.`,
+      },
     };
   },
 
   onActionResolved({ owner, skill, context }) {
     if (skill?.key !== CLAIM_ACTION_KEY) return;
 
-    const enemies = (context.aliveChampions ?? []).filter(
-      (c) => c.team !== owner.team,
+    const enemies = TargetFilter.candidates(
+      "enemy",
+      owner,
+      context.aliveChampions ?? [],
     );
 
     const shattered = [];
@@ -58,7 +67,10 @@ export default {
     if (!shattered.length) return;
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> The ground answers Atlas's CLAIM — ${shattered.join(", ")} loses Shield to the tremor.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> The ground answers Atlas's CLAIM — ${shattered.join(", ")} loses Shield to the tremor.`,
+        pt: `<b>[Passiva — ${this.name}]</b> O chão responde ao CLAIM de Atlas — ${shattered.join(", ")} perde Escudo com o tremor.`,
+      },
     };
   },
 };
