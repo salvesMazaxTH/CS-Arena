@@ -511,7 +511,10 @@ function emitChampionDeath(deathResult) {
       claimPoints: null,
       globalDialogs: [],
       state: getGameState(champ ? [champ] : []),
-      log: `${deathResult.championName ?? "Champion"} was eliminated. Score updated.`,
+      log: {
+        en: `${deathResult.championName ?? "Champion"} was eliminated. Score: <b>+${deathResult.killPoints}</b> (<b>${deathResult.scoreBefore} → ${deathResult.scoreAfter}</b>)`,
+        pt: `${deathResult.championName ?? "Campeão"} foi eliminado. Pontos: <b>+${deathResult.killPoints}</b> (<b>${deathResult.scoreBefore} → ${deathResult.scoreAfter}</b>)`,
+      },
     });
   }
 

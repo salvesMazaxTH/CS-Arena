@@ -1,9 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { formatChampionName } from "../../../ui/formatters.js";
-import {
-  CLAIM_ACTION_KEY,
-  getClaimPoints,
-} from "../../../engine/combat/claim.js";
+import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
 import totalBlock from "../generic/totalBlock.js";
 
 const MISERS_TOLL_HOOK_KEY = "misers_toll_hook";
@@ -65,7 +62,10 @@ const avarionSkills = [
       });
 
       context.registerDialog?.({
-        message: `${formatChampionName(enemy)} was appraised and found wanting: -${this.attackShred} Attack!`,
+        message: {
+          en: `${formatChampionName(enemy)} was appraised and found wanting: -${this.attackShred} Attack!`,
+          pt: `${formatChampionName(enemy)} foi avaliado e considerado insuficiente: -${this.attackShred} de Ataque!`,
+        },
         sourceId: user.id,
         targetId: enemy.id,
       });
@@ -124,51 +124,48 @@ const avarionSkills = [
             if (!owner?.alive) return;
             if (!actionSource || actionSource.team === owner.team) return;
 
-            // The CLAIM has already scored by the time this hook runs.
-            // `preActionClaimPoints` is the number the resolver actually
-            // awarded; recomputing it is only a fallback for contexts that do
-            // not publish it.
-            const claimedPoints = Number(
-              context?.preActionClaimPoints ??
-                getClaimPoints(actionSource, context?.currentTurn),
-            );
+            // The CLAIM has already scored by the time this hook runs, and the
+            // resolver publishes the points it actually awarded. The context
+            // is created per action, so that number is never shared between
+            // two CLAIMs.
+            const claimedPoints = Number(context.preActionClaimPoints);
 
-            // A toll can never take back more than the CLAIM brought in, even
-            // if several tolls land on the same CLAIM, so what previous tolls
-            // already took is tracked on the action's own context.
-            const alreadyTolled = Number(context?.misersTollCollected ?? 0);
-            const collected = Math.min(
-              tollPoints,
-              claimedPoints - alreadyTolled,
-            );
+            // A toll can never take back more than the CLAIM brought in.
+            const collected = Math.min(tollPoints, claimedPoints);
 
             if (!(collected > 0)) return;
 
-            if (context) context.misersTollCollected = alreadyTolled + collected;
-
             owner.removeHookEffects((he) => he.key === MISERS_TOLL_HOOK_KEY);
 
-            // The collected half is registered on Avarion's side; the returned
-            // result carries the matching deduction on the claimer's side.
-            context?.registerScore?.({
-              amount: collected,
-              scoringSlot: owner.team - 1,
-              reason: MISERS_TOLL_HOOK_KEY,
-              sourceId: owner.id,
-            });
-
-            return {
-              type: "score",
-              amount: -collected,
-              scoringSlot: actionSource.team - 1,
-              log: `${formatChampionName(owner)} levied <b>Miser's Toll</b> on ${formatChampionName(actionSource)}'s CLAIM, diverting ${collected} point(s) to his own ledger.`,
-            };
+            // The deduction on the claimer's side and the matching gain on
+            // Avarion's side.
+            return [
+              {
+                type: "score",
+                amount: -collected,
+                scoringSlot: actionSource.team - 1,
+                sourceId: owner.id,
+                log: {
+                  en: `${formatChampionName(owner)} levied <b>Miser's Toll</b> on ${formatChampionName(actionSource)}'s CLAIM, diverting <b>${collected}</b> point(s) to his own ledger.`,
+                  pt: `${formatChampionName(owner)} cobrou o <b>Pedágio do Avarento</b> sobre o CLAIM de ${formatChampionName(actionSource)}, desviando <b>${collected}</b> ponto(s) para o próprio livro-razão.`,
+                },
+              },
+              {
+                type: "score",
+                amount: collected,
+                scoringSlot: owner.team - 1,
+                sourceId: owner.id,
+              },
+            ];
           },
         }, context);
       }
 
       return {
-        log: `${formatChampionName(user)} gathered the loose crystal of the field and hung <b>Miser's Toll</b> over the enemy ledger.`,
+        log: {
+          en: `${formatChampionName(user)} gathered the loose crystal of the field and hung <b>Miser's Toll</b> over the enemy ledger.`,
+          pt: `${formatChampionName(user)} recolheu o cristal solto do campo e pendurou o <b>Pedágio do Avarento</b> sobre o livro-razão inimigo.`,
+        },
       };
     },
   },
@@ -226,7 +223,10 @@ const avarionSkills = [
       });
 
       context.registerDialog?.({
-        message: `${formatChampionName(enemy)} was written down in the ledger: -${this.attackShred} Attack for ${this.shredDuration} turns!`,
+        message: {
+          en: `${formatChampionName(enemy)} was written down in the ledger: -${this.attackShred} Attack for ${this.shredDuration} turns!`,
+          pt: `${formatChampionName(enemy)} foi anotado no livro-razão: -${this.attackShred} de Ataque por ${this.shredDuration} turnos!`,
+        },
         sourceId: user.id,
         targetId: enemy.id,
       });

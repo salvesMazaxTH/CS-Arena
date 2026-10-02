@@ -713,6 +713,7 @@ class CombatState {
 
     let scoreAwarded = false;
     let killPoints = 0;
+    const scoreBefore = this.playerScores[scoringSlot] || 0;
 
     if (rawKillPoints > 0) {
       killPoints = this.addPointForSlot(scoringSlot, rawKillPoints, true);
@@ -749,6 +750,8 @@ class CombatState {
       deathBonus,
       comebackBonus,
       killPoints,
+      scoreBefore,
+      scoreAfter: this.playerScores[scoringSlot] || 0,
       scoreAwarded,
       scorePayload: scoreAwarded ? this.getScorePayload() : null,
       gameEnded: this.gameEnded,

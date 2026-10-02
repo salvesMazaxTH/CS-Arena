@@ -174,9 +174,11 @@ export class TurnResolver {
 
   /** Banks every score entry a resolved context registered; null if it had none. */
   applyScoreResults(results) {
-    const scoreResults = (results || []).filter(
-      (entry) => entry?.type === "score",
-    );
+    // A hook may return several score entries as an array (e.g. a gain for
+    // one side and the matching deduction for the other).
+    const scoreResults = (results || [])
+      .flat()
+      .filter((entry) => entry?.type === "score");
     if (scoreResults.length === 0) return null;
 
     for (const scoreResult of scoreResults) {

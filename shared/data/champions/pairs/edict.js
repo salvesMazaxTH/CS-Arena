@@ -6,6 +6,8 @@
 
 export const AVARIK_NAME = "Avarik";
 export const AVARION_NAME = "Avarion";
+export const AVARIK_KEY = "avarik";
+export const AVARION_KEY = "avarion";
 
 // Thresholds differ because HP drains over a match while Attack is near-static,
 // so each line sits where it stays reachable without disqualifying the roster.
@@ -26,9 +28,9 @@ function listChampions(context) {
 }
 
 // The other brother is on the field, on either team.
-export function isBrotherOnField(context, brotherName) {
+export function isBrotherOnField(context, brotherKey) {
   return listChampions(context).some(
-    (champion) => champion?.alive && champion.name === brotherName,
+    (champion) => champion?.alive && champion.championKey === brotherKey,
   );
 }
 
@@ -39,10 +41,10 @@ export function isIndirectDamage(context) {
   return !!context?.isDot || Number(context?.damageDepth ?? 0) > 0;
 }
 
-export function isEdictInForce(owner, context, brotherName) {
+export function isEdictInForce(owner, context, brotherKey) {
   if (!owner?.alive) return false;
 
-  return !isBrotherOnField(context, brotherName);
+  return !isBrotherOnField(context, brotherKey);
 }
 
 // Current stat value, so buffs and debuffs move a champion in and out of reach.
