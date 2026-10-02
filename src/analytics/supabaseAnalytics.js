@@ -55,14 +55,14 @@ function compKeyFor(championKeys) {
  * @param {number} params.turnCount
  * @param {number[]} params.scores - [scoreTeam1, scoreTeam2]
  * @param {{team:number, username:string, championKeys:string[], emblemKeys:string[]}[]} params.players
- * @param {object[]} params.championRoster - serialized champions from getMatchRosterStats(), each with a `team` and `matchStats`
+ * @param {{team:number, championKey:string, formOf:string|null, matchStats:object}[]} params.formStats - one entry per form each champion took; `formOf` names the drafted champion when the row is a transformation
  */
 export async function recordMatchResult({
   winnerTeam,
   turnCount,
   scores,
   players,
-  championRoster,
+  formStats,
 }) {
   const supabase = getClient();
   if (!supabase) return;
@@ -99,19 +99,20 @@ export async function recordMatchResult({
 
   const playerIdByTeam = new Map(insertedPlayers.map((p) => [p.team, p.id]));
 
-  const championRows = championRoster
-    .filter((champion) => playerIdByTeam.has(champion.team))
-    .map((champion) => ({
+  const championRows = formStats
+    .filter((form) => playerIdByTeam.has(form.team))
+    .map((form) => ({
       match_id: match.id,
-      match_player_id: playerIdByTeam.get(champion.team),
-      team: champion.team,
-      champion_key: champion.championKey,
-      damage: champion.matchStats?.damage || 0,
-      healing_received: champion.matchStats?.healingReceived || 0,
-      healing_done: champion.matchStats?.healingDone || 0,
-      raw_taken: champion.matchStats?.rawTaken || 0,
-      damage_mitigated: champion.matchStats?.damageMitigated || 0,
-      points: champion.matchStats?.points || 0,
+      match_player_id: playerIdByTeam.get(form.team),
+      team: form.team,
+      champion_key: form.championKey,
+      form_of: form.formOf,
+      damage: form.matchStats.damage,
+      healing_received: form.matchStats.healingReceived,
+      healing_done: form.matchStats.healingDone,
+      raw_taken: form.matchStats.rawTaken,
+      damage_mitigated: form.matchStats.damageMitigated,
+      points: form.matchStats.points,
     }));
 
   if (championRows.length > 0) {

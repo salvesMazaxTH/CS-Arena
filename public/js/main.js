@@ -6,15 +6,7 @@ import { getChampionClassKeys } from "../../shared/data/championClasses.js";
 import { getChampionAffinityKeys } from "../../shared/data/championTraits.js";
 import { resolveText } from "../../shared/i18n/locale.js";
 import { getLocale, setLocale } from "./i18n/clientLocale.js";
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+import { escapeHtml } from "../../shared/ui/formatters.js";
 
 // Overlay visibility: shown by swapping .hidden → .active; hidden the reverse.
 function showOverlay(el) {

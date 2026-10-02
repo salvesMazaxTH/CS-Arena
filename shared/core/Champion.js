@@ -119,6 +119,9 @@ export class Champion {
 
     // MATCH STATS (backend authoritative)
     this.matchStats = this.buildMatchStats(matchStats);
+    // The same counters split by the championKey on the field when each one
+    // landed, so every form a champion takes gets its own analytics row.
+    this.matchStatsByForm = {};
   }
 
   static fromBaseData(baseData, id, team, { combatSlot = null } = {}) {
@@ -463,30 +466,53 @@ export class Champion {
 
   resetMatchStats() {
     this.matchStats = this.buildMatchStats();
+    this.matchStatsByForm = {};
+  }
+
+  // Opens the ledger row of the form now on the field, so a form that never
+  // scores still counts as having taken the field.
+  openMatchStatsForm() {
+    this.matchStatsByForm[this.championKey] ??= this.buildMatchStats();
+  }
+
+  getMatchStatsByForm() {
+    return Object.entries(this.matchStatsByForm).map(
+      ([championKey, matchStats]) => ({
+        championKey,
+        matchStats: this.buildMatchStats(matchStats),
+      }),
+    );
+  }
+
+  addMatchStat(field, value) {
+    const amount = Math.max(0, Number(value) || 0);
+    this.matchStats[field] += amount;
+    this.openMatchStatsForm();
+    this.matchStatsByForm[this.championKey][field] += amount;
   }
 
   addDamageDealt(value) {
-    this.matchStats.damage += Math.max(0, Number(value) || 0);
+    this.addMatchStat("damage", value);
   }
 
   addHealingReceived(value) {
-    this.matchStats.healingReceived += Math.max(0, Number(value) || 0);
+    this.addMatchStat("healingReceived", value);
   }
 
   addHealingDone(value) {
-    this.matchStats.healingDone += Math.max(0, Number(value) || 0);
+    this.addMatchStat("healingDone", value);
   }
 
   addRawDamageTaken(value) {
-    this.matchStats.rawTaken += Math.max(0, Number(value) || 0);
+    this.addMatchStat("rawTaken", value);
   }
 
   addDamageMitigated(value) {
-    this.matchStats.damageMitigated += Math.max(0, Number(value) || 0);
+    this.addMatchStat("damageMitigated", value);
   }
 
   addPointsScored(value) {
-    this.matchStats.points += Math.max(0, Number(value) || 0);
+    this.addMatchStat("points", value);
   }
 
   // ===============================

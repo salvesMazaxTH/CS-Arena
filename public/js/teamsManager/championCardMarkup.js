@@ -4,15 +4,9 @@ import {
 } from "/shared/ui/identityPalette.js";
 import { getChampionClassKeys } from "/shared/data/championClasses.js";
 import { getChampionAffinityKeys } from "/shared/data/championTraits.js";
+import { escapeHtml } from "/shared/ui/formatters.js";
 
-export function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+export { escapeHtml };
 
 const affinityBadgeByKey = Object.freeze(
   Object.fromEntries(

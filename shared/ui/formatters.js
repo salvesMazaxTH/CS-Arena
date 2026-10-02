@@ -29,3 +29,16 @@ export function formatPlayerName(playerName, team) {
   const teamClass = team === 1 ? "team-1" : "team-2";
   return `<span class="${teamClass}">${playerName}</span>`;
 }
+
+/**
+ * Escapes text written by players (display names, team names) before it goes
+ * into innerHTML.
+ */
+export function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}

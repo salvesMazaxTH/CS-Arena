@@ -390,6 +390,7 @@ class CombatState {
 
     champion.runtime ??= {};
     champion.runtime.fieldEntryTurn ??= this.match.combat.currentTurn;
+    champion.openMatchStatsForm();
 
     this.activeChampions.set(champion.id, champion);
 
@@ -411,6 +412,7 @@ class CombatState {
 
     champion.runtime ??= {};
     champion.runtime.fieldEntryTurn ??= this.match.combat.currentTurn;
+    champion.openMatchStatsForm();
 
     this.activeChampions.set(champion.id, champion);
 

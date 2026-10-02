@@ -34,7 +34,7 @@ export function applyDamage(event) {
   }
 
   const damageToApply = Math.floor(event.damage);
-
+  const wasAlive = event.defender.alive;
 
   event.defender.takeDamage(damageToApply, event.context);
 
@@ -47,11 +47,19 @@ export function applyDamage(event) {
         .reduce((sum, s) => sum + (Number(s.amount) || 0), 0)
     : 0;
   const absorbedByShield = Math.max(0, shieldBefore - remainingShield);
+  // What the killing blow had left over once the HP ran out. It never shows on
+  // screen, but the attacker dealt it.
+  const overkill =
+    wasAlive && !event.defender.alive
+      ? Math.max(0, damageToApply - absorbedByShield - event.actualDmg)
+      : 0;
 
   event.context.registerDamage({
     target: event.defender,
     amount: event.actualDmg,
     rawAmount: damageToApply,
+    overkill,
+    mitigatedDamage: Math.round(event.mitigatedDamage ?? 0),
     absorbedByShield,
     remainingShield,
     sourceId: event.attacker?.id,

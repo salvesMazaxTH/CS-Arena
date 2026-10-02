@@ -1301,6 +1301,8 @@ export class TurnResolver {
         target,
         amount,
         rawAmount,
+        overkill = 0,
+        mitigatedDamage = 0,
         absorbedByShield,
         remainingShield,
         sourceId,
@@ -1330,19 +1332,24 @@ export class TurnResolver {
           ? Math.max(0, rawCandidate)
           : dealt;
 
+        // The killing blow's leftover counts as dealt.
+        const credited = dealt + Math.max(0, Number(overkill) || 0);
+
         // A shared tick credits each applier for its own stacks.
         const credits =
           !sourceId && dotSources?.length
-            ? splitByStacks(dotSources, dealt).map((share) => ({
+            ? splitByStacks(dotSources, credited).map((share) => ({
                 champ: combat.getChampion(share.sourceId),
                 amount: share.amount,
               }))
-            : [{ champ: sourceChamp, amount: dealt }];
+            : [{ champ: sourceChamp, amount: credited }];
         for (const { champ, amount: share } of credits) {
           if (champ && champ.team !== target.team) champ.addDamageDealt(share);
         }
         target?.addRawDamageTaken?.(raw);
-        target?.addDamageMitigated?.(Math.max(0, raw - dealt));
+        // Only what Defense and damage reduction took off; shields and
+        // overkill are not mitigation.
+        target?.addDamageMitigated?.(Math.max(0, Number(mitigatedDamage) || 0));
 
         if (target?.id && target.runtime) {
           target.runtime.lastDamageSourceId = sourceId ?? null;

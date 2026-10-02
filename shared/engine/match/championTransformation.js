@@ -151,6 +151,14 @@ function transferCombatState({ sourceChampion, nextChampion }) {
   nextChampion.matchStats = nextChampion.buildMatchStats(
     sourceChampion?.matchStats,
   );
+  nextChampion.matchStatsByForm = Object.fromEntries(
+    Object.entries(sourceChampion?.matchStatsByForm ?? {}).map(
+      ([formKey, matchStats]) => [
+        formKey,
+        nextChampion.buildMatchStats(matchStats),
+      ],
+    ),
+  );
 }
 
 // A transformation replaces championKey, but the roster, the lineup banner and

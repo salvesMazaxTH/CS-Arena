@@ -4,6 +4,8 @@
  * across tabbed tables. Reads the final roster snapshot the server sends
  * with `gameOver` and the local player's team; writes only to the DOM.
  */
+import { escapeHtml } from "../../../shared/ui/formatters.js";
+
 export function createMatchStatsPanel() {
   const statsTabKeys = [
     "damage",
@@ -20,13 +22,6 @@ export function createMatchStatsPanel() {
     const num = Number(value);
     return Number.isFinite(num) ? num : 0;
   };
-
-  const escapeHtml = (value) =>
-    String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
 
   function getSnapshotStatsEntry(champion) {
     if (!champion) return null;

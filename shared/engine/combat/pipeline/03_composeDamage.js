@@ -91,6 +91,10 @@ export function composeDamage(event) {
 
   event.crit ??= { didCrit: false, critExtra: 0 };
 
+  // What Defense and damage reduction took off the hit. A recompose starts
+  // over, so it is reset here rather than accumulated.
+  event.mitigatedDamage = 0;
+
   // Absolute damage skips the whole mitigation body; every other mode runs it.
   if (event.mode !== event.constructor.Modes.ABSOLUTE) {
     // aplica crítico — recalcula critExtra a partir do bonus atual (pode ter mudado via hook)
@@ -98,6 +102,8 @@ export function composeDamage(event) {
       event.crit.critExtra = event.damage * (event.crit.bonus / 100);
       event.damage += event.crit.critExtra;
     }
+
+    const damageBeforeMitigation = event.damage;
 
     const baseDefense = event.defender.baseDefense ?? event.defender.Defense;
     const currentDefense = event.defender.Defense;
@@ -193,6 +199,10 @@ export function composeDamage(event) {
     if (!event.context?.ignoreMinimumFloor) {
       event.damage = Math.max(event.damage, MIN_DAMAGE_FLOOR);
     }
+
+    // Read after the floor gives some back, before the cap: the cap is not
+    // the defender's doing.
+    event.mitigatedDamage = Math.max(0, damageBeforeMitigation - event.damage);
 
     if (Number.isFinite(event.constructor.GLOBAL_DMG_CAP)) {
       event.damage = Math.min(event.damage, event.constructor.GLOBAL_DMG_CAP);

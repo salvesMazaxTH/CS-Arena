@@ -71,8 +71,10 @@ alter table matches enable row level security;
 alter table match_players enable row level security;
 alter table match_champion_stats enable row level security;
 
--- Overall picture: how many matches were decisive vs. draws, and whether
--- team 1 (which acts first) is systematically favored.
+-- Overall picture: how many matches were decisive vs. draws. Superseded by
+-- migrations/002_forms_and_player_profiles.sql, which drops the per-side
+-- columns: turns resolve simultaneously and each player sees themselves as
+-- team 1, so the side means nothing.
 create or replace view v_overall_summary as
 select
   count(*) as total_matches,
@@ -96,6 +98,8 @@ from matches;
 -- was ever summoned; materialized = actually took the field) with lifetime
 -- stat totals, so nobody has to scan match_champion_stats match-by-match to
 -- answer "how much damage has Vulnara dealt across her whole history".
+-- Superseded by migrations/002_forms_and_player_profiles.sql, which adds one
+-- row per transformation form.
 create or replace view v_champion_overall as
 with roster as (
   select
@@ -166,6 +170,8 @@ group by e.emblem_key
 order by matches_played desc;
 
 -- Win rate per team composition (8 champion keys, order-independent).
+-- Superseded by migrations/002_forms_and_player_profiles.sql, which appends
+-- decisive_matches.
 create or replace view v_comp_winrate as
 select
   p.comp_key,

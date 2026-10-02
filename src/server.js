@@ -682,6 +682,43 @@ function getMatchRosterStats() {
   return roster.map((champion) => champion.serialize());
 }
 
+/** One analytics row per form each champion took, so a transformation scores
+ *  under its own key while the drafted form keeps what it did itself. */
+function getMatchFormStats() {
+  const roster = [
+    ...match.combat.getTeamChampions(1, { includeInactive: true, includeDead: true }),
+    ...match.combat.getTeamChampions(2, { includeInactive: true, includeDead: true }),
+  ];
+
+  return roster.flatMap((champion) => {
+    const draftedKey = rosterChampionKey(champion);
+    return champion.getMatchStatsByForm().map(({ championKey, matchStats }) => ({
+      team: champion.team,
+      championKey,
+      formOf: championKey === draftedKey ? null : draftedKey,
+      matchStats,
+    }));
+  });
+}
+
+function uploadMatchResult(winnerTeam) {
+  if (!isEditModeClean(editMode)) return;
+
+  recordMatchResult({
+    winnerTeam,
+    turnCount: match.combat.currentTurn,
+    scores: match.combat.playerScores,
+    players: match.players.map((p) => ({
+      team: p.team,
+      username: p.username,
+      userId: p.userId,
+      championKeys: p.selectedChampionKeys,
+      emblemKeys: p.emblems.map((e) => e.key),
+    })),
+    formStats: getMatchFormStats(),
+  }).catch((err) => console.error("[analytics] upload falhou:", err));
+}
+
 function emitGameOverIfNeeded({ endOfTurn = false } = {}) {
   const gameEnd = match.checkGameEnd({ endOfTurn });
 
@@ -700,21 +737,7 @@ function emitGameOverIfNeeded({ endOfTurn = false } = {}) {
 
   io.emit("gameOver", { winnerTeam, winnerName, champions: championRoster });
 
-  if (isEditModeClean(editMode)) {
-    recordMatchResult({
-      winnerTeam,
-      turnCount: match.combat.currentTurn,
-      scores: match.combat.playerScores,
-      players: match.players.map((p) => ({
-        team: p.team,
-        username: p.username,
-        userId: p.userId,
-        championKeys: p.selectedChampionKeys,
-        emblemKeys: p.emblems.map((e) => e.key),
-      })),
-      championRoster,
-    }).catch((err) => console.error("[analytics] upload falhou:", err));
-  }
+  uploadMatchResult(winnerTeam);
 }
 
 function handleEndTurn() {
@@ -2066,21 +2089,7 @@ io.on("connection", (socket) => {
       champions: championRoster,
     });
 
-    if (isEditModeClean(editMode)) {
-      recordMatchResult({
-        winnerTeam,
-        turnCount: match.combat.currentTurn,
-        scores: match.combat.playerScores,
-        players: match.players.map((p) => ({
-          team: p.team,
-          username: p.username,
-          userId: p.userId,
-          championKeys: p.selectedChampionKeys,
-          emblemKeys: p.emblems.map((e) => e.key),
-        })),
-        championRoster,
-      }).catch((err) => console.error("[analytics] upload falhou:", err));
-    }
+    uploadMatchResult(winnerTeam);
   });
 
   // =============================

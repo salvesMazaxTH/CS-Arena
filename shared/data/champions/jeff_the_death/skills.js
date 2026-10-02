@@ -166,7 +166,12 @@ const jeffTheDeathSkills = [
           }
 
           const punishDamage = owner.HP * punishPercent;
-          const dotContext = { ...context, isDot: true };
+          const dotContext = {
+            ...context,
+            isDot: true,
+            dotSourceId: user.id,
+            dotSourceTeam: user.team,
+          };
 
           const result = SkillHits.run(skill, "punish", {
             user: null,

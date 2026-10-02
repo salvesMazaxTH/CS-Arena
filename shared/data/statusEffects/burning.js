@@ -36,7 +36,12 @@ const burning = {
     const multiplier = Number(this.damageMultiplier) || 1;
     const damage = (15 + Math.floor(owner.maxHP * 0.04)) * multiplier;
 
-    const dotContext = { ...context, isDot: true };
+    const dotContext = {
+      ...context,
+      isDot: true,
+      dotSourceId: this.sourceId ?? null,
+      dotSourceTeam: this.sourceTeam ?? null,
+    };
 
     const dmgEvent = new DamageEvent({
       attacker: null,

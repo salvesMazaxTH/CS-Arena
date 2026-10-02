@@ -10,6 +10,7 @@ import { elementsOf } from "../../../shared/engine/combat/elements.js";
 import { GAME_GLOSSARY } from "../gameGlossary.js";
 import { resolveText } from "../../../shared/i18n/locale.js";
 import { getLocale } from "../i18n/clientLocale.js";
+import { escapeHtml } from "../../../shared/ui/formatters.js";
 import { StatusEffectsRegistry } from "../../../shared/data/statusEffects/effectsRegistry.js";
 import { EMBLEMS } from "../../../shared/data/emblems/index.js";
 import { championDB } from "../../../shared/data/championDB.js";
@@ -29,14 +30,6 @@ export function createOverlays({
   let skillOverlay = null;
   let portraitOverlay = null;
   let quickStatsOverlay = null;
-
-  const escapeHtml = (value) =>
-    String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
 
   const toParagraphs = (text) => String(text ?? "").replace(/\n/g, "<br>");
 
