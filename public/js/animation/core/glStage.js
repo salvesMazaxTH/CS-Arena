@@ -3,7 +3,7 @@
 // driven by one rAF loop. Each effect module still owns its own visual
 // classes and textures — only this renderer plumbing is common.
 
-import { recordEffectFrame } from "./effectQuality.js";
+import { takeEffectStep } from "./effectQuality.js";
 
 let stage = null;
 
@@ -55,9 +55,8 @@ export function startLoop() {
   if (stage.raf) return;
   stage.last = performance.now();
   const frame = (now) => {
-    const dt = Math.min(Math.max((now - stage.last) / 1000, 0), 1 / 30);
+    const dt = takeEffectStep(now, stage.last);
     stage.last = now;
-    recordEffectFrame(dt);
 
     for (let i = stage.effects.length - 1; i >= 0; i--) {
       const en = stage.effects[i];

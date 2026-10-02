@@ -6,7 +6,7 @@
 // why there is only one, and it is hidden while nothing is live.
 
 import { getElementCenter } from "./animationUtils.js";
-import { recordEffectFrame } from "./effectQuality.js";
+import { takeEffectStep } from "./effectQuality.js";
 import { screenToWorld } from "./glStage.js";
 
 let stage = null;
@@ -76,9 +76,8 @@ function startLoop() {
   let last = performance.now();
 
   const frame = (now) => {
-    const dt = Math.min(Math.max((now - last) / 1000, 0), 1 / 30);
+    const dt = takeEffectStep(now, last);
     last = now;
-    recordEffectFrame(dt);
 
     for (let i = stage.effects.length - 1; i >= 0; i--) {
       const entry = stage.effects[i];

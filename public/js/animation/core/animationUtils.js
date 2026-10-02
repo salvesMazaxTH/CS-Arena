@@ -1,6 +1,6 @@
 // Geometry and canvas plumbing shared by every skill animation.
 
-import { recordEffectFrame } from "./effectQuality.js";
+import { takeEffectStep } from "./effectQuality.js";
 
 export function getElementCenter(el) {
   const rect = el.getBoundingClientRect();
@@ -60,13 +60,11 @@ export async function runSoloEffect(box, buildEffect, onFrame) {
 
   await new Promise((resolve) => {
     function frame(now) {
-      // The first rAF timestamp can predate the performance.now() taken above.
-      const dt = Math.min(Math.max((now - last) / 1000, 0), 1 / 30);
+      const dt = takeEffectStep(now, last);
       last = now;
 
       ctx.clearRect(box.x, box.y, box.width, box.height);
       const alive = effect.step(dt);
-      recordEffectFrame(dt);
       onFrame?.(effect);
       if (!alive) {
         canvas.remove();

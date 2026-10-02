@@ -16,13 +16,16 @@ const FRAMES_TO_DOWNGRADE = 6;
 const FRAMES_TO_RECOVER = 12; // longer streak required to trust a recovery
 const MAX_TRANSITIONS = 4;
 const REDUCED_SCALE = 0.45;
+// Longest step an effect advances in one frame, so a hitch slows the effect
+// down instead of teleporting its particles.
+const MAX_STEP = 1 / 30;
 
 let streak = 0;
 let reduced = false;
 let transitions = 0;
 
-// Called once per VFX frame with its measured delta (seconds).
-export function recordEffectFrame(dt) {
+// Called once per VFX frame with its real duration (seconds).
+function recordEffectFrame(dt) {
   if (transitions >= MAX_TRANSITIONS) return;
 
   const slow = dt * 1000 > SLOW_FRAME_MS;
@@ -39,6 +42,18 @@ export function recordEffectFrame(dt) {
     transitions++;
     streak = 0;
   }
+}
+
+// Called once per VFX frame with its rAF timestamp and the previous one;
+// returns the step the effect advances by. The real frame time is what gets
+// recorded: the capped step can never exceed SLOW_FRAME_MS, so measuring it
+// would never prove a device slow.
+export function takeEffectStep(now, last) {
+  // The first rAF timestamp can predate the performance.now() its loop
+  // started from, and a negative step runs effects backwards in time.
+  const elapsed = Math.max((now - last) / 1000, 0);
+  recordEffectFrame(elapsed);
+  return Math.min(elapsed, MAX_STEP);
 }
 
 // Multiplier for particle counts: 1 on devices keeping pace, lower once

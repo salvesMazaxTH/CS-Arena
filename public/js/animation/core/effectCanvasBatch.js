@@ -1,5 +1,5 @@
 import { computeEffectBox, MAX_EFFECT_DPR } from "./animationUtils.js";
-import { recordEffectFrame } from "./effectQuality.js";
+import { takeEffectStep } from "./effectQuality.js";
 
 function unionBox(a, b) {
   const x = Math.min(a.x, b.x);
@@ -70,12 +70,11 @@ export class EffectCanvasBatch {
   }
 
   frame(now) {
-    const dt = Math.min((now - this.last) / 1000, 1 / 30);
+    const dt = takeEffectStep(now, this.last);
     this.last = now;
 
     const { x, y, width, height } = this.box;
     this.ctx.clearRect(x, y, width, height);
-    recordEffectFrame(dt);
 
     for (let i = this.effects.length - 1; i >= 0; i--) {
       const entry = this.effects[i];
