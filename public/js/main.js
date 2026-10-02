@@ -794,6 +794,41 @@ socket.on("allTeamsSelected", () => {
   resetLineupMaterializationState();
 });
 
+// The account dropped mid-match and came back inside the reconnection window:
+// skip the hub and go straight back into the match. The log starts empty.
+socket.on("matchResumed", ({ turn, score, phase, roster, firstChoicePending: choicePending }) => {
+  matchmaking = false;
+  if (skipSlotBtn) {
+    skipSlotBtn.removeEventListener("click", skipCurrentSlot);
+    skipSlotBtn.addEventListener("click", skipCurrentSlot);
+  }
+  hideOverlay(loginScreen);
+  hideOverlay(hubScreen);
+  mainContent.classList.remove("hidden");
+  mainContent.classList.add("visible");
+
+  gameEnded = false;
+  window.gameEnded = false;
+  if (surrenderBtn) surrenderBtn.disabled = false;
+  gameOverOverlay.classList.remove("active", "win-background", "lose-background");
+  gameOverOverlay.classList.add("hidden");
+
+  audioManager.playMusic(["main", "main2", "main2"]);
+
+  if (Array.isArray(roster)) playerRoster = roster.slice(0, TEAM_SIZE);
+  resetLineupMaterializationState();
+
+  currentTurn = turn;
+  hasConfirmedEndTurn = false;
+  isResolvingTurn = phase !== "planning";
+  firstChoicePending = !!choicePending;
+  firstChoiceResolved = !choicePending;
+  syncLineupBannerLock();
+
+  combatAnimations.handleCombatReset({ turn, score });
+  renderLineupBanner();
+});
+
 // Icons and colors for affinities/classes live in the shared identity palette
 // so badges, emblem tiles and the stylesheet all read from the same source.
 const affinityBadgeByKey = Object.freeze(

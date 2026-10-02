@@ -5,6 +5,9 @@ export class Player {
     this.userId = userId;
     this.team = team;
     this.socketId = null;
+    // Dropped mid-match: the slot stays held, with the stale socketId, until the
+    // account reconnects or the reconnection window runs out.
+    this.disconnected = false;
     this.selectedChampionKeys = [];
     this.emblems = [];
     // Emblem key -> id of the champion whose arrival triggered it (null when the

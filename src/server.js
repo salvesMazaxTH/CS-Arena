@@ -1230,6 +1230,37 @@ function resetCombatState() {
   gameOverEmitted = false;
 }
 
+/**
+ * Withdraws a team's pending actions, refunding their momentum, and drops the
+ * team's end-of-turn confirmation.
+ */
+function cancelTeamPendingActions(playerSlot) {
+  const playerTeam = playerSlot + 1;
+
+  for (let i = match.combat.pendingActions.length - 1; i >= 0; i--) {
+    const action = match.combat.pendingActions[i];
+    const champ = match.combat.activeChampions.get(action.userId);
+
+    if (!champ) continue;
+
+    if (champ.team !== playerTeam) continue;
+
+    // Revert state.
+    champ.hasActedThisTurn = false;
+
+    if (action.momentumCost > 0) {
+      champ.addMomentum({ amount: action.momentumCost });
+    }
+
+    match.combat.pendingActions.splice(i, 1);
+  }
+
+  if (match.isPlayerReady(playerSlot)) {
+    match.removeReadyPlayer(playerSlot);
+    io.emit("playerCanceledEndTurn", playerSlot);
+  }
+}
+
 // ============================================================
 //  SOCKET HANDLERS
 // ============================================================
@@ -1407,7 +1438,80 @@ io.on("connection", (socket) => {
   //  requestPlayerSlot
   // =============================
 
+  /**
+   * Puts a returning account back into the slot it held, mid-match, and sends
+   * its client everything it needs to pick up exactly where it left off.
+   */
+  function resumeMatch(slot) {
+    const player = match.rebindPlayerSocket(slot, socket.id);
+    if (!player) return;
+
+    match.clearDisconnectionTimer(slot);
+
+    console.log(`Player ${slot + 1} (${player.username}) reconnected.`);
+
+    socket.emit("playerAssigned", {
+      playerId: player.id,
+      team: player.team,
+      username: player.username,
+      emblems: player.emblems.map((emblem) => emblem.key),
+    });
+    io.emit("playerNamesUpdate", match.getPlayerNamesEntries());
+    io.emit("playerCountUpdate", match.getConnectedCount());
+
+    const firstChoicePending =
+      match.combat.activeChampions.size === 0 &&
+      !match.combat.firstChampionChoices.has(socket.id);
+
+    socket.emit("matchResumed", {
+      turn: match.getCurrentTurn(),
+      score: match.getScorePayload(),
+      phase: match.combat.phase,
+      roster: player.selectedChampionKeys,
+      firstChoicePending,
+    });
+    socket.emit(
+      "gameStateUpdate",
+      getGameState([], { viewerTeam: getViewerTeam(socket.id) }),
+    );
+
+    if (firstChoicePending) {
+      socket.emit("requestFirstChampionSelection", {
+        roster: match.combat.reserveQueues.get(player.team) || [],
+        timeout: FIRST_CHOICE_TIMEOUT,
+      });
+    } else if (
+      match.combat.phase === "planning" &&
+      match.combat.activeChampions.size > 0
+    ) {
+      socket.emit("turnUpdate", match.combat.currentTurn);
+    }
+
+    const opponent = match.getOpponent(slot);
+    if (opponent && !opponent.disconnected) {
+      io.to(opponent.socketId).emit("opponentReconnected");
+    }
+
+    // The returning client has no turn animations left to play.
+    if (waitingForAnimations) {
+      match.addFinishedAnimationSocket(socket.id);
+      if (match.getFinishedAnimationCount() >= 2) finishAnimationWait();
+    }
+  }
+
   socket.on("requestPlayerSlot", () => {
+    const heldSlot = match.findHeldSlotForUser(socket.data.userId);
+
+    if (heldSlot !== -1) {
+      if (!match.isGameEnded() && !gameOverEmitted) {
+        resumeMatch(heldSlot);
+        return;
+      }
+      // The match ended while this account was away; nothing to go back to.
+      match.clearDisconnectionTimer(heldSlot);
+      match.setPlayer(heldSlot, null);
+    }
+
     const assignResult = assignPlayerSlot();
     if (!assignResult) return;
 
@@ -1565,6 +1669,47 @@ io.on("connection", (socket) => {
 
     // Clear pending timers.
     match.clearDisconnectionTimer(disconnectedSlot);
+
+    const leavingPlayer = match.getPlayer(disconnectedSlot);
+
+    // Mid-match, an account keeps its slot through the reconnection window, so
+    // reloading the page drops it straight back into the match.
+    if (
+      wasGameActive &&
+      leavingPlayer?.userId &&
+      match.isCombatStarted() &&
+      !match.isGameEnded() &&
+      !gameOverEmitted
+    ) {
+      leavingPlayer.disconnected = true;
+      match.removeSocket(socket.id);
+      cancelTeamPendingActions(disconnectedSlot);
+
+      io.emit("playerCountUpdate", match.getConnectedCount());
+      io.emit("playerNamesUpdate", match.getPlayerNamesEntries());
+
+      const remainingSlot = disconnectedSlot === 0 ? 1 : 0;
+      const remainingSocketId = match.getPlayer(remainingSlot).socketId;
+
+      io.to(remainingSocketId).emit("opponentDisconnected", {
+        timeout: DISCONNECT_TIMEOUT,
+      });
+
+      const timer = setTimeout(() => {
+        io.to(remainingSocketId).emit(
+          "forceLogout",
+          "Your opponent disconnected and did not reconnect in time.",
+        );
+
+        resetGameState();
+        io.emit("playerCountUpdate", match.getConnectedCount());
+        io.emit("playerNamesUpdate", match.getPlayerNamesEntries());
+        broadcastGameState();
+      }, DISCONNECT_TIMEOUT);
+
+      match.setDisconnectionTimer(disconnectedSlot, timer);
+      return;
+    }
 
     // Release the slot.
     const disconnectedPlayer = match.getPlayer(disconnectedSlot);
@@ -1808,36 +1953,7 @@ io.on("connection", (socket) => {
 
     if (playerSlot === undefined) return;
 
-    const playerTeam = playerSlot + 1;
-
-    for (let i = match.combat.pendingActions.length - 1; i >= 0; i--) {
-      // Nothing left in the array — leave the loop (execution continues below it).
-      if (!match.combat.pendingActions.length) {
-        console.warn("Undo request with no pending actions.");
-        break;
-      }
-      const action = match.combat.pendingActions[i];
-      const champ = match.combat.activeChampions.get(action.userId);
-
-      if (!champ) continue;
-
-      if (champ.team !== playerTeam) continue;
-
-      // Revert state.
-      champ.hasActedThisTurn = false;
-
-      if (action.momentumCost > 0) {
-        champ.addMomentum({ amount: action.momentumCost });
-      }
-
-      match.combat.pendingActions.splice(i, 1);
-    }
-
-    // Remove the end-of-turn confirmation.
-    if (match.isPlayerReady(playerSlot)) {
-      match.removeReadyPlayer(playerSlot);
-      io.emit("playerCanceledEndTurn", playerSlot);
-    }
+    cancelTeamPendingActions(playerSlot);
 
     socket.emit("actionsCanceled");
   });

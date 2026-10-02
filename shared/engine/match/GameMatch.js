@@ -953,7 +953,7 @@ export class GameMatch {
   }
 
   getConnectedPlayers() {
-    return this.players.filter((player) => player?.socketId);
+    return this.players.filter((player) => player?.socketId && !player.disconnected);
   }
 
   getPlayerTeam(socketId) {
@@ -981,11 +981,47 @@ export class GameMatch {
   }
 
   areBothPlayersConnected() {
-    return !!(this.players[0] && this.players[1]);
+    return this.getConnectedCount() === 2;
   }
 
+  /** A player who dropped mid-match still holds the slot, but does not count. */
   getConnectedCount() {
-    return this.players.filter((player) => player !== null).length;
+    return this.players.filter((player) => player && !player.disconnected).length;
+  }
+
+  /** Slot held for this account by a player who dropped mid-match, or -1. */
+  findHeldSlotForUser(userId) {
+    if (!userId) return -1;
+    return this.players.findIndex(
+      (player) => player?.disconnected && player.userId === userId,
+    );
+  }
+
+  /**
+   * Hands a held slot to the account's new socket. Everything keyed by the old
+   * socket id moves with it, so a pending first-champion choice or animation
+   * report still counts.
+   */
+  rebindPlayerSocket(slot, socketId) {
+    const player = this.getPlayer(slot);
+    if (!player) return null;
+
+    const oldSocketId = player.socketId;
+    const rekey = (map) => {
+      if (!map.has(oldSocketId)) return;
+      map.set(socketId, map.get(oldSocketId));
+      map.delete(oldSocketId);
+    };
+    rekey(this.combat.firstChampionChoices);
+    rekey(this.lobby.firstChoiceTimeouts);
+    if (this.combat.finishedAnimationSockets.delete(oldSocketId)) {
+      this.combat.finishedAnimationSockets.add(socketId);
+    }
+
+    this.removeSocket(oldSocketId);
+    player.disconnected = false;
+    this.assignSocketToSlot(socketId, slot);
+    return player;
   }
 
   getPlayerNamesEntries() {
