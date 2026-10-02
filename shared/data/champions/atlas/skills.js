@@ -29,8 +29,8 @@ const atlasSkills = [
 
     description() {
       return {
-        en: `Atlas brings his mace down with the full weight of a falling sky behind it, and the ground gives way well past where it lands. Deals physical damage equal to <b>${this.defenseScaling}%</b> of his <b>Defense</b> to the chosen enemy and breaks <b>${this.shredAmount}</b> <b>Shield</b> off them; whoever stands beside them takes <b>${this.adjacentDefenseScaling}%</b> of his <b>Defense</b> as the ground buckles under them too, breaking <b>${this.adjacentShredAmount}</b> <b>Shield</b>.`,
-        pt: `Atlas desce sua maça com todo o peso de um céu em queda, e o chão cede bem além de onde ela pousa. Causa dano físico igual a <b>${this.defenseScaling}%</b> de sua <b>Defesa</b> ao inimigo escolhido e quebra <b>${this.shredAmount}</b> de <b>Escudo</b> dele; quem estiver ao lado também sofre <b>${this.adjacentDefenseScaling}%</b> de sua <b>Defesa</b> conforme o chão cede sob eles também, quebrando <b>${this.adjacentShredAmount}</b> de <b>Escudo</b>.`,
+        en: `Atlas brings his mace down with the full weight of a falling sky behind it, and the ground gives way well past where it lands. Deals physical damage equal to <b>${this.defenseScaling}%</b> of his <b>Defense</b> to the chosen enemy, breaking <b>${this.shredAmount}</b> <b>Shield</b> off them before the blow lands; whoever stands beside them takes <b>${this.adjacentDefenseScaling}%</b> of his <b>Defense</b> as the ground buckles under them too, breaking <b>${this.adjacentShredAmount}</b> <b>Shield</b>.`,
+        pt: `Atlas desce sua maça com todo o peso de um céu em queda, e o chão cede bem além de onde ela pousa. Causa dano físico igual a <b>${this.defenseScaling}%</b> de sua <b>Defesa</b> ao inimigo escolhido, quebrando <b>${this.shredAmount}</b> de <b>Escudo</b> dele antes do golpe; quem estiver ao lado também sofre <b>${this.adjacentDefenseScaling}%</b> de sua <b>Defesa</b> conforme o chão cede sob eles também, quebrando <b>${this.adjacentShredAmount}</b> de <b>Escudo</b>.`,
       };
     },
 
@@ -47,6 +47,7 @@ const atlasSkills = [
         defender: enemy,
         skill: this,
         type: "physical",
+        shieldBreak: { amount: this.shredAmount },
         context,
         allChampions: context?.allChampions,
       }).execute();
@@ -54,16 +55,14 @@ const atlasSkills = [
       const mainArr = Array.isArray(mainResult) ? mainResult : [mainResult];
       results.push(...mainArr);
 
-      if (mainArr[0]?.landed) {
-        const broken = enemy.breakShields(this.shredAmount);
-        if (broken > 0) {
-          results.push({
-            log: {
-              en: `${formatChampionName(enemy)} loses ${broken} Shield to the blow.`,
-              pt: `${formatChampionName(enemy)} perde ${broken} de Escudo com o golpe.`,
-            },
-          });
-        }
+      const mainBroken = mainArr[0]?.shieldBroken || 0;
+      if (mainBroken > 0) {
+        results.push({
+          log: {
+            en: `${formatChampionName(enemy)} loses ${mainBroken} Shield to the blow.`,
+            pt: `${formatChampionName(enemy)} perde ${mainBroken} de Escudo com o golpe.`,
+          },
+        });
       }
 
       const adjacentEnemies = context.getAdjacentChampions(enemy);
@@ -76,6 +75,7 @@ const atlasSkills = [
           defender: adjacent,
           skill: this,
           type: "physical",
+          shieldBreak: { amount: this.adjacentShredAmount },
           context,
           allChampions: context?.allChampions,
         }).execute();
@@ -83,16 +83,14 @@ const atlasSkills = [
         const sideArr = Array.isArray(sideResult) ? sideResult : [sideResult];
         results.push(...sideArr);
 
-        if (sideArr[0]?.landed) {
-          const broken = adjacent.breakShields(this.adjacentShredAmount);
-          if (broken > 0) {
-            results.push({
-              log: {
-                en: `${formatChampionName(adjacent)} loses ${broken} Shield to the tremor.`,
-                pt: `${formatChampionName(adjacent)} perde ${broken} de Escudo com o tremor.`,
-              },
-            });
-          }
+        const sideBroken = sideArr[0]?.shieldBroken || 0;
+        if (sideBroken > 0) {
+          results.push({
+            log: {
+              en: `${formatChampionName(adjacent)} loses ${sideBroken} Shield to the tremor.`,
+              pt: `${formatChampionName(adjacent)} perde ${sideBroken} de Escudo com o tremor.`,
+            },
+          });
         }
       }
 
@@ -162,8 +160,8 @@ const atlasSkills = [
 
     description() {
       return {
-        en: `Atlas stops holding anything back, and the sky he carries comes down on the whole enemy line at once. Deals physical damage to every enemy equal to <b>${this.defenseScaling}%</b> of his <b>Defense</b>, breaking <b>${this.shredAmount}</b> <b>Shield</b> off each of them as it lands.`,
-        pt: `Atlas para de segurar qualquer coisa, e o céu que carrega desaba sobre toda a linha inimiga de uma vez. Causa dano físico a todo inimigo igual a <b>${this.defenseScaling}%</b> de sua <b>Defesa</b>, quebrando <b>${this.shredAmount}</b> de <b>Escudo</b> de cada um deles ao atingir.`,
+        en: `Atlas stops holding anything back, and the sky he carries comes down on the whole enemy line at once. Deals physical damage to every enemy equal to <b>${this.defenseScaling}%</b> of his <b>Defense</b>, breaking <b>${this.shredAmount}</b> <b>Shield</b> off each of them before it lands.`,
+        pt: `Atlas para de segurar qualquer coisa, e o céu que carrega desaba sobre toda a linha inimiga de uma vez. Causa dano físico a todo inimigo igual a <b>${this.defenseScaling}%</b> de sua <b>Defesa</b>, quebrando <b>${this.shredAmount}</b> de <b>Escudo</b> de cada um deles antes do impacto.`,
       };
     },
 
@@ -181,6 +179,7 @@ const atlasSkills = [
           defender: enemy,
           skill: this,
           type: "physical",
+          shieldBreak: { amount: this.shredAmount },
           context,
           allChampions: context?.allChampions,
         }).execute();
@@ -188,16 +187,14 @@ const atlasSkills = [
         const arr = Array.isArray(result) ? result : [result];
         results.push(...arr);
 
-        if (arr[0]?.landed) {
-          const broken = enemy.breakShields(this.shredAmount);
-          if (broken > 0) {
-            results.push({
-              log: {
-                en: `${formatChampionName(enemy)} loses ${broken} Shield to the collapse.`,
-                pt: `${formatChampionName(enemy)} perde ${broken} de Escudo com o desabamento.`,
-              },
-            });
-          }
+        const broken = arr[0]?.shieldBroken || 0;
+        if (broken > 0) {
+          results.push({
+            log: {
+              en: `${formatChampionName(enemy)} loses ${broken} Shield to the collapse.`,
+              pt: `${formatChampionName(enemy)} perde ${broken} de Escudo com o desabamento.`,
+            },
+          });
         }
       }
 
