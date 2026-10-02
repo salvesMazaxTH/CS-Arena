@@ -30,12 +30,8 @@ const avarionSkills = [
 
     description() {
       return {
-        en: `Avarion sets the chosen target on the scales of his crystal staff, appraises them and finds them wanting, dealing <b>Earth</b> magical damage.
-
-      The verdict is written down: the target's <b>Attack</b> is reduced by <b>${this.attackShred}</b> for <b>${this.shredDuration}</b> turns.`,
-        pt: `Avarion coloca o alvo escolhido na balança de seu cajado de cristal, o avalia e o considera insuficiente, causando dano mágico de <b>Terra</b>.
-
-      O veredito fica registrado: o <b>Ataque</b> do alvo é reduzido em <b>${this.attackShred}</b> por <b>${this.shredDuration}</b> turnos.`,
+        en: `Avarion sets the chosen target on the scales of his crystal staff, appraises them and finds them wanting.\n\nThe verdict is written down: the target's <b>Attack</b> is reduced by <b>${this.attackShred}</b> for <b>${this.shredDuration}</b> turns. Deals magical damage.`,
+        pt: `Avarion coloca o alvo escolhido na balança de seu cajado de cristal, o avalia e o considera insuficiente.\n\nO veredito fica registrado: o <b>Ataque</b> do alvo é reduzido em <b>${this.attackShred}</b> por <b>${this.shredDuration}</b> turnos. Causa dano mágico.`,
       };
     },
 
@@ -93,12 +89,8 @@ const avarionSkills = [
 
     description() {
       return {
-        en: `Avarion draws the loose crystal of the field into his own hand, increasing his <b>Attack</b> by <b>${this.attackBonusPercent}%</b> for <b>${this.attackBonusDuration}</b> turns.
-
-      He then hangs his toll gate over the enemy ledger: the next time an enemy champion uses <b>CLAIM</b>, that champion scores <b>${this.tollPoints}</b> fewer points and Avarion's team collects those points instead.`,
-        pt: `Avarion atrai o cristal solto do campo para sua própria mão, aumentando seu <b>Ataque</b> em <b>${this.attackBonusPercent}%</b> por <b>${this.attackBonusDuration}</b> turnos.
-
-      Ele então pendura seu pedágio sobre o registro inimigo: na próxima vez que um campeão inimigo usar <b>CLAIM</b>, aquele campeão marca <b>${this.tollPoints}</b> pontos a menos e o time de Avarion coleta esses pontos.`,
+        en: `Avarion draws the loose crystal of the field into his own hand, increasing his <b>Attack</b> by <b>${this.attackBonusPercent}%</b> for <b>${this.attackBonusDuration}</b> turns.\n\nHe then hangs his toll gate over the enemy ledger: the next time an enemy champion uses <b>CLAIM</b>, that champion scores <b>${this.tollPoints}</b> fewer points and Avarion's team collects those points instead.`,
+        pt: `Avarion atrai o cristal solto do campo para sua própria mão, aumentando seu <b>Ataque</b> em <b>${this.attackBonusPercent}%</b> por <b>${this.attackBonusDuration}</b> turnos.\n\nEle então pendura seu pedágio sobre o registro inimigo: na próxima vez que um campeão inimigo usar <b>CLAIM</b>, aquele campeão marca <b>${this.tollPoints}</b> pontos a menos e o time de Avarion coleta esses pontos.`,
       };
     },
 
@@ -114,13 +106,10 @@ const avarionSkills = [
         statModifierSrc: user,
       });
 
-      user.runtime ??= {};
-      user.runtime.hookEffects ??= [];
-
       const tollPoints = this.tollPoints;
 
       if (
-        !user.runtime.hookEffects.some((he) => he.key === MISERS_TOLL_HOOK_KEY)
+        !user.runtime?.hookEffects?.some((he) => he.key === MISERS_TOLL_HOOK_KEY)
       ) {
         user.addHookEffect({
           type: "buff",
@@ -157,9 +146,7 @@ const avarionSkills = [
 
             if (context) context.misersTollCollected = alreadyTolled + collected;
 
-            owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
-              (he) => he.key !== MISERS_TOLL_HOOK_KEY,
-            );
+            owner.removeHookEffects((he) => he.key === MISERS_TOLL_HOOK_KEY);
 
             // The collected half is registered on Avarion's side; the returned
             // result carries the matching deduction on the claimer's side.
@@ -204,12 +191,8 @@ const avarionSkills = [
 
     description() {
       return {
-        en: `Avarion closes the ledger on the chosen target, and every debt he ever recorded against them comes down at once as crystallized stone, dealing massive <b>Earth</b> magical damage.
-
-      The entry stays open against them: the target's <b>Attack</b> is reduced by <b>${this.attackShred}</b> for <b>${this.shredDuration}</b> turns.`,
-        pt: `Avarion fecha o registro sobre o alvo escolhido, e cada dívida que já lançou contra ele desaba de uma vez como pedra cristalizada, causando dano mágico maciço de <b>Terra</b>.
-
-      A entrada permanece aberta contra ele: o <b>Ataque</b> do alvo é reduzido em <b>${this.attackShred}</b> por <b>${this.shredDuration}</b> turnos.`,
+        en: `Avarion closes the ledger on the chosen target, and every debt he ever recorded against them comes down at once as crystallized stone.\n\nThe entry stays open against them: the target's <b>Attack</b> is reduced by <b>${this.attackShred}</b> for <b>${this.shredDuration}</b> turns. Deals magical damage.`,
+        pt: `Avarion fecha o registro sobre o alvo escolhido, e cada dívida que já lançou contra ele desaba de uma vez como pedra cristalizada.\n\nA entrada permanece aberta contra ele: o <b>Ataque</b> do alvo é reduzido em <b>${this.attackShred}</b> por <b>${this.shredDuration}</b> turnos. Causa dano mágico.`,
       };
     },
 

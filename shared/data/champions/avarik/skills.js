@@ -26,8 +26,8 @@ const avarikSkills = [
 
     description() {
       return {
-        en: `Avarik closes one stone-scaled fist around the chosen target and weighs them against the whole mountain he carries, dealing <b>${this.maxHPPercent}%</b> of his <b>Max HP</b> as <b>Absolute Damage</b>.`,
-        pt: `Avarik fecha um punho de escamas de pedra ao redor do alvo escolhido e o pesa contra a montanha inteira que carrega, causando <b>${this.maxHPPercent}%</b> de seu <b>HP Máximo</b> como <b>Dano Absoluto</b>.`,
+        en: `Avarik closes one stone-scaled fist around the chosen target and weighs them against the whole mountain he carries, dealing <b>${this.maxHPPercent}%</b> of his <b>Max HP</b> as <b>Absolute Damage</b>. Deals physical damage.`,
+        pt: `Avarik fecha um punho de escamas de pedra ao redor do alvo escolhido e o pesa contra a montanha inteira que carrega, causando <b>${this.maxHPPercent}%</b> de seu <b>HP Máximo</b> como <b>Dano Absoluto</b>. Causa dano físico.`,
       };
     },
 
@@ -64,12 +64,8 @@ const avarikSkills = [
 
     description() {
       return {
-        en: `Avarik tears a slab of bedrock loose and swallows it whole, restoring <b>${this.healPercent}%</b> of his <b>Max HP</b>.
-
-      His appetite then carries over to the ledger: the next time this champion uses <b>CLAIM</b>, he seizes <b>${this.bonusClaimPoints}</b> additional points.`,
-        pt: `Avarik arranca uma laje de rocha e a engole inteira, restaurando <b>${this.healPercent}%</b> de seu <b>HP Máximo</b>.
-
-      Seu apetite então se estende ao registro: na próxima vez que este campeão usar <b>CLAIM</b>, ele arrebata <b>${this.bonusClaimPoints}</b> pontos adicionais.`,
+        en: `Avarik tears a slab of bedrock loose and swallows it whole, restoring <b>${this.healPercent}%</b> of his <b>Max HP</b>.\n\nHis appetite carries over to the ledger: the next time Avarik uses <b>CLAIM</b>, he seizes <b>${this.bonusClaimPoints}</b> additional points. The toll <b>does not stack</b>.`,
+        pt: `Avarik arranca uma laje de rocha e a engole inteira, restaurando <b>${this.healPercent}%</b> de seu <b>HP Máximo</b>.\n\nSeu apetite se estende ao registro: na próxima vez que Avarik usar <b>CLAIM</b>, ele arrebata <b>${this.bonusClaimPoints}</b> pontos adicionais. O pedágio <b>não acumula</b>.`,
       };
     },
 
@@ -84,16 +80,20 @@ const avarikSkills = [
         context,
       }).execute();
 
-      user.runtime ??= {};
-      user.runtime.hookEffects ??= [];
-
       const bonusClaimPoints = this.bonusClaimPoints;
+      const alreadySet = user.runtime?.hookEffects?.some(
+        (he) => he.key === GLUTTONS_TOLL_HOOK_KEY,
+      );
 
-      if (
-        !user.runtime.hookEffects.some(
-          (he) => he.key === GLUTTONS_TOLL_HOOK_KEY,
-        )
-      ) {
+      if (alreadySet) {
+        context.registerDialog?.({
+          message: {
+            en: `${formatChampionName(user)}'s <b>Glutton's Toll</b> is already set — it does not stack.`,
+            pt: `O <b>Glutton's Toll</b> de ${formatChampionName(user)} já está armado — ele não acumula.`,
+          },
+          sourceId: user.id,
+        });
+      } else {
         user.addHookEffect({
           type: "buff",
           key: GLUTTONS_TOLL_HOOK_KEY,
@@ -106,22 +106,26 @@ const avarikSkills = [
           onActionResolved({ owner, skill }) {
             if (skill?.key !== CLAIM_ACTION_KEY) return;
 
-            owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
-              (he) => he.key !== GLUTTONS_TOLL_HOOK_KEY,
-            );
+            owner.removeHookEffects((he) => he.key === GLUTTONS_TOLL_HOOK_KEY);
 
             return {
               type: "score",
               amount: bonusClaimPoints,
               scoringSlot: owner.team - 1,
-              log: `${formatChampionName(owner)} collected <b>Glutton's Toll</b> from his own CLAIM, seizing ${bonusClaimPoints} additional point(s).`,
+              log: {
+                en: `${formatChampionName(owner)} collected <b>Glutton's Toll</b> from his own CLAIM, seizing <b>${bonusClaimPoints}</b> additional point(s).`,
+                pt: `${formatChampionName(owner)} cobrou o <b>Glutton's Toll</b> do próprio CLAIM, arrebatando <b>${bonusClaimPoints}</b> ponto(s) adicional(is).`,
+              },
             };
           },
         }, context);
       }
 
       return {
-        log: `${formatChampionName(user)} swallowed a slab of bedrock, restoring ${restored} HP and setting <b>Glutton's Toll</b> on his next CLAIM.`,
+        log: {
+          en: `${formatChampionName(user)} swallowed a slab of bedrock, restoring <b>${restored}</b> HP${alreadySet ? "" : " and setting <b>Glutton's Toll</b> on his next CLAIM"}.`,
+          pt: `${formatChampionName(user)} engoliu uma laje de rocha, restaurando <b>${restored}</b> de HP${alreadySet ? "" : " e armando o <b>Glutton's Toll</b> no próximo CLAIM"}.`,
+        },
       };
     },
   },
@@ -143,12 +147,8 @@ const avarikSkills = [
 
     description() {
       return {
-        en: `Avarik hurls everything he has hoarded — the plates of his own body and the mountain buried under them — at the chosen target, dealing heavy <b>Earth</b> physical damage.
-
-      The hoard lands with him: the target also takes bonus <b>Absolute Damage</b> equal to <b>${this.currentHPPercent}%</b> of Avarik's current <b>HP</b>.`,
-        pt: `Avarik arremessa tudo o que acumulou — as placas do próprio corpo e a montanha soterrada sob elas — contra o alvo escolhido, causando pesado dano físico de <b>Terra</b>.
-
-      O acúmulo cai junto com ele: o alvo também sofre <b>Dano Absoluto</b> bônus igual a <b>${this.currentHPPercent}%</b> do <b>HP</b> atual de Avarik.`,
+        en: `Avarik hurls everything he has hoarded — the plates of his own body and the mountain buried under them — at the chosen target.\n\nThe hoard lands with him: the target also takes bonus <b>Absolute Damage</b> equal to <b>${this.currentHPPercent}%</b> of Avarik's current <b>HP</b>. Deals physical damage.`,
+        pt: `Avarik arremessa tudo o que acumulou — as placas do próprio corpo e a montanha soterrada sob elas — contra o alvo escolhido.\n\nO acúmulo cai junto com ele: o alvo também sofre <b>Dano Absoluto</b> bônus igual a <b>${this.currentHPPercent}%</b> do <b>HP</b> atual de Avarik. Causa dano físico.`,
       };
     },
 
@@ -194,7 +194,10 @@ const avarikSkills = [
       );
 
       context.registerDialog?.({
-        message: `The whole hoard lands on ${formatChampionName(enemy)}, dealing ${hoardDamage} Absolute Damage!`,
+        message: {
+          en: `The whole hoard lands on ${formatChampionName(enemy)}, dealing <b>${hoardDamage}</b> Absolute Damage!`,
+          pt: `Todo o acúmulo desaba sobre ${formatChampionName(enemy)}, causando <b>${hoardDamage}</b> de Dano Absoluto!`,
+        },
         sourceId: user.id,
         targetId: enemy.id,
       });
