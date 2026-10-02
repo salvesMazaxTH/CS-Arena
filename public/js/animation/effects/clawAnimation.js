@@ -253,8 +253,8 @@ class ClawRakeEffect {
   }
 }
 
-const PADDING_SCALE = 1.1;
-const PADDING_FLOOR = 300;
+const PADDING_SCALE = 1;
+const PADDING_FLOOR = 200;
 
 // The hit or skill picks a palette by `hitVfxPalette`; feral otherwise.
 export function createClaw() {
