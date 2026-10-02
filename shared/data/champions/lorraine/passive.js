@@ -37,6 +37,8 @@ export function declareDuel(owner, enemy, context) {
   const applied = owner.applyTaunt(enemy.id, DUEL_DURATION, context);
   const added = owner.tauntEffects[owner.tauntEffects.length - 1];
   if (added) added.lorraineDuel = true;
+  // Mirrored in runtime so the description can name the opponent on the client.
+  owner.runtime.lorraineDuelTarget = { id: enemy.id, name: enemy.name };
 
   return applied;
 }
@@ -76,10 +78,16 @@ export default {
   parryReduction: 80,
   riposteBf: 35,
 
-  description() {
+  description(champion) {
+    const opponent = champion?.runtime?.lorraineDuelTarget?.name;
+
     return {
-      en: `Lorraine fights one person at a time and considers everyone else in the room a distraction. She is never without a <b>Duel</b>. Whenever a turn begins and she has none, she names the enemy with the highest <b>Attack</b>; if the named one falls mid-turn, the next opponent she strikes or is struck by takes their place. Against whoever she has named she deals <b>${this.duelDamagePercent}%</b> increased damage, and every blow that one aims at her has a <b>${this.parryChance}%</b> chance of being turned aside, blunted by <b>${this.parryReduction}%</b> (<b>Absolute Damage</b> excepted) and answered with a riposte that can never be a <b>critical hit</b>.`,
-      pt: `Lorraine luta com uma pessoa de cada vez e trata todo o resto na sala como distração. Ela nunca está sem um <b>Duelo</b>. Sempre que um turno começa e ela não tem nenhum, nomeia o inimigo com maior <b>Ataque</b>; se o nomeado cair no meio do turno, o próximo oponente que ela golpear ou que a golpear toma o lugar dele. Contra quem ela nomeou, causa dano <b>${this.duelDamagePercent}%</b> maior, e todo golpe que esse alvo desferir contra ela tem <b>${this.parryChance}%</b> de chance de ser desviado, reduzido em <b>${this.parryReduction}%</b> (exceto <b>dano Absoluto</b>) e respondido com uma réplica que nunca pode ser <b>acerto crítico</b>.`,
+      en: `Lorraine fights one person at a time and considers everyone else in the room a distraction. She is never without a <b>Duel</b>. Whenever a turn begins and she has none, she names the enemy with the highest <b>Attack</b>; if the named one falls mid-turn, the next opponent she strikes or is struck by takes their place. Against whoever she has named she deals <b>${this.duelDamagePercent}%</b> increased damage, and every blow that one aims at her has a <b>${this.parryChance}%</b> chance of being turned aside, blunted by <b>${this.parryReduction}%</b> (<b>Absolute Damage</b> excepted) and answered with a riposte that can never be a <b>critical hit</b>.${opponent ? `
+
+      In a Duel with: <b>${opponent}</b>` : ""}`,
+      pt: `Lorraine luta com uma pessoa de cada vez e trata todo o resto na sala como distração. Ela nunca está sem um <b>Duelo</b>. Sempre que um turno começa e ela não tem nenhum, nomeia o inimigo com maior <b>Ataque</b>; se o nomeado cair no meio do turno, o próximo oponente que ela golpear ou que a golpear toma o lugar dele. Contra quem ela nomeou, causa dano <b>${this.duelDamagePercent}%</b> maior, e todo golpe que esse alvo desferir contra ela tem <b>${this.parryChance}%</b> de chance de ser desviado, reduzido em <b>${this.parryReduction}%</b> (exceto <b>dano Absoluto</b>) e respondido com uma réplica que nunca pode ser <b>acerto crítico</b>.${opponent ? `
+
+      Em duelo com: <b>${opponent}</b>` : ""}`,
     };
   },
 
@@ -98,6 +106,12 @@ export default {
         pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} nomeia ${formatChampionName(named)} e se recusa a olhar para outro lugar.`,
       },
     };
+  },
+
+  onChampionDeath({ owner, deadChampion }) {
+    if (owner.runtime.lorraineDuelTarget?.id === deadChampion.id) {
+      delete owner.runtime.lorraineDuelTarget;
+    }
   },
 
   onBeforeDmgDealing({ owner, attacker, defender, damage, context }) {
