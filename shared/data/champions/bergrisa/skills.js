@@ -5,8 +5,8 @@ import { formatChampionName } from "../../../ui/formatters.js";
 import passive from "./passive.js";
 import totalBlock from "../generic/totalBlock.js";
 
-function strikeAll(skill, user, targets, context) {
-  const baseDamage = (user.Attack * skill.bf) / 100;
+function strike(skill, user, targets, context, percent = 100) {
+  const baseDamage = (user.Attack * skill.bf * percent) / 10000;
   const results = [];
 
   for (const enemy of targets) {
@@ -41,44 +41,43 @@ const bergrisaSkills = [
     stunDuration: 1,
     stunSedimentCost: 8,
     stunGapThreshold: 110,
+    splashPercent: 50,
 
     description() {
       return {
-        en: `Bergrisa takes one step, and the whole line of them has to decide where it stands. She strikes every enemy at once; if she is holding <b>${this.stunSedimentCost}</b> <b>Sediment</b> she spends it to <b>Stun</b> for <b>${this.stunDuration}</b> turn the enemy whose <b>Defense</b> she most outweighs, and only if that gap is at least <b>${this.stunGapThreshold}</b>. Deals physical damage.`,
-        pt: `Bergrisa dá um passo, e toda a linha inimiga precisa decidir onde se firmar. Ela atinge todos os inimigos de uma vez; se estiver com <b>${this.stunSedimentCost}</b> de <b>Sedimento</b>, ela o gasta para <b>Atordoar</b> por <b>${this.stunDuration}</b> turno o inimigo cuja <b>Defesa</b> ela mais supera, e apenas se essa diferença for de pelo menos <b>${this.stunGapThreshold}</b>. Causa dano físico.`,
+        en: `Bergrisa takes one step, and the enemy in front of her has to decide where it stands. She strikes the chosen enemy, and the blow spills onto whoever stands beside them for <b>${this.splashPercent}%</b> of the damage; if she is holding <b>${this.stunSedimentCost}</b> <b>Sediment</b> she spends it to <b>Stun</b> the chosen enemy for <b>${this.stunDuration}</b> turn, but only if her <b>Defense</b> outweighs theirs by at least <b>${this.stunGapThreshold}</b>. Deals physical damage.`,
+        pt: `Bergrisa dá um passo, e o inimigo à sua frente precisa decidir onde se firmar. Ela atinge o inimigo escolhido, e o golpe respinga em quem estiver ao lado dele por <b>${this.splashPercent}%</b> do dano; se estiver com <b>${this.stunSedimentCost}</b> de <b>Sedimento</b>, ela o gasta para <b>Atordoar</b> o inimigo escolhido por <b>${this.stunDuration}</b> turno, mas apenas se sua <b>Defesa</b> superar a dele em pelo menos <b>${this.stunGapThreshold}</b>. Causa dano físico.`,
       };
     },
 
-    targetSpec: ["all:enemy"],
+    targetSpec: ["enemy"],
 
     resolve({ user, targets, context = {} }) {
-      const results = strikeAll(this, user, targets, context);
+      const [target] = targets;
+      const results = strike(this, user, [target], context);
+
+      const splashed = context.getAdjacentChampions(target) || [];
+      results.push(...strike(this, user, splashed, context, this.splashPercent));
 
       const sediment = user.runtime?.bergrisaSediment || 0;
-      if (sediment < this.stunSedimentCost) return results;
+      if (sediment < this.stunSedimentCost || !target.alive) return results;
 
-      const outweighed = targets
-        .filter((enemy) => enemy.alive)
-        .sort((a, b) => (a.Defense || 0) - (b.Defense || 0))[0];
-
-      if (!outweighed) return results;
-
-      const gap = (user.Defense || 0) - (outweighed.Defense || 0);
+      const gap = (user.Defense || 0) - (target.Defense || 0);
       if (gap < this.stunGapThreshold) return results;
 
-      const hit = results.find((r) => r?.defender?.id === outweighed.id);
+      const hit = results.find((r) => r?.defender?.id === target.id);
       if (!effectConnected(hit, "stunned")) return results;
 
       passive.setSediment(user, sediment - this.stunSedimentCost, context);
 
-      outweighed.applyStatusEffect("stunned", this.stunDuration, context, {
+      target.applyStatusEffect("stunned", this.stunDuration, context, {
         sourceId: user.id,
       });
 
       results.push({
         log: {
-          en: `<b>[${this.name}]</b> ${formatChampionName(user)} spent ${this.stunSedimentCost} Sediment and pinned ${formatChampionName(outweighed)} to the ground.`,
-          pt: `<b>[${this.name}]</b> ${formatChampionName(user)} gastou ${this.stunSedimentCost} de Sedimento e cravou ${formatChampionName(outweighed)} no chão.`,
+          en: `<b>[${this.name}]</b> ${formatChampionName(user)} spent ${this.stunSedimentCost} Sediment and pinned ${formatChampionName(target)} to the ground.`,
+          pt: `<b>[${this.name}]</b> ${formatChampionName(user)} gastou ${this.stunSedimentCost} de Sedimento e cravou ${formatChampionName(target)} no chão.`,
         },
       });
 
@@ -171,7 +170,7 @@ const bergrisaSkills = [
     targetSpec: ["all:enemy"],
 
     resolve({ user, targets, context = {} }) {
-      const results = strikeAll(this, user, targets, context);
+      const results = strike(this, user, targets, context);
 
       passive.setSediment(
         user,
