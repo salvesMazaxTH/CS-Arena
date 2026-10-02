@@ -80,7 +80,7 @@ const editMode = {
 const TEAM_SIZE = 8;
 const ACTIVE_PER_TEAM = 3; // max champions on the field per team (roster=8, active=3)
 const FIRST_CHOICE_TIMEOUT = 45 * 1000; // 45s for the 1v1 pick before auto-selecting at random
-const DISCONNECT_TIMEOUT = 30 * 1000; // 30s to reconnect
+const DISCONNECT_TIMEOUT = 50 * 1000; // 50s to reconnect
 const ANIMATION_STRAGGLER_TIMEOUT = 45 * 1000; // 45s for the second client to finish animating a turn
 
 // ============================================================
