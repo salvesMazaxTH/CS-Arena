@@ -4,6 +4,8 @@ import {
   findTwin,
   survivalDamage,
   TWIN_BOND_TEXT,
+  ULTIMATE_SPENT_TEXT,
+  ultimateSavesLeft,
 } from "../pairs/twinBond.js";
 
 export default {
@@ -41,6 +43,17 @@ export default {
 
   onValidateAction({ actionSource, skill, context }) {
     if (skill?.key !== "i_will_keep_you_here") return;
+
+    if (ultimateSavesLeft(actionSource, skill) <= 0) {
+      return {
+        deny: true,
+        message: {
+          en: ULTIMATE_SPENT_TEXT.en(skill.name),
+          pt: ULTIMATE_SPENT_TEXT.pt(skill.name),
+        },
+      };
+    }
+
     if (findTwin(actionSource, context)) return;
 
     return {

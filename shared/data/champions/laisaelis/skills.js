@@ -1,6 +1,13 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicShot from "../generic/basicShot.js";
-import { findTwin, survivalDamage } from "../pairs/twinBond.js";
+import {
+  findTwin,
+  spendUltimateSave,
+  survivalDamage,
+  ULTIMATE_SPENT_TEXT,
+  ultimateSavesLeft,
+  ultimateSavesLine,
+} from "../pairs/twinBond.js";
 
 const SISTER_KEYS = ["laisaelis", "laiserisa"];
 
@@ -199,20 +206,33 @@ const laisaelisSkills = [
 
     auraDuration: 2,
     survivalHP: 1,
+    maxTriggers: 2,
 
     contact: false,
     isUltimate: true,
     momentumCost: 60,
     priority: 4,
 
-    description() {
+    description(champion) {
+      const savesLine = ultimateSavesLine(champion, this);
+
       return {
-        en: `Laisaelis refuses the one departure she cannot bear and lays an anchor of presence over her sister. For <b>${this.auraDuration}</b> turn(s), the first lethal effect that would take Laiserisa instead leaves her on the field with <b>${this.survivalHP}</b> HP. The anchor never spends what Laiserisa carries of her own, and cannot be laid at all while she is absent from the field or lost to the <b>Nothingness</b>.`,
-        pt: `Laisaelis recusa a única partida que não consegue suportar e lança uma âncora de presença sobre sua irmã. Por <b>${this.auraDuration}</b> turno(s), o primeiro efeito letal que atingiria Laiserisa a deixa em campo com <b>${this.survivalHP}</b> HP. A âncora nunca gasta o que Laiserisa carrega por conta própria, e não pode ser lançada enquanto ela estiver ausente do campo ou perdida no <b>Nada</b>.`,
+        en: `Laisaelis refuses the one departure she cannot bear and lays an anchor of presence over her sister. For <b>${this.auraDuration}</b> turn(s), the first lethal effect that would take Laiserisa instead leaves her on the field with <b>${this.survivalHP}</b> HP. The anchor never spends what Laiserisa carries of her own, and cannot be laid at all while she is absent from the field or lost to the <b>Nothingness</b>. It can save her up to <b>${this.maxTriggers}</b> times per match.
+
+        ${savesLine.en}`,
+        pt: `Laisaelis recusa a única partida que não consegue suportar e lança uma âncora de presença sobre sua irmã. Por <b>${this.auraDuration}</b> turno(s), o primeiro efeito letal que atingiria Laiserisa a deixa em campo com <b>${this.survivalHP}</b> HP. A âncora nunca gasta o que Laiserisa carrega por conta própria, e não pode ser lançada enquanto ela estiver ausente do campo ou perdida no <b>Nada</b>. Pode salvá-la até <b>${this.maxTriggers}</b> vezes por partida.
+
+        ${savesLine.pt}`,
       };
     },
 
     targetSpec: ["self"],
+
+    disabledReason({ user }) {
+      return ultimateSavesLeft(user, this) > 0
+        ? null
+        : ULTIMATE_SPENT_TEXT.en(this.name);
+    },
 
     resolve({ user, context = {} }) {
       const twin = findTwin(user, context);
@@ -233,6 +253,7 @@ const laisaelisSkills = [
 
       const survivalHP = this.survivalHP;
       const skillName = this.name;
+      const skill = this;
 
       twin.addHookEffect(
         {
@@ -267,6 +288,7 @@ const laisaelisSkills = [
             owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
               (e) => e.key !== "keep_you_here",
             );
+            spendUltimateSave(user, skill);
 
             context.registerDialog({
               message: {

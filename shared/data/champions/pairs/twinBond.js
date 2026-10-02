@@ -31,6 +31,36 @@ export function survivalDamage(champion, survivalHP) {
   return Math.max(champion.HP + regularShieldTotal(champion) - survivalHP, 0);
 }
 
+/**
+ * An ultimate's `maxTriggers` counts the saves it actually delivered, kept on
+ * the caster; merely casting it, or leaving its aura to lapse, spends nothing.
+ */
+export function ultimateSavesLeft(caster, skill) {
+  return skill.maxTriggers - (caster.runtime?.ultimateSaves?.[skill.key] ?? 0);
+}
+
+export function spendUltimateSave(caster, skill) {
+  caster.runtime.ultimateSaves ??= {};
+  caster.runtime.ultimateSaves[skill.key] =
+    (caster.runtime.ultimateSaves[skill.key] ?? 0) + 1;
+}
+
+/** The live "saves left" line closing an ultimate's description, scoped to this match. */
+export function ultimateSavesLine(caster, skill) {
+  const left = caster ? ultimateSavesLeft(caster, skill) : skill.maxTriggers;
+  const count = `<b>${left}/${skill.maxTriggers}</b>`;
+
+  return {
+    en: `<b>Saves left this match:</b> ${count}`,
+    pt: `<b>Salvações restantes nesta partida:</b> ${count}`,
+  };
+}
+
+export const ULTIMATE_SPENT_TEXT = {
+  en: (name) => `<b>${name}</b> has already delivered all of its saves this match.`,
+  pt: (name) => `<b>${name}</b> já entregou todas as suas salvações nesta partida.`,
+};
+
 /** The innate half both sisters share; returns whether the owner was taken along. */
 export function dieWithTwin({ owner, deadChampion, context }, passiveName) {
   if (!owner.alive || owner === deadChampion) return false;

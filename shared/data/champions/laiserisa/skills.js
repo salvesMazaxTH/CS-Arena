@@ -1,6 +1,13 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicShot from "../generic/basicShot.js";
-import { findTwin, survivalDamage } from "../pairs/twinBond.js";
+import {
+  findTwin,
+  spendUltimateSave,
+  survivalDamage,
+  ULTIMATE_SPENT_TEXT,
+  ultimateSavesLeft,
+  ultimateSavesLine,
+} from "../pairs/twinBond.js";
 
 const SISTER_KEYS = ["laisaelis", "laiserisa"];
 
@@ -140,22 +147,35 @@ const laiserisaSkills = [
     name: "Then Let Me Take You With Me",
 
     auraDuration: 2,
-    vanishTurns: 1,
+    vanishTurns: 2,
     returnHPPercent: 25,
+    maxTriggers: 2,
 
     contact: false,
     isUltimate: true,
     momentumCost: 60,
     priority: 4,
 
-    description() {
+    description(champion) {
+      const savesLine = ultimateSavesLine(champion, this);
+
       return {
-        en: `Laiserisa accepts what her sister spent the whole match refusing, and binds their two endings into one. For <b>${this.auraDuration}</b> turn(s), the next lethal effect that would take either sister instead empties her to a sliver, and at the start of the next turn both slip into the <b>Nothingness</b> together — returning <b>${this.vanishTurns}</b> turns later with <b>${this.returnHPPercent}%</b> of their base Max HP each, and only once the field has room for both. Struck down in that sliver of a turn, they go for good. It cannot be bound while her sister is absent from the field.`,
-        pt: `Laiserisa aceita o que sua irmã passou a partida inteira recusando, e une os dois finais em um só. Por <b>${this.auraDuration}</b> turno(s), o próximo efeito letal que atingiria qualquer uma das irmãs a esvazia até um fio de vida, e no início do turno seguinte ambas escorregam juntas para o <b>Nada</b> — retornando <b>${this.vanishTurns}</b> turno(s) depois com <b>${this.returnHPPercent}%</b> do HP Máximo base de cada uma, e somente quando houver espaço em campo para as duas. Se derrubadas nesse fio de vida, partem para sempre. Não pode ser conjurada enquanto sua irmã estiver ausente do campo.`,
+        en: `Laiserisa accepts what her sister spent the whole match refusing, and binds their two endings into one. For <b>${this.auraDuration}</b> turn(s), the next lethal effect that would take either sister instead empties her to a sliver, and both slip into the <b>Nothingness</b> together — returning <b>${this.vanishTurns}</b> turns later with <b>${this.returnHPPercent}%</b> of their base Max HP each, and only once the field has room for both. It can save them up to <b>${this.maxTriggers}</b> times per match. It cannot be bound while her sister is absent from the field.
+
+        ${savesLine.en}`,
+        pt: `Laiserisa aceita o que sua irmã passou a partida inteira recusando, e une os dois finais em um só. Por <b>${this.auraDuration}</b> turno(s), o próximo efeito letal que atingiria qualquer uma das irmãs a esvazia até um fio de vida, e ambas escorregam juntas para o <b>Nada</b> — retornando <b>${this.vanishTurns}</b> turnos depois com <b>${this.returnHPPercent}%</b> do HP Máximo base de cada uma, e somente quando houver espaço em campo para as duas. Pode salvá-las até <b>${this.maxTriggers}</b> vezes por partida. Não pode ser conjurada enquanto sua irmã estiver ausente do campo.
+
+        ${savesLine.pt}`,
       };
     },
 
     targetSpec: ["self"],
+
+    disabledReason({ user }) {
+      return ultimateSavesLeft(user, this) > 0
+        ? null
+        : ULTIMATE_SPENT_TEXT.en(this.name);
+    },
 
     resolve({ user, context }) {
       const twin = findTwin(user, context);
@@ -173,6 +193,7 @@ const laiserisaSkills = [
       const vanishTurns = this.vanishTurns;
       const hpRatio = this.returnHPPercent / 100;
       const groupId = `twin_departure_${user.id}`;
+      const skill = this;
 
       const aura = {
         type: "buff",
@@ -198,21 +219,18 @@ const laiserisaSkills = [
           if (!owner.wouldBeLethal(damage)) return;
 
           owner.runtime.preventFinishingUntilTurn = context.currentTurn + 1;
+          spendUltimateSave(user, skill);
 
           for (const sister of [user, twin]) {
             sister.runtime.hookEffects = sister.runtime.hookEffects.filter(
               (effect) => effect.key !== "twin_departure",
             );
 
-            context.schedule({
-              type: "championMutation",
-              turnToHappen: context.currentTurn + 1,
-              payload: {
-                targetId: sister.id,
-                mode: "vanish",
-                turns: vanishTurns,
-                returnState: { hpRatio, groupId },
-              },
+            context.requestChampionMutation({
+              targetId: sister.id,
+              mode: "vanish",
+              turns: vanishTurns,
+              returnState: { hpRatio, groupId },
             });
           }
 

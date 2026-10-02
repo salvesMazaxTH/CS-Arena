@@ -4,6 +4,8 @@ import {
   findTwin,
   survivalDamage,
   TWIN_BOND_TEXT,
+  ULTIMATE_SPENT_TEXT,
+  ultimateSavesLeft,
 } from "../pairs/twinBond.js";
 
 export default {
@@ -17,10 +19,10 @@ export default {
     const stillUnspent = champion.runtime?.leaveSpent ? "no" : "yes";
 
     return {
-      en: `Laiserisa is the sister who answers presence by letting it go: nothing she touches is destroyed, only allowed to stop being. The first lethal effect that would end her instead empties her to a sliver and she slips into the <b>Nothingness</b> at once, returning <b>${this.vanishTurns}</b> turns later with <b>${this.returnHPPercent}%</b> of her base Max HP — and should her sister have fallen meanwhile, she returns only to cease. <b>Once per match</b>. ${TWIN_BOND_TEXT.en}
+      en: `Laiserisa is the sister who answers presence by letting it go: nothing she touches is destroyed, only allowed to stop being. The first lethal effect that would end her instead empties her to a sliver and she slips into the <b>Nothingness</b>, returning <b>${this.vanishTurns}</b> turns later with <b>${this.returnHPPercent}%</b> of her base Max HP — and should her sister have fallen meanwhile, she returns only to cease. <b>Once per match</b>. ${TWIN_BOND_TEXT.en}
 
       <b>Still unspent:</b> ${stillUnspent}`,
-      pt: `Laiserisa é a irmã que responde à presença deixando-a ir: nada que ela toca é destruído, apenas permitido deixar de ser. O primeiro efeito letal que a atingiria a esvazia até um fio de vida e ela escorrega para o <b>Nada</b> de imediato, retornando <b>${this.vanishTurns}</b> turnos depois com <b>${this.returnHPPercent}%</b> do seu HP Máximo base — e, caso sua irmã tenha caído nesse meio-tempo, ela retorna apenas para cessar. <b>Uma vez por partida</b>. ${TWIN_BOND_TEXT.pt}
+      pt: `Laiserisa é a irmã que responde à presença deixando-a ir: nada que ela toca é destruído, apenas permitido deixar de ser. O primeiro efeito letal que a atingiria a esvazia até um fio de vida e ela escorrega para o <b>Nada</b>, retornando <b>${this.vanishTurns}</b> turnos depois com <b>${this.returnHPPercent}%</b> do seu HP Máximo base — e, caso sua irmã tenha caído nesse meio-tempo, ela retorna apenas para cessar. <b>Uma vez por partida</b>. ${TWIN_BOND_TEXT.pt}
 
       <b>Ainda não usado:</b> ${stillUnspent === "yes" ? "sim" : "não"}`,
     };
@@ -42,6 +44,17 @@ export default {
 
   onValidateAction({ actionSource, skill, context }) {
     if (skill?.key !== "then_let_me_take_you_with_me") return;
+
+    if (ultimateSavesLeft(actionSource, skill) <= 0) {
+      return {
+        deny: true,
+        message: {
+          en: ULTIMATE_SPENT_TEXT.en(skill.name),
+          pt: ULTIMATE_SPENT_TEXT.pt(skill.name),
+        },
+      };
+    }
+
     if (findTwin(actionSource, context)) return;
 
     return {
