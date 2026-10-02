@@ -110,11 +110,17 @@ function assertStatusPreconditions(champion, statusEffectKey, context) {
 
 // The active status remembers who last applied it, so a reader can ask "who
 // put this on him?" turns after the application left the turn history.
-function stampStatusSource(instance, context, metadata) {
+function statusSourceOf(context, metadata) {
   const source = resolveStatusEffectSource(context, metadata);
-  instance.sourceId =
-    metadata?.sourceId ?? context?.actionSource?.id ?? source?.id ?? null;
-  instance.sourceTeam = source?.team ?? null;
+  return {
+    sourceId:
+      metadata?.sourceId ?? context?.actionSource?.id ?? source?.id ?? null,
+    sourceTeam: source?.team ?? null,
+  };
+}
+
+function stampStatusSource(instance, context, metadata) {
+  Object.assign(instance, statusSourceOf(context, metadata));
 }
 
 function recordStatusInTurn({ champion, statusEffectKey, context, metadata, stacks }) {
@@ -200,7 +206,12 @@ function applyStatusEffectCore({
 
   if (definition.stackLifetime) {
     effectInstance.stackBatches = [];
-    addStackBatch(effectInstance, normalizedStackCount, definition);
+    addStackBatch(
+      effectInstance,
+      normalizedStackCount,
+      definition,
+      statusSourceOf(context, metadata),
+    );
     effectInstance.metadata.stacks = effectInstance.stacks;
     effectInstance.metadata.stackCount = effectInstance.stacks;
   }
@@ -276,7 +287,12 @@ function applyStackUpdate({
   durationFromStacks,
 }) {
   const newStacks = definition.stackLifetime
-    ? addStackBatch(existingInstance, normalizedStackCount, definition)
+    ? addStackBatch(
+        existingInstance,
+        normalizedStackCount,
+        definition,
+        statusSourceOf(context, metadata),
+      )
     : Math.max(1, (Number(existingInstance.stacks) || 1) + normalizedStackCount);
 
   existingInstance.stacks = newStacks;

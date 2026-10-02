@@ -1,7 +1,11 @@
 import { DamageEvent } from "../../engine/combat/DamageEvent.js";
 import { StatusEffect } from "../../core/StatusEffect.js";
 import { formatChampionName } from "../../ui/formatters.js";
-import { ageStackBatches } from "../../core/stackLifetime.js";
+import {
+  ageStackBatches,
+  leadingStackSource,
+  stackSources,
+} from "../../core/stackLifetime.js";
 
 // A Bleeding stack is worth this fraction of the victim's Max HP; Drex's
 // Bloodletting replays real Bleeding damage and reads it from here.
@@ -26,7 +30,16 @@ const bleeding = {
     const dmgPerStack = Math.floor(
       owner.maxHP * BLEEDING_DAMAGE_PER_STACK_RATIO,
     );
-    const dotContext = { ...context, isDot: true };
+    // Each applier is credited for the stacks it put on the target.
+    const sources = stackSources(this);
+    const lead = leadingStackSource(sources);
+    const dotContext = {
+      ...context,
+      isDot: true,
+      dotSourceId: lead?.sourceId ?? this.sourceId ?? null,
+      dotSourceTeam: lead?.sourceTeam ?? this.sourceTeam ?? null,
+      dotSources: sources,
+    };
 
     const result = new DamageEvent({
       attacker: null,

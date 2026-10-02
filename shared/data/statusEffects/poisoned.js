@@ -1,7 +1,11 @@
 import { DamageEvent } from "../../engine/combat/DamageEvent.js";
 import { StatusEffect } from "../../core/StatusEffect.js";
 import { formatChampionName } from "../../ui/formatters.js";
-import { ageStackBatches } from "../../core/stackLifetime.js";
+import {
+  ageStackBatches,
+  leadingStackSource,
+  stackSources,
+} from "../../core/stackLifetime.js";
 
 const poisoned = {
   key: "poisoned",
@@ -19,11 +23,15 @@ const poisoned = {
     const dmgPerStack = Math.floor(owner.maxHP * 0.04);
     // The tick stays attackerless, so nothing reacts to it as "dealt damage";
     // only the turn history learns who poisoned the target.
+    // Each applier is credited for the stacks it put on the target.
+    const sources = stackSources(this);
+    const lead = leadingStackSource(sources);
     const dotContext = {
       ...context,
       isDot: true,
-      dotSourceId: this.sourceId ?? null,
-      dotSourceTeam: this.sourceTeam ?? null,
+      dotSourceId: lead?.sourceId ?? this.sourceId ?? null,
+      dotSourceTeam: lead?.sourceTeam ?? this.sourceTeam ?? null,
+      dotSources: sources,
     };
 
     const result = new DamageEvent({

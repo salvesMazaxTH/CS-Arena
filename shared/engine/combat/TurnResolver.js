@@ -7,6 +7,7 @@ import { CLAIM_ACTION_KEY, getClaimPoints } from "./claim.js";
 import { snapshotChampions } from "./snapshotChampions.js";
 import { TargetFilter } from "./targetFilter.js";
 import { getBlindMiss } from "../../data/statusEffects/blind.js";
+import { splitByStacks } from "../../core/stackLifetime.js";
 
 export const BASE_MOMENTUM_REGEN = 6;
 export const MOMENTUM_REGEN_PER_TURN = 3;
@@ -390,8 +391,14 @@ export class TurnResolver {
       }
 
       const message = hidden
-        ? `${formatChampionName(user)} reaches for ${formatChampionName(hidden)}, but cannot find them.`
-        : `${formatChampionName(user)} used <b>${skill.name}</b>, but found no target.`;
+        ? {
+            en: `${formatChampionName(user)} reaches for ${formatChampionName(hidden)}, but cannot find them.`,
+            pt: `${formatChampionName(user)} procura por ${formatChampionName(hidden)}, mas não há ninguém ali.`,
+          }
+        : {
+            en: `${formatChampionName(user)} used <b>${skill.name}</b>, but found no target.`,
+            pt: `${formatChampionName(user)} usou <b>${skill.name}</b>, mas não encontrou alvo.`,
+          };
 
       context.registerDialog({
         message,
@@ -1297,6 +1304,8 @@ export class TurnResolver {
         absorbedByShield,
         remainingShield,
         sourceId,
+        dotSourceId = null,
+        dotSources = null,
         isCritical = false,
         isDot = false,
         element = null,
@@ -1310,16 +1319,28 @@ export class TurnResolver {
       } = {}) {
         if (!target?.id) return;
 
-        const sourceChamp = sourceId
-          ? combat.activeChampions.get(sourceId)
-          : null;
+        // Credit survives the source leaving the field, and an attackerless
+        // tick still belongs to whoever applied it. Damage a team does to
+        // itself (HP costs, friendly fire) is not damage dealt.
+        const creditId = sourceId ?? dotSourceId;
+        const sourceChamp = creditId ? combat.getChampion(creditId) : null;
         const dealt = Math.max(0, Number(amount) || 0);
         const rawCandidate = Number(rawAmount);
         const raw = Number.isFinite(rawCandidate)
           ? Math.max(0, rawCandidate)
           : dealt;
 
-        sourceChamp?.addDamageDealt?.(dealt);
+        // A shared tick credits each applier for its own stacks.
+        const credits =
+          !sourceId && dotSources?.length
+            ? splitByStacks(dotSources, dealt).map((share) => ({
+                champ: combat.getChampion(share.sourceId),
+                amount: share.amount,
+              }))
+            : [{ champ: sourceChamp, amount: dealt }];
+        for (const { champ, amount: share } of credits) {
+          if (champ && champ.team !== target.team) champ.addDamageDealt(share);
+        }
         target?.addRawDamageTaken?.(raw);
         target?.addDamageMitigated?.(Math.max(0, raw - dealt));
 
@@ -1379,8 +1400,8 @@ export class TurnResolver {
         if (!target?.id || value <= 0) return;
 
         const sourceChamp =
-          combat.activeChampions.get(sourceId) ||
-          combat.activeChampions.get(this.actionSourceId) ||
+          combat.getChampion(sourceId) ||
+          combat.getChampion(this.actionSourceId) ||
           target;
 
         target?.addHealingReceived?.(value);
@@ -1413,11 +1434,12 @@ export class TurnResolver {
         if (!target?.id || value <= 0) return;
 
         const sourceChamp =
-          combat.activeChampions.get(sourceId) ||
-          combat.activeChampions.get(this.actionSourceId) ||
+          combat.getChampion(sourceId) ||
+          combat.getChampion(this.actionSourceId) ||
           target;
 
         target?.addHealingReceived?.(value);
+        sourceChamp?.addHealingDone?.(value);
 
         this._lastEventRef = null;
 

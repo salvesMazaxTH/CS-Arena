@@ -1,4 +1,5 @@
 import { getClaimPoints } from "../claim.js";
+import { splitByStacks } from "../../../core/stackLifetime.js";
 
 export function applyDamage(event) {
   if (event.constructor.debugMode) console.group(`❤️ [APLICANDO DANO]`);
@@ -54,6 +55,8 @@ export function applyDamage(event) {
     absorbedByShield,
     remainingShield,
     sourceId: event.attacker?.id,
+    dotSourceId: event.context.dotSourceId ?? null,
+    dotSources: event.context.dotSources ?? null,
     isCritical: event.crit?.didCrit,
     isDot: !!event.context.isDot,
     element: event.element,
@@ -69,16 +72,29 @@ export function applyDamage(event) {
     },
   });
 
-  event.context.recordDamageInTurn?.({
-    targetId: event.defender.id,
-    sourceId: event.attacker?.id ?? event.context.dotSourceId ?? null,
-    sourceTeam: event.attacker?.team ?? event.context.dotSourceTeam ?? null,
-    amount: event.actualDmg,
-    absorbed: absorbedByShield,
-    skillKey: event.skill?.key ?? null,
-    isDot: !!event.context.isDot,
-    reaction: (event.context.damageDepth || 0) > 0,
-  });
+  // A tick fed by several appliers is one hit on screen but one history
+  // entry per applier, each carrying its share of the stacks.
+  const shares = event.attacker
+    ? [{ sourceId: event.attacker.id, sourceTeam: event.attacker.team, stacks: 1 }]
+    : event.context.dotSources?.length
+      ? event.context.dotSources
+      : [{
+          sourceId: event.context.dotSourceId ?? null,
+          sourceTeam: event.context.dotSourceTeam ?? null,
+          stacks: 1,
+        }];
+  for (const share of splitByStacks(shares, event.actualDmg, absorbedByShield)) {
+    event.context.recordDamageInTurn?.({
+      targetId: event.defender.id,
+      sourceId: share.sourceId,
+      sourceTeam: share.sourceTeam,
+      amount: share.amount,
+      absorbed: share.absorbed,
+      skillKey: event.skill?.key ?? null,
+      isDot: !!event.context.isDot,
+      reaction: (event.context.damageDepth || 0) > 0,
+    });
+  }
 
   // _lastEventRef now points at this hit. The affinity line is said once per
   // target in the action and held until the action's last hit has played.
