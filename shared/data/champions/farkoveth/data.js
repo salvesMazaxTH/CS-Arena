@@ -3,8 +3,6 @@ export default {
   releaseDate: "2026-10-02",
   portrait: "/assets/portraits/farkoveth.webp",
 
-  unreleased: true,
-
   HP: 315,
   Attack: 275,
   Defense: 190,
