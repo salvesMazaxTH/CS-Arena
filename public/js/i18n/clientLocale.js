@@ -10,6 +10,8 @@ export function getLocale() {
   }
 }
 
+document.documentElement.lang = getLocale();
+
 export function setLocale(locale) {
   const normalized = normalizeLocale(locale);
   try {
@@ -17,6 +19,7 @@ export function setLocale(locale) {
   } catch {
     // Storage unavailable (private mode, etc.) - locale just won't persist.
   }
+  document.documentElement.lang = normalized;
   document.dispatchEvent(new CustomEvent("localechange", { detail: normalized }));
   return normalized;
 }

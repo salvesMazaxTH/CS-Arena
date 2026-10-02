@@ -8,6 +8,7 @@ import { snapshotChampions } from "./snapshotChampions.js";
 import { TargetFilter } from "./targetFilter.js";
 import { getBlindMiss } from "../../data/statusEffects/blind.js";
 import { splitByStacks } from "../../core/stackLifetime.js";
+import { scaleGenericMomentumGain } from "./momentumSlowdown.js";
 
 export const BASE_MOMENTUM_REGEN = 6;
 export const MOMENTUM_REGEN_PER_TURN = 3;
@@ -811,9 +812,15 @@ export class TurnResolver {
   applyGlobalMomentumRegen(champion, context) {
     if (!champion.alive) return;
 
+    const amount = scaleGenericMomentumGain(
+      champion,
+      getGlobalMomentumRegen(this.combat.currentTurn),
+    );
+    if (amount <= 0) return;
+
     this.applyResourceChange({
       target: champion,
-      amount: getGlobalMomentumRegen(this.combat.currentTurn),
+      amount,
       context,
       sourceId: champion.id,
       visualPhase: "global_turn_regen",
@@ -835,7 +842,10 @@ export class TurnResolver {
       return total + Math.max(0, Number(event.amount) || 0);
     }, 0);
 
-    const userMomentumGain = getMomentumFromDamageDealt(damageDealtToEnemies);
+    const userMomentumGain = scaleGenericMomentumGain(
+      user,
+      getMomentumFromDamageDealt(damageDealtToEnemies),
+    );
 
     if (userMomentumGain > 0) {
       this.applyResourceChange({
@@ -866,7 +876,10 @@ export class TurnResolver {
       const target = this.combat.activeChampions.get(targetId);
       if (!target || !target.alive) continue;
 
-      const momentumGain = getMomentumFromDamageTaken(totalDamageTaken);
+      const momentumGain = scaleGenericMomentumGain(
+        target,
+        getMomentumFromDamageTaken(totalDamageTaken),
+      );
 
       if (momentumGain <= 0) continue;
 

@@ -520,6 +520,32 @@
   transform: translateX(-50%);
 }
 
+/* Shown at the slowdown threshold; the title explains the halved generic gains. */
+.momentum-slowdown-warning {
+  position: absolute;
+  top: 50%;
+  right: -3px;
+  z-index: 4;
+  transform: translate(100%, -50%);
+  width: 14px;
+  height: 12px;
+  padding-top: 2px;
+  box-sizing: border-box;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  background: #ffcc00;
+  color: #1a1206;
+  font-family: "Chakra Petch", "Montserrat", sans-serif;
+  font-size: 0.55rem;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  cursor: help;
+}
+
+.momentum-slowdown-warning[hidden] {
+  display: none;
+}
+
 .hp-segments {
   position: absolute;
   inset: 0;

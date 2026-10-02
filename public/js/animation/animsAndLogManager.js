@@ -2,6 +2,7 @@ import { formatChampionName } from "../../../shared/ui/formatters.js";
 import {
   formatShieldBadge,
   SHIELD_MARKERS,
+  syncMomentumSlowdownWarning,
 } from "../../../shared/core/championUI.js";
 
 import {
@@ -1273,6 +1274,7 @@ export function createCombatAnimationManager(deps) {
 
     el.dataset.momentumUnits = currentUnits;
     fill.style.width = `${(currentUnits / MAX_UNITS) * 100}%`;
+    syncMomentumSlowdownWarning(el, currentUnits);
   }
 
   // ============================================================

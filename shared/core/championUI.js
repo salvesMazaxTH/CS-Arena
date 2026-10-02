@@ -1,5 +1,10 @@
 import { StatusIndicator } from "../ui/statusIndicator.js";
 import { SpawnProtection } from "../engine/combat/spawnProtection.js";
+import {
+  MOMENTUM_SLOWDOWN_TOOLTIP,
+  isMomentumSlowed,
+} from "../engine/combat/momentumSlowdown.js";
+import { resolveText } from "../i18n/locale.js";
 
 // Spelled out in words: the icon strip is for buffs and debuffs only.
 function syncTakingTheFieldUI(champion) {
@@ -84,6 +89,7 @@ function buildChampionHTML(champion, { editMode } = {}) {
                     <span class="momentum-threshold" style="left: 60%;">2</span>
                     <span class="momentum-threshold" style="left: 80%;">3</span>
                 </div>
+                <span class="momentum-slowdown-warning" hidden>!</span>
             </div>
         </div>
 
@@ -241,6 +247,8 @@ export function updateChampionUI(champion, context) {
     momentumFillEl.style.width = `${percent}%`;
   }
 
+  syncMomentumSlowdownWarning(champion.el, currentUnits);
+
   // =========================
   // SEGMENTOS (HP)
   // =========================
@@ -282,6 +290,17 @@ export function updateChampionUI(champion, context) {
  * Sync action state UI
  * @param {object} champion - The champion instance
  */
+export function syncMomentumSlowdownWarning(el, momentum) {
+  const warning = el?.querySelector(".momentum-slowdown-warning");
+  if (!warning) return;
+
+  warning.hidden = !isMomentumSlowed({ momentum });
+  warning.title = resolveText(
+    MOMENTUM_SLOWDOWN_TOOLTIP,
+    document.documentElement.lang,
+  );
+}
+
 export function syncChampionActionStateUI(_champion) {
   // skill buttons have been removed from champion cards; action is handled via the action bar
 }
