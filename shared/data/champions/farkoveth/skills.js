@@ -19,8 +19,8 @@ const farkovethSkills = [
 
     description() {
       return {
-        en: `Four metres of hooded stone settle onto whatever will hold them and stop being a thing anyone thinks to look at. Farkoveth spends his action to become <b>Invisible</b> for <b>${this.effectDuration}</b> turn(s), acting through it without breaking cover, and the next damaging skill he uses deals <b>${this.nextSkillBonus}%</b> increased damage.`,
-        pt: `Quatro metros de pedra encapuzada se acomodam sobre o que quer que os sustente e deixam de ser algo em que alguém pensa em reparar. Farkoveth gasta sua ação para ficar <b>Invisível</b> por <b>${this.effectDuration}</b> turno(s), agindo através disso sem quebrar o disfarce, e a próxima habilidade de dano que usar causa dano <b>${this.nextSkillBonus}%</b> maior.`,
+        en: `Four metres of hooded stone settle onto whatever will hold them and stop being a thing anyone thinks to look at. Farkoveth becomes <b>Invisible</b> for <b>${this.effectDuration}</b> turn(s) or until he acts, and the next damaging skill he uses deals <b>${this.nextSkillBonus}%</b> increased damage.`,
+        pt: `Quatro metros de pedra encapuzada se acomodam sobre o que quer que os sustente e deixam de ser algo em que alguém pensa em reparar. Farkoveth fica <b>Invisível</b> por <b>${this.effectDuration}</b> turno(s) ou até agir, e a próxima habilidade de dano que usar causa dano <b>${this.nextSkillBonus}%</b> maior.`,
       };
     },
 
@@ -30,8 +30,9 @@ const farkovethSkills = [
       user.removeStatusEffect("invisible");
       user.applyStatusEffect("invisible", this.effectDuration, context, {
         source: this.key,
-        breaksOnAction: false,
       });
+
+      user.removeHookEffects((hook) => hook.key === "perched_edge");
 
       user.addHookEffect(
         {
@@ -40,12 +41,10 @@ const farkovethSkills = [
           group: "skill",
           expiresAtTurn: context.currentTurn + this.effectDuration,
           hookScope: { onBeforeDmgDealing: "attacker" },
-          onBeforeDmgDealing({ attacker, owner, damage }) {
-            if (attacker !== owner) return;
+          onBeforeDmgDealing({ attacker, owner, damage, skill, context }) {
+            if (attacker !== owner || !skill || context.damageDepth > 0) return;
 
-            owner.runtime.hookEffects = owner.runtime.hookEffects.filter(
-              (effect) => effect.key !== "perched_edge",
-            );
+            owner.removeHookEffects((hook) => hook.key === "perched_edge");
             return { damage: Number(damage) * (1 + bonus / 100) };
           },
         },
@@ -75,8 +74,8 @@ const farkovethSkills = [
     key: "chipped_edge",
     name: "Chipped Edge",
 
-    bf: 90,
-    defenseCost: 35,
+    bf: 65,
+    defenseCost: 50,
     bonusPerDefense: 1,
 
     element: "earth",
@@ -89,8 +88,8 @@ const farkovethSkills = [
 
     description() {
       return {
-        en: `He breaks a shard off his own forearm, sets it against the kunai and lets the edge carry the weight of the piece he just lost. Farkoveth spends <b>${this.defenseCost}</b> of his <b>Defense</b> to deal <b>physical damage</b> plus bonus damage equal to <b>${this.bonusPerDefense}x</b> the Defense actually spent.`,
-        pt: `Ele quebra um estilhaço do próprio antebraço, encosta-o na kunai e deixa que a lâmina carregue o peso do pedaço que acabou de perder. Farkoveth gasta <b>${this.defenseCost}</b> de sua <b>Defesa</b> para causar <b>dano físico</b> mais dano bônus igual a <b>${this.bonusPerDefense}x</b> a Defesa realmente gasta.`,
+        en: `He breaks a shard off his own forearm, sets it against the kunai and lets the edge carry the weight of the piece he just lost. Farkoveth spends <b>${this.defenseCost}</b> of his <b>Defense</b>. Deals <b>physical damage</b>, plus bonus damage equal to <b>${this.bonusPerDefense}x</b> the Defense actually spent.`,
+        pt: `Ele quebra um estilhaço do próprio antebraço, encosta-o na kunai e deixa que a lâmina carregue o peso do pedaço que acabou de perder. Farkoveth gasta <b>${this.defenseCost}</b> de sua <b>Defesa</b>. Causa <b>dano físico</b>, mais dano bônus igual a <b>${this.bonusPerDefense}x</b> a Defesa realmente gasta.`,
       };
     },
 
@@ -132,8 +131,8 @@ const farkovethSkills = [
 
     description() {
       return {
-        en: `Farkoveth stops holding himself together and drops the whole four metres of it onto the chosen target at once. He spends every point of <b>Defense</b> he still has to deal <b>physical damage</b> plus bonus damage equal to <b>${this.bonusPerDefense}x</b> the Defense spent, and is left with none of it.`,
-        pt: `Farkoveth para de se manter unido e derruba os quatro metros inteiros sobre o alvo escolhido de uma vez. Ele gasta cada ponto de <b>Defesa</b> que ainda tem para causar <b>dano físico</b> mais dano bônus igual a <b>${this.bonusPerDefense}x</b> a Defesa gasta, ficando sem nenhuma.`,
+        en: `Farkoveth stops holding himself together and drops the whole four metres of it onto the chosen target at once. He spends every point of <b>Defense</b> he still has, and is left with none of it. Deals <b>physical damage</b>, plus bonus damage equal to <b>${this.bonusPerDefense}x</b> the Defense spent.`,
+        pt: `Farkoveth para de se manter unido e derruba os quatro metros inteiros sobre o alvo escolhido de uma vez. Ele gasta cada ponto de <b>Defesa</b> que ainda tem, ficando sem nenhuma. Causa <b>dano físico</b>, mais dano bônus igual a <b>${this.bonusPerDefense}x</b> a Defesa gasta.`,
       };
     },
 
