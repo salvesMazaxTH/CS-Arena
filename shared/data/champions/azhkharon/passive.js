@@ -26,7 +26,12 @@ export default {
 
     const hasAllyStatus = this.besiegingStatuses.some((key) => {
       const instance = target.statusEffects?.get(key);
-      return instance && byAlly(instance.sourceId, instance.sourceTeam);
+      if (!instance) return false;
+      // A stacked status counts if any ally still holds stacks in it.
+      if (instance.stackBatches?.length) {
+        return instance.stackBatches.some((b) => byAlly(b.sourceId, b.sourceTeam));
+      }
+      return byAlly(instance.sourceId, instance.sourceTeam);
     });
 
     const tookAllyDamage = (context?.getDamageTakenThisTurn?.(target.id) ?? []).some(
@@ -37,6 +42,21 @@ export default {
 
     if (this.isVigilTurn(context)) return hasAllyStatus || tookAllyDamage;
     return hasAllyStatus && tookAllyDamage;
+  },
+
+  // His own Chilled would swallow an ally's and leave the siege unlaid, so
+  // he lets go of it and the ally's lands in its place.
+  onStatusEffectIncoming({ owner, target, statusEffect, metadata, context }) {
+    if (!owner.alive || statusEffect?.key !== "chilled") return;
+    if (target.team === owner.team) return;
+
+    const applierId = metadata?.sourceId ?? context?.actionSource?.id ?? null;
+    const applierTeam = context?.actionSource?.team ?? null;
+    if (applierId == null || applierId === owner.id) return;
+    if (applierTeam !== owner.team) return;
+
+    if (target.statusEffects?.get("chilled")?.sourceId !== owner.id) return;
+    target.removeStatusEffect("chilled");
   },
 
   onTurnStart({ owner, context }) {
