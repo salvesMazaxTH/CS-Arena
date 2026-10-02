@@ -767,6 +767,10 @@ function handleEndTurn() {
       const drawn = result.context?._intermediateSnapshot;
       if (drawn) flushFieldArrivals(new Set(drawn.map(({ id }) => id)));
 
+      // Whoever slipped into the Nothingness during this action leaves right
+      // after it, not after the whole turn has played out.
+      flushFieldDepartures();
+
       const championMutationRequests =
         result.context?.flags?.championMutationRequests;
       if (championMutationRequests?.length) {
