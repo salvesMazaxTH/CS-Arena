@@ -687,7 +687,7 @@ export function createCombatAnimationManager(deps) {
       targetId,
       userId,
       sourceId,
-      rawAmount,
+      amount,
       absorbedByShield,
       isCritical,
       isDot,
@@ -743,7 +743,9 @@ export function createCombatAnimationManager(deps) {
     const hasFinishing = !!resolvedFinishingType;
     const usesObliterateStyle = resolvedFinishingType === "obliterate";
 
-    const hpDamage = Math.max(0, Number(rawAmount) || 0);
+    // The HP actually lost: rawAmount still includes what the shield absorbed,
+    // which would drop the bar too far until the state sync pulled it back.
+    const hpDamage = Math.max(0, Number(amount) || 0);
     const absorbedFromEvent = Math.max(0, Number(absorbedByShield) || 0);
     const hasShieldAbsorption = absorbedFromEvent > 0;
     const hasHpDamage = hpDamage > 0;
