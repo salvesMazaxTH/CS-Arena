@@ -1,6 +1,6 @@
 // shared/data/emblems/balanced_party.js
 
-import { countClassRequirementSlots } from "./eligibility.js";
+import { countClassRequirementSlots } from "./eligibility.js";
 import { isEmblemBeneficiary } from "./emblemGrants.js";
 
 export const balancedParty = {
@@ -26,8 +26,8 @@ export const balancedParty = {
 
   description() {
     return {
-      en: `The oldest party there is: a shield up front, a hand at the back keeping everyone standing, and the spells that end the fight. Each champion fills a single role, so one champion never counts toward two classes. While at least one allied Tank, Enchanter and Mage — three different champions — stand on the field together, every allied champion deals <b>${this.damageBonusPercent}%</b> increased damage and takes <b>${this.damageReductionPercent}%</b> less damage (except <b>Absolute Damage</b>).`,
-      pt: `A formação mais antiga que existe: um escudo na frente, uma mão lá atrás mantendo todos de pé e os feitiços que encerram a luta. Cada campeão ocupa um único papel, então nenhum campeão conta para duas classes. Enquanto ao menos um Tanque, um Encantador e um Mago aliados — três campeões diferentes — estiverem juntos em campo, todo campeão aliado causa dano <b>${this.damageBonusPercent}%</b> maior e sofre <b>${this.damageReductionPercent}%</b> menos dano (exceto <b>Dano Absoluto</b>).`,
+      en: `While your team has a living Tank, Enchanter and Mage on the field (three different champions), your champions deal <b>${this.damageBonusPercent}%</b> increased damage and take <b>${this.damageReductionPercent}%</b> less damage (except <b>Absolute Damage</b>).`,
+      pt: `Enquanto seu time tiver um Tanque, um Encantador e um Mago vivos em campo (três campeões diferentes), seus campeões causam dano <b>${this.damageBonusPercent}%</b> maior e sofrem <b>${this.damageReductionPercent}%</b> menos dano (exceto <b>Dano Absoluto</b>).`,
     };
   },
 
