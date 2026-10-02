@@ -23,8 +23,8 @@ const baraoEstrondosoSkills = [
 
     description() {
       return {
-        en: `The Barão hurls his full weight behind a single blow, driving it into the chosen target.`,
-        pt: `O Barão arremessa todo o seu peso atrás de um único golpe, cravando-o no alvo escolhido.`,
+        en: `The Barão hurls his full weight behind a single blow, driving it into the chosen target. Deals physical damage.`,
+        pt: `O Barão arremessa todo o seu peso atrás de um único golpe, cravando-o no alvo escolhido. Causa dano físico.`,
       };
     },
 
@@ -92,8 +92,8 @@ const baraoEstrondosoSkills = [
 
     description() {
       return {
-        en: `Deals ABSURD damage to the chosen target plus all <b>Stored Damage</b>. This attack is always a <b>Critical Hit</b>. After the attack, <b>Stored Damage</b> is reset to <b>0</b>.`,
-        pt: `Causa dano ABSURDO ao alvo escolhido mais todo o <b>Dano Armazenado</b>. Este ataque é sempre um <b>Acerto Crítico</b>. Após o ataque, o <b>Dano Armazenado</b> é zerado.`,
+        en: `Deals ABSURD damage to the chosen target plus all <b>Stored Damage</b> as bonus damage. This attack is always a <b>Critical Hit</b>. After the attack, <b>Stored Damage</b> is reset to <b>0</b>. Deals physical damage.`,
+        pt: `Causa dano ABSURDO ao alvo escolhido mais todo o <b>Dano Armazenado</b> como dano bônus. Este ataque é sempre um <b>Acerto Crítico</b>. Após o ataque, o <b>Dano Armazenado</b> é zerado. Causa dano físico.`,
       };
     },
 
@@ -102,10 +102,11 @@ const baraoEstrondosoSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
       const storedDamage = user.runtime?.storedDamage || 0;
-      const baseDamage = (user.Attack * this.bf) / 100 + storedDamage;
+      const baseDamage = (user.Attack * this.bf) / 100;
 
       const damageResult = new DamageEvent({
         baseDamage,
+        bonusDamage: storedDamage,
         attacker: user,
         defender: enemy,
         skill: this,

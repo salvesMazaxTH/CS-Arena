@@ -76,9 +76,9 @@ export default {
     const stored = damage * storageRate;
 
     owner.runtime = owner.runtime || {};
-    owner.runtime.storedDamage = Math.min(
-      this.storageCap,
-      (owner.runtime.storedDamage || 0) + stored,
+    // Rounded before it settles: the stored total is never a fractional value.
+    owner.runtime.storedDamage = Math.round(
+      Math.min(this.storageCap, (owner.runtime.storedDamage || 0) + stored),
     );
   },
 
@@ -124,12 +124,18 @@ export default {
         targetId: owner.id,
         statusEffectKey: "inert",
         duration: 1,
-        dialog: `${formatChampionName(owner)} is left <b>Inert</b> by the <b>Reactor Overload</b>!`,
+        dialog: {
+          en: `${formatChampionName(owner)} is left <b>Inert</b> by the <b>Reactor Overload</b>!`,
+          pt: `${formatChampionName(owner)} fica <b>Inerte</b> pela <b>Sobrecarga do Reator</b>!`,
+        },
       },
     });
 
     return {
-      log: `${formatChampionName(owner)} suffered <b>Reactor Overload</b> and will be left <b>Inert</b> next turn!`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} suffered <b>Reactor Overload</b> and will be left <b>Inert</b> next turn!`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} sofreu <b>Sobrecarga do Reator</b> e ficará <b>Inerte</b> no próximo turno!`,
+      },
     };
   },
 };
