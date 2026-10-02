@@ -1445,6 +1445,11 @@ io.on("connection", (socket) => {
     // zero). Wipe it, otherwise the old state would be restored instead.
     if (match.isCombatStarted()) match.combat.reset();
 
+    // A match that ended without the slots ever emptying (surrender, or the
+    // players leaving one at a time) leaves this flag set, and the new match's
+    // win would then never reach the clients.
+    gameOverEmitted = false;
+
     match.combat.start();
 
     // Populate each team's reserve queue with its confirmed roster, then start
