@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
+import { reactionLog } from "../../../engine/combat/reactionLog.js";
 
 export const SELINA_WARD = "selina_ward";
 
@@ -67,13 +68,11 @@ export default {
       type: "physical",
       contact: true,
       mode: "absolute",
+      // The riposte's own line carries the damage, so the passive adds none.
+      hitLog: reactionLog(({ source, target, dmg }) => ({
+        en: `<b>[Passive — ${this.name}]</b> ${source} answers for ${formatChampionName(defender)} — her blade opens ${target} for ${dmg} damage`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${source} responde por ${formatChampionName(defender)} — sua lâmina fere ${target} em ${dmg} de dano`,
+      })),
     });
-
-    return {
-      log: {
-        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} answers for ${formatChampionName(defender)} — her blade opens ${formatChampionName(attacker)} for <b>${this.riposteDamage}</b>.`,
-        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} responde por ${formatChampionName(defender)} — sua lâmina fere ${formatChampionName(attacker)} em <b>${this.riposteDamage}</b>.`,
-      },
-    };
   },
 };

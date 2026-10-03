@@ -128,6 +128,8 @@ export class DamageEvent {
     this.hitVfx = params.hitVfx ?? skill?.hitVfx ?? null;
     this.hitVfxPalette = params.hitVfxPalette ?? skill?.hitVfxPalette ?? null;
     this.hitLabel = params.hitLabel ?? null;
+    // A reaction hit can word its own log line; see reactionLog.js.
+    this.hitLog = params.hitLog ?? skill?.hitLog ?? null;
     // Identity of the declared hit within the skill. Loop guards compare this
     // rather than the skill key, which every hit of a skill shares.
     this.hitId = params.hitId ?? null;

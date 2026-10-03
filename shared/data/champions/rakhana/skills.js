@@ -1,5 +1,6 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
+import { reactionLog } from "../../../engine/combat/reactionLog.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
@@ -236,6 +237,11 @@ const rakhanaSkills = [
               context,
             }),
 
+            hitLog: reactionLog(({ source, target, dmg }) => ({
+              en: `<b>[${skill.name}]</b> ${source}'s mirror throws the blow back at ${target} for ${dmg} damage`,
+              pt: `<b>[${skill.name}]</b> o espelho de ${source} devolve o golpe a ${target} e causa ${dmg} de dano`,
+            })),
+
             dialog: {
               message: {
                 en: `${formatChampionName(defender)} reflects damage with ${this.name}!`,
@@ -272,10 +278,10 @@ const rakhanaSkills = [
             log: {
               en: `<b>[${this.name}]</b> ${formatChampionName(
                 defender,
-              )} reduces incoming damage by ${reflectPercent}% and reflects ${reflectedDamage} damage!`,
+              )} reduces incoming damage by ${reflectPercent}%!`,
               pt: `<b>[${this.name}]</b> ${formatChampionName(
                 defender,
-              )} reduz o dano recebido em ${reflectPercent}% e reflete ${reflectedDamage} de dano!`,
+              )} reduz o dano recebido em ${reflectPercent}%!`,
             },
           };
         },

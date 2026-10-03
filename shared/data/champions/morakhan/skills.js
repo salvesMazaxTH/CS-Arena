@@ -1,4 +1,5 @@
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
+import { reactionLog } from "../../../engine/combat/reactionLog.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 import basicStrike from "../generic/basicStrike.js";
@@ -263,6 +264,11 @@ const morakhanSkills = [
               context,
             }),
 
+            hitLog: reactionLog(({ source, target, dmg }) => ({
+              en: `<b>[ULTIMATE — ${name}]</b> the mountain under ${source} throws the blow back at ${target} for ${dmg} damage`,
+              pt: `<b>[ULTIMATE — ${name}]</b> a montanha sob ${source} devolve o golpe a ${target} e causa ${dmg} de dano`,
+            })),
+
             dialog: {
               message: {
                 en: `${formatChampionName(
@@ -281,14 +287,10 @@ const morakhanSkills = [
             log: {
               en: `<b>[ULTIMATE — ${name}]</b> ${formatChampionName(
                 defender,
-              )} reflects <b>${Math.floor(
-                reflectedDamage,
-              )}</b> damage back to the attacker and takes only <b>${100 - dmgReduct}%</b> of the blow!`,
+              )} takes only <b>${100 - dmgReduct}%</b> of the blow!`,
               pt: `<b>[ULTIMATE — ${name}]</b> ${formatChampionName(
                 defender,
-              )} reflete <b>${Math.floor(
-                reflectedDamage,
-              )}</b> de dano de volta no atacante e sofre apenas <b>${100 - dmgReduct}%</b> do golpe!`,
+              )} sofre apenas <b>${100 - dmgReduct}%</b> do golpe!`,
             },
           };
         },

@@ -1,6 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
-import { formatChampionName } from "../../../ui/formatters.js";
-import { pushResultLog } from "../../../engine/combat/resultLog.js";
+import { recoilLog } from "../../../engine/combat/reactionLog.js";
 import totalBlock from "../generic/totalBlock.js";
 
 const eliasCrossSkills = [
@@ -206,6 +205,7 @@ const eliasCrossSkills = [
             defender: user,
             type: "magical",
             skill: this,
+            hitLog: recoilLog(this),
           });
         }
 
@@ -224,15 +224,6 @@ const eliasCrossSkills = [
         } else if (result) {
           results.push(result);
         }
-      }
-
-      const eliasUltLog = {
-        en: `${formatChampionName(user)} took ${this.recoilDamage}% of his Max HP as Absolute Recoil Damage.`,
-        pt: `${formatChampionName(user)} sofreu ${this.recoilDamage}% do seu HP Máximo como Dano de Recuo Absoluto.`,
-      };
-
-      if (results.length > 0) {
-        pushResultLog(results[0], eliasUltLog);
       }
 
       return results;

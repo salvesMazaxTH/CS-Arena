@@ -39,6 +39,7 @@ export class SkillHits {
       ignoreAffinityResistance:
         spec.ignoreAffinityResistance ?? skill.ignoreAffinityResistance,
       hitLabel: spec.label ?? null,
+      hitLog: spec.hitLog ?? null,
       suppressLog: spec.suppressLog ?? skill.suppressLog ?? false,
       context,
       allChampions: context?.allChampions,

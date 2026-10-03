@@ -1,6 +1,6 @@
 import { DamageEvent } from "../../engine/combat/DamageEvent.js";
 import { StatusEffect } from "../../core/StatusEffect.js";
-import { formatChampionName } from "../../ui/formatters.js";
+import { reactionLog } from "../../engine/combat/reactionLog.js";
 
 const ROMAN = ["", "I", "II", "III", "IV", "V"];
 
@@ -58,16 +58,10 @@ const thorns = {
         hitVfx: "thorn_prick",
         // One line with the damage in it, instead of the generic
         // "X used Thorns" line: the bearer did not act, the thorns did.
-        hitLog: (hit) => {
-          const dmg = Math.floor(hit.damage);
-          const target = formatChampionName(hit.defender);
-          const bearer = formatChampionName(hit.attacker);
-          const hp = `${hit.hpAfter}/${hit.defender.maxHP}`;
-          return {
-            en: `<b>[Thorns ${tier}]</b> ${target} is torn by ${bearer}'s thorns for ${dmg} damage\nfinal HP of ${target}: ${hp}`,
-            pt: `<b>[Espinhos ${tier}]</b> ${target} é rasgado pelos espinhos de ${bearer} e sofre ${dmg} de dano\nHP final de ${target}: ${hp}`,
-          };
-        },
+        hitLog: reactionLog(({ source, target, dmg }) => ({
+          en: `<b>[Thorns ${tier}]</b> ${target} is torn by ${source}'s thorns for ${dmg} damage`,
+          pt: `<b>[Espinhos ${tier}]</b> ${target} é rasgado pelos espinhos de ${source} e sofre ${dmg} de dano`,
+        })),
       },
       type: "physical",
       mode: DamageEvent.Modes.PIERCING,

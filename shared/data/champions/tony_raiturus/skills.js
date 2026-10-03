@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { recoilLog } from "../../../engine/combat/reactionLog.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 import { detonateThunder } from "./passive.js";
@@ -77,6 +78,7 @@ const tonyRaiturusSkills = [
         defender: user,
         type: "magical",
         skill: this,
+        hitLog: recoilLog(this),
       });
 
       return new DamageEvent({

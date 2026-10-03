@@ -1,4 +1,5 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
+import { recoilLog } from "../../../engine/combat/reactionLog.js";
 import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
@@ -57,6 +58,7 @@ const calypheraSkills = [
         defender: user,
         type: "physical",
         skill: this,
+        hitLog: recoilLog(this),
       });
 
       arr.push(...accrueLight(user, this.facetsGranted * DAMAGE_PER_FACET, context));

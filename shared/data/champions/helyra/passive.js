@@ -1,5 +1,6 @@
 import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 import { formatChampionName } from "../../../ui/formatters.js";
+import { reactionLog } from "../../../engine/combat/reactionLog.js";
 
 const arcSkill = {
   key: "crossfire_current_arc",
@@ -41,6 +42,13 @@ export default {
 
     context.extraDamageQueue ??= [];
 
+    // Each arc words its own line, so the passive adds no announcement.
+    const from = formatChampionName(defender);
+    const hitLog = reactionLog(({ target, dmg }) => ({
+      en: `<b>[Passive — ${this.name}]</b> The current jumps from ${from} to ${target} for ${dmg} damage`,
+      pt: `<b>[Passiva — ${this.name}]</b> A corrente salta de ${from} para ${target} e causa ${dmg} de dano`,
+    }));
+
     for (const other of others) {
       const grounded =
         conductorArcPercent && other.hasStatusEffect("conductor");
@@ -54,14 +62,8 @@ export default {
         skill: arcSkill,
         type: "physical",
         mode: "absolute",
+        hitLog,
       });
     }
-
-    return {
-      log: {
-        en: `<b>[Passive — ${this.name}]</b> The current leaves ${formatChampionName(defender)} and looks for the rest of the room.`,
-        pt: `<b>[Passiva — ${this.name}]</b> A corrente deixa ${formatChampionName(defender)} e procura o resto do salão.`,
-      },
-    };
   },
 };
