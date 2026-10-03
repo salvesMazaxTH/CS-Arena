@@ -1055,7 +1055,10 @@ export function createCombatAnimationManager(deps) {
 
     const { targetId, immuneMessage } = effect;
     const message =
-      immuneMessage || `${championName(targetId)} is <b>Immune!</b>`;
+      immuneMessage || {
+        en: `${championName(targetId)} is <b>Immune!</b>`,
+        pt: `${championName(targetId)} está <b>Imune!</b>`,
+      };
     await showDialog(message);
   }
 
@@ -1065,7 +1068,10 @@ export function createCombatAnimationManager(deps) {
 
   async function animateShieldBlock(effect) {
     await showDialog(
-      `${championName(effect.targetId)}'s shield blocked the attack!`,
+      {
+        en: `${championName(effect.targetId)}'s shield blocked the attack!`,
+        pt: `O escudo de ${championName(effect.targetId)} bloqueou o ataque!`,
+      },
     );
   }
 
