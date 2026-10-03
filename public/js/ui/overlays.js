@@ -502,7 +502,10 @@ export function createOverlays({
   }
 
   function damageDealtColumn(champion) {
-    const mods = champion.damageModifiers ?? [];
+    // A modifier that currently adds nothing (e.g. Tides at 0 stacks) stays hidden.
+    const mods = (champion.damageModifiers ?? []).filter(
+      (m) => m.percent !== 0 || m.flat !== 0,
+    );
     if (!mods.length) return [];
 
     // Modifiers apply one after another in array order, so composing their

@@ -32,6 +32,25 @@ export default {
     onAfterDmgDealing: "attacker",
   },
 
+  // Registered at birth so the modifier never depends on how the stacks were
+  // gained; it reads the live stack count.
+  onChampionAdded({ owner, champion }) {
+    if (champion !== owner) return;
+
+    owner.addDamageModifier({
+      id: "tides-stacks",
+      name: "Tides",
+      permanent: true,
+      apply: ({ baseDamage, attacker }) => {
+        const stacks = Math.min(
+          attacker.runtime?.mareStacks || 0,
+          this.maxStacks,
+        );
+        return baseDamage + stacks * this.dmgPerStack;
+      },
+    });
+  },
+
   onAfterDmgDealing({ owner, actualDmg, context }) {
     if (!(actualDmg > 0)) return;
 
@@ -61,26 +80,6 @@ export default {
     }
 
     owner.runtime.mareStacks++;
-
-    // Register the flat-damage modifier once; it reads the live stack count.
-    const alreadyHas = owner
-      .getDamageModifiers()
-      .some((m) => m.id === "tides-stacks");
-
-    if (!alreadyHas) {
-      owner.addDamageModifier({
-        id: "tides-stacks",
-        name: "Tides",
-        permanent: true,
-        apply: ({ baseDamage, attacker }) => {
-          const stacks = Math.min(
-            attacker.runtime?.mareStacks || 0,
-            this.maxStacks,
-          );
-          return baseDamage + stacks * this.dmgPerStack;
-        },
-      });
-    }
 
     return {
       log: {

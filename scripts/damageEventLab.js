@@ -282,31 +282,8 @@ function createArena(options) {
 
   if (options.stacks != null) attacker.runtime.theopetraStacks = options.stacks;
 
-  seedTidesModifier(attacker);
 
   return { resolver, attacker, defender };
-}
-
-// Naelys' passive only registers its Tides modifier when a stack is gained, so
-// stacks seeded through --attacker-set would otherwise add nothing. Mirrors the
-// passive's own modifier (same id, so the passive never adds a second one).
-function seedTidesModifier(attacker) {
-  const passive = attacker.passive;
-  if (passive?.key !== "heart_of_the_tides") return;
-  if (!(attacker.runtime.mareStacks > 0)) return;
-  if (attacker.getDamageModifiers().some((m) => m.id === "tides-stacks")) {
-    return;
-  }
-
-  attacker.addDamageModifier({
-    id: "tides-stacks",
-    name: "Tides",
-    permanent: true,
-    apply: ({ baseDamage, attacker: atk }) =>
-      baseDamage +
-      Math.min(atk.runtime?.mareStacks || 0, passive.maxStacks) *
-        passive.dmgPerStack,
-  });
 }
 
 function createContext(resolver, user, options) {
