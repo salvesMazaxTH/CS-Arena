@@ -2,6 +2,7 @@ import { formatChampionName } from "../../../ui/formatters.js";
 import { StatusEffectsRegistry } from "../../statusEffects/effectsRegistry.js";
 import { TargetFilter } from "../../../engine/combat/targetFilter.js";
 import { resolveElementalStatusImmunity } from "../../../engine/combat/statusEffectImmunity.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 export default {
   key: "the_calm_she_returns_to",
@@ -64,7 +65,7 @@ export default {
     );
     if (!enemies.length) return;
 
-    const ebbContext = { ...context, statModifierSrcId: owner.id };
+    const ebbContext = deriveContext(context, { statModifierSrcId: owner.id });
     const laid = [];
 
     for (const effect of pending.effects) {

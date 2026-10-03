@@ -4,6 +4,7 @@ import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 import unstableOvercharge from "./passive.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 const editMode = false; // Enable to test Voltexz's recoil (deals 999 to herself).
 
@@ -27,7 +28,7 @@ function applyOverchargeRecoil({ user, baseDamage, context }) {
     user,
     target: user,
     baseDamage: recoilDamage,
-    context: { ...context, damageDepth: 1 },
+    context: deriveContext(context, { damageDepth: 1 }),
   });
 
   const entries = Array.isArray(result) ? result : [result];

@@ -11,6 +11,7 @@ import { emitCombatEvent } from "../engine/combat/combatEvents.js";
 import { formatChampionName } from "../ui/formatters.js";
 import { SpawnProtection } from "../engine/combat/spawnProtection.js";
 import { addStackBatch } from "./stackLifetime.js";
+import { deriveContext } from "../engine/combat/deriveContext.js";
 
 function resolveStatusEffectDuration(duration, metadata = {}) {
   if (metadata?.persistent) return Infinity;
@@ -624,7 +625,9 @@ export function purgeExpiredStatusEffects(champion, currentTurn, context) {
     const decayContext =
       context?.statModifierSrcId != null
         ? context
-        : { ...context, statModifierSrcId: sourceId ?? champion.id };
+        : deriveContext(context, {
+            statModifierSrcId: sourceId ?? champion.id,
+          });
 
     applyStatusEffect(champion, decay.key, decay.duration, decayContext);
   }

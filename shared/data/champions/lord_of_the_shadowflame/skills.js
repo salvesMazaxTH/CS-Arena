@@ -2,6 +2,7 @@ import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import totalBlock from "../generic/totalBlock.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 const lordOfTheShadowflameSkills = [
   totalBlock,
@@ -110,7 +111,7 @@ const lordOfTheShadowflameSkills = [
         user,
         target: user,
         baseDamage: recoilDamage,
-        context: { ...context, damageDepth: 1 },
+        context: deriveContext(context, { damageDepth: 1 }),
       });
 
       results.push(

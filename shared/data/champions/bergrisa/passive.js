@@ -1,6 +1,7 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
 import { roundToFive } from "../../../core/championCombat.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 export default {
   key: "strata",
@@ -92,7 +93,7 @@ export default {
         statName: "Defense",
         amount: target,
         isPermanent: true,
-        context: { ...context, registerBuff: null },
+        context: deriveContext(context, { registerBuff: null }),
       });
     }
     owner.runtime.bergrisaDefenseModifiers =

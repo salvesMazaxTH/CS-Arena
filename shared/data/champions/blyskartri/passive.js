@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 export default {
   key: "unstoppable_progression",
@@ -98,14 +99,14 @@ export default {
       user: owner,
       target: lowestHealthEnemy,
       baseDamage: damageAmount,
-      context: { ...context, damageDepth: (context.damageDepth || 0) + 1 },
+      context: deriveContext(context, { damageDepth: (context.damageDepth || 0) + 1 }),
     });
 
     owner.runtime.impulseStacks = 0;
 
     return {
       damageEvent,
-      log: `${formatChampionName(owner)} unleashed a burst of speed, consuming all Impulse against ${formatChampionName(lowestHealthEnemy)}!`,
+      log: burst,
     };
   },
 };

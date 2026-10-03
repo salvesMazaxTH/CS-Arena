@@ -1,6 +1,7 @@
 import { DamageEvent } from "./DamageEvent.js";
 import { formatChampionName } from "../../ui/formatters.js";
 import { hasElement } from "./elements.js";
+import { deriveContext } from "./deriveContext.js";
 
 // Reactions between an element and a status effect of an opposing one.
 export class ElementalInteractions {
@@ -68,11 +69,10 @@ export class ElementalInteractions {
   static _react({ target, context, percent, key, name, dialog }) {
     // No attacker: the elements did this, so no lifesteal or on-hit passive feeds
     // off it. `isDot` is what permits that, and it also blocks reaction cascades.
-    const reactionContext = {
-      ...context,
+    const reactionContext = deriveContext(context, {
       isDot: true,
       damageDepth: (context.damageDepth ?? 0) + 1,
-    };
+    });
 
     const result = new DamageEvent({
       baseDamage: (target.maxHP * percent) / 100,

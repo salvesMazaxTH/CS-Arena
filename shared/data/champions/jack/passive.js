@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 export const SOLVED_RUNTIME_FLAG = "jackSolved";
 
@@ -74,7 +75,7 @@ export default {
       user: owner,
       target,
       baseDamage: this.paralysisDamage,
-      context: { ...context, damageDepth: (context.damageDepth || 0) + 1 },
+      context: deriveContext(context, { damageDepth: (context.damageDepth || 0) + 1 }),
     });
   },
 };

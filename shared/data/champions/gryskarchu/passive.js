@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 export default {
   key: "fountain_of_life",
@@ -57,10 +58,9 @@ export default {
     // Convert overheal into permanent Max HP.
     if (overheal > 0) {
       owner.modifyHP(overheal, {
-        context: {
-          ...context,
+        context: deriveContext(context, {
           source: "passive-fountain-of-life-overheal",
-        },
+        }),
         affectMax: true,
         isPermanent: true,
       });
@@ -77,10 +77,9 @@ export default {
       owner.modifyStat({
         statName: "Defense",
         amount: this.defBonus,
-        context: {
-          ...context,
+        context: deriveContext(context, {
           source: "passive-fountain-of-life",
-        },
+        }),
         isPermanent: true,
       });
 

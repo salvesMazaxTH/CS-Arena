@@ -3,6 +3,7 @@ import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 import { BLEEDING_DAMAGE_PER_STACK_RATIO } from "../../statusEffects/bleeding.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 const drexSkills = [
   totalBlock,
@@ -147,7 +148,7 @@ const drexSkills = [
             },
             type: "physical",
             mode: DamageEvent.Modes.ABSOLUTE,
-            context: { ...context, isDot: true },
+            context: deriveContext(context, { isDot: true }),
             allowsLifeSteal: true,
             allChampions: context?.allChampions,
           }).execute();

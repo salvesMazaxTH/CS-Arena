@@ -1,6 +1,7 @@
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import { CLAIM_ACTION_KEY } from "../../../engine/combat/claim.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 export default {
   key: "the_hour_is_kept",
@@ -52,7 +53,7 @@ export default {
         user: owner,
         target: enemy,
         baseDamage,
-        context: { ...context, damageDepth: (context.damageDepth || 0) + 1 },
+        context: deriveContext(context, { damageDepth: (context.damageDepth || 0) + 1 }),
       });
       const arr = Array.isArray(hit) ? hit : [hit];
       results.push(...arr);

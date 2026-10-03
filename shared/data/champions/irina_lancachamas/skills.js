@@ -4,6 +4,7 @@ import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
 import redlineRapture from "./passive.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 // The flamethrower overheats every time the trigger is pulled, so the recoil is
 // its own unconditional hit rather than a reaction queued off the shot (which
@@ -26,7 +27,7 @@ function applyWeaponOverheat({ user, baseDamage, recoilPercent, context }) {
     user,
     target: user,
     baseDamage: recoilDamage,
-    context: { ...context, damageDepth: 1 },
+    context: deriveContext(context, { damageDepth: 1 }),
   });
 
   const entries = Array.isArray(result) ? result : [result];

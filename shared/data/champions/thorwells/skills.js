@@ -3,6 +3,7 @@ import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 const thorwellsSkills = [
   // ========================
@@ -120,7 +121,7 @@ const thorwellsSkills = [
         user,
         target: arcTarget,
         baseDamage: baseDamage * this.arcRatio,
-        context: { ...context, damageDepth: (context.damageDepth || 0) + 1 },
+        context: deriveContext(context, { damageDepth: (context.damageDepth || 0) + 1 }),
       });
 
       results.push(...(Array.isArray(arcResult) ? arcResult : [arcResult]));

@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 export default {
   key: "regrowth",
@@ -44,10 +45,9 @@ export default {
     if (growth <= 0) return;
 
     owner.modifyHP(growth, {
-      context: {
-        ...context,
+      context: deriveContext(context, {
         source: "passive-regrowth",
-      },
+      }),
       affectMax: true,
       isPermanent: true,
     });

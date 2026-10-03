@@ -1,5 +1,6 @@
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { formatChampionName } from "../../../ui/formatters.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 function _processEntropy(owner, context, resolver, passive) {
   const { stacksCap, drainPunishPercent } = passive;
@@ -51,7 +52,7 @@ function _processEntropy(owner, context, resolver, passive) {
           user: owner,
           target: enemy,
           baseDamage: dmg,
-          context: { ...context, damageDepth: (context.damageDepth || 0) + 1 },
+          context: deriveContext(context, { damageDepth: (context.damageDepth || 0) + 1 }),
         });
 
         if (Array.isArray(damageResult)) {

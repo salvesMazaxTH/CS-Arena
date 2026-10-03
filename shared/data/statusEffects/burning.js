@@ -3,6 +3,7 @@ import { StatusEffect } from "../../core/StatusEffect.js";
 import { formatChampionName } from "../../ui/formatters.js";
 import { ElementalInteractions } from "../../engine/combat/ElementalInteractions.js";
 import { hasElement } from "../../engine/combat/elements.js";
+import { deriveContext } from "../../engine/combat/deriveContext.js";
 
 const burning = {
   key: "burning",
@@ -36,12 +37,11 @@ const burning = {
     const multiplier = Number(this.damageMultiplier) || 1;
     const damage = (15 + Math.floor(owner.maxHP * 0.04)) * multiplier;
 
-    const dotContext = {
-      ...context,
+    const dotContext = deriveContext(context, {
       isDot: true,
       dotSourceId: this.sourceId ?? null,
       dotSourceTeam: this.sourceTeam ?? null,
-    };
+    });
 
     const dmgEvent = new DamageEvent({
       attacker: null,

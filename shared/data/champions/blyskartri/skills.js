@@ -1,6 +1,7 @@
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicStrike from "../generic/basicStrike.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 const blyskartriSkills = [
   basicStrike,
@@ -132,7 +133,7 @@ const blyskartriSkills = [
             user,
             target: attacker,
             baseDamage: counterDamage,
-            context: { ...context, damageDepth: (context.damageDepth || 0) + 1 },
+            context: deriveContext(context, { damageDepth: (context.damageDepth || 0) + 1 }),
           });
 
           const counterLog = `${formatChampionName(user)} strikes back at ${formatChampionName(attacker)} for attacking his ally!`;

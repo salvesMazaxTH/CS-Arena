@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 export default {
   key: "absolute_cold",
@@ -72,7 +73,7 @@ export default {
       user: owner,
       target,
       baseDamage: this.passiveDamage,
-      context: { ...context, damageDepth: (context.damageDepth || 0) + 1 },
+      context: deriveContext(context, { damageDepth: (context.damageDepth || 0) + 1 }),
     });
   },
 };

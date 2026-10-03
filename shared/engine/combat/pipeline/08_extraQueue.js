@@ -1,3 +1,5 @@
+import { deriveContext } from "../deriveContext.js";
+
 // Safety net against reaction loops (two thorns/counters bouncing forever).
 // High enough that no legitimate chain ever reaches it.
 export const MAX_DAMAGE_DEPTH = 16;
@@ -26,7 +28,7 @@ export function processExtraQueue(event) {
     const extraEvent = new event.constructor({
       ...extra, // baseDamage, attacker, defender, skill, etc.
       allChampions: event.allChampions,
-      context: _reactionContext(event.context, {
+      context: deriveContext(event.context, {
         damageDepth: depth,
         origin: extra.hitId || extra.skill?.key || "reaction",
         // Important: We pass the reference of the cleaned queue to the new event
@@ -52,14 +54,4 @@ export function processExtraQueue(event) {
 
   // Store in the internal state of the current instance for buildFinalResult to consolidate later
   event.extraResults.push(...results);
-}
-
-// Copies descriptors rather than values so getters such as matchChampions stay
-// live instead of freezing into a snapshot of the parent's field.
-function _reactionContext(parent, overrides) {
-  const context = Object.defineProperties(
-    {},
-    Object.getOwnPropertyDescriptors(parent),
-  );
-  return Object.assign(context, overrides);
 }

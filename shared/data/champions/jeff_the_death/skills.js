@@ -2,6 +2,7 @@ import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 const jeffTheDeathSkills = [
   // =========================
@@ -166,12 +167,11 @@ const jeffTheDeathSkills = [
           }
 
           const punishDamage = owner.HP * punishPercent;
-          const dotContext = {
-            ...context,
+          const dotContext = deriveContext(context, {
             isDot: true,
             dotSourceId: user.id,
             dotSourceTeam: user.team,
-          };
+          });
 
           const result = SkillHits.run(skill, "punish", {
             user: null,

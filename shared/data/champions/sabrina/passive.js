@@ -1,6 +1,7 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { hasElement } from "../../../engine/combat/elements.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 export default {
   key: "thermal_convergence",
@@ -52,7 +53,7 @@ export default {
       user: owner,
       target: defender,
       baseDamage: iceDamage,
-      context: { ...context, damageDepth: (context.damageDepth || 0) + 1 },
+      context: deriveContext(context, { damageDepth: (context.damageDepth || 0) + 1 }),
     });
   },
 };

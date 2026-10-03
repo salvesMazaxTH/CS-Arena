@@ -6,6 +6,7 @@ import {
   leadingStackSource,
   stackSources,
 } from "../../core/stackLifetime.js";
+import { deriveContext } from "../../engine/combat/deriveContext.js";
 
 const poisoned = {
   key: "poisoned",
@@ -26,13 +27,12 @@ const poisoned = {
     // Each applier is credited for the stacks it put on the target.
     const sources = stackSources(this);
     const lead = leadingStackSource(sources);
-    const dotContext = {
-      ...context,
+    const dotContext = deriveContext(context, {
       isDot: true,
       dotSourceId: lead?.sourceId ?? this.sourceId ?? null,
       dotSourceTeam: lead?.sourceTeam ?? this.sourceTeam ?? null,
       dotSources: sources,
-    };
+    });
 
     const result = new DamageEvent({
       attacker: null,

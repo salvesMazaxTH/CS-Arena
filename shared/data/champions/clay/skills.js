@@ -3,6 +3,7 @@ import { SkillHits } from "../../../engine/combat/SkillHits.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import totalBlock from "../generic/totalBlock.js";
+import { deriveContext } from "../../../engine/combat/deriveContext.js";
 
 const claySkills = [
   // ========================
@@ -119,7 +120,7 @@ const claySkills = [
         user,
         target: user,
         baseDamage: recoilDamage,
-        context: { ...context, damageDepth: 1 },
+        context: deriveContext(context, { damageDepth: 1 }),
       });
 
       const recoilEntries = Array.isArray(recoilResult)
@@ -203,7 +204,7 @@ const claySkills = [
         user,
         target: user,
         baseDamage: recoilDamage,
-        context: { ...context, damageDepth: 1 },
+        context: deriveContext(context, { damageDepth: 1 }),
       });
 
       const recoilEntries = Array.isArray(recoilResult)
