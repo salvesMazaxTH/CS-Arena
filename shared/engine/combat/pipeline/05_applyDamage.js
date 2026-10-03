@@ -48,6 +48,7 @@ export function applyDamage(event) {
     wasAlive && !event.defender.alive
       ? Math.max(0, damageToApply - absorbedByShield - event.actualDmg)
       : 0;
+  event.overkill = overkill;
 
   event.context.registerDamage({
     target: event.defender,

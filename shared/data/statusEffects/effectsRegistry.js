@@ -17,6 +17,7 @@ import invisible from "./invisible.js";
 import concealed from "./concealed.js";
 import healBlock from "./healBlock.js";
 import blind from "./blind.js";
+import thorns from "./thorns.js";
 
 export const StatusEffectsRegistry = {
   paralyzed,
@@ -36,6 +37,7 @@ export const StatusEffectsRegistry = {
   poisoned,
   healBlock,
   blind,
+  thorns,
 };
 
 export const EvolvedStatusByBase = Object.fromEntries(

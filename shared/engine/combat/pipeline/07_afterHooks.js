@@ -1,5 +1,6 @@
 import { emitCombatEvent, collectHookLogs } from "../combatEvents.js";
 import { HealEvent } from "../HealEvent.js";
+import thorns from "../../../data/statusEffects/thorns.js";
 
 export function runAfterHooks(event) {
   // Defender reacts before the attacker reaps: mirror of the before phase.
@@ -9,6 +10,8 @@ export function runAfterHooks(event) {
   // 2. Sync passive logs and effects
   if (afterTake.logs.length) event.afterLogs.push(...afterTake.logs);
   if (afterDeal.logs.length) event.afterLogs.push(...afterDeal.logs);
+
+  thorns.onContactHit(event);
 
   // 3. Lifesteal
   const lsResult = _applyLifeSteal(event);

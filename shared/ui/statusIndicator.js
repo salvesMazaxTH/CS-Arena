@@ -19,12 +19,17 @@ const DEBUFF_ICON = {
   name: "debuff",
 };
 
+const ROMAN_TIERS = ["", "I", "II", "III", "IV", "V"];
+
 function syncStatusStackBadge(indicator, icon, effectData) {
   if (!indicator) return;
 
   const currentBadge = indicator.querySelector(".status-indicator-stack-badge");
+  const tier = Number(effectData?.tier) || 0;
   const stackCount = Number(effectData?.stacks ?? effectData?.stackCount) || 0;
-  const shouldShowBadge = Boolean(icon?.showStackCount) && stackCount > 0;
+  const shouldShowBadge = icon?.showTierNumeral
+    ? tier > 0
+    : Boolean(icon?.showStackCount) && stackCount > 0;
 
   if (!shouldShowBadge) {
     currentBadge?.remove();
@@ -33,7 +38,9 @@ function syncStatusStackBadge(indicator, icon, effectData) {
 
   const badge = currentBadge || document.createElement("span");
   badge.className = "status-indicator-stack-badge";
-  badge.textContent = String(stackCount);
+  badge.textContent = icon?.showTierNumeral
+    ? ROMAN_TIERS[tier] ?? String(tier)
+    : String(stackCount);
 
   if (!currentBadge) {
     indicator.appendChild(badge);
@@ -143,6 +150,13 @@ export const StatusIndicator = {
       value: "🕶️",
       background: "rgba(20, 20, 20, 0.85)",
       label: "Blind",
+    },
+    thorns: {
+      type: "image",
+      value: "/assets/indicators/thorns_indicator.svg",
+      background: "none",
+      label: "Thorns",
+      showTierNumeral: true,
     },
   },
 

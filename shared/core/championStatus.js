@@ -148,6 +148,18 @@ function applyStatusEffectCore({
   const isStackable = definition.isStackable || false;
   const existingInstance = champion.statusEffects.get(statusEffectKey);
 
+  // A tiered status (Thorns) is raised in place instead of being refused.
+  if (existingInstance && typeof definition.reapply === "function") {
+    const raised = definition.reapply({
+      existingInstance,
+      tierGain: normalizedStackCount,
+    });
+    if (raised) stampStatusSource(existingInstance, context, metadata);
+    return raised
+      ? buildStatusEffectApplyResult(champion, statusEffectKey, existingInstance)
+      : false;
+  }
+
   if (!isStackable && existingInstance) {
     return false;
   }

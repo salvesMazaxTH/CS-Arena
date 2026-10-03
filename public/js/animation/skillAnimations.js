@@ -37,6 +37,11 @@ import {
 import { createClaw } from "./effects/clawAnimation.js";
 import { createBite } from "./effects/biteAnimation.js";
 import { playMultislash } from "./effects/multislashAnimation.js";
+import {
+  playBriarCrush,
+  playSpineVolley,
+  playThornPrick,
+} from "./effects/spineAnimation.js";
 import { playParry, playRiposte } from "./effects/parryAnimation.js";
 import { playSlash } from "./effects/slashAnimation.js";
 import { createWaterBoltGL } from "./effects/waterBoltGLAnimation.js";
@@ -225,6 +230,9 @@ registerSkillAnimation("default_radiant_bolt", createRadiantBoltGL(1));
 registerSkillAnimation("default_radiant_beam", createRadiantBeamGL(1));
 registerSkillAnimation("default_slash", playSlash);
 registerSkillAnimation("default_multislash", playMultislash);
+registerSkillAnimation("default_spine_volley", playSpineVolley);
+registerSkillAnimation("default_thorn_prick", playThornPrick);
+registerSkillAnimation("default_briar_crush", playBriarCrush);
 registerSkillAnimation("default_claw", createClaw());
 registerSkillAnimation("default_bite", createBite());
 registerSkillAnimation("default_bite_big", createBite(1.35));

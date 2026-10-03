@@ -24,6 +24,9 @@ export function buildFinalResult(event) {
       en: `${targetName} took ${dmg} damage${effect && ` from${effect}`}\nfinal HP of ${targetName}: ${hpLine}`,
       pt: `${targetName} sofreu ${dmg} de dano${effect && ` de${effect}`}\nHP final de ${targetName}: ${hpLine}`,
     };
+  } else if (typeof event.skill?.hitLog === "function") {
+    // A reaction hit can word its own line (e.g. Thorns returning damage).
+    finalLog = event.skill.hitLog(event);
   } else {
     finalLog = _buildLog(
       event.attacker,
