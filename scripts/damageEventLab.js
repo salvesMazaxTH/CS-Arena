@@ -1,7 +1,10 @@
-import { Champion } from "../shared/core/Champion.js";
-import { emitCombatEvent } from "../shared/engine/combat/combatEvents.js";
 import { DamageEvent } from "../shared/engine/combat/DamageEvent.js";
+import { TurnResolver } from "../shared/engine/combat/TurnResolver.js";
+import { GameMatch } from "../shared/engine/match/GameMatch.js";
 import { championDB } from "../shared/data/championDB.js";
+import { SUPPORTED_LOCALES, resolveText } from "../shared/i18n/locale.js";
+
+const CRIT_MODES = ["auto", "force", "disable"];
 
 function parseValue(raw) {
   if (raw === "true") return true;
@@ -101,8 +104,10 @@ function parseArgs(argv) {
   const out = {
     attacker: "tharox",
     defender: "bruno",
-    skill: "impacto_da_couraça",
+    skill: "carapace_impact",
     turn: 1,
+    crit: "auto",
+    locale: "en",
     stacks: null,
     bonusDamage: null,
     comparePassive: false,
@@ -207,7 +212,8 @@ function parseArgs(argv) {
     else if (key === "turn") out.turn = Number(next);
     else if (key === "stacks") out.stacks = Number(next);
     else if (key === "bonus-damage") out.bonusDamage = Number(next);
-    else if (key === "crit") out.crit = String(next);
+    else if (key === "crit") out.crit = next;
+    else if (key === "locale") out.locale = next;
     else if (key === "compare-path") out.comparePath = next;
     else if (key === "compare-min") out.compareMin = Number(next);
     else if (key === "compare-max") out.compareMax = Number(next);
@@ -218,135 +224,95 @@ function parseArgs(argv) {
     i += 1;
   }
 
+  if (!CRIT_MODES.includes(out.crit)) {
+    throw new Error(`--crit must be one of: ${CRIT_MODES.join(", ")}`);
+  }
+  if (!SUPPORTED_LOCALES.includes(out.locale)) {
+    throw new Error(`--locale must be one of: ${SUPPORTED_LOCALES.join(", ")}`);
+  }
+
   return out;
 }
 
-function pickChampion(key, id, team, slot) {
-  const baseData = championDB[key];
-  if (!baseData) {
-    const available = Object.keys(championDB).sort().join(", ");
-    throw new Error(`Champion '${key}' not found. Available: ${available}`);
+// A real match and resolver, so every skill runs against the same context,
+// registries and hooks the server builds — no hand-rolled mock to drift.
+function createArena(options) {
+  const match = new GameMatch();
+  match.combat.currentTurn = options.turn;
+
+  const spawn = (championKey, team) => {
+    if (!championDB[championKey]) {
+      const available = Object.keys(championDB).sort().join(", ");
+      throw new Error(
+        `Champion '${championKey}' not found. Available: ${available}`,
+      );
+    }
+    return match.combat.spawnChampion({
+      championKey,
+      team,
+      combatSlot: 0,
+      spawnProtection: false,
+    });
+  };
+
+  const attacker = spawn(options.attacker, 1);
+  const defender = spawn(options.defender, 2);
+
+  // `force` rides the engine's own debug flag; `disable` zeroes the stat, so a
+  // skill that adds its own crit chance can still crit.
+  const resolver = new TurnResolver(match, {
+    alwaysCrit: options.crit === "force",
+  });
+  if (options.crit === "disable") attacker.Critical = 0;
+
+  if (options.attackerAttack != null) {
+    attacker.Attack = options.attackerAttack;
+    attacker.baseAttack = options.attackerAttack;
   }
 
-  return Champion.fromBaseData(baseData, id, team, { combatSlot: slot });
+  if (options.defenderDefense != null) {
+    defender.Defense = options.defenderDefense;
+    defender.baseDefense = options.defenderDefense;
+  }
+
+  if (options.noPassive) attacker.passive = null;
+
+  applyAssignments(attacker, options.attackerSet || []);
+  applyAssignments(defender, options.defenderSet || []);
+
+  if (options.stacks != null) attacker.runtime.theopetraStacks = options.stacks;
+
+  seedTidesModifier(attacker);
+
+  return { resolver, attacker, defender };
 }
 
-function createContext({ allChampions, turn, sourceId }) {
-  const activeChampions = new Map(allChampions.map((c) => [c.id, c]));
+// Naelys' passive only registers its Tides modifier when a stack is gained, so
+// stacks seeded through --attacker-set would otherwise add nothing. Mirrors the
+// passive's own modifier (same id, so the passive never adds a second one).
+function seedTidesModifier(attacker) {
+  const passive = attacker.passive;
+  if (passive?.key !== "heart_of_the_tides") return;
+  if (!(attacker.runtime.mareStacks > 0)) return;
+  if (attacker.getDamageModifiers().some((m) => m.id === "tides-stacks")) {
+    return;
+  }
 
-  return {
-    currentTurn: turn,
-    statModifierSrcId: sourceId ?? null,
-    actionSourceId: sourceId ?? null,
-    isDot: false,
-    aliveChampions: allChampions,
-    logs: [],
-    dialogs: [],
-    dialogDedupeKeys: new Set(),
-    damageEvents: [],
-    resourceChanges: [],
-    heals: [],
-    buffs: [],
-    shields: [],
-    extraDamageQueue: [],
-    allChampions: activeChampions,
-    activeChampions,
-    registerDialog(entry) {
-      this.dialogs.push(entry);
-    },
-    registerHookLogs(hookResults) {
-      for (const r of hookResults || []) {
-        if (r?.log) this.logs.push(r.log);
-        if (Array.isArray(r?.logs)) this.logs.push(...r.logs);
-      }
-    },
-    registerDamage(entry) {
-      this.damageEvents.push(entry);
-    },
-    registerResourceChange(entry) {
-      this.resourceChanges.push(entry);
-    },
-    registerHeal(entry) {
-      this.heals.push(entry);
-
-      const sourceChamp =
-        this.activeChampions.get(entry?.sourceId) || entry?.target || null;
-
-      emitCombatEvent(
-        "onAfterHealing",
-        {
-          healSrc: sourceChamp,
-          healTarget: entry?.target || null,
-          amount: Number(entry?.amount) || 0,
-          context: this,
-        },
-        this.allChampions,
-      );
-    },
-    registerBuff(entry) {
-      this.buffs.push(entry);
-    },
-    registerShield(entry) {
-      this.shields.push(entry);
-    },
-  };
+  attacker.addDamageModifier({
+    id: "tides-stacks",
+    name: "Tides",
+    permanent: true,
+    apply: ({ baseDamage, attacker: atk }) =>
+      baseDamage +
+      Math.min(atk.runtime?.mareStacks || 0, passive.maxStacks) *
+        passive.dmgPerStack,
+  });
 }
 
-// Helper to set critOptions on context when requested by CLI
-function applyCritOptionToContext(context, critFlag) {
-  if (!critFlag) return;
-  const v = String(critFlag).toLowerCase();
-  if (v === "disable") context.critOptions = { disable: true };
-  else if (v === "force") context.critOptions = { force: true };
-  else context.critOptions = {}; // auto / unknown -> leave empty
-}
-
-function createLabResolver({ activeChampions }) {
-  return {
-    combat: {
-      activeChampions,
-    },
-    applyResourceChange({
-      target,
-      amount,
-      context,
-      sourceId,
-      emitHooks = true,
-    }) {
-      if (!target || amount === 0) return 0;
-
-      const applied =
-        amount > 0 ? target.addMomentum(amount) : target.spendMomentum(amount);
-
-      if (applied === 0) return 0;
-
-      if (typeof context?.registerResourceChange === "function") {
-        context.registerResourceChange({ target, amount: applied, sourceId });
-      }
-
-      if (!emitHooks) return applied;
-
-      const eventType = applied > 0 ? "onResourceGain" : "onResourceSpend";
-      const payloadType = applied > 0 ? "resourceGain" : "resourceSpend";
-
-      emitCombatEvent(
-        eventType,
-        {
-          target,
-          owner: target,
-          amount: Math.abs(applied),
-          context,
-          type: payloadType,
-          resourceType: "momentum",
-          source: activeChampions.get(sourceId) || null,
-          resolver: this,
-        },
-        activeChampions,
-      );
-
-      return applied;
-    },
-  };
+function createContext(resolver, user, options) {
+  const context = resolver.createBaseContext({ sourceId: user.id });
+  applyAssignments(context, options.contextSet || []);
+  return context;
 }
 
 function getSkill(champion, skillKey) {
@@ -365,231 +331,147 @@ function estimateSkillBaseDamage(attacker, skill) {
   return (attacker.Attack * skill.bf) / 100;
 }
 
-function resolveTargets({ user, defender, skill }) {
-  const first = skill?.targetSpec?.[0];
-
-  if (first === "self") return [user];
-  if (first === "enemy") return [defender];
-  if (first === "all:enemy") return [defender];
-
-  return [defender];
+// One-on-one arena: a self-targeting skill hits its user, anything else the foe.
+function resolveTargets({ user, foe, skill }) {
+  return skill?.targetSpec?.[0] === "self" ? [user] : [foe];
 }
 
-function executeSkill({ user, defender, skill, context }) {
-  const targets = resolveTargets({ user, defender, skill });
-  const resolver = createLabResolver({
-    activeChampions: context.activeChampions,
-  });
+// Runs a skill through the resolver's real skill path and flattens its results.
+function executeSkill({ resolver, user, foe, skill, context }) {
+  const targets = resolveTargets({ user, foe, skill });
+  return resolver
+    .performSkillExecution(user, skill, targets, context)
+    .flat(Infinity)
+    .filter(Boolean);
+}
 
-  return skill.resolve({
-    user,
-    targets,
-    context,
-    resolver,
+function collectLogs(results) {
+  return results.flatMap((r) => [r.log].flat(Infinity)).filter(Boolean);
+}
+
+// Dialogs hang off the visual event they follow, or sit in globalDialogs.
+function collectDialogs(context) {
+  const dialogs = [];
+  for (const [bucket, entries] of Object.entries(context.visual)) {
+    if (!Array.isArray(entries)) continue;
+    if (bucket === "globalDialogs") {
+      dialogs.push(...entries);
+      continue;
+    }
+    for (const entry of entries) {
+      dialogs.push(...(entry.preDialogs ?? []), ...(entry.postDialogs ?? []));
+    }
+  }
+  return dialogs;
+}
+
+function readTracked(paths, scope) {
+  return paths.map((path) => {
+    const { root, localPath } = resolveRootByPath(path, scope);
+    return { path, value: getPath(root, localPath) };
   });
+}
+
+function runPreSkills({ resolver, user, foe, keys, options }) {
+  const executed = [];
+  for (const key of keys) {
+    if (!key || key === "none") continue;
+    if (!(user.skills || []).some((s) => s.key === key)) continue;
+
+    const context = createContext(resolver, user, options);
+    const results = executeSkill({
+      resolver,
+      user,
+      foe,
+      skill: getSkill(user, key),
+      context,
+    });
+    executed.push({ key, user: user.name, results });
+  }
+  return executed;
 }
 
 function runScenario(options, tag) {
-  const attacker = pickChampion(options.attacker, "p1-a", "player1", 0);
-  const defender = pickChampion(options.defender, "p2-b", "player2", 0);
-
-  if (options.attackerAttack != null) {
-    attacker.Attack = options.attackerAttack;
-    attacker.baseAttack = options.attackerAttack;
-  }
-
-  if (options.defenderDefense != null) {
-    defender.Defense = options.defenderDefense;
-    defender.baseDefense = options.defenderDefense;
-  }
-
-  if (options.noPassive) attacker.passive = null;
-
-  applyAssignments(attacker, options.attackerSet || []);
-  applyAssignments(defender, options.defenderSet || []);
-
-  // Se for Naelys e mareStacks > 0, adiciona o damageModifier de Maré igual à passiva
-  if (
-    attacker.name === "Naelys" &&
-    attacker.runtime &&
-    typeof attacker.runtime.mareStacks === "number" &&
-    attacker.runtime.mareStacks > 0
-  ) {
-    const alreadyHas = attacker
-      .getDamageModifiers()
-      .some((m) => m.id === "mare-stacks");
-    if (!alreadyHas) {
-      const passive = attacker.passive;
-      attacker.addDamageModifier({
-        id: "mare-stacks",
-        name: "Maré",
-        permanent: true,
-        apply: ({ baseDamage, attacker: atk }) => {
-          const stacks = Math.min(
-            atk?.runtime?.mareStacks || 0,
-            passive?.maxStacks || 4,
-          );
-          return baseDamage + stacks * (passive?.dmgPerStack || 10);
-        },
-      });
-    }
-  }
-
-  if (options.stacks != null) {
-    attacker.runtime = attacker.runtime || {};
-    attacker.runtime.theopetraStacks = options.stacks;
-  }
-
-  const context = createContext({
-    allChampions: [attacker, defender],
-    turn: options.turn,
-    sourceId: attacker.id,
-  });
-
-  applyAssignments(context, options.contextSet || []);
-
-  // Apply CLI crit option to context so DamageEvent can pick it up
-  applyCritOptionToContext(context, options.crit);
-
-  const trackedBefore = [];
-  for (const path of options.track || []) {
-    const { root, localPath } = resolveRootByPath(path, {
-      attacker,
-      defender,
-      context,
-    });
-    trackedBefore.push({ path, value: getPath(root, localPath) });
-  }
-
+  const { resolver, attacker, defender } = createArena(options);
   const skill = getSkill(attacker, options.skill);
-  // Defender pre-skills (executed before attacker's pre-skills)
-  const preSkillDefQueue = Array.isArray(options.preSkillsDefender)
-    ? options.preSkillsDefender
-    : options.preSkillsDefender
-      ? [options.preSkillsDefender]
-      : [];
 
-  const preSkillResultsDefender = [];
-  for (const preSkillKey of preSkillDefQueue) {
-    if (!preSkillKey || preSkillKey === "none") continue;
-    const skillExists = (defender.skills || []).some(
-      (s) => s.key === preSkillKey,
-    );
-    if (!skillExists) continue;
-    const preSkill = getSkill(defender, preSkillKey);
-    const preResult = executeSkill({
+  // Defender pre-skills run first, then the attacker's, each as its own action.
+  const preSkills = [
+    ...runPreSkills({
+      resolver,
       user: defender,
-      defender: attacker,
-      skill: preSkill,
-      context,
-    });
-
-    preSkillResultsDefender.push({ key: preSkillKey, result: preResult });
-  }
-
-  const preSkillQueue = Array.isArray(options.preSkills)
-    ? options.preSkills
-    : options.preSkills
-      ? [options.preSkills]
-      : [];
-
-  const preSkillResults = [];
-  for (const preSkillKey of preSkillQueue) {
-    if (!preSkillKey || preSkillKey === "none") continue;
-    // Só executa se a skill existir para o atacante
-    const skillExists = (attacker.skills || []).some(
-      (s) => s.key === preSkillKey,
-    );
-    if (!skillExists) continue;
-    const preSkill = getSkill(attacker, preSkillKey);
-    const preResult = executeSkill({
+      foe: attacker,
+      keys: options.preSkillsDefender,
+      options,
+    }),
+    ...runPreSkills({
+      resolver,
       user: attacker,
-      defender,
-      skill: preSkill,
-      context,
-    });
+      foe: defender,
+      keys: options.preSkills,
+      options,
+    }),
+  ];
 
-    preSkillResults.push({
-      key: preSkillKey,
-      result: preResult,
-    });
-  }
+  const context = createContext(resolver, attacker, options);
+  const scope = { attacker, defender, context };
+  const trackedBefore = readTracked(options.track, scope);
   const baseDamage = estimateSkillBaseDamage(attacker, skill);
 
-  const result = executeSkill({
+  const results = executeSkill({
+    resolver,
     user: attacker,
-    defender,
+    foe: defender,
     skill,
     context,
   });
 
-  const mainResult = Array.isArray(result) ? result[0] : result;
+  const [target] = resolveTargets({ user: attacker, foe: defender, skill });
+  const mainResult =
+    results.find(
+      (r) => r.targetId === target.id && Number.isFinite(r.totalDamage),
+    ) ?? null;
 
-  const trackedAfter = [];
-  for (const path of options.track || []) {
-    const { root, localPath } = resolveRootByPath(path, {
-      attacker,
-      defender,
-      context,
-    });
-    trackedAfter.push({ path, value: getPath(root, localPath) });
-  }
+  const trackedAfter = readTracked(options.track, scope);
 
-  const tracked = trackedBefore.map((entry, idx) => ({
-    path: entry.path,
-    before: entry.value,
-    after: trackedAfter[idx]?.value,
-  }));
-
-  const summary = {
+  return {
     tag,
+    locale: options.locale,
     attacker: attacker.name,
     defender: defender.name,
     skill: skill.key,
     baseDamage,
-    tracked,
-    preSkills: preSkillResults,
+    tracked: trackedBefore.map((entry, idx) => ({
+      path: entry.path,
+      before: entry.value,
+      after: trackedAfter[idx]?.value,
+    })),
+    preSkills: preSkills.map(({ key, user }) => ({ key, user })),
     totalDamage: mainResult?.totalDamage ?? null,
     mitigatedDamage: mainResult?.journey?.mitigated ?? null,
     hpAfter: `${defender.HP}/${defender.maxHP}`,
-    log: mainResult?.log ?? null,
-    dialogs: context.dialogs,
-    rawResult: result,
+    logs: collectLogs(results),
+    dialogs: collectDialogs(context),
+    rawResult: results,
   };
-
-  return summary;
 }
 
 // Direct DamageEvent probe: fires one hit with an explicit bonusDamage rider so
 // the semi-absolute merge can be eyeballed without touching any champion kit.
 function runBonusProbe(options) {
-  const attacker = pickChampion(options.attacker, "p1-a", "player1", 0);
-  const defender = pickChampion(options.defender, "p2-b", "player2", 0);
-
-  if (options.attackerAttack != null) {
-    attacker.Attack = options.attackerAttack;
-    attacker.baseAttack = options.attackerAttack;
-  }
-  if (options.defenderDefense != null) {
-    defender.Defense = options.defenderDefense;
-    defender.baseDefense = options.defenderDefense;
-  }
-  if (options.noPassive) attacker.passive = null;
-
-  applyAssignments(attacker, options.attackerSet || []);
-  applyAssignments(defender, options.defenderSet || []);
-
-  const context = createContext({
-    allChampions: [attacker, defender],
-    turn: options.turn,
-    sourceId: attacker.id,
-  });
-  applyAssignments(context, options.contextSet || []);
-  applyCritOptionToContext(context, options.crit);
+  const { resolver, attacker, defender } = createArena(options);
+  const context = createContext(resolver, attacker, options);
 
   const skill = getSkill(attacker, options.skill);
-  const [target] = resolveTargets({ user: attacker, defender, skill });
+  const [target] = resolveTargets({ user: attacker, foe: defender, skill });
   const baseDamage = estimateSkillBaseDamage(attacker, skill) ?? 100;
+
+  const critOptions =
+    options.crit === "force"
+      ? { force: true }
+      : options.crit === "disable"
+        ? { disable: true }
+        : {};
 
   const result = new DamageEvent({
     baseDamage,
@@ -600,10 +482,12 @@ function runBonusProbe(options) {
     defender: target,
     skill,
     context,
+    critOptions,
     allChampions: context.allChampions,
   }).execute();
 
-  const main = Array.isArray(result) ? result[0] : result;
+  const results = [result].flat(Infinity).filter(Boolean);
+  const main = results[0];
   const j = main?.journey ?? {};
 
   console.log(`\n=== Bonus-damage probe ===`);
@@ -619,18 +503,24 @@ function runBonusProbe(options) {
   console.log(`Applied damage (HP delta): ${main?.totalDamage}`);
   console.log(`Defender HP after: ${target.HP}/${target.maxHP}`);
 
-  if (main?.log) {
-    console.log("--- Log ---");
-    console.log(main.log);
-  }
-  if (context.dialogs.length) {
-    console.log("--- Dialogs ---");
-    for (const d of context.dialogs) console.log(d.message);
-  }
+  printText("Log", collectLogs(results), options.locale);
+  printText(
+    "Dialogs",
+    collectDialogs(context).map((d) => d.message),
+    options.locale,
+  );
+
   if (options.showJson) {
     console.log("\n--- JSON ---");
     console.log(JSON.stringify(result, null, 2));
   }
+}
+
+// Logs and dialogs are plain strings or { en, pt } pairs; print the chosen locale.
+function printText(title, entries, locale) {
+  if (!entries.length) return;
+  console.log(`--- ${title} ---`);
+  for (const entry of entries) console.log(resolveText(entry, locale));
 }
 
 function printSummary(summary) {
@@ -654,7 +544,7 @@ function printSummary(summary) {
   if (summary.preSkills.length) {
     console.log("Pre-skills executed:");
     for (const step of summary.preSkills) {
-      console.log(`- ${step.key}`);
+      console.log(`- ${step.user}: ${step.key}`);
     }
   }
 
@@ -662,17 +552,12 @@ function printSummary(summary) {
   console.log(`Applied damage (HP delta): ${summary.totalDamage}`);
   console.log(`Defender HP after: ${summary.hpAfter}`);
 
-  if (summary.log) {
-    console.log("--- Log ---");
-    console.log(summary.log);
-  }
-
-  if (summary.dialogs.length) {
-    console.log("--- Dialogs ---");
-    for (const d of summary.dialogs) {
-      console.log(d.message);
-    }
-  }
+  printText("Log", summary.logs, summary.locale);
+  printText(
+    "Dialogs",
+    summary.dialogs.map((d) => d.message),
+    summary.locale,
+  );
 }
 
 function main() {
@@ -688,13 +573,13 @@ function main() {
   }
 
   if (options.comparePassive) {
-    const probe = pickChampion(options.attacker, "probe", "player1", 0);
+    const probePassive = championDB[options.attacker]?.passive;
     const comparePath =
       options.comparePath || "attacker.runtime.theopetraStacks";
     const compareMax =
       options.compareMax != null
         ? options.compareMax
-        : (probe.passive?.maxStacks ?? 0);
+        : (probePassive?.maxStacks ?? 0);
 
     if (!Number.isFinite(compareMax)) {
       throw new Error(
