@@ -272,8 +272,8 @@ const victoriaSkills = [
 
     description() {
       return {
-        en: `Victoria winds up once and brings down something closer to a small sun than a fist on the chosen target. If they are <b>Burning</b>, the fire is swallowed whole and the blow lands with <b>${this.consumeBonus}</b> bonus damage. Deals physical damage.`,
-        pt: `Victoria toma impulso uma única vez e desce algo mais parecido com um pequeno sol do que um punho sobre o alvo escolhido. Se ele estiver <b>Queimando</b>, o fogo é engolido por inteiro e o golpe chega com <b>${this.consumeBonus}</b> de dano bônus. Causa dano físico.`,
+        en: `The blow that made a legend of the fighting champion: Victoria winds up once and brings down something closer to a small sun than a fist on the chosen target. If they are <b>Burning</b>, the fire is swallowed whole and the blow lands with <b>${this.consumeBonus}</b> bonus damage. Deals physical damage.`,
+        pt: `O golpe que fez da campeã de luta uma lenda: Victoria toma impulso uma única vez e desce algo mais parecido com um pequeno sol do que um punho sobre o alvo escolhido. Se ele estiver <b>Queimando</b>, o fogo é engolido por inteiro e o golpe chega com <b>${this.consumeBonus}</b> de dano bônus. Causa dano físico.`,
       };
     },
 
