@@ -1,5 +1,5 @@
 export function processFinishing(event) {
-  const rule = event.skill?.finishingRule ?? event.skill?.obliterateRule;
+  const rule = event.skill?.finishingRule;
   if (!rule) return;
 
   const finishingType = resolveFinishingType(event.skill);
@@ -24,7 +24,9 @@ export function processFinishing(event) {
   const hpAfter = Number.isFinite(event.hpAfter)
     ? event.hpAfter
     : event.defender.HP;
-  const hpPercent = hpAfter / event.defender.maxHP;
+  const maxHP = Number(event.defender.maxHP);
+  if (!(maxHP > 0)) return;
+  const hpPercent = hpAfter / maxHP;
 
   if (hpPercent <= threshold) {
     const remainingHp = Math.max(0, hpAfter);
@@ -55,7 +57,7 @@ function resolveFinishingType(skill) {
       ? skill.finishingType()
       : skill?.finishingType;
 
-  return skillType || (skill?.obliterateRule ? "obliterate" : "regular");
+  return skillType || "regular";
 }
 
 function buildFinishingFlags(finishingType) {
@@ -84,5 +86,3 @@ function registerFinishingDialog(event, finishingType) {
     targetId: event.defender?.id,
   });
 }
-
-export { processFinishing as processObliterate };

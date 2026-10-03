@@ -1,23 +1,23 @@
-import { emitCombatEvent } from "../combatEvents.js";
+import { emitCombatEvent, collectHookLogs } from "../combatEvents.js";
 import { HealEvent } from "../HealEvent.js";
 
 export function runAfterHooks(event) {
-  // 1. Executa hooks de passivas
+  // Defender reacts before the attacker reaps: mirror of the before phase.
   const afterTake = _applyAfterTakingPassive(event);
   const afterDeal = _applyAfterDealingPassive(event);
 
-  // 2. Sincroniza logs e efeitos das passivas
+  // 2. Sync passive logs and effects
   if (afterTake.logs.length) event.afterLogs.push(...afterTake.logs);
   if (afterDeal.logs.length) event.afterLogs.push(...afterDeal.logs);
 
-  // 3. Processa Lifesteal
+  // 3. Lifesteal
   const lsResult = _applyLifeSteal(event);
 
   if (lsResult) {
-    // Salva na instância para o buildFinalResult usar
+    // Stored on the event for the result builder
     event.lifesteal = lsResult;
 
-    // Adiciona o log do lifesteal e de possíveis passivas ativadas por ele
+    // Lifesteal log, plus any passives it triggered
     event.afterLogs.push(lsResult.log);
     if (lsResult.passiveLogs?.length) {
       event.afterLogs.push(...lsResult.passiveLogs);
@@ -28,27 +28,22 @@ export function runAfterHooks(event) {
 function _applyLifeSteal(event) {
   if (event.constructor.debugMode) console.group(`💉 [LIFESTEAL]`);
 
-  // 1. Validações iniciais usando os dados da instância
+  // 1. Gate
   const lsRate = event.attacker?.LifeSteal || 0;
-  const allowsLifeStealOnDot = event.context?.allowsLifeSteal === true;
-  if (
-    lsRate <= 0 ||
-    event.actualDmg <= 0 ||
-    (event.context.isDot && !allowsLifeStealOnDot)
-  ) {
+  if (lsRate <= 0 || event.actualDmg <= 0 || !event.allowsLifeSteal) {
     if (event.constructor.debugMode) {
       console.log(
-        `⚠️ Pulando Lifesteal: LS=${lsRate}%, DMG=${event.actualDmg}`,
+        `⚠️ Skipping lifesteal: LS=${lsRate}%, DMG=${event.actualDmg}`,
       );
       console.groupEnd();
     }
     return null;
   }
 
-  // 2. Cálculo do heal
+  // 2. Heal amount
   const rawHeal = (event.actualDmg * lsRate) / 100;
 
-  // 3. Aplica a cura (heal() garante floor e mínimo de 1)
+  // 3. Apply it (heal() floors it with a minimum of 1)
   const effectiveHeal = new HealEvent({
     target: event.attacker,
     amount: rawHeal,
@@ -65,15 +60,17 @@ function _applyLifeSteal(event) {
 
   if (event.constructor.debugMode) {
     console.log(
-      `📊 Efetivo: ${effectiveHeal} (HP: ${event.attacker.HP}/${event.attacker.maxHP})`,
+      `📊 Effective: ${effectiveHeal} (HP: ${event.attacker.HP}/${event.attacker.maxHP})`,
     );
     console.groupEnd();
   }
 
   return {
     amount: effectiveHeal,
-    log: `Roubo de vida: ${effectiveHeal} | HP: ${event.attacker.HP}/${event.attacker.maxHP}` /* ,
-    passiveLogs, */,
+    log: {
+      en: `Lifesteal: ${effectiveHeal} | HP: ${event.attacker.HP}/${event.attacker.maxHP}`,
+      pt: `Roubo de vida: ${effectiveHeal} | HP: ${event.attacker.HP}/${event.attacker.maxHP}`,
+    },
   };
 }
 
@@ -114,13 +111,6 @@ function _applyAfterDealingPassive(event) {
 }
 
 function _processHook(event, eventName, payload) {
-  // JSON.stringify força o JS a ler o valor exato AGORA, sem preguiça de log
-  /*   console.log("[ALL CHAMPIONS DEBUG]", event.allChampions);
-   */
-  // Verifique se o event.allChampions não foi redefinido por acidente
-  if (!event.allChampions || event.allChampions.length === 0) {
-    /*  console.error("❌ ERRO CRÍTICO: allChampions sumiu antes do emit!"); */
-  }
   const results =
     emitCombatEvent(eventName, payload, event.allChampions, {
       players: event.players,
@@ -131,23 +121,13 @@ function _processHook(event, eventName, payload) {
   for (const r of results) {
     if (!r) continue;
 
-    // Caso legado: Array direto de logs
+    // Legacy: a bare array of logs
     if (Array.isArray(r)) {
       summary.logs.push(...r);
       continue;
     }
 
-    // Mutação de estado do evento
-    if (r.damage !== undefined) event.damage = r.damage;
-    if (r.crit !== undefined) event.crit = r.crit;
-
-    // Consolidação de Logs e Effects (Uso de set de chaves para enxugar)
-    ["log", "logs"].forEach((key) => {
-      if (r[key]) {
-        const val = Array.isArray(r[key]) ? r[key] : [r[key]];
-        summary.logs.push(...val);
-      }
-    });
+    collectHookLogs(r, summary.logs);
   }
   return summary;
 }

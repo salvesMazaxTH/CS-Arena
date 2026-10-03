@@ -2,11 +2,11 @@ import { getClaimPoints } from "../claim.js";
 import { splitByStacks } from "../../../core/stackLifetime.js";
 
 export function applyDamage(event) {
-  if (event.constructor.debugMode) console.group(`❤️ [APLICANDO DANO]`);
+  if (event.constructor.debugMode) console.group(`❤️ [APPLYING DAMAGE]`);
   if (event.constructor.debugMode) {
     console.log(`👤 Defender: ${event.defender.name}`);
-    console.log(`📍 HP Antes: ${event.defender.HP}/${event.defender.maxHP}`);
-    console.log(`💥 Dano: ${event.damage}`);
+    console.log(`📍 HP before: ${event.defender.HP}/${event.defender.maxHP}`);
+    console.log(`💥 Damage: ${event.damage}`);
   }
 
   const currentTurn = event.context?.currentTurn ?? 0;
@@ -32,6 +32,9 @@ export function applyDamage(event) {
   if (event.damage > 0 && event.damage < 1) {
     event.damage = 1;
   }
+
+  // Max HP tops out at 999, so no hit, Absolute included, ever deals more.
+  event.damage = Math.min(event.damage, event.constructor.GLOBAL_DMG_CAP);
 
   const damageToApply = Math.floor(event.damage);
   const wasAlive = event.defender.alive;
@@ -116,11 +119,11 @@ export function applyDamage(event) {
   }
 
   if (event.constructor.debugMode) {
-    console.log(`📍 HP Depois: ${event.hpAfter}/${event.defender.maxHP}`);
-    console.log(`✅ Dano efetivo: ${event.actualDmg}`);
+    console.log(`📍 HP after: ${event.hpAfter}/${event.defender.maxHP}`);
+    console.log(`✅ Effective damage: ${event.actualDmg}`);
     if (event.hpAfter <= event.defender.maxHP * 0.2)
-      console.log(`🚨 ALERTA: Defender em perigo! (<20% HP)`);
-    if (event.hpAfter <= 0) console.log(`💀 Defender DERROTADO!`);
+      console.log(`🚨 ALERT: defender in danger! (<20% HP)`);
+    if (event.hpAfter <= 0) console.log(`💀 Defender DEFEATED!`);
     console.groupEnd();
   }
 }

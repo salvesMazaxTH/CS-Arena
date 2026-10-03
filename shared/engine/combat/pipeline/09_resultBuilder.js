@@ -17,10 +17,12 @@ export function buildFinalResult(event) {
         ? event.skill.name
         : event.skill;
     const dmg = Math.floor(event.damage);
-    finalLog = `${targetName} took ${dmg} damage${
-      effectName ? ` from <b>${effectName}</b>` : ""
-    }`;
-    finalLog += `\nfinal HP of ${targetName}: ${event.hpAfter}/${event.defender.maxHP}`;
+    const hpLine = `${event.hpAfter}/${event.defender.maxHP}`;
+    const effect = effectName ? ` <b>${effectName}</b>` : "";
+    finalLog = {
+      en: `${targetName} took ${dmg} damage${effect && ` from${effect}`}\nfinal HP of ${targetName}: ${hpLine}`,
+      pt: `${targetName} sofreu ${dmg} de dano${effect && ` de${effect}`}\nHP final de ${targetName}: ${hpLine}`,
+    };
   } else {
     finalLog = _buildLog(
       event.attacker,
@@ -31,8 +33,6 @@ export function buildFinalResult(event) {
       event.hpAfter,
     );
   }
-
-  if (event.constructor.debugMode) console.groupEnd(); // Close the debug group if it was opened
 
   const mainResult = {
     totalDamage: event.actualDmg,
@@ -52,11 +52,12 @@ export function buildFinalResult(event) {
     crit: event.crit,
     damageDepth: event.context.damageDepth,
     skill: event.skill,
-    // We include the damage journey for debugging/panels if needed
+    // Damage breakdown, read by scripts/damageEventLab.js.
     journey: {
       base: event.baseDamage,
       bonus: event.bonusDamage,
-      mitigated: event.damage,
+      mitigated: event.mitigatedDamage,
+      final: event.damage,
       actual: event.actualDmg,
     },
   };
@@ -68,17 +69,18 @@ export function buildFinalResult(event) {
 }
 
 function _buildLog(user, target, skill, dmg, crit, hpAfter) {
-  const userName = user ? formatChampionName(user) : "Effect";
+  const userName = user
+    ? { en: formatChampionName(user), pt: formatChampionName(user) }
+    : { en: "Effect", pt: "Efeito" };
   const targetName = formatChampionName(target);
 
   // skill can be a string (skill name) or an object (skill instance)
   const skillName = skill && typeof skill === "object" ? skill.name : skill;
   dmg = Math.floor(dmg);
-  let log = `${userName} used <b>${skillName}</b> and dealt ${dmg} damage to ${targetName}`;
+  const hpLine = `${hpAfter}/${target.maxHP}`;
 
-  if (crit.didCrit) log += ` (CRITICAL)`;
-
-  log += `\nfinal HP of ${targetName}: ${hpAfter}/${target.maxHP}`;
-
-  return log;
+  return {
+    en: `${userName.en} used <b>${skillName}</b> and dealt ${dmg} damage to ${targetName}${crit.didCrit ? " (CRITICAL)" : ""}\nfinal HP of ${targetName}: ${hpLine}`,
+    pt: `${userName.pt} usou <b>${skillName}</b> e causou ${dmg} de dano a ${targetName}${crit.didCrit ? " (CRÍTICO)" : ""}\nHP final de ${targetName}: ${hpLine}`,
+  };
 }

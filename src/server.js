@@ -989,7 +989,7 @@ function handleScheduledEffect(effect, context) {
           context: ctx,
           baseDamage: effect.payload.baseDamage ?? 0,
           mode: effect.payload.mode,
-          piercingPortion: effect.payload.piercingPortion,
+          piercingPercentage: effect.payload.piercingPercentage,
           allChampions: match.combat.activeChampions,
         });
         dmg.execute();

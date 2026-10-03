@@ -66,7 +66,6 @@ export function preChecks(event) {
     const evasion = hookForcedEvade
       ? { attempted: true, evaded: true }
       : _rollEvasion({
-          attacker: event.attacker,
           defender: event.defender,
           context: event.context,
           debugMode: event.constructor.debugMode,
@@ -100,13 +99,7 @@ export function preChecks(event) {
         ),
       );
 
-      return {
-        totalDamage: 0,
-        evaded: true,
-        targetId: event.defender.id,
-        userId: event.attacker.id,
-        type: event.type,
-      };
+      return _buildEvadeResult(event);
     }
   }
 
@@ -115,9 +108,11 @@ export function preChecks(event) {
     event.mode !== event.constructor.Modes.ABSOLUTE &&
     !event.skill?.cannotBeBlocked
   ) {
-    if (
-      event.defender._checkAndConsumeShieldBlock?.(event.context, event.type)
-    ) {
+    const blockedBy = event.defender._checkAndConsumeShieldBlock?.(
+      event.context,
+      event.type,
+    );
+    if (blockedBy) {
       event.context.registerDamage({
         target: event.defender,
         amount: 0,
@@ -130,54 +125,60 @@ export function preChecks(event) {
         flags: { shieldBlocked: true },
       });
 
-      return _buildShieldBlockResult(event);
+      return _buildShieldBlockResult(event, blockedBy);
     }
   }
   return null;
 }
 
-function _rollEvasion({ attacker, defender, context, debugMode }) {
+function _rollEvasion({ defender, context, debugMode }) {
   const editMode = context?.editMode ?? {};
   const chance = Number(defender.Evasion) || 0;
 
-  if (debugMode) {
-    console.log("🔥 _rollEvasion chamado:", {
-      attacker: attacker.name,
-      defender: defender.name,
-      evasion: chance,
-      editMode,
-    });
-  }
+  // Debug override: always evade.
+  if (editMode.alwaysEvade) return { attempted: true, evaded: true };
 
-  // 1️⃣ Override absoluto (debug)
-  if (editMode.alwaysEvade) {
-    return {
-      attempted: true,
-      evaded: true,
-      log: `\n${formatChampionName(defender)} evadiu automaticamente.`,
-    };
-  }
+  // No Evasion means no attempt at all.
+  if (chance <= 0) return null;
 
-  // 2️⃣ Sem chance real
-  if (chance <= 0 && !editMode.alwaysEvade) {
-    return null; // NÃO houve tentativa
-  }
-
-  // 3️⃣ Roll
   const roll = Math.random() * 100;
   const evaded = roll < chance;
 
   if (debugMode) {
-    console.log(`🎯 Roll de Esquiva: ${roll.toFixed(2)}`);
-    console.log(`🎲 Chance de Esquiva: ${chance}%`);
-    console.log(evaded ? "✅ Ataque EVADIDO!" : "❌ Ataque ACERTADO");
+    console.log(`🎯 Evasion roll: ${roll.toFixed(2)}`);
+    console.log(`🎲 Evasion chance: ${chance}%`);
+    console.log(evaded ? "✅ Attack EVADED!" : "❌ Attack HIT");
   }
 
-  // 4️⃣ Resultado padronizado
+  return { evaded, attempted: true };
+}
+
+// The skill's name for player text, with a per-locale fallback.
+function _skillName(event) {
+  const name = event.skill?.name;
+  return name ? { en: name, pt: name } : { en: "a skill", pt: "uma habilidade" };
+}
+
+function _buildEvadeResult(event) {
+  const targetName = formatChampionName(event.defender);
+  const username = formatChampionName(event.attacker);
+  const skillName = _skillName(event);
+
   return {
-    evaded,
-    attempted: true,
-    log: `\n${formatChampionName(defender)} tentou esquivar o ataque... !`,
+    baseDamage: event.baseDamage,
+    totalDamage: 0,
+    finalHP: event.defender.HP,
+    targetId: event.defender.id,
+    userId: event.attacker.id,
+    hitId: event.hitId,
+    shieldBlocked: false,
+    evaded: true,
+    type: event.type,
+    log: {
+      en: `${targetName} evaded ${username}'s ${skillName.en}!`,
+      pt: `${targetName} esquivou de ${skillName.pt} de ${username}!`,
+    },
+    crit: { chance: 0, didCrit: false, bonus: 0, roll: null },
   };
 }
 
@@ -201,7 +202,7 @@ function _buildBlockedResult(
 ) {
   const targetName = formatChampionName(event.defender);
   const username = event.attacker ? formatChampionName(event.attacker) : null;
-  const skillName = event.skill?.name || "habilidade";
+  const skillName = _skillName(event);
 
   // A silent block leaves no visual and no log: the target is simply not there.
   if (!silent) {
@@ -223,8 +224,14 @@ function _buildBlockedResult(
     : customMessage
       ? customMessage
       : username
-        ? `${username} tentou usar ${skillName} em ${targetName}, mas o alvo possui Imunidade Absoluta!`
-        : `${targetName} é imune ao dano!`;
+        ? {
+            en: `${username} tried to use ${skillName.en} on ${targetName}, but the target is immune!`,
+            pt: `${username} tentou usar ${skillName.pt} em ${targetName}, mas o alvo está imune!`,
+          }
+        : {
+            en: `${targetName} is immune to the damage!`,
+            pt: `${targetName} está imune ao dano!`,
+          };
 
   return {
     baseDamage: event.baseDamage,
@@ -232,6 +239,7 @@ function _buildBlockedResult(
     finalHP: event.defender.HP,
     targetId: event.defender.id,
     userId: event.attacker?.id ?? null,
+    hitId: event.hitId,
     evaded: false,
     [kind]: true,
     type: event.type,
@@ -247,7 +255,7 @@ function _inactiveDialogKey(defenderId) {
 function _buildInactiveTargetResult(event) {
   const targetName = formatChampionName(event.defender);
   const username = event.attacker ? formatChampionName(event.attacker) : null;
-  const skillName = event.skill?.name || "skill";
+  const skillName = _skillName(event);
 
   const alreadyExplained = event.context.dialogDedupeKeys.has(
     _inactiveDialogKey(event.defender?.id ?? targetName),
@@ -255,7 +263,10 @@ function _buildInactiveTargetResult(event) {
 
   if (!alreadyExplained) {
     event.context.registerDialog({
-      message: `${targetName} is not active in combat and could not be hit.`,
+      message: {
+        en: `${targetName} is not active in combat and could not be hit.`,
+        pt: `${targetName} não está ativo em combate e não pôde ser atingido.`,
+      },
       dedupeKey: _inactiveDialogKey(event.defender?.id ?? targetName),
       sourceId: event.attacker?.id ?? null,
       targetId: event.defender?.id ?? null,
@@ -266,8 +277,14 @@ function _buildInactiveTargetResult(event) {
   const log = alreadyExplained
     ? undefined
     : username
-      ? `${username} tried to use ${skillName} on ${targetName}, but the target is not active in combat.`
-      : `${targetName} is not active in combat.`;
+      ? {
+          en: `${username} tried to use ${skillName.en} on ${targetName}, but the target is not active in combat.`,
+          pt: `${username} tentou usar ${skillName.pt} em ${targetName}, mas o alvo não está ativo em combate.`,
+        }
+      : {
+          en: `${targetName} is not active in combat.`,
+          pt: `${targetName} não está ativo em combate.`,
+        };
 
   return {
     baseDamage: event.baseDamage,
@@ -275,6 +292,7 @@ function _buildInactiveTargetResult(event) {
     finalHP: event.defender.HP,
     targetId: event.defender.id,
     userId: event.attacker?.id ?? null,
+    hitId: event.hitId,
     evaded: false,
     inactiveTarget: true,
     type: event.type,
@@ -283,14 +301,33 @@ function _buildInactiveTargetResult(event) {
   };
 }
 
-function _buildShieldBlockResult(event) {
+// What each blocking shield is called, and what it stopped.
+const BLOCKING_SHIELD_TEXT = {
+  supreme: {
+    en: { name: "Supreme Shield", blocked: "the hit" },
+    pt: { name: "Escudo Supremo", blocked: "o golpe" },
+  },
+  spell: {
+    en: { name: "Spell Shield", blocked: "the magical damage" },
+    pt: { name: "Escudo Mágico", blocked: "o dano mágico" },
+  },
+};
+
+function _buildShieldBlockResult(event, blockedBy) {
   const targetName = formatChampionName(event.defender);
   const username = event.attacker ? formatChampionName(event.attacker) : null;
-  const skillName = event.skill?.name || "habilidade";
+  const skillName = event.skill?.name || "skill";
+  const { en, pt } = BLOCKING_SHIELD_TEXT[blockedBy];
 
   const log = username
-    ? `${username} usou ${skillName} em ${targetName}, mas o Escudo de Feitiço de ${targetName} bloqueou o dano mágico e se dissipou!`
-    : `${targetName} bloqueou um dano mágico com Escudo de Feitiço e ele se dissipou!`;
+    ? {
+        en: `${username} used ${skillName} on ${targetName}, but ${targetName}'s ${en.name} blocked ${en.blocked} and faded away!`,
+        pt: `${username} usou ${skillName} em ${targetName}, mas o ${pt.name} de ${targetName} bloqueou ${pt.blocked} e se dissipou!`,
+      }
+    : {
+        en: `${targetName}'s ${en.name} blocked ${en.blocked} and faded away!`,
+        pt: `O ${pt.name} de ${targetName} bloqueou ${pt.blocked} e se dissipou!`,
+      };
 
   return {
     baseDamage: event.baseDamage,
@@ -298,6 +335,7 @@ function _buildShieldBlockResult(event) {
     finalHP: event.defender.HP,
     targetId: event.defender.id,
     userId: event.attacker?.id ?? null,
+    hitId: event.hitId,
     shieldBlocked: true,
     evaded: false,
     type: event.type,

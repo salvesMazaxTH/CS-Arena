@@ -149,7 +149,7 @@ export function _checkAndConsumeShieldBlock(champion, context, damageType) {
   );
   if (supremeIdx !== -1) {
     champion.runtime.shields.splice(supremeIdx, 1);
-    return true;
+    return "supreme";
   }
 
   // Spell shield: blocks magical damage only.
@@ -159,7 +159,7 @@ export function _checkAndConsumeShieldBlock(champion, context, damageType) {
     );
     if (spellIdx !== -1) {
       champion.runtime.shields.splice(spellIdx, 1);
-      return true;
+      return "spell";
     }
   }
 

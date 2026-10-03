@@ -53,11 +53,11 @@ export class DamageEvent {
     const { attacker, defender, skill, context, baseDamage, type } = params;
 
     if (!attacker && !context?.isDot) {
-      throw new Error("DamageEvent precisa de attacker");
+      throw new Error("DamageEvent requires an attacker");
     }
 
     if (!defender) {
-      throw new Error("DamageEvent precisa de defender");
+      throw new Error("DamageEvent requires a defender");
     }
 
     if (type !== "physical" && type !== "magical") {
@@ -95,11 +95,7 @@ export class DamageEvent {
     // piercingPercentage: % of the defender's defense to ignore (0-100).
     // Only used when mode === PIERCING. Defaults to 100 (full pierce).
     if (this.mode === DamageEvent.Modes.PIERCING) {
-      this.piercingPercentage =
-        params.piercingPercentage ??
-        params.defenseIgnorePercent ??
-        params.piercingPortion ??
-        100;
+      this.piercingPercentage = params.piercingPercentage ?? 100;
     } else {
       this.piercingPercentage = 0;
     }
@@ -137,7 +133,14 @@ export class DamageEvent {
     this.hitId = params.hitId ?? null;
     this.suppressLog = params.suppressLog ?? skill?.suppressLog ?? false;
 
-    this.context = context ?? {};
+    // The pipeline writes to the turn context (registerDamage, dialog dedupe),
+    // so a bare object would only fail later, mid-hit.
+    if (!context?.registerDamage || !context.dialogDedupeKeys) {
+      throw new Error(
+        "DamageEvent needs a turn context (TurnResolver.createBaseContext()).",
+      );
+    }
+    this.context = context;
 
     // Any DoT should be treated as nested damage (depth >= 1) by default.
     // Callers can still explicitly pass a higher damageDepth when needed.
@@ -150,11 +153,9 @@ export class DamageEvent {
       params.allChampions instanceof Map
         ? [...params.allChampions.values()]
         : (params.allChampions ?? []);
-    // console.log(
-    //   "[DamageEvent_constructor] ALL-CHAMPIONS DEBUG allChampions in DamageEvent:",
-    //   this.allChampions,
-    // );
-    this.critOptions = params.critOptions ?? params.context?.critOptions ?? [];
+    this.critOptions = params.critOptions ?? {};
+    // Every hit heals through LifeSteal except DoT ticks, unless the caller opts in.
+    this.allowsLifeSteal = params.allowsLifeSteal ?? !this.context.isDot;
     this.flags = params.flags ?? {};
 
     // Per-hit, never on the shared context: reflects must not inherit the pierce.
@@ -168,7 +169,7 @@ export class DamageEvent {
 
     this.hookPolicy = DEFAULT_HOOK_POLICY;
 
-    // 🔥 ESTADO INTERNO
+    // Internal state
     this.crit = { didCrit: false };
     this.actualDmg = 0;
     this.hpAfter = null;
@@ -207,22 +208,15 @@ export class DamageEvent {
 
     processExtraQueue(this);
 
-    this.context.ignoreMinimumFloor = false;
+    const result = buildFinalResult(this);
 
+    // Silences this hit's own log only; nested reactions keep theirs.
     if (this.suppressLog) {
-      // Retorna apenas o objeto de resultado, mas sem o campo 'log' padrão
-      const result = buildFinalResult(this);
-      if (Array.isArray(result)) {
-        result.forEach((r) => {
-          if (r && r.log) r.log = undefined;
-        });
-      } else if (result && result.log) {
-        result.log = undefined;
-      }
-      return stampLanded(result);
+      const own = Array.isArray(result) ? result[0] : result;
+      if (own) own.log = undefined;
     }
 
-    return stampLanded(buildFinalResult(this));
+    return stampLanded(result);
   }
 
   applyShieldBreak() {
@@ -242,7 +236,6 @@ export class DamageEvent {
     if (!REACTIVE_HOOKS.has(eventName)) return true;
 
     const context = this.context;
-    if (!context) return true;
 
     const isDot = !!context.isDot;
     const damageDepth = Number(context.damageDepth ?? 0);
@@ -270,7 +263,7 @@ export class DamageEvent {
         return false;
       }
 
-      // Dot é um caso específico dentro de dano aninhado.
+      // A DoT is a specific case of nested damage.
       if (isDot && !policy.allowOnDot) {
         return false;
       }

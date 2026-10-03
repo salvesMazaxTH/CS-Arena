@@ -1,7 +1,19 @@
+// Safety net against reaction loops (two thorns/counters bouncing forever).
+// High enough that no legitimate chain ever reaches it.
+export const MAX_DAMAGE_DEPTH = 16;
+
 export function processExtraQueue(event) {
   const queue = event.context.extraDamageQueue || [];
-  if (queue.length === 0) return [];
+  if (queue.length === 0) return;
 
+  const depth = (event.context.damageDepth || 0) + 1;
+  if (depth > MAX_DAMAGE_DEPTH) {
+    console.warn(
+      `[DamageEvent] MAX_DAMAGE_DEPTH (${MAX_DAMAGE_DEPTH}) reached; dropping ${queue.length} queued reaction(s).`,
+    );
+    event.context.extraDamageQueue = [];
+    return;
+  }
 
   // Clean the original queue to avoid re-processing the same events in case of recursion
   const itemsToProcess = [...queue];
@@ -14,14 +26,15 @@ export function processExtraQueue(event) {
     const extraEvent = new event.constructor({
       ...extra, // baseDamage, attacker, defender, skill, etc.
       allChampions: event.allChampions,
-      context: {
-        ...event.context,
-        // Increment the depth to avoid infinite recursion (stops at 2 or 3)
-        damageDepth: (event.context.damageDepth || 0) + 1,
+      context: _reactionContext(event.context, {
+        damageDepth: depth,
         origin: extra.hitId || extra.skill?.key || "reaction",
         // Important: We pass the reference of the cleaned queue to the new event
         extraDamageQueue: event.context.extraDamageQueue,
-      },
+        // A reaction is its own hit, not a tick of the DoT that provoked it.
+        isDot: !!extra.isDot,
+        dotSourceId: extra.dotSourceId ?? null,
+      }),
     });
 
     // 2. Execute the full pipeline for the new event
@@ -39,5 +52,14 @@ export function processExtraQueue(event) {
 
   // Store in the internal state of the current instance for buildFinalResult to consolidate later
   event.extraResults.push(...results);
-  return results;
+}
+
+// Copies descriptors rather than values so getters such as matchChampions stay
+// live instead of freezing into a snapshot of the parent's field.
+function _reactionContext(parent, overrides) {
+  const context = Object.defineProperties(
+    {},
+    Object.getOwnPropertyDescriptors(parent),
+  );
+  return Object.assign(context, overrides);
 }

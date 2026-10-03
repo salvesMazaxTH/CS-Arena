@@ -31,16 +31,10 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
 
   if (debugMode) {
     console.group(`📡 EVENT: ${eventName}`);
-    /*  console.log(`[EVENT EMIT] ${eventName}`, {
-      source: payload?.source?.name,
-      target: payload?.target?.name,
-    }); */
   }
 
   if (!champions) {
-    if (debugMode) {
-      // console.log(`[EVENT EMIT] ⚠️ No champions provided`);
-    }
+    if (debugMode) console.groupEnd();
     return results;
   }
 
@@ -152,10 +146,15 @@ export function emitCombatEvent(eventName, payload, champions, options = {}) {
     }
   }
 
-  if (debugMode) {
-    // console.log(`[EVENT EMIT] 📦 Aggregated results:`, results);
-    console.groupEnd();
-  }
+  if (debugMode) console.groupEnd();
 
   return results;
+}
+
+/** Appends a hook result's `log`/`logs` (single entry or array) to `logs`. */
+export function collectHookLogs(result, logs) {
+  for (const key of ["log", "logs"]) {
+    const val = result[key];
+    if (val) logs.push(...(Array.isArray(val) ? val : [val]));
+  }
 }

@@ -147,11 +147,8 @@ const drexSkills = [
             },
             type: "physical",
             mode: DamageEvent.Modes.ABSOLUTE,
-            context: {
-              ...context,
-              isDot: true,
-              allowsLifeSteal: true,
-            },
+            context: { ...context, isDot: true },
+            allowsLifeSteal: true,
             allChampions: context?.allChampions,
           }).execute();
 

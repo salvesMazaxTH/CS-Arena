@@ -4,67 +4,46 @@
 
 const MIN_DAMAGE_FLOOR = 5;
 
+const MAX_REDUCTION = 0.95;
+
+// Defense -> damage reduction, as [defense, reduction] points sorted by
+// defense and linearly interpolated between them. Built once at load.
+const DEFENSE_CURVE = [
+  [0, 0.0],
+  [35, 0.25],
+  [60, 0.4],
+  [85, 0.53],
+  [110, 0.6],
+  [125, 0.633],
+  [150, 0.68],
+  [175, 0.72],
+  [200, 0.754],
+  [220, 0.78],
+  [300, 0.85],
+  [400, 0.9],
+  [600, MAX_REDUCTION],
+];
+
 function defToMitPct(defense, debugMode) {
-  if (debugMode) console.group(`🛡️ [DEFENSE DEBUG]`);
+  let effective = MAX_REDUCTION;
 
-  if (!defense) {
-    if (debugMode) {
-      console.log(`Defense: ${defense} (ou 0)`);
-      console.log(`Redução percentual: 0%`);
-      console.groupEnd();
-    }
-    return 0;
-  }
-
-  const MAX_REDUCTION = 0.95;
-
-  // --- Curva de mitigação por Defesa ---
-  const curve = {
-    0: 0.0,
-    35: 0.25,
-    60: 0.4,
-    85: 0.53,
-    110: 0.6,
-    125: 0.633,
-    150: 0.68,
-    175: 0.72,
-    200: 0.754,
-    220: 0.78,
-    300: 0.85,
-    400: 0.9,
-    600: MAX_REDUCTION,
-  };
-
-  const keys = Object.keys(curve)
-    .map(Number)
-    .sort((a, b) => a - b);
-
-  const top = keys[keys.length - 1];
-  let effective = curve[top];
-
-  if (defense <= keys[0]) {
-    effective = curve[keys[0]];
-  } else if (defense < top) {
-    for (let i = 0; i < keys.length - 1; i++) {
-      const a = keys[i];
-      const b = keys[i + 1];
-
-      if (defense >= a && defense <= b) {
-        const t = (defense - a) / (b - a);
-        effective = curve[a] + t * (curve[b] - curve[a]);
+  if (!(defense > 0)) {
+    effective = 0;
+  } else {
+    for (let i = 1; i < DEFENSE_CURVE.length; i++) {
+      const [b, rb] = DEFENSE_CURVE[i];
+      if (defense <= b) {
+        const [a, ra] = DEFENSE_CURVE[i - 1];
+        effective = ra + ((defense - a) / (b - a)) * (rb - ra);
         break;
       }
     }
   }
 
-  // Segurança numérica
-  effective = Math.min(effective, MAX_REDUCTION);
-
   if (debugMode) {
-    console.log(`Defense original: ${defense}`);
-    console.log(`Redução interpolada: ${(effective * 100).toFixed(2)}%`);
-    console.log(`Dano que PASSA: ${((1 - effective) * 100).toFixed(2)}%`);
-    console.groupEnd();
+    console.log(
+      `🛡️ Defense ${defense} -> ${(effective * 100).toFixed(2)}% reduction`,
+    );
   }
 
   return effective;
@@ -78,31 +57,31 @@ export function composeDamage(event) {
   if (event.constructor.debugMode) console.group(`⚙️ [DAMAGE COMPOSITION]`);
 
   if (typeof event.damage !== "number") {
-    throw new Error(`composeDamage recebeu damage inválido: ${event.damage}`);
+    throw new Error(`composeDamage received invalid damage: ${event.damage}`);
   }
 
-  // 1. Tira a foto do dano máximo alcançado antes do alvo se defender
+  // Snapshot of the peak damage before the target defends.
   event.preMitigationDamage = event.damage;
   if (event.constructor.debugMode) {
     console.log(
-      `📸 Dano pré-mitigação: ${event.preMitigationDamage.toFixed(2)}`,
+      `📸 Pre-mitigation damage: ${event.preMitigationDamage.toFixed(2)}`,
     );
   }
-
-  event.crit ??= { didCrit: false, critExtra: 0 };
 
   // What Defense and damage reduction took off the hit. A recompose starts
   // over, so it is reset here rather than accumulated.
   event.mitigatedDamage = 0;
 
+  // Crit is rolled only on non-Absolute hits (step 2), but a hit that already
+  // crit keeps it when a step 4 hook promotes it to Absolute. critExtra is
+  // recomputed from the current bonus, which a hook may have changed.
+  if (event.crit.didCrit) {
+    event.crit.critExtra = event.damage * (event.crit.bonus / 100);
+    event.damage += event.crit.critExtra;
+  }
+
   // Absolute damage skips the whole mitigation body; every other mode runs it.
   if (event.mode !== event.constructor.Modes.ABSOLUTE) {
-    // aplica crítico — recalcula critExtra a partir do bonus atual (pode ter mudado via hook)
-    if (event.crit.didCrit) {
-      event.crit.critExtra = event.damage * (event.crit.bonus / 100);
-      event.damage += event.crit.critExtra;
-    }
-
     const damageBeforeMitigation = event.damage;
 
     const baseDefense = event.defender.baseDefense ?? event.defender.Defense;
@@ -124,107 +103,46 @@ export function composeDamage(event) {
       };
       flat = tr.flat || 0;
       percent = tr.percent || 0;
-    } else if (event.constructor.debugMode) {
     }
 
-    // ---------------- STANDARD ----------------
-    if (event.mode === event.constructor.Modes.STANDARD) {
-      const debug = event.constructor.debugMode;
-
-      if (debug) {
-      }
-
-      // Defesa
-      const defensePercent = defToMitPct(
-        defenseUsed,
-        event.constructor.debugMode,
-      );
-      const defenseMitigation = event.damage * defensePercent;
-      event.damage = event.damage - defenseMitigation;
-
-      if (debug) {
-      }
-
-      // Redução percentual
-      event.damage *= 1 - percent / 100;
-
-      if (debug) {
-      }
-
-      // Redução flat
-      event.damage = event.damage - flat;
-
-      if (debug) {
-      }
+    // STANDARD is PIERCING that ignores 0% of the Defense.
+    let piercePct = 0;
+    if (event.mode === event.constructor.Modes.PIERCING) {
+      piercePct = Math.min(100, Math.max(0, Number(event.piercingPercentage) || 0));
     }
 
-    // ------------ PIERCING ------------
-    else if (event.mode === event.constructor.Modes.PIERCING) {
-      // piercingPercentage: % da defesa do alvo a ignorar (0-100). Default 100.
-      let piercePct = Number(event.piercingPercentage ?? 100);
-      if (isNaN(piercePct) || piercePct < 0) piercePct = 0;
-      if (piercePct > 100) piercePct = 100;
+    const defensePercent = defToMitPct(
+      defenseUsed * (1 - piercePct / 100),
+      event.constructor.debugMode,
+    );
+    event.damage -= event.damage * defensePercent;
+    event.damage *= 1 - percent / 100;
+    event.damage -= flat;
 
-      // Reduz a defesa efetiva ANTES de calcular mitigation
-      const effectiveDefense = defenseUsed * (1 - piercePct / 100);
-      const defensePercent = defToMitPct(
-        effectiveDefense,
-        event.constructor.debugMode,
-      );
-
-      const debug = event.constructor.debugMode;
-      if (debug) {
-      }
-
-      const defenseMitigation = event.damage * defensePercent;
-      event.damage = event.damage - defenseMitigation;
-
-      if (debug) {
-      }
-
-      // Redução percentual
-      event.damage *= 1 - percent / 100;
-
-      if (debug) {
-      }
-
-      // Redução flat
-      event.damage = event.damage - flat;
-
-      if (debug) {
-      }
-    }
-
-    // -------- FLOOR --------
-    if (!event.context?.ignoreMinimumFloor) {
-      event.damage = Math.max(event.damage, MIN_DAMAGE_FLOOR);
-    }
-
-    // Read after the floor gives some back, before the cap: the cap is not
-    // the defender's doing.
     event.mitigatedDamage = Math.max(0, damageBeforeMitigation - event.damage);
-
-    if (Number.isFinite(event.constructor.GLOBAL_DMG_CAP)) {
-      event.damage = Math.min(event.damage, event.constructor.GLOBAL_DMG_CAP);
-    }
   }
 
-  // Semi-absolute bonus rider: joins the hit after mitigation, bounded only by
-  // the global damage cap.
-  if (event.bonusDamage > 0) {
-    event.damage += event.bonusDamage;
-    if (Number.isFinite(event.constructor.GLOBAL_DMG_CAP)) {
-      event.damage = Math.min(event.damage, event.constructor.GLOBAL_DMG_CAP);
-    }
+  // Semi-absolute bonus rider: joins the hit after mitigation.
+  if (event.bonusDamage > 0) event.damage += event.bonusDamage;
+
+  // -------- FLOOR --------
+  // Lifts only a total below the floor; it never stacks on top of the rider.
+  if (
+    event.mode !== event.constructor.Modes.ABSOLUTE &&
+    event.damage < MIN_DAMAGE_FLOOR
+  ) {
+    // What the floor gives back was never mitigated.
+    const lift = MIN_DAMAGE_FLOOR - event.damage;
+    event.mitigatedDamage = Math.max(0, event.mitigatedDamage - lift);
+    event.damage = MIN_DAMAGE_FLOOR;
   }
 
-  // 2. Tira a foto do dano matemático final, pronto para ser aplicado
+  // Snapshot of the final computed damage, ready to apply.
 
   const damageOverride = event.context?.editMode?.damageOutput;
 
   if (damageOverride != null) {
     event.damage = damageOverride;
-    if (event.constructor.debugMode) console.groupEnd();
   }
 
   if (event.constructor.debugMode) {

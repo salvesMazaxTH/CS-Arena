@@ -614,7 +614,7 @@ function runBonusProbe(options) {
     `baseDamage: ${baseDamage.toFixed(2)} | bonusDamage: ${options.bonusDamage}`,
   );
   console.log(
-    `journey: base=${j.base} bonus=${j.bonus} mitigated=${j.mitigated} actual=${j.actual}`,
+    `journey: base=${j.base} bonus=${j.bonus} mitigated=${j.mitigated} final=${j.final} actual=${j.actual}`,
   );
   console.log(`Applied damage (HP delta): ${main?.totalDamage}`);
   console.log(`Defender HP after: ${target.HP}/${target.maxHP}`);

@@ -59,7 +59,7 @@ const MAX_NET_AFFINITY = 2;
 function applyAffinity(event, debugMode) {
   // A hit may carry several elements; each one is checked against every
   // defender affinity and the counts add up before the net cap applies.
-  const skillElements = elementsOf(event.element ?? event.skill?.element);
+  const skillElements = elementsOf(event.element);
 
   if (!skillElements.length) return;
 
@@ -109,7 +109,9 @@ function applyAffinity(event, debugMode) {
   if (net > 0) {
     event.affinityDialog = {
       message:
-        net === MAX_NET_AFFINITY ? "💥 É DEVASTADOR!" : "✨ É SUPER-EFETIVO!",
+        net === MAX_NET_AFFINITY
+          ? { en: "💥 It's DEVASTATING!", pt: "💥 É DEVASTADOR!" }
+          : { en: "✨ It's SUPER EFFECTIVE!", pt: "✨ É SUPER EFETIVO!" },
       duration: 1000,
       timing: "post",
     };
@@ -117,8 +119,8 @@ function applyAffinity(event, debugMode) {
     event.affinityDialog = {
       message:
         net === -MAX_NET_AFFINITY
-          ? "🛡️ Quase não faz efeito..."
-          : "🛡️ Não é muito efetivo...",
+          ? { en: "🛡️ It barely has any effect...", pt: "🛡️ Quase não faz efeito..." }
+          : { en: "🛡️ It's not very effective...", pt: "🛡️ Não é muito efetivo..." },
       duration: 1000,
       timing: "post",
     };
@@ -145,7 +147,7 @@ const MAX_CRIT_CHANCE = 95;
 
 function processCrit(event, debugMode) {
   if (debugMode) {
-    console.group(`⚔️ [CRÍTICO PROCESSING] - Damage Base: ${event.damage}`);
+    console.group(`⚔️ [CRIT PROCESSING] - Damage Base: ${event.damage}`);
   }
 
   // extraChance adds to the attacker's Critical before the cap, in the same roll.
@@ -181,17 +183,22 @@ function processCrit(event, debugMode) {
   event.crit.critExtra = critExtra;
   if (debugMode) {
     console.log(
-      `[DAMAGE COMPOSITION] 💥 Dano extra de crítico: ${critExtra.toFixed(2)}`,
+      `[DAMAGE COMPOSITION] 💥 Crit extra damage: ${critExtra.toFixed(2)}`,
     );
   }
 
   if (debugMode) console.groupEnd();
 }
 
+/** The % a crit adds for this attacker: its override when set (0 included), else the default. */
+export function critBonusOf(attacker) {
+  return attacker?.critBonusOverride ?? DEFAULT_CRIT_BONUS;
+}
+
 function _rollCrit(user, context, chance, critOptions = {}, debugMode = false) {
   const { force = false, disable = false } = critOptions;
 
-  const bonus = user?.critBonusOverride || DEFAULT_CRIT_BONUS;
+  const bonus = critBonusOf(user);
 
   if (disable) {
     return {
@@ -219,9 +226,9 @@ function _rollCrit(user, context, chance, critOptions = {}, debugMode = false) {
 
   if (debugMode) {
     console.log(`[CRIT]🎯 Roll: ${roll.toFixed(2)}`);
-    console.log(`[CRIT]🎲 Chance necessária: ${chance}%`);
-    console.log(didCrit ? "[CRIT]✅ CRÍTICO!" : "[CRIT]❌ Sem crítico");
-    console.log(`[CRIT]➕ Bônus de crítico: ${bonus}%`);
+    console.log(`[CRIT]🎲 Chance needed: ${chance}%`);
+    console.log(didCrit ? "[CRIT]✅ CRITICAL!" : "[CRIT]❌ No crit");
+    console.log(`[CRIT]➕ Crit bonus: ${bonus}%`);
   }
 
   return {
@@ -240,31 +247,32 @@ function _rollCrit(user, context, chance, critOptions = {}, debugMode = false) {
 function applyDamageModifiers(event, debugMode) {
   if (!event.attacker?.getDamageModifiers) {
     if (debugMode) {
-      console.log(`⚠️ [DAMAGEMODIFIERS] Nenhum modificador de dano disponível`);
+      console.log(`⚠️ [DAMAGEMODIFIERS] No damage modifiers available`);
     }
     return;
   }
 
   if (debugMode) {
     console.group(`🔧 [DAMAGE MODIFIERS]`);
-    console.log(`📍 Damage Inicial: ${event.damage}`);
+    console.log(`📍 Initial damage: ${event.damage}`);
   }
 
   event.attacker.purgeExpiredModifiers(event.context.currentTurn);
 
   const modifiers = event.attacker.getDamageModifiers();
 
+  if (!Array.isArray(modifiers)) {
+    throw new Error(
+      `getDamageModifiers must return an array, got: ${modifiers}`,
+    );
+  }
   if (debugMode) {
     console.log(
-      `[DAMAGE MODIFIERS] 🎯 Total de modificadores: ${modifiers.length}`,
+      `[DAMAGE MODIFIERS] 🎯 Modifier count: ${modifiers.length}`,
     );
   }
 
-  if (!Array.isArray(modifiers)) {
-    throw new Error(
-      `getDamageModifiers deve retornar um array, mas recebeu: ${modifiers}`,
-    );
-  }
+
 
   for (let i = 0; i < modifiers.length; i++) {
     const mod = modifiers[i];
@@ -294,7 +302,7 @@ function applyDamageModifiers(event, debugMode) {
 
         if (debugMode) {
           console.log(
-            `     ✏️ Aplicado: ${oldDamage} → ${event.damage} (Δ ${event.damage - oldDamage})`,
+            `     ✏️ Applied: ${oldDamage} → ${event.damage} (Δ ${event.damage - oldDamage})`,
           );
         }
       }
@@ -302,7 +310,7 @@ function applyDamageModifiers(event, debugMode) {
   }
 
   if (debugMode) {
-    console.log(`📊 Damage Final: ${event.damage.toFixed(2)}`);
+    console.log(`📊 Final damage: ${event.damage.toFixed(2)}`);
     console.groupEnd();
   }
 }
@@ -314,7 +322,7 @@ function applyDamageModifiers(event, debugMode) {
 export function prepareDamage(event) {
   if (event.mode === event.constructor.Modes.ABSOLUTE) return;
   const debug = event.constructor.debugMode;
-  // ordem importa
+  // Order matters:
   // crit -> modifiers -> affinity
   processCrit(event, debug);
 

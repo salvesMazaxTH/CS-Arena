@@ -1,5 +1,6 @@
-import { emitCombatEvent } from "../combatEvents.js";
+import { emitCombatEvent, collectHookLogs } from "../combatEvents.js";
 import { composeDamage } from "./03_composeDamage.js";
+import { critBonusOf } from "./02_prepareDamage.js";
 
 export function runBeforeHooks(event) {
   // Absolute hits reach the hooks too, but canRunHook filters every listener
@@ -24,7 +25,7 @@ export function runBeforeHooks(event) {
   if (take.logs.length) event.beforeLogs.push(...take.logs);
 
   if (event.crit?.didCrit) {
-    emitCombatEvent(
+    const critResults = emitCombatEvent(
       "onCriticalHit",
       {
         attacker: event.attacker,
@@ -32,8 +33,11 @@ export function runBeforeHooks(event) {
         context: event.context,
         forced: event.crit?.forced,
       },
-      event.allChampions ?? event.context?.allChampions,
+      event.allChampions,
     );
+    for (const r of critResults || []) {
+      if (r) collectHookLogs(r, event.beforeLogs);
+    }
   }
 }
 
@@ -95,7 +99,8 @@ function _composedField(starting, ceiling = Infinity) {
     saw: false,
 
     apply(requested) {
-      const value = Number(requested) || 0;
+      // A negative request reads as a full denial, never a sign flip.
+      const value = Math.max(0, Number(requested) || 0);
       this.saw = true;
 
       if (value > this.starting) this.delta += value - this.starting;
@@ -103,7 +108,7 @@ function _composedField(starting, ceiling = Infinity) {
     },
 
     scaleBy(multiplier) {
-      this.scale *= Number(multiplier) || 1;
+      this.scale *= Math.max(0, Number(multiplier) || 1);
       this.saw = true;
     },
 
@@ -245,16 +250,10 @@ function _processHook(event, eventName, payload) {
     }
     if (r.crit !== undefined) {
       summary.critChanged = true;
-      event.crit = r.crit;
+      event.crit = _normalizeHookCrit(r.crit, event.attacker);
     }
 
-    // Consolidate logs and effects
-    ["log", "logs"].forEach((key) => {
-      if (r[key]) {
-        const val = Array.isArray(r[key]) ? r[key] : [r[key]];
-        summary.logs.push(...val);
-      }
-    });
+    collectHookLogs(r, summary.logs);
   }
 
   if (baseDamage.saw) {
@@ -285,23 +284,34 @@ function _processHook(event, eventName, payload) {
     summary.damageDelta = damage.delta;
   }
 
-  if (Number.isFinite(damageCap)) {
-    event.damage = Math.min(event.damage, damageCap);
-    summary.damageCap = damageCap;
-  }
-
   if (bonusAdded) {
     event.bonusDamage = (Number(event.bonusDamage) || 0) + bonusAdded;
     // composeDamage already folded the pre-hook rider into event.damage; keep it
     // in sync here. A later recompose resets from preMitigation and re-adds the
     // whole event.bonusDamage, so this never double-counts.
     event.damage += bonusAdded;
+  }
 
-    const cap = event.constructor?.GLOBAL_DMG_CAP;
-    if (Number.isFinite(cap)) event.damage = Math.min(event.damage, cap);
+  // After the rider, as on a recompose: a hook's cap bounds the whole hit.
+  if (Number.isFinite(damageCap)) {
+    event.damage = Math.min(event.damage, damageCap);
+    summary.damageCap = damageCap;
   }
 
   return summary;
+}
+
+// A hook may hand back a bare { didCrit: true }; the crit then adds the
+// attacker's usual bonus instead of turning the damage into NaN.
+function _normalizeHookCrit(crit, attacker) {
+  if (!crit) return { didCrit: false, bonus: 0, critExtra: 0 };
+
+  const bonus = Number(crit.bonus);
+  return {
+    ...crit,
+    didCrit: !!crit.didCrit,
+    bonus: Number.isFinite(bonus) ? bonus : crit.didCrit ? critBonusOf(attacker) : 0,
+  };
 }
 
 function _snapshotCrit(crit) {
