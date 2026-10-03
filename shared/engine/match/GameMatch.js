@@ -637,7 +637,10 @@ class CombatState {
 
       return {
         champion: reverted,
-        log: `${formatChampionName(reverted)} returned to its original form.`,
+        log: {
+          en: `${formatChampionName(reverted)} returned to its original form.`,
+          pt: `${formatChampionName(reverted)} voltou à forma original.`,
+        },
       };
     }
 

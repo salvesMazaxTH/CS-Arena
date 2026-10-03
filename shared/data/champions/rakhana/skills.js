@@ -136,7 +136,7 @@ const rakhanaSkills = [
     hits: [
       {
         id: "reflection",
-        label: "Silver Mirror Counterattack",
+        label: { en: "Silver Mirror Counterattack", pt: "Contra-ataque (Silver Mirror)" },
         type: "physical",
         contact: false,
         damageMode: "piercing",

@@ -319,7 +319,10 @@ export class TurnResolver {
         reason: "inactive",
         user,
         action,
-        logMessage: `${userName}'s action ignored (not active).`,
+        logMessage: {
+          en: `${userName}'s action ignored (not active).`,
+          pt: `A ação de ${userName} foi ignorada (fora de campo).`,
+        },
       };
     }
 
@@ -327,7 +330,10 @@ export class TurnResolver {
     const denial = this.canExecuteAction(user, action, context);
     if (denial?.denied) {
       context.registerDialog({
-        message: denial.message || `${formatChampionName(user)} cannot act.`,
+        message: denial.message || {
+          en: `${formatChampionName(user)} cannot act.`,
+          pt: `${formatChampionName(user)} não pode agir.`,
+        },
         sourceId: user.id,
         damageDepth: context.damageDepth ?? 0,
       });
@@ -353,7 +359,10 @@ export class TurnResolver {
         reason: "skill_not_found",
         user,
         action,
-        logMessage: `Error: Skill ${action.skillKey} not found for ${formatChampionName(user)}.`,
+        logMessage: {
+          en: `Error: Skill ${action.skillKey} not found for ${formatChampionName(user)}.`,
+          pt: `Erro: habilidade ${action.skillKey} não encontrada para ${formatChampionName(user)}.`,
+        },
       };
     }
 
@@ -670,8 +679,10 @@ export class TurnResolver {
           denied: true,
           message:
             res.message ||
-            res.log ||
-            `${formatChampionName(user)} cannot act.`,
+            res.log || {
+              en: `${formatChampionName(user)} cannot act.`,
+              pt: `${formatChampionName(user)} não pode agir.`,
+            },
         };
       }
     }
@@ -686,7 +697,10 @@ export class TurnResolver {
         if (taunter?.alive) {
           return {
             denied: true,
-            message: `${formatChampionName(user)} is taunted and must attack their taunter.`,
+            message: {
+              en: `${formatChampionName(user)} is taunted and must attack their taunter.`,
+              pt: `${formatChampionName(user)} está sob provocação e só pode atacar quem a lançou.`,
+            },
           };
         }
       }

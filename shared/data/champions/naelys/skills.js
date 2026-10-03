@@ -117,7 +117,7 @@ const naelysSkills = [
     hits: [
       {
         id: "counter",
-        label: "Raging Sea Counterattack",
+        label: { en: "Raging Sea Counterattack", pt: "Contra-ataque (Mass of the Raging Sea)" },
         type: "physical",
         element: null,
         contact: false,

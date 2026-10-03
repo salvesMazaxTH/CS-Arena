@@ -86,7 +86,7 @@ const selinaSkills = [
       { id: "flare", type: "magical", hitVfx: "radiant_bolt" },
       {
         id: "cut",
-        label: "Blade",
+        label: { en: "Blade", pt: "Lâmina" },
         bf: 35,
         type: "physical",
         contact: true,

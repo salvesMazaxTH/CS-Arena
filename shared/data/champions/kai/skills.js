@@ -71,7 +71,7 @@ const kaiSkills = [
     hits: [
       {
         id: "counter",
-        label: "Living Ember Counter",
+        label: { en: "Living Ember Counter", pt: "Contra-ataque (Living Ember Stance)" },
         type: "physical",
         element: "fire",
         contact: true,

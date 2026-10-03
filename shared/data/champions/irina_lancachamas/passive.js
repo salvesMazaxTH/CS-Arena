@@ -12,7 +12,7 @@ export default {
   hits: [
     {
       id: "overheat",
-      label: "Weapon Overheat",
+      label: { en: "Weapon Overheat", pt: "Superaquecimento da Arma" },
       type: "magical",
       contact: false,
       damageMode: "absolute",

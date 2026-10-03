@@ -40,7 +40,10 @@ const blyskartriSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} energizes ${formatChampionName(ally)}.`,
+        log: {
+          en: `${formatChampionName(user)} energizes ${formatChampionName(ally)}.`,
+          pt: `${formatChampionName(user)} energiza ${formatChampionName(ally)}.`,
+        },
       };
     },
   },
@@ -151,7 +154,10 @@ const blyskartriSkills = [
       }, context);
 
       return {
-        log: `${formatChampionName(user)} strengthens ${formatChampionName(ally)}.`,
+        log: {
+          en: `${formatChampionName(user)} strengthens ${formatChampionName(ally)}.`,
+          pt: `${formatChampionName(user)} fortalece ${formatChampionName(ally)}.`,
+        },
       };
     },
   },
@@ -246,7 +252,10 @@ const blyskartriSkills = [
           if (moverIndex === undefined || targetIndex === undefined) return;
           if (moverIndex >= targetIndex) return;
 
-          const overtake = `${formatChampionName(attacker)} strikes ahead of ${formatChampionName(defender)}'s defence!`;
+          const overtake = {
+            en: `${formatChampionName(attacker)} strikes ahead of ${formatChampionName(defender)}'s defence!`,
+            pt: `${formatChampionName(attacker)} golpeia antes que ${formatChampionName(defender)} consiga se defender!`,
+          };
 
           context.extraDamageQueue.push({
             ...SkillHits.params(skill, "overtake", {
@@ -263,7 +272,10 @@ const blyskartriSkills = [
       }, context);
 
       return {
-        log: `${formatChampionName(user)} opens the Horizon for ${formatChampionName(ally)}!`,
+        log: {
+          en: `${formatChampionName(user)} opens the Horizon for ${formatChampionName(ally)}!`,
+          pt: `${formatChampionName(user)} abre o Horizonte para ${formatChampionName(ally)}!`,
+        },
       };
     },
   },

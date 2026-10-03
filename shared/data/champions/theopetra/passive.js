@@ -32,17 +32,28 @@ export default {
     owner.runtime.theopetraStacks = previous + 1;
 
     if (owner.runtime.theopetraStacks === this.maxStacks) {
-      const message = `<b>[PASSIVE — ${this.name}]</b> ${formatChampionName(owner)} reached the maximum number of stacks (${this.maxStacks})! Her next ability will deal bonus damage.`;
+      const name = formatChampionName(owner);
       context.registerDialog({
-        message,
+        message: {
+          en: `${name} reached the maximum number of stacks (${this.maxStacks})! Her next ability will deal ${this.bonusPercent}% increased damage.`,
+          pt: `${name} atingiu o máximo de acúmulos (${this.maxStacks})! Sua próxima habilidade causará dano ${this.bonusPercent}% maior.`,
+        },
         sourceId: owner.id,
         targetId: owner.id,
       });
-      return { log: message };
+      return {
+        log: {
+          en: `<b>[Passive — ${this.name}]</b> ${name} reached the maximum number of stacks (${this.maxStacks}).`,
+          pt: `<b>[Passiva — ${this.name}]</b> ${name} atingiu o máximo de acúmulos (${this.maxStacks}).`,
+        },
+      };
     }
 
     return {
-      log: `<b>[PASSIVE — ${this.name}]</b> ${formatChampionName(owner)} gained 1 stack (${owner.runtime.theopetraStacks}/${this.maxStacks}).`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} gained 1 stack (${owner.runtime.theopetraStacks}/${this.maxStacks}).`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} ganhou 1 acúmulo (${owner.runtime.theopetraStacks}/${this.maxStacks}).`,
+      },
     };
   },
 
@@ -67,7 +78,10 @@ export default {
       preMitigationDamage: finalBaseDamage,
       piercingPercentage: this.piercingRatio * 100,
       mode: "piercing",
-      log: `[PASSIVE — Eternalized Rock] ${formatChampionName(owner)} consumes all stacks and gains +${this.bonusPercent}% bonus damage on this ability!`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} consumes all stacks and deals ${this.bonusPercent}% increased damage with this ability!`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} consome todos os acúmulos e causa dano ${this.bonusPercent}% maior com esta habilidade!`,
+      },
     };
   },
 
@@ -87,7 +101,10 @@ export default {
     ) {
       return {
         cancel: true,
-        message: `${formatChampionName(target)} is immune to Control effects!`,
+        message: {
+          en: `${formatChampionName(target)} is immune to Control effects!`,
+          pt: `${formatChampionName(target)} é imune a efeitos de Controle!`,
+        },
       };
     }
   },

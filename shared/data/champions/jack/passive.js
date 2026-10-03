@@ -20,7 +20,7 @@ export default {
   hits: [
     {
       id: "closing_argument",
-      label: "Show Your Work (Passive)",
+      label: { en: "Show Your Work (Passive)", pt: "Show Your Work (Passiva)" },
       type: "magical",
       contact: false,
       damageMode: "absolute",

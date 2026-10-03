@@ -12,7 +12,7 @@ export default {
   hits: [
     {
       id: "closing_ice",
-      label: "Absolute Cold (Passive)",
+      label: { en: "Absolute Cold (Passive)", pt: "Absolute Cold (Passiva)" },
       type: "magical",
       contact: false,
       damageMode: "absolute",

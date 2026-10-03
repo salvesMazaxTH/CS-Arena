@@ -12,7 +12,7 @@ export default {
   hits: [
     {
       id: "crystallization",
-      label: "Thermal Convergence (Passive)",
+      label: { en: "Thermal Convergence (Passive)", pt: "Thermal Convergence (Passiva)" },
       type: "magical",
       element: "ice",
       contact: false,

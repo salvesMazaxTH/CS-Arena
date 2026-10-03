@@ -195,7 +195,7 @@ const morakhanSkills = [
     hits: [
       {
         id: "reflection",
-        label: "Mountain Stance Counterattack",
+        label: { en: "Mountain Stance Counterattack", pt: "Contra-ataque (Mountain Stance)" },
         type: "magical",
         contact: false,
         damageMode: "piercing",

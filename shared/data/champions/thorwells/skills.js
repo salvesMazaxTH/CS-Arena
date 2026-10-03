@@ -65,7 +65,7 @@ const thorwellsSkills = [
         id: "arc",
         type: "magical",
         contact: false,
-        label: "Skyfall Cleave (Arc)",
+        label: { en: "Skyfall Cleave (Arc)", pt: "Skyfall Cleave (Arco)" },
       },
     ],
 
@@ -112,7 +112,10 @@ const thorwellsSkills = [
       const arcTarget = tied[Math.floor(Math.random() * tied.length)];
 
       context.registerDialog({
-        message: `The storm leaps off ${formatChampionName(enemy)} into ${formatChampionName(arcTarget)}!`,
+        message: {
+          en: `The storm leaps off ${formatChampionName(enemy)} into ${formatChampionName(arcTarget)}!`,
+          pt: `A tempestade salta de ${formatChampionName(enemy)} para ${formatChampionName(arcTarget)}!`,
+        },
         sourceId: user.id,
         targetId: arcTarget.id,
       });

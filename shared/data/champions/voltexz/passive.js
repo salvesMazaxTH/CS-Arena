@@ -10,7 +10,7 @@ export default {
   hits: [
     {
       id: "recoil",
-      label: "Recoil (Unstable Overcharge)",
+      label: { en: "Recoil (Unstable Overcharge)", pt: "Recuo (Unstable Overcharge)" },
       type: "magical",
       contact: false,
       damageMode: "absolute",

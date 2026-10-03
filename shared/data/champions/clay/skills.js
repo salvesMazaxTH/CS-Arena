@@ -66,7 +66,7 @@ const claySkills = [
     hits: [
       {
         id: "recoil",
-        label: "Recoil (Reckless Fury)",
+        label: { en: "Recoil (Reckless Fury)", pt: "Recuo (Reckless Fury)" },
         type: "physical",
         contact: false,
         damageMode: "absolute",
@@ -155,7 +155,7 @@ const claySkills = [
     hits: [
       {
         id: "recoil",
-        label: "Recoil (Worth the Blood)",
+        label: { en: "Recoil (Worth the Blood)", pt: "Recuo (Worth the Blood)" },
         type: "physical",
         contact: false,
         damageMode: "absolute",

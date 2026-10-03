@@ -43,13 +43,16 @@ const raliaSkills = [
 
       if (hpCost <= 0) {
         context.registerDialog({
-          message: `But it failed.`,
+          message: { en: `But it failed.`, pt: `Mas falhou.` },
           sourceId: user.id,
           targetId: user.id,
         });
 
         return {
-          log: `${userName} had no blood left to swear on. <b>Iron Oath</b> failed.`,
+          log: {
+            en: `${userName} had no blood left to swear on. <b>Iron Oath</b> failed.`,
+            pt: `${userName} não tinha mais sangue para jurar. <b>Iron Oath</b> falhou.`,
+          },
         };
       }
 
@@ -73,7 +76,10 @@ const raliaSkills = [
       });
 
       context.registerDialog({
-        message: `${userName} swears the <b>Iron Oath</b> in her own blood!`,
+        message: {
+          en: `${userName} swears the <b>Iron Oath</b> in her own blood!`,
+          pt: `${userName} sela o <b>Iron Oath</b> com o próprio sangue!`,
+        },
         sourceId: user.id,
         targetId: user.id,
         duration: 1000,

@@ -64,7 +64,10 @@ export default {
     owner.runtime.impulseStacks++;
 
     const gained = {
-      log: `${formatChampionName(owner)} gained 1 Impulse stack. Current stacks: ${owner.runtime.impulseStacks}`,
+      log: {
+        en: `${formatChampionName(owner)} gained 1 Impulse stack (${owner.runtime.impulseStacks}/${this.stackCap}).`,
+        pt: `${formatChampionName(owner)} ganhou 1 acúmulo de Impulso (${owner.runtime.impulseStacks}/${this.stackCap}).`,
+      },
     };
 
     if (owner.runtime.impulseStacks < this.stackCap) return gained;
@@ -89,8 +92,13 @@ export default {
       return Math.random() < 0.5 ? a : b;
     }, enemies[0]);
 
+    const burst = {
+      en: `${formatChampionName(owner)} unleashed a burst of speed, consuming all Impulse against ${formatChampionName(lowestHealthEnemy)}!`,
+      pt: `${formatChampionName(owner)} liberou uma explosão de velocidade, consumindo todo o Impulso contra ${formatChampionName(lowestHealthEnemy)}!`,
+    };
+
     context.registerDialog({
-      message: `${formatChampionName(owner)} unleashed a burst of speed, consuming all Impulse against ${formatChampionName(lowestHealthEnemy)}!`,
+      message: burst,
       sourceId: owner.id,
       targetId: owner.id,
     });

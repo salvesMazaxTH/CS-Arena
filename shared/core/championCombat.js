@@ -179,7 +179,10 @@ export function applyTaunt(champion, taunterId, duration, context) {
     ? formatChampionName(tauntSource)
     : taunterId;
 
-  const logMsg = `${formatChampionName(champion)} was taunted by <b>${tauntSourceName}</b>.`;
+  const logMsg = {
+    en: `${formatChampionName(champion)} was taunted by <b>${tauntSourceName}</b>.`,
+    pt: `<b>${tauntSourceName}</b> provocou ${formatChampionName(champion)}.`,
+  };
 
   if (context?.registerDialog) {
     context.registerDialog({

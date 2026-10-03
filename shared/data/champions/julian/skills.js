@@ -156,10 +156,10 @@ const julianSkills = [
     priority: 0,
 
     hits: [
-      { id: "impact", label: "Impact" },
+      { id: "impact", label: { en: "Impact", pt: "Impacto" } },
       {
         id: "punch_through",
-        label: "Punch-Through",
+        label: { en: "Punch-Through", pt: "Perfuração" },
         damageMode: "piercing",
         piercingPercentage: 100,
       },

@@ -1,5 +1,6 @@
 // step9 - resultBuilder.js - Consolidates the final result of the attack, including logs, total damage, final HP, etc. Can be an object or an array (in case of counter-attacks/reflects).
 import { formatChampionName } from "../../../ui/formatters.js";
+import { resolveText } from "../../../i18n/locale.js";
 
 export function buildFinalResult(event) {
   // Consolidates all logs (those from the pipeline + any that hooks may have added to the context)
@@ -69,18 +70,14 @@ export function buildFinalResult(event) {
 }
 
 function _buildLog(user, target, skill, dmg, crit, hpAfter) {
-  const userName = user
-    ? { en: formatChampionName(user), pt: formatChampionName(user) }
-    : { en: "Effect", pt: "Efeito" };
   const targetName = formatChampionName(target);
-
-  // skill can be a string (skill name) or an object (skill instance)
-  const skillName = skill && typeof skill === "object" ? skill.name : skill;
+  // skill is a skill instance or a hit label; a label may be { en, pt }
+  const label = skill?.name ?? skill;
   dmg = Math.floor(dmg);
   const hpLine = `${hpAfter}/${target.maxHP}`;
 
   return {
-    en: `${userName.en} used <b>${skillName}</b> and dealt ${dmg} damage to ${targetName}${crit.didCrit ? " (CRITICAL)" : ""}\nfinal HP of ${targetName}: ${hpLine}`,
-    pt: `${userName.pt} usou <b>${skillName}</b> e causou ${dmg} de dano a ${targetName}${crit.didCrit ? " (CRÍTICO)" : ""}\nHP final de ${targetName}: ${hpLine}`,
+    en: `${user ? formatChampionName(user) : "Effect"} used <b>${resolveText(label, "en")}</b> and dealt ${dmg} damage to ${targetName}${crit.didCrit ? " (CRITICAL)" : ""}\nfinal HP of ${targetName}: ${hpLine}`,
+    pt: `${user ? formatChampionName(user) : "Efeito"} usou <b>${resolveText(label, "pt")}</b> e causou ${dmg} de dano a ${targetName}${crit.didCrit ? " (CRÍTICO)" : ""}\nHP final de ${targetName}: ${hpLine}`,
   };
 }

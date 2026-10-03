@@ -71,7 +71,7 @@ const lordOfTheShadowflameSkills = [
     hits: [
       {
         id: "recoil",
-        label: "Recoil (The Flame Takes Its Due)",
+        label: { en: "Recoil (The Flame Takes Its Due)", pt: "Recuo (The Flame Takes Its Due)" },
         type: "magical",
         contact: false,
         damageMode: "absolute",

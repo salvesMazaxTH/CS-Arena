@@ -103,7 +103,7 @@ const hikariSkills = [
     hits: [
       {
         id: "counter",
-        label: "Substitution Counter",
+        label: { en: "Substitution Counter", pt: "Contra-ataque (Substitution)" },
         type: "physical",
         contact: true,
         damageMode: "standard",

@@ -23,7 +23,10 @@ export default {
 
     return {
       cancel: true,
-      message: `<b>[Passive — ${this.name}]</b> the storm sets no pace for ${formatChampionName(owner)} — his Speed holds.`,
+      message: {
+        en: `<b>[Passive — ${this.name}]</b> the storm sets no pace for ${formatChampionName(owner)} — his Speed holds.`,
+        pt: `<b>[Passiva — ${this.name}]</b> a tempestade não dita o ritmo de ${formatChampionName(owner)} — sua Velocidade se mantém.`,
+      },
     };
   },
 
@@ -44,14 +47,20 @@ export default {
     owner.runtime.slowerThanStormTurn = context.currentTurn;
 
     context.registerDialog({
-      message: `${formatChampionName(attacker)}'s blow was loosed a week too early — ${formatChampionName(owner)} is not where it falls.`,
+      message: {
+        en: `${formatChampionName(attacker)}'s blow was loosed a week too early — ${formatChampionName(owner)} is not where it falls.`,
+        pt: `O golpe de ${formatChampionName(attacker)} saiu uma semana adiantado — ${formatChampionName(owner)} já não está onde ele cai.`,
+      },
       sourceId: owner.id,
       targetId: owner.id,
     });
 
     return {
       evade: true,
-      message: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} reads ${formatChampionName(attacker)} and steps clean through the blow.`,
+      message: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} reads ${formatChampionName(attacker)} and steps clean through the blow.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} lê ${formatChampionName(attacker)} e passa ileso pelo golpe.`,
+      },
     };
   },
 };

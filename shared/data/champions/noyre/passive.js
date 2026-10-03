@@ -102,7 +102,7 @@ export default {
   hits: [
     {
       id: "punishment",
-      label: "Entropy (Passive)",
+      label: { en: "Entropy (Passive)", pt: "Entropy (Passiva)" },
       type: "magical",
       contact: false,
       damageMode: "piercing",
