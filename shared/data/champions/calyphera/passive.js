@@ -111,14 +111,15 @@ export default {
     return { damage: damage * (1 + this.physicalVulnerabilityPercent / 100) };
   },
 
+  // accrueLight returns skill-result entries ({ log }); a hook hands back the bare logs.
   onAfterDmgTaking({ owner, attacker, damage, context }) {
     if (attacker === owner || !(damage > 0)) return;
-    return accrueLight(owner, damage, context);
+    return { logs: accrueLight(owner, damage, context).map(({ log }) => log) };
   },
 
   onAfterDmgDealing({ owner, defender, damage, context }) {
     if (defender.team === owner.team || !(damage > 0)) return;
-    return accrueLight(owner, damage, context);
+    return { logs: accrueLight(owner, damage, context).map(({ log }) => log) };
   },
 
   onBeforeDmgDealing({ owner, defender, damage }) {

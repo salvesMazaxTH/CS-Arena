@@ -208,12 +208,6 @@ function _processHook(event, eventName, payload) {
   for (const r of results) {
     if (!r) continue;
 
-    // Legacy case: a plain array of logs
-    if (Array.isArray(r)) {
-      summary.logs.push(...r);
-      continue;
-    }
-
     // Event state mutation
     if (r.damage !== undefined) {
       damage.apply(r.damage);

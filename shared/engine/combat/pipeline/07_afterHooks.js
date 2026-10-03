@@ -121,12 +121,6 @@ function _processHook(event, eventName, payload) {
   for (const r of results) {
     if (!r) continue;
 
-    // Legacy: a bare array of logs
-    if (Array.isArray(r)) {
-      summary.logs.push(...r);
-      continue;
-    }
-
     collectHookLogs(r, summary.logs);
   }
   return summary;

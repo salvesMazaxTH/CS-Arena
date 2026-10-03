@@ -139,11 +139,11 @@ export function decayShields(champion, currentTurn) {
   return removed;
 }
 
-/** Whether a shield blocks (and is consumed by) the current action. */
+/** Whether a shield blocks (and is consumed by) the incoming hit. */
 export function _checkAndConsumeShieldBlock(champion, context, damageType) {
   if (!Array.isArray(champion.runtime?.shields)) return false;
 
-  // Supreme shield: blocks ANY action.
+  // Supreme shield: blocks any hit, whatever its damage type.
   const supremeIdx = champion.runtime.shields.findIndex(
     (s) => s.type === "supreme" && s.amount > 0,
   );
@@ -688,7 +688,7 @@ export function takeDamage(champion, amount, context) {
   amount = Math.floor(amount);
 
   for (const shield of champion.runtime.shields) {
-    // Spell and Supreme shields don't absorb HP — they only block actions.
+    // Spell and Supreme shields don't absorb HP — they block whole hits.
     if (shield.type && shield.type !== "regular") continue;
     if (amount <= 0) break;
 

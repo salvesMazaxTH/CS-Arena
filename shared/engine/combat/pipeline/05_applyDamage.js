@@ -1,5 +1,6 @@
 import { getClaimPoints } from "../claim.js";
 import { splitByStacks } from "../../../core/stackLifetime.js";
+import { regularShieldTotal } from "../../../core/championCombat.js";
 
 export function applyDamage(event) {
   if (event.constructor.debugMode) console.group(`❤️ [APPLYING DAMAGE]`);
@@ -18,11 +19,7 @@ export function applyDamage(event) {
   event.defender.runtime.claimValueBeforeDeathTurn = currentTurn;
 
   const hpBefore = event.defender.HP;
-  const shieldBefore = Array.isArray(event.defender.runtime?.shields)
-    ? event.defender.runtime.shields
-        .filter((s) => !s?.type || s.type === "regular")
-        .reduce((sum, s) => sum + (Number(s.amount) || 0), 0)
-    : 0;
+  const shieldBefore = regularShieldTotal(event.defender);
 
   // Positive damage can never round down to 0 — a hit that connects always
   // deals at least 1. Only hooks composing together (e.g. Avarik's Edict
@@ -41,14 +38,9 @@ export function applyDamage(event) {
 
   event.defender.takeDamage(damageToApply, event.context);
 
-
   event.hpAfter = event.defender.HP;
   event.actualDmg = hpBefore - event.hpAfter;
-  const remainingShield = Array.isArray(event.defender.runtime?.shields)
-    ? event.defender.runtime.shields
-        .filter((s) => !s?.type || s.type === "regular")
-        .reduce((sum, s) => sum + (Number(s.amount) || 0), 0)
-    : 0;
+  const remainingShield = regularShieldTotal(event.defender);
   const absorbedByShield = Math.max(0, shieldBefore - remainingShield);
   // What the killing blow had left over once the HP ran out. It never shows on
   // screen, but the attacker dealt it.
