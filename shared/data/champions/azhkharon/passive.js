@@ -9,8 +9,8 @@ export default {
 
   description() {
     return {
-      en: `Azh'Kharon's citadel fell at the change of the watch, in the one hour its walls stood unmanned. Dead and bound to the pact, he swore no change of the watch would ever find him off his post again — and on the turns the watch turns (<b>${STAR_CHECKPOINT_TURNS.join(", ")}</b>), that night comes back to him. On those turns he gains <b>+${this.attackBuff}%</b> <b>Attack</b>, and an enemy counts as <b>Besieged</b> with only one of its two conditions met. An enemy is <b>Besieged</b> while it carries <b>Poisoned</b>, <b>Chilled</b> or <b>Frozen</b> applied by another ally, and has already taken damage from another ally this turn, shield-absorbed damage and poison ticks included.`,
-      pt: `A cidadela de Azh'Kharon caiu na troca da guarda, na única hora em que suas muralhas ficaram sem ninguém. Morto e preso ao pacto, ele jurou que nenhuma troca da guarda voltaria a encontrá-lo fora do posto — e nos turnos em que a guarda troca (<b>${STAR_CHECKPOINT_TURNS.join(", ")}</b>), aquela noite volta para ele. Nesses turnos ele ganha <b>+${this.attackBuff}%</b> de <b>Ataque</b>, e basta uma das duas condições para um inimigo contar como <b>Sitiado</b>. Um inimigo está <b>Sitiado</b> enquanto carrega <b>Envenenado</b>, <b>Gelado</b> ou <b>Congelado</b> aplicado por outro aliado e já sofreu dano de outro aliado neste turno, contando dano absorvido por escudo e ticks de veneno.`,
+      en: `Azh'Kharon's citadel fell at the change of the watch, the one hour its walls stood unmanned — dead or not, he has not left his post since. An enemy is <b>Besieged</b> while it carries <b>Poisoned</b>, <b>Chilled</b> or <b>Frozen</b> applied by one of his allies and has already taken damage from one of his allies this turn, shield-absorbed damage and poison ticks included. On the turns the watch changes (<b>${STAR_CHECKPOINT_TURNS.join(", ")}</b>), he gains <b>+${this.attackBuff}%</b> <b>Attack</b>, and either condition alone leaves an enemy <b>Besieged</b>.`,
+      pt: `A cidadela de Azh'Kharon caiu na troca da guarda, a única hora em que suas muralhas ficaram sem vigia — morto ou não, ele nunca mais deixou o posto. Um inimigo está <b>Sitiado</b> enquanto carrega <b>Envenenado</b>, <b>Gelado</b> ou <b>Congelado</b> aplicado por um aliado dele e já sofreu dano de um aliado dele neste turno, contando dano absorvido por escudo e ticks de veneno. Nos turnos de troca da guarda (<b>${STAR_CHECKPOINT_TURNS.join(", ")}</b>), ele ganha <b>+${this.attackBuff}%</b> de <b>Ataque</b>, e basta uma das duas condições para deixar um inimigo <b>Sitiado</b>.`,
     };
   },
 
@@ -70,12 +70,6 @@ export default {
       context,
       isPercent: true,
       statModifierSrc: owner,
-    });
-
-    context.registerDialog({
-      message: `<b>[PASSIVE — ${this.name}]</b> The watch turns, and ${formatChampionName(owner)} is at his post.`,
-      sourceId: owner.id,
-      targetId: owner.id,
     });
 
     return {

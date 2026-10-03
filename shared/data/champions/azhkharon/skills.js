@@ -9,7 +9,7 @@ const azhkharonSkills = [
   totalBlock,
 
   // ========================
-  // Skill 1 — basic attack
+  // Skill 1 — Rampart Cleave
   // ========================
   {
     key: "rampart_cleave",
@@ -59,7 +59,7 @@ const azhkharonSkills = [
   },
 
   // ========================
-  // Skill 2 — taunt / defense
+  // Skill 2 — Desecrated Standard
   // ========================
   {
     key: "desecrated_standard",
@@ -102,10 +102,11 @@ const azhkharonSkills = [
         if (tauntLog) logs.push(tauntLog);
       }
 
+      const taunted = besieged.length;
       logs.push({
         log: {
-          en: `<b>[${this.name}]</b> ${formatChampionName(user)} planted his standard, gaining +${this.defBuff}% Defense and taunting ${besieged.length} besieged enemy(ies).`,
-          pt: `<b>[${this.name}]</b> ${formatChampionName(user)} fincou seu estandarte, ganhando +${this.defBuff}% de Defesa e provocando ${besieged.length} inimigo(s) sitiado(s).`,
+          en: `<b>[${this.name}]</b> ${formatChampionName(user)} planted his standard, gaining +${this.defBuff}% Defense${taunted ? ` and taunting ${taunted} besieged enemy(ies)` : ""}.`,
+          pt: `<b>[${this.name}]</b> ${formatChampionName(user)} fincou seu estandarte, ganhando +${this.defBuff}% de Defesa${taunted ? ` e provocando ${taunted} inimigo(s) sitiado(s)` : ""}.`,
         },
       });
 
@@ -140,8 +141,8 @@ const azhkharonSkills = [
     targetSpec: ["all:enemy"],
 
     resolve({ user, targets, context = {} }) {
-      // Read the siege before the blast lands: Kharon's own hit and poison
-      // must not count as the allied pressure that besieges a target.
+      // Read the siege before the blast lands: past maxStacks, Kharon's own
+      // poison stacks evict an ally's oldest batch and would lift the siege.
       const besieged = new Set(
         targets.filter((enemy) => passive.isBesieged(user, enemy, context)),
       );
