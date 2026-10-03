@@ -65,14 +65,20 @@ export default {
     const survivalHP = Math.floor(owner.maxHP * this.ascensionThreshold);
 
     context.registerDialog({
-      message: `${formatChampionName(owner)} should be on the floor. The grudge is not finished with him.`,
+      message: {
+        en: `${formatChampionName(owner)} should be on the floor. The grudge is not finished with him.`,
+        pt: `${formatChampionName(owner)} já devia estar no chão. Mas o rancor ainda não acabou com ele.`,
+      },
       sourceId: owner.id,
       targetId: owner.id,
     });
 
     return {
       damageCap: Math.max(owner.HP + regularShieldTotal(owner) - survivalHP, 0),
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} refuses to go down with the debt unpaid.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} refuses to go down with the debt unpaid.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} se recusa a cair com a dívida em aberto.`,
+      },
     };
   },
 
@@ -83,7 +89,10 @@ export default {
       return;
 
     context.registerDialog({
-      message: `${formatChampionName(owner)} bears down harder — divine blood bleeds the same as any master's did.`,
+      message: {
+        en: `${formatChampionName(owner)} bears down harder — divine blood bleeds the same as any master's did.`,
+        pt: `${formatChampionName(owner)} pesa ainda mais a mão — sangue divino sangra igual ao de qualquer senhor que ele já teve.`,
+      },
       sourceId: owner.id,
       targetId: defender.id,
     });
@@ -121,17 +130,23 @@ export default {
 
     const risesAs =
       newChampionKey === this.ascendsInto
-        ? "Clay, Godslayer"
-        : "the Lord of the Shadowflame";
+        ? { en: "Clay, Godslayer", pt: "Clay, Godslayer" }
+        : { en: "the Lord of the Shadowflame", pt: "o Lorde da Chama Sombria" };
 
     context.registerDialog({
-      message: `${formatChampionName(owner)} stops being something anyone can put back in chains.`,
+      message: {
+        en: `${formatChampionName(owner)} stops being something anyone can put back in chains.`,
+        pt: `${formatChampionName(owner)} deixa de ser algo que alguém consiga acorrentar de novo.`,
+      },
       sourceId: owner.id,
       targetId: owner.id,
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} rises as <b>${risesAs}</b>.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} rises as <b>${risesAs.en}</b>.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} se ergue como <b>${risesAs.pt}</b>.`,
+      },
     };
   },
 };

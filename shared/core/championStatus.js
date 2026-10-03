@@ -467,9 +467,10 @@ function _canApplyStatusEffect(
   if (cancelled) {
     return {
       allowed: false,
-      message:
-        cancelled.message ??
-        `${formatChampionName(champion)} is immune to ${definition.name}.`,
+      message: cancelled.message ?? {
+        en: `${formatChampionName(champion)} is immune to ${definition.name}.`,
+        pt: `${formatChampionName(champion)} é imune a ${definition.namePt ?? definition.name}.`,
+      },
     };
   }
 

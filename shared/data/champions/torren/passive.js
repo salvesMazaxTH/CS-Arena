@@ -22,7 +22,10 @@ export default {
       return {
         cancel: true,
         immune: true,
-        message: `<b>[Passive - ${this.name}]</b> ${formatChampionName(defender)} is immune to indirect damage!`,
+        message: {
+          en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(defender)} is immune to indirect damage!`,
+          pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(defender)} é imune a dano indireto!`,
+        },
       };
     }
   },

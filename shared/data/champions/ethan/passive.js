@@ -66,7 +66,7 @@ export default {
     return {
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} rises as <b>the Lord of the Shadowflame</b>.`,
-        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} se ergue como <b>o Senhor da Chama Sombria</b>.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} se ergue como <b>o Lorde da Chama Sombria</b>.`,
       },
     };
   },

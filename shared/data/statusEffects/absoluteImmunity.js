@@ -18,7 +18,10 @@ const absoluteImmunity = {
     return {
       cancel: true,
       immune: true,
-      message: `${formatChampionName(defender)} has <b>${this.name}</b> and is immune to damage!`,
+      message: {
+        en: `${formatChampionName(defender)} has <b>${this.name}</b> and is immune to damage!`,
+        pt: `${formatChampionName(defender)} tem <b>${this.namePt}</b> e é imune a dano!`,
+      },
     };
   },
 
@@ -27,7 +30,7 @@ const absoluteImmunity = {
 
     return {
       cancel: true,
-      message: `${formatChampionName(target)} has <b>${this.name}</b> and is immune to negative effects!`,
+      message: this.negativeEffectMessage(target),
     };
   },
 
@@ -36,7 +39,14 @@ const absoluteImmunity = {
 
     return {
       cancel: true,
-      message: `${formatChampionName(target)} has <b>${this.name}</b> and is immune to negative effects!`,
+      message: this.negativeEffectMessage(target),
+    };
+  },
+
+  negativeEffectMessage(target) {
+    return {
+      en: `${formatChampionName(target)} has <b>${this.name}</b> and is immune to negative effects!`,
+      pt: `${formatChampionName(target)} tem <b>${this.namePt}</b> e é imune a efeitos negativos!`,
     };
   },
 
@@ -49,12 +59,14 @@ const absoluteImmunity = {
       metadata,
       hooks: {
         name: this.name,
+        namePt: this.namePt,
         type: this.type,
         subtypes: this.subtypes,
         hookScope: this.hookScope,
         onDamageIncoming: this.onDamageIncoming,
         onStatusEffectIncoming: this.onStatusEffectIncoming,
         onHookEffectIncoming: this.onHookEffectIncoming,
+        negativeEffectMessage: this.negativeEffectMessage,
       },
     });
   },

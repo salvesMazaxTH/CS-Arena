@@ -37,7 +37,10 @@ const totalBlock = {
     if (!success) {
       user.runtime.totalBlockStreak = 0;
 
-      const failMessage = `${formatChampionName(user)} tries to use <b>Total Block</b>, but fails.`;
+      const failMessage = {
+        en: `${formatChampionName(user)} tries to use <b>Total Block</b>, but fails.`,
+        pt: `${formatChampionName(user)} tenta usar <b>Total Block</b>, mas falha.`,
+      };
 
       context.registerDialog?.({
         message: failMessage,
@@ -72,7 +75,10 @@ const totalBlock = {
         return {
           cancel: true,
           immune: true,
-          message: `${formatChampionName(defender)} blocks the attack with <b>Total Block</b>!`,
+          message: {
+            en: `${formatChampionName(defender)} blocks the attack with <b>Total Block</b>!`,
+            pt: `${formatChampionName(defender)} bloqueia o ataque com <b>Total Block</b>!`,
+          },
         };
       },
 
@@ -80,7 +86,10 @@ const totalBlock = {
         if (statusEffect.type !== "debuff") return;
         return {
           cancel: true,
-          message: `${formatChampionName(target)} blocks a negative effect with <b>Total Block</b>!`,
+          message: {
+            en: `${formatChampionName(target)} blocks a negative effect with <b>Total Block</b>!`,
+            pt: `${formatChampionName(target)} bloqueia um efeito negativo com <b>Total Block</b>!`,
+          },
         };
       },
     };
@@ -88,7 +97,10 @@ const totalBlock = {
     user.addHookEffect(effect, context);
     user.runtime.lastTotalBlockTurn = context.currentTurn;
 
-    const successMessage = `${formatChampionName(user)} uses <b>Total Block</b> and is protected against the next attack!`;
+    const successMessage = {
+      en: `${formatChampionName(user)} uses <b>Total Block</b> and is protected against the next attack!`,
+      pt: `${formatChampionName(user)} usa <b>Total Block</b> e fica protegido contra o próximo ataque!`,
+    };
 
     context.registerDialog?.({
       message: successMessage,

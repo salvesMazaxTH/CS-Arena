@@ -75,7 +75,7 @@ const claySkills = [
 
     description() {
       return {
-        en: `The worse off Clay already is, the less he holds back — the wound itself becomes a weapon. Deals physical damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost, leaves the target Bleeding for ${this.bleedingStacks} acúmulo(s), and costs Clay Absolute recoil damage equal to ${this.recoilPercentOfMaxHP}% of his Max HP.`,
+        en: `The worse off Clay already is, the less he holds back — the wound itself becomes a weapon. Deals physical damage, adding up to an extra ${this.missingHpScalingPercent}% of his Attack scaled by how much HP he has already lost, leaves the target Bleeding for ${this.bleedingStacks} stack(s), and costs Clay Absolute recoil damage equal to ${this.recoilPercentOfMaxHP}% of his Max HP.`,
         pt: `Quanto mais ferido Clay estiver, menos ele se contém — a própria ferida se transforma em arma. Causa dano físico, acrescentando até ${this.missingHpScalingPercent}% de seu Ataque, escalado conforme a quantidade de Vida que já perdeu, deixa o alvo Sangrando por ${this.bleedingStacks} acúmulo(s), e custa a Clay dano de recuo Absoluto equivalente a ${this.recoilPercentOfMaxHP}% de sua Vida Máxima.`,
       };
     },
@@ -128,7 +128,10 @@ const claySkills = [
 
       const userName = formatChampionName(user);
       recoilEntries.push({
-        log: `${userName} takes ${recoilEntries[0].totalDamage} Absolute recoil damage from <b>${this.name}</b>.\nfinal HP of ${userName}: ${recoilEntries[0].finalHP}/${user.maxHP}`,
+        log: {
+          en: `${userName} takes ${recoilEntries[0].totalDamage} Absolute recoil damage from <b>${this.name}</b>.\nfinal HP of ${userName}: ${recoilEntries[0].finalHP}/${user.maxHP}`,
+          pt: `${userName} sofre ${recoilEntries[0].totalDamage} de dano de recuo Absoluto de <b>${this.name}</b>.\nHP final de ${userName}: ${recoilEntries[0].finalHP}/${user.maxHP}`,
+        },
       });
 
       return [...arr, ...recoilEntries];
@@ -188,7 +191,10 @@ const claySkills = [
       );
 
       context.registerDialog({
-        message: `${formatChampionName(user)} tears himself open to swing that hard.`,
+        message: {
+          en: `${formatChampionName(user)} tears himself open to swing that hard.`,
+          pt: `${formatChampionName(user)} se rasga por dentro para golpear com tanta força.`,
+        },
         sourceId: user.id,
         targetId: user.id,
       });
@@ -207,7 +213,10 @@ const claySkills = [
 
       const userName = formatChampionName(user);
       results.push({
-        log: `${userName} takes ${recoilEntries[0].totalDamage} Absolute recoil damage from <b>${this.name}</b>.\nfinal HP of ${userName}: ${recoilEntries[0].finalHP}/${user.maxHP}`,
+        log: {
+          en: `${userName} takes ${recoilEntries[0].totalDamage} Absolute recoil damage from <b>${this.name}</b>.\nfinal HP of ${userName}: ${recoilEntries[0].finalHP}/${user.maxHP}`,
+          pt: `${userName} sofre ${recoilEntries[0].totalDamage} de dano de recuo Absoluto de <b>${this.name}</b>.\nHP final de ${userName}: ${recoilEntries[0].finalHP}/${user.maxHP}`,
+        },
       });
 
       return results;

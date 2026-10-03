@@ -154,7 +154,10 @@ const naelthosSkills = [
           return {
             cancel: true,
             immune: true,
-            message: `${formatChampionName(defender)} is in Aquatic Form! It is untargetable and immune to damage!`,
+            message: {
+              en: `${formatChampionName(defender)} is in Aquatic Form! It is untargetable and immune to damage!`,
+              pt: `${formatChampionName(defender)} está em Aquatic Form! Não pode ser alvo e é imune a dano!`,
+            },
           };
         },
         onStatusEffectIncoming({ target, statusEffect }) {
@@ -162,7 +165,10 @@ const naelthosSkills = [
           return {
             cancel: true,
             immune: true,
-            message: `${formatChampionName(target)} is in Aquatic Form! It is untargetable and immune to negative effects!`,
+            message: {
+              en: `${formatChampionName(target)} is in Aquatic Form! It is untargetable and immune to negative effects!`,
+              pt: `${formatChampionName(target)} está em Aquatic Form! Não pode ser alvo e é imune a efeitos negativos!`,
+            },
           };
         },
       };
@@ -173,7 +179,10 @@ const naelthosSkills = [
       const userName = formatChampionName(user);
       return [
         {
-          log: `${userName} dissolves into Aquatic Form, untargetable until turn ${currentTurn + this.effectDuration} — unless he acts first.`,
+          log: {
+            en: `${userName} dissolves into Aquatic Form, untargetable until turn ${currentTurn + this.effectDuration} — unless he acts first.`,
+            pt: `${userName} se dissolve em Aquatic Form e não pode ser alvo até o turno ${currentTurn + this.effectDuration} — a menos que aja antes.`,
+          },
         },
       ];
     },
