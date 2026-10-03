@@ -164,17 +164,18 @@ function processCrit(event, debugMode) {
     forced: false,
   };
 
-  if (chance > 0 || event.critOptions?.force || event.critOptions?.disable) {
-    const rolled = _rollCrit(
+  // Rolled even at 0% chance, so editMode.alwaysCrit reaches attackers with no
+  // Critical stat.
+  Object.assign(
+    event.crit,
+    _rollCrit(
       event.attacker,
       event.context,
       chance,
       event.critOptions,
       debugMode,
-    );
-
-    if (rolled) Object.assign(event.crit, rolled);
-  }
+    ),
+  );
 
   const critBonusFactor = event.crit.bonus / 100;
   const critExtra = event.damage * critBonusFactor;

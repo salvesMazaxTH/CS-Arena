@@ -21,7 +21,7 @@ export function preChecks(event) {
     return _buildUnreachableResult(event, null, { silent: true });
   }
 
-  // 1️⃣ IMUNIDADE
+  // 1️⃣ IMMUNITY
   const results = emitCombatEvent(
     "onDamageIncoming",
     {
@@ -58,7 +58,7 @@ export function preChecks(event) {
     }
   }
 
-  // 2️⃣ ESQUIVA
+  // 2️⃣ EVASION
   if (
     event.mode !== event.constructor.Modes.ABSOLUTE &&
     !event.cannotBeEvaded
@@ -316,13 +316,13 @@ const BLOCKING_SHIELD_TEXT = {
 function _buildShieldBlockResult(event, blockedBy) {
   const targetName = formatChampionName(event.defender);
   const username = event.attacker ? formatChampionName(event.attacker) : null;
-  const skillName = event.skill?.name || "skill";
+  const skillName = _skillName(event);
   const { en, pt } = BLOCKING_SHIELD_TEXT[blockedBy];
 
   const log = username
     ? {
-        en: `${username} used ${skillName} on ${targetName}, but ${targetName}'s ${en.name} blocked ${en.blocked} and faded away!`,
-        pt: `${username} usou ${skillName} em ${targetName}, mas o ${pt.name} de ${targetName} bloqueou ${pt.blocked} e se dissipou!`,
+        en: `${username} used ${skillName.en} on ${targetName}, but ${targetName}'s ${en.name} blocked ${en.blocked} and faded away!`,
+        pt: `${username} usou ${skillName.pt} em ${targetName}, mas o ${pt.name} de ${targetName} bloqueou ${pt.blocked} e se dissipou!`,
       }
     : {
         en: `${targetName}'s ${en.name} blocked ${en.blocked} and faded away!`,
