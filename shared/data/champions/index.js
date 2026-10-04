@@ -94,6 +94,7 @@ import hikari_dummy from "./hikari_dummy/index.js";
 import zophirox from "./zophirox/index.js";
 import azhkharon from "./azhkharon/index.js";
 import xharkovar from "./xharkovar/index.js";
+import zaguroth from "./zaguroth/index.js";
 
 const championDB = {
   atlas,
@@ -192,6 +193,7 @@ const championDB = {
   zophirox,
   azhkharon,
   xharkovar,
+  zaguroth,
 };
 
 export default championDB;
