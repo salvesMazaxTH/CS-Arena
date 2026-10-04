@@ -38,6 +38,7 @@ function syncStatusStackBadge(indicator, icon, effectData) {
 
   const badge = currentBadge || document.createElement("span");
   badge.className = "status-indicator-stack-badge";
+  badge.classList.toggle("is-positive", Boolean(icon?.positiveBadge));
   badge.textContent = icon?.showTierNumeral
     ? ROMAN_TIERS[tier] ?? String(tier)
     : String(stackCount);
@@ -154,9 +155,10 @@ export const StatusIndicator = {
     thorns: {
       type: "image",
       value: "/assets/indicators/thorns_indicator.svg",
-      background: "none",
+      background: "rgba(72, 40, 18, 0.88)",
       label: "Thorns",
       showTierNumeral: true,
+      positiveBadge: true,
     },
   },
 

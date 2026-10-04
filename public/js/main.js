@@ -344,8 +344,9 @@ localeSelect.addEventListener("change", (e) => {
 socket.on("editModeUpdate", (serverEditMode = {}) => {
   Object.assign(editMode, serverEditMode);
   mirrorEditMode(editMode);
-  // Auto-login in edit mode: if server enabled autoLogin, fill username and join
-  if (editMode.enabled && editMode.autoLogin) {
+  // Auto-login in edit mode: if server enabled autoLogin, fill username and join.
+  // A signed-in account joins through enterWithAccount instead, after its teams load.
+  if (editMode.enabled && editMode.autoLogin && !currentUserId) {
     // 🔥 request slot automatically
     socket.emit("requestPlayerSlot");
   }

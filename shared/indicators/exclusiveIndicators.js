@@ -82,6 +82,7 @@ registerRuntimeCounterIndicator("zyrelle_ammo", "zyrelleAmmo", {
   background: "rgba(100, 200, 255, 0.8)",
   label: "Ammo",
   showStackCount: true,
+  positiveBadge: true,
 });
 
 // Lorena's mark (runtime.lorenaMarkUntilTurn): a one-shot guaranteed crit on
@@ -142,6 +143,7 @@ registerRuntimeCounterIndicator("layla_static", "laylaStatic", {
   background: "rgba(96, 122, 210, 0.85)",
   label: "Static",
   showStackCount: true,
+  positiveBadge: true,
 });
 
 // Mali Magarc's Older Than Refinement (runtime.maliUnrefined): magical damage
@@ -152,6 +154,7 @@ registerRuntimeCounterIndicator("mali_unrefined", "maliUnrefined", {
   background: "rgba(72, 96, 190, 0.85)",
   label: "Essence",
   showStackCount: true,
+  positiveBadge: true,
 });
 
 // Cassian's Blood Tide (runtime.cassianBloodMeter): fills from every hit he
@@ -174,6 +177,7 @@ registerRuntimeCounterIndicator("meow_lives", "meowLives", {
   background: "rgba(60, 60, 70, 0.85)",
   label: "Lives",
   showStackCount: true,
+  positiveBadge: true,
 });
 
 // Calyphera's Facets (runtime.calypheraFacets): the lines of light the long
@@ -184,6 +188,7 @@ registerRuntimeCounterIndicator("calyphera_facets", "calypheraFacets", {
   background: "rgba(120, 170, 200, 0.85)",
   label: "Facets",
   showStackCount: true,
+  positiveBadge: true,
 });
 
 // Weyne's Stillness (runtime.weyneStillness): the shots she chose not to take,
@@ -195,6 +200,7 @@ registerRuntimeCounterIndicator("weyne_stillness", "weyneStillness", {
   background: "rgba(40, 80, 115, 0.88)",
   label: "Stillness",
   showStackCount: true,
+  positiveBadge: true,
   imageSize: 32,
 });
 
@@ -207,6 +213,7 @@ registerRuntimeCounterIndicator("weyne_steady", "weyneSteady", {
   background: "rgba(55, 100, 140, 0.88)",
   label: "Steady",
   showStackCount: true,
+  positiveBadge: true,
   imageSize: 32,
 });
 
@@ -241,6 +248,7 @@ registerRuntimeCounterIndicator("victoria_stored_heat", "victoriaStoredHeat", {
   background: "rgba(200, 60, 0, 0.85)",
   label: "Stored Heat",
   showStackCount: true,
+  positiveBadge: true,
 });
 
 // Bergrisa's Sediment (runtime.bergrisaSediment): the layers of the world that
@@ -251,6 +259,7 @@ registerRuntimeCounterIndicator("bergrisa_sediment", "bergrisaSediment", {
   background: "rgba(105, 95, 80, 0.88)",
   label: "Sediment",
   showStackCount: true,
+  positiveBadge: true,
 });
 
 // Neraqa's The Undertow (hookEffect "undertow_countdown" on her): turns left
