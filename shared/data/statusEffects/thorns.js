@@ -6,8 +6,8 @@ const ROMAN = ["", "I", "II", "III", "IV", "V"];
 
 // Thorns is a power tier, not a pile of stacks: applying tier N to a bearer
 // at tier M leaves it at min(maxTier, M + N), and it never decays. Every
-// contact hit the bearer takes, killing blow included, returns a share of
-// what got through (actualDmg + overkill) as Defense-ignoring damage.
+// contact hit the bearer takes, killing blow included, returns a base amount plus a
+// share of what got through (actualDmg + overkill) as Defense-ignoring damage.
 const thorns = {
   key: "thorns",
   name: "Thorns",
@@ -17,6 +17,8 @@ const thorns = {
   maxTier: 5,
   // Share of the damage taken returned to the attacker, indexed by tier.
   returnPercentByTier: [0, 10, 15, 20, 25, 30],
+  // Added to every return on top of the share, so low tiers still bite.
+  baseReturnDamage: 10,
 
   toRoman(tier) {
     return ROMAN[tier] ?? String(tier);
@@ -42,8 +44,8 @@ const thorns = {
 
     const taken = (event.actualDmg || 0) + (event.overkill || 0);
     const percent = this.returnPercentByTier[instance.tier] ?? 0;
-    const returned = (taken * percent) / 100;
-    if (returned <= 0) return;
+    if (taken <= 0) return;
+    const returned = this.baseReturnDamage + (taken * percent) / 100;
 
     const tier = this.toRoman(instance.tier);
     event.context.extraDamageQueue ??= [];

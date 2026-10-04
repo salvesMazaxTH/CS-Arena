@@ -96,8 +96,8 @@ export const GAME_GLOSSARY = {
   thorns: {
     title: { en: "Thorns", pt: "Espinhos" },
     description: {
-      en: "Every contact hit the champion takes returns part of the damage to the attacker, ignoring Defense — even the blow that kills them. Comes in tiers I to V (10% / 15% / 20% / 25% / 30%); applying it again raises the tier, and it never wears off.",
-      pt: "Todo golpe de contato que o campeão sofre devolve parte do dano ao atacante, ignorando a Defesa — até o golpe que o derruba. Tem níveis de I a V (10% / 15% / 20% / 25% / 30%); aplicá-lo de novo sobe o nível, e ele nunca se esgota.",
+      en: "Every contact hit the champion takes deals 10 damage plus part of the damage taken back to the attacker, ignoring Defense — even the blow that kills them. Comes in tiers I to V (10% / 15% / 20% / 25% / 30% of the damage taken); applying it again raises the tier, and it never wears off.",
+      pt: "Todo golpe de contato que o campeão sofre causa ao atacante 10 de dano mais parte do dano sofrido, ignorando a Defesa — até o golpe que o derruba. Tem níveis de I a V (10% / 15% / 20% / 25% / 30% do dano sofrido); aplicá-lo de novo sobe o nível, e ele nunca se esgota.",
     },
   },
   absolute_immunity: {
