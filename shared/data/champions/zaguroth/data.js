@@ -1,7 +1,6 @@
 export default {
   name: "Zaguroth",
   releaseDate: "2026-10-05",
-  unreleased: true,
   portrait: "/assets/portraits/zaguroth.webp",
 
   HP: 330,

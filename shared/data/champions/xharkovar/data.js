@@ -1,7 +1,6 @@
 export default {
   name: "Xharkovar",
   releaseDate: "2026-10-05",
-  unreleased: true,
   portrait: "/assets/portraits/xharkovar.webp",
 
   HP: 365,

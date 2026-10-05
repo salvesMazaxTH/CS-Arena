@@ -1,11 +1,9 @@
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
+import thorns from "../../statusEffects/thorns.js";
 import basicStrike from "../generic/basicStrike.js";
-
-const thornsTier = (champion) => champion.statusEffects?.get("thorns")?.tier ?? 0;
-
-const toArray = (result) => (Array.isArray(result) ? result : [result]);
+import growingSpines from "./passive.js";
 
 const zagurothSkills = [
   basicStrike,
@@ -34,18 +32,18 @@ const zagurothSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
 
-      return toArray(
-        new DamageEvent({
-          baseDamage: (user.Attack * this.bf) / 100,
-          bonusDamage: this.bonusDamagePerTier * thornsTier(user),
-          attacker: user,
-          defender: enemy,
-          skill: this,
-          type: "physical",
-          context,
-          allChampions: context?.allChampions,
-        }).execute(),
-      );
+      const result = new DamageEvent({
+        baseDamage: (user.Attack * this.bf) / 100,
+        bonusDamage: this.bonusDamagePerTier * thorns.tierOf(user),
+        attacker: user,
+        defender: enemy,
+        skill: this,
+        type: "physical",
+        context,
+        allChampions: context?.allChampions,
+      }).execute();
+
+      return Array.isArray(result) ? result : [result];
     },
   },
 
@@ -56,7 +54,7 @@ const zagurothSkills = [
     key: "thorn_vines",
     name: "Thorn Vines",
     bf: 60,
-    bonusDamagePerTierSpent: 15,
+    bonusDamagePerTier: 15,
     rootedDuration: 1,
     allyThornsTier: 1,
     contact: false,
@@ -68,8 +66,8 @@ const zagurothSkills = [
 
     description() {
       return {
-        en: `Zaguroth tears his spines loose and plants them in the sand, and giant thorn vines burst up around the chosen enemy, dealing <b>${this.bonusDamagePerTierSpent}</b> bonus damage per tier of <b>Thorns</b> spent and leaving it <b>Rooted</b> for <b>${this.rootedDuration}</b> turn. His <b>Thorns</b> fall back to <b>I</b>, and the vines coil around the chosen ally too, granting it permanent <b>Thorns</b>. Deals physical damage.`,
-        pt: `Zaguroth arranca os próprios espinhos e os planta na areia, e vinhas de espinhos gigantescas irrompem ao redor do inimigo escolhido, causando <b>${this.bonusDamagePerTierSpent}</b> de dano bônus por nível de <b>Espinhos</b> gasto e deixando-o <b>Enraizado</b> por <b>${this.rootedDuration}</b> turno. Seus <b>Espinhos</b> voltam ao <b>I</b>, e as vinhas também se enroscam no aliado escolhido, concedendo-lhe <b>Espinhos</b> permanentes. Causa dano físico.`,
+        en: `Zaguroth tears his spines loose and plants them in the sand, and giant thorn vines burst up around the chosen enemy, dealing <b>${this.bonusDamagePerTier}</b> bonus damage per tier of his <b>Thorns</b> and leaving it <b>Rooted</b> for <b>${this.rootedDuration}</b> turn. His <b>Thorns</b> then fall back to <b>${thorns.toRoman(growingSpines.startingTier)}</b>, and the vines coil around the chosen ally too, granting it permanent <b>Thorns</b> or raising them by <b>${this.allyThornsTier}</b> tier if it already has them. Deals physical damage.`,
+        pt: `Zaguroth arranca os próprios espinhos e os planta na areia, e vinhas de espinhos gigantescas irrompem ao redor do inimigo escolhido, causando <b>${this.bonusDamagePerTier}</b> de dano bônus por nível dos seus <b>Espinhos</b> e deixando-o <b>Enraizado</b> por <b>${this.rootedDuration}</b> turno. Em seguida, seus <b>Espinhos</b> voltam ao nível <b>${thorns.toRoman(growingSpines.startingTier)}</b>, e as vinhas também se enroscam no aliado escolhido, concedendo-lhe <b>Espinhos</b> permanentes, ou subindo-os em <b>${this.allyThornsTier}</b> nível se ele já os tiver. Causa dano físico.`,
       };
     },
 
@@ -77,32 +75,27 @@ const zagurothSkills = [
       const enemy = targets.find((t) => t.team !== user.team);
       const ally = targets.find((t) => t.team === user.team && t.id !== user.id);
 
-      const tiersSpent = thornsTier(user);
-      if (tiersSpent > 0) {
-        user.removeStatusEffect("thorns");
-        user.applyStatusEffect(
-          "thorns",
-          Infinity,
-          context,
-          { persistent: true, sourceId: user.id },
-          1,
-        );
-      }
+      const results = [];
 
-      const results = enemy
-        ? toArray(
-            new DamageEvent({
-              baseDamage: (user.Attack * this.bf) / 100,
-              bonusDamage: this.bonusDamagePerTierSpent * tiersSpent,
-              attacker: user,
-              defender: enemy,
-              skill: this,
-              type: "physical",
-              context,
-              allChampions: context?.allChampions,
-            }).execute(),
-          )
-        : [];
+      // With no enemy to strike, the spines stay on: there is nothing to
+      // plant them in. An evaded or blocked strike still spends them.
+      if (enemy) {
+        const tier = thorns.tierOf(user);
+        thorns.setTier(user, growingSpines.startingTier);
+
+        const result = new DamageEvent({
+          baseDamage: (user.Attack * this.bf) / 100,
+          bonusDamage: this.bonusDamagePerTier * tier,
+          attacker: user,
+          defender: enemy,
+          skill: this,
+          type: "physical",
+          context,
+          allChampions: context?.allChampions,
+        }).execute();
+
+        results.push(...(Array.isArray(result) ? result : [result]));
+      }
 
       if (enemy && effectConnected(results[0], "rooted")) {
         enemy.applyStatusEffect("rooted", this.rootedDuration, context, {
@@ -110,7 +103,10 @@ const zagurothSkills = [
         });
       }
 
-      if (ally?.alive) {
+      // False when the ally's Thorns are already at the top tier: nothing
+      // changed, so nothing is logged.
+      const allyThorned =
+        ally?.alive &&
         ally.applyStatusEffect(
           "thorns",
           Infinity,
@@ -118,6 +114,8 @@ const zagurothSkills = [
           { persistent: true, sourceId: user.id },
           this.allyThornsTier,
         );
+
+      if (allyThorned) {
         results.push({
           log: {
             en: `<b>[${this.name}]</b> Thorn vines coil around ${formatChampionName(ally)}.`,
@@ -159,18 +157,18 @@ const zagurothSkills = [
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
 
-      return toArray(
-        new DamageEvent({
-          baseDamage: (user.Attack * this.bf) / 100,
-          bonusDamage: this.bonusDamagePerTier * thornsTier(user),
-          attacker: user,
-          defender: enemy,
-          skill: this,
-          type: "physical",
-          context,
-          allChampions: context?.allChampions,
-        }).execute(),
-      );
+      const result = new DamageEvent({
+        baseDamage: (user.Attack * this.bf) / 100,
+        bonusDamage: this.bonusDamagePerTier * thorns.tierOf(user),
+        attacker: user,
+        defender: enemy,
+        skill: this,
+        type: "physical",
+        context,
+        allChampions: context?.allChampions,
+      }).execute();
+
+      return Array.isArray(result) ? result : [result];
     },
   },
 ];

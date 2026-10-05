@@ -1,7 +1,5 @@
 import thorns from "../../statusEffects/thorns.js";
 
-const thornsTier = (champion) => champion.statusEffects?.get("thorns")?.tier ?? 0;
-
 export default {
   key: "growing_spines",
   name: "Growing Spines",
@@ -39,7 +37,7 @@ export default {
     if (!owner.runtime.landedContactHit) return;
     owner.runtime.landedContactHit = false;
 
-    if (!owner.alive || thornsTier(owner) >= thorns.maxTier) return;
+    if (!owner.alive || thorns.tierOf(owner) >= thorns.maxTier) return;
 
     owner.applyStatusEffect(
       "thorns",
