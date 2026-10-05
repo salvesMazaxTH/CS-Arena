@@ -95,10 +95,13 @@ const maliMagarcSkills = [
       const results = Array.isArray(result) ? [...result] : [result];
       if (!results.some((r) => r?.landed)) return results;
 
-      const [stripped] = enemy.getStatusEffects({ type: "buff" });
+      const [stripped] = enemy.stripStatusEffects({ type: "buff", max: 1 });
       if (!stripped) return results;
 
-      enemy.removeStatusEffect(stripped.key);
+      // A tiered effect (Thorns) loses one tier and may stay on.
+      const unwritten = stripped.removed
+        ? { en: stripped.name, pt: stripped.namePt }
+        : { en: `a tier of ${stripped.name}`, pt: `um nível de ${stripped.namePt}` };
 
       resolver.applyResourceChange({
         target: user,
@@ -110,8 +113,8 @@ const maliMagarcSkills = [
 
       context.registerDialog?.({
         message: {
-          en: `${formatChampionName(user)} unwrites ${stripped.name ?? stripped.key} from ${formatChampionName(enemy)}.`,
-          pt: `${formatChampionName(user)} desfaz ${stripped.name ?? stripped.key} de ${formatChampionName(enemy)}.`,
+          en: `${formatChampionName(user)} unwrites ${unwritten.en} from ${formatChampionName(enemy)}.`,
+          pt: `${formatChampionName(user)} desfaz ${unwritten.pt} de ${formatChampionName(enemy)}.`,
         },
         sourceId: user.id,
         targetId: enemy.id,
@@ -188,10 +191,7 @@ const maliMagarcSkills = [
       for (const champ of context.aliveChampions) {
         if (champ.team === user.team || !champ.alive) continue;
 
-        const [buff] = champ.getStatusEffects({ type: "buff" });
-        if (!buff) continue;
-
-        champ.removeStatusEffect(buff.key);
+        if (!champ.stripStatusEffects({ type: "buff", max: 1 }).length) continue;
         stripped++;
 
         context.registerDialog?.({

@@ -44,18 +44,15 @@ export default {
 
       if (lastTriggerTurn === context.currentTurn) return;
 
-      const debuffStatusEffects = owner.getStatusEffects({
-        type: "debuff",
-      });
-
       // Only activates if there is a debuff to remove.
-      if (!debuffStatusEffects.length) return;
+      if (!owner.getStatusEffects({ type: "debuff" }).length) return;
 
       owner.runtime.deepTransfigurationLastTriggerTurn = context.currentTurn;
 
-      const removedDebuff = debuffStatusEffects[0];
-
-      owner.removeStatusEffect(removedDebuff.key);
+      const [removedDebuff] = owner.stripStatusEffects({
+        type: "debuff",
+        max: 1,
+      });
 
       const restored = new HealEvent({
         target: owner,
@@ -67,12 +64,10 @@ export default {
       owner.runtime.deepTransfigurationNextAttackBonus = true;
 
       return {
-        log:
-          `<b>[Passive - Deep Transfiguration]</b> ` +
-          `${formatChampionName(owner)} crossed the 50% HP threshold, ` +
-          `removed ${removedDebuff.name ?? removedDebuff.key}, ` +
-          `restored ${restored} HP ` +
-          `and empowered his next attack.`,
+        log: {
+          en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} crosses <b>${this.hpThreshold * 100}%</b> HP, sheds <b>${removedDebuff.name}</b>, restores <b>${restored}</b> HP and empowers his next attack.`,
+          pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} cruza <b>${this.hpThreshold * 100}%</b> de HP, se livra de <b>${removedDebuff.namePt}</b>, recupera <b>${restored}</b> de HP e fortalece seu próximo ataque.`,
+        },
       };
     }
   },

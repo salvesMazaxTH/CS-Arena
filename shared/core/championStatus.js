@@ -606,6 +606,53 @@ export function removeStatusEffect(champion, statusEffectName) {
 }
 
 /**
+ * Strip statusEffects the way a dispel or cleanse does, picking at random when
+ * it cannot take them all. A definition with stripUnits counts as that many separate
+ * effects (each Thorns tier is one), and its onStrip takes the units off.
+ * @param {object} options - type: statusEffect type to strip; max: how many effects
+ * @returns {array} One entry per effect touched: { key, name, namePt, units, removed }
+ */
+export function stripStatusEffects(champion, { type = "buff", max = Infinity } = {}) {
+  const units = [];
+  for (const effect of getStatusEffects(champion, { type })) {
+    const count = StatusEffectsRegistry[effect.key]?.stripUnits?.(effect) ?? 1;
+    for (let i = 0; i < count; i++) units.push(effect);
+  }
+
+  // Partial Fisher-Yates: only the first `picks` slots need shuffling.
+  const picks = Math.min(max, units.length);
+  for (let i = 0; i < picks; i++) {
+    const j = i + Math.floor(Math.random() * (units.length - i));
+    [units[i], units[j]] = [units[j], units[i]];
+  }
+
+  const tally = new Map();
+  for (const effect of units.slice(0, picks)) {
+    tally.set(effect, (tally.get(effect) ?? 0) + 1);
+  }
+
+  const stripped = [];
+  for (const [effect, count] of tally) {
+    const definition = StatusEffectsRegistry[effect.key];
+    if (definition?.onStrip) {
+      definition.onStrip(champion, count);
+    } else {
+      removeStatusEffect(champion, effect.key);
+    }
+
+    stripped.push({
+      key: effect.key,
+      name: effect.name,
+      namePt: definition?.namePt ?? effect.name,
+      units: count,
+      removed: !champion.statusEffects.has(effect.key),
+    });
+  }
+
+  return stripped;
+}
+
+/**
  * Purge all expired statusEffects at turn end
  * @param {object} champion - The champion instance
  * @param {number} currentTurn - Current turn number

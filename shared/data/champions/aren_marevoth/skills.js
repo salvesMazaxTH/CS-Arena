@@ -11,21 +11,22 @@ import { HealEvent } from "../../../engine/combat/HealEvent.js";
 // Strip up to `max` positive effects — positive status effects first, then
 // standalone stat buffs — and return how many fell.
 function stripPositiveEffects(target, max) {
-  const statuses = target.getStatusEffects({ type: "buff" }).slice(0, max);
-  for (const status of statuses) target.removeStatusEffect(status.key);
+  const statusCount = target
+    .stripStatusEffects({ type: "buff", max })
+    .reduce((sum, entry) => sum + entry.units, 0);
 
   let mods = [];
-  if (statuses.length < max) {
+  if (statusCount < max) {
     mods = target.statModifiers
       .filter(
           (mod) =>
             mod.amount > 0 && !mod.statusKey && mod.origin?.kind !== "emblem",
         )
-      .slice(0, max - statuses.length);
+      .slice(0, max - statusCount);
     target.removeStatModifiers(mods);
   }
 
-  return statuses.length + mods.length;
+  return statusCount + mods.length;
 }
 
 const arenMarevothSkills = [

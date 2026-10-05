@@ -6,9 +6,7 @@ import { shredSpeed, speedAdvantage } from "./passive.js";
 // Buff status effects and temporary positive stat modifiers only: hookEffects,
 // shields and permanent or status-owned modifiers are left alone.
 function stripPositiveEffects(target) {
-  for (const status of target.getStatusEffects({ type: "buff" })) {
-    target.removeStatusEffect(status.key);
-  }
+  target.stripStatusEffects({ type: "buff" });
 
   target.removeStatModifiers(
     target.statModifiers.filter(

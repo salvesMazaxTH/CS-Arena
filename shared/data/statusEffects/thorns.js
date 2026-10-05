@@ -24,6 +24,33 @@ const thorns = {
     return ROMAN[tier] ?? String(tier);
   },
 
+  // The bearer's current tier; 0 when it has no Thorns.
+  tierOf(champion) {
+    return champion?.statusEffects?.get(this.key)?.tier ?? 0;
+  },
+
+  // Moves an existing bearer straight to the given tier, up or down; does
+  // nothing to a champion without Thorns. Returns whether the tier changed.
+  setTier(champion, tier) {
+    const instance = champion?.statusEffects?.get(this.key);
+    if (!instance) return false;
+    const before = instance.tier;
+    instance.tier = Math.min(this.maxTier, Math.max(1, tier));
+    return instance.tier !== before;
+  },
+
+  // To a dispel every tier is a separate positive effect: stripping all of
+  // them takes the Thorns off entirely.
+  stripUnits(instance) {
+    return instance.tier;
+  },
+
+  onStrip(champion, count) {
+    const tier = this.tierOf(champion) - count;
+    if (tier > 0) this.setTier(champion, tier);
+    else champion.removeStatusEffect(this.key);
+  },
+
   // Raises an existing bearer's tier; called by applyStatusEffect instead of
   // refusing a second application.
   reapply({ existingInstance, tierGain }) {
@@ -43,8 +70,8 @@ const thorns = {
     if (!attacker?.alive || attacker === defender) return;
 
     const taken = (event.actualDmg || 0) + (event.overkill || 0);
-    const percent = this.returnPercentByTier[instance.tier] ?? 0;
     if (taken <= 0) return;
+    const percent = this.returnPercentByTier[instance.tier] ?? 0;
     const returned = this.baseReturnDamage + (taken * percent) / 100;
 
     const tier = this.toRoman(instance.tier);

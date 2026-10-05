@@ -9,6 +9,7 @@ import {
   getStatusEffects,
   isActionBlockedByHardCC,
   removeStatusEffect,
+  stripStatusEffects,
   purgeExpiredStatusEffects,
 } from "./championStatus.js";
 
@@ -566,6 +567,10 @@ export class Champion {
 
   removeStatusEffect(statusEffectKey) {
     return removeStatusEffect(this, statusEffectKey);
+  }
+
+  stripStatusEffects(options) {
+    return stripStatusEffects(this, options);
   }
 
   addHookEffect(hookEffect, context) {

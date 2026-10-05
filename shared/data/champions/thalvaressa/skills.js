@@ -89,8 +89,7 @@ const thalvaressaSkills = [
       const [ally] = targets;
       if (!ally) return;
 
-      const [cleansed] = ally.getStatusEffects({ type: "debuff" });
-      if (cleansed) ally.removeStatusEffect(cleansed.key);
+      const [cleansed] = ally.stripStatusEffects({ type: "debuff", max: 1 });
 
       ally.applyDamageReduction({
         amount: this.damageReduction,
@@ -110,7 +109,7 @@ const thalvaressaSkills = [
           pt: `${formatChampionName(user)} fecha o <b>Bramble Ward</b> ao redor de ${formatChampionName(
             ally,
           )}: <b>${this.damageReduction}%</b> menos dano recebido por <b>${this.wardDuration}</b> turno(s)${
-            cleansed ? `, <b>${cleansed.name}</b> arrancado` : ""
+            cleansed ? `, <b>${cleansed.namePt}</b> arrancado` : ""
           }.`,
         },
       };
@@ -170,11 +169,7 @@ const thalvaressaSkills = [
       }
 
       for (const ally of allies) {
-        for (const debuff of ally
-          .getStatusEffects({ type: "debuff" })
-          .slice(0, this.cleanseCount)) {
-          ally.removeStatusEffect(debuff.key);
-        }
+        ally.stripStatusEffects({ type: "debuff", max: this.cleanseCount });
 
         ally.applyDamageReduction({
           amount: this.damageReduction,

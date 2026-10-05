@@ -52,8 +52,7 @@ const selinaSkills = [
         source: SELINA_WARD,
       });
 
-      const [cleansed] = ally.getStatusEffects({ type: "debuff" });
-      if (cleansed) ally.removeStatusEffect(cleansed.key);
+      const [cleansed] = ally.stripStatusEffects({ type: "debuff", max: 1 });
 
       const userName = formatChampionName(user);
       const allyName = formatChampionName(ally);
@@ -65,7 +64,7 @@ const selinaSkills = [
           } in <b>Light That Shelters</b>: <b>${healed}</b> HP restored and <b>${this.shieldAmount}</b> Shield raised${cleansed ? `, ${cleansed.name} cleansed` : ""}.`,
           pt: `${userName} envolve ${
             userName === allyName ? "a si mesma" : allyName
-          } em <b>Luz Que Protege</b>: <b>${healed}</b> de HP restaurado e <b>${this.shieldAmount}</b> de Escudo erguido${cleansed ? `, ${cleansed.name} removido` : ""}.`,
+          } em <b>Luz Que Protege</b>: <b>${healed}</b> de HP restaurado e <b>${this.shieldAmount}</b> de Escudo erguido${cleansed ? `, ${cleansed.namePt} removido` : ""}.`,
         },
       };
     },
