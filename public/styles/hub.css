@@ -103,6 +103,26 @@ button.hub-manage-link {
   gap: 14px;
 }
 
+.hub-section-head {
+  margin: 22px 4px 12px;
+}
+
+.hub-section-head:first-child {
+  margin-top: 4px;
+}
+
+.hub-section-head h3 {
+  font-family: "Chakra Petch", "Montserrat", sans-serif;
+  font-size: 1.05rem;
+  color: #f4f7ff;
+}
+
+.hub-section-head p {
+  margin-top: 3px;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
 .hub-team-card {
   display: flex;
   flex-direction: column;

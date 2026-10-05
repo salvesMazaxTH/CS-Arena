@@ -7,7 +7,7 @@ import { TeamBuilder } from "./teamsManager/TeamBuilder.js";
 import { escapeHtml } from "./teamsManager/championCardMarkup.js";
 import { renderTeamSummary } from "./ui/teamCard.js";
 import { readMirroredEditMode } from "./editModeMirror.js";
-import { getSession } from "./auth/session.js";
+import { getSession, supabase } from "./auth/session.js";
 import { getLocale, setLocale } from "./i18n/clientLocale.js";
 
 applyIdentityPaletteCssVariables(document.documentElement);
@@ -31,6 +31,10 @@ const builder = new TeamBuilder({
   editMode: clientEditMode,
   onSave: (team) => {
     const saved = store.saveCustom(team);
+    if (!saved) {
+      flashToast(teamLimitMessage());
+      return;
+    }
     store.setSelectedId(saved.id);
     showList();
     flashToast(`"${saved.name}" saved.`);
@@ -45,6 +49,62 @@ function teamValidity(team) {
     emblems: EMBLEMS,
     editMode: clientEditMode,
   });
+}
+
+// team id -> { matches, wins, losses, draws }, filled from the account.
+let teamStats = new Map();
+
+async function loadTeamStats() {
+  const { data, error } = await supabase.rpc("my_team_stats");
+  if (error) throw error;
+  teamStats = new Map((data ?? []).map((row) => [row.team_id, row]));
+}
+
+// Dev preview: fill every card with made-up records to check the layout
+// without playing matches. Nothing is written to the account.
+if (clientEditMode.enabled) {
+  window.previewTeamStats = () => {
+    const samples = [
+      { matches: 12, wins: 7, losses: 5, draws: 0 },
+      { matches: 1, wins: 1, losses: 0, draws: 0 },
+      { matches: 9, wins: 2, losses: 6, draws: 1 },
+      { matches: 2, wins: 0, losses: 0, draws: 2 },
+      null,
+    ];
+    teamStats = new Map(
+      store
+        .getAll()
+        .map((team, i) => [team.id, samples[i % samples.length]])
+        .filter(([, stats]) => stats),
+    );
+    renderList();
+  };
+  window.resetTeamStats = () => loadTeamStats().then(renderList);
+}
+
+function renderTeamStats(team) {
+  const stats = teamStats.get(team.id);
+  if (!stats || !stats.matches) {
+    return `<div class="tm-record is-empty">No matches played with this team yet.</div>`;
+  }
+  const decisive = stats.wins + stats.losses;
+  const winrate = decisive ? Math.round((stats.wins / decisive) * 100) : null;
+  const draws = stats.draws ? `, ${stats.draws} ${stats.draws === 1 ? "draw" : "draws"}` : "";
+  const matchWord = stats.matches === 1 ? "match" : "matches";
+  return `
+    <div class="tm-record" aria-label="${winrate ?? 0}% winrate over ${stats.matches} ${matchWord}">
+      <strong class="tm-record-rate">${winrate === null ? "–" : `${winrate}%`}</strong>
+      <div class="tm-record-detail">
+        <div class="tm-record-bar${decisive ? "" : " is-neutral"}" style="--win: ${decisive ? stats.wins / decisive : 0}">
+          <span class="tm-record-bar-win"></span>
+        </div>
+        <span class="tm-record-line">
+          <b class="is-win">${stats.wins}W</b>
+          <b class="is-loss">${stats.losses}L</b>
+          <span>in ${stats.matches} ${matchWord}${draws}</span>
+        </span>
+      </div>
+    </div>`;
 }
 
 function renderTeamCard(team) {
@@ -62,6 +122,7 @@ function renderTeamCard(team) {
   return `
     <article class="tm-team-card ${validity.ok ? "" : "is-invalid"}">
       ${renderTeamSummary(team)}
+      ${renderTeamStats(team)}
       ${validity.ok ? "" : `<span class="tm-invalid-flag" title="${escapeHtml(validity.errors.join(" "))}">Needs fixing</span>`}
       <div class="tm-team-card-actions">${actions}</div>
     </article>
@@ -109,6 +170,10 @@ function onGridClick(event) {
     const team = store.getById(id);
     if (team) showBuilder(team);
   } else if (act === "duplicate") {
+    if (store.isFull()) {
+      flashToast(teamLimitMessage());
+      return;
+    }
     const copy = store.duplicate(id);
     if (copy) showBuilder(copy);
   } else if (act === "delete") {
@@ -131,9 +196,17 @@ localeSelect.addEventListener("change", (e) => {
 prebuiltGrid.addEventListener("click", onGridClick);
 customGrid.addEventListener("click", onGridClick);
 
-newTeamBtn.addEventListener("click", () =>
-  showBuilder({ name: "", champions: [], emblems: [], derivedFrom: null }),
-);
+function teamLimitMessage() {
+  return `You can save up to ${store.maxCustomTeams} teams. Delete one to make room.`;
+}
+
+newTeamBtn.addEventListener("click", () => {
+  if (store.isFull()) {
+    flashToast(teamLimitMessage());
+    return;
+  }
+  showBuilder({ name: "", champions: [], emblems: [], derivedFrom: null });
+});
 
 store.onSyncError = () => flashToast("Could not sync with your account. Check your connection.");
 
@@ -141,7 +214,7 @@ store.onSyncError = () => flashToast("Could not sync with your account. Check yo
 async function refreshFromAccount() {
   if (!store.userId || listView.hidden) return;
   try {
-    await store.load(store.userId);
+    await Promise.all([store.load(store.userId), loadTeamStats().catch(() => {})]);
     renderList();
   } catch {
     /* keep showing the cached teams */
@@ -155,6 +228,8 @@ async function start() {
   const session = await getSession();
   if (session) {
     await store.load(session.user.id);
+    // Stats are a bonus: a failed fetch just leaves the cards without them.
+    loadTeamStats().then(() => !listView.hidden && renderList(), () => {});
   } else if (!(clientEditMode.enabled && clientEditMode.autoLogin)) {
     location.href = "/";
     return;

@@ -54,7 +54,7 @@ function compKeyFor(championKeys) {
  * @param {number|null} params.winnerTeam - 1, 2, or null for a draw
  * @param {number} params.turnCount
  * @param {number[]} params.scores - [scoreTeam1, scoreTeam2]
- * @param {{team:number, username:string, championKeys:string[], emblemKeys:string[]}[]} params.players
+ * @param {{team:number, username:string, teamId?:string|null, championKeys:string[], emblemKeys:string[]}[]} params.players
  * @param {{team:number, championKey:string, formOf:string|null, matchStats:object}[]} params.formStats - one entry per form each champion took; `formOf` names the drafted champion when the row is a transformation
  */
 export async function recordMatchResult({
@@ -88,6 +88,7 @@ export async function recordMatchResult({
         team: p.team,
         username: p.username,
         user_id: p.userId ?? null,
+        team_id: p.teamId ?? null,
         champion_keys: p.championKeys,
         emblem_keys: p.emblemKeys,
         comp_key: compKeyFor(p.championKeys),

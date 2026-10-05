@@ -715,6 +715,7 @@ function uploadMatchResult(winnerTeam) {
       team: p.team,
       username: p.username,
       userId: p.userId,
+      teamId: p.teamId ?? null,
       championKeys: p.selectedChampionKeys,
       emblemKeys: p.emblems.map((e) => e.key),
     })),
@@ -1455,6 +1456,7 @@ io.on("connection", (socket) => {
       if (!player || player.isTeamSelected()) continue;
       player.setSelectedChampionKeys([...team.champions]);
       player.setEmblems(resolveEmblems(team.emblems));
+      player.teamId = null;
     }
 
     if (checkAllTeamsSelected()) startGameIfReady();
@@ -1788,7 +1790,7 @@ io.on("connection", (socket) => {
   //  readyWithTeam (hub → matchmaking)
   // =============================
 
-  socket.on("readyWithTeam", ({ champions, emblems } = {}) => {
+  socket.on("readyWithTeam", ({ champions, emblems, teamId } = {}) => {
     const playerSlot = match.getSlotBySocket(socket.id);
     const player = match.players[playerSlot];
 
@@ -1821,6 +1823,9 @@ io.on("connection", (socket) => {
 
     player.setSelectedChampionKeys([...team.champions]);
     player.setEmblems(resolveEmblems(team.emblems));
+    // Saved-team id, kept only to credit the match to that team's stats.
+    player.teamId =
+      typeof teamId === "string" && teamId.length <= 64 ? teamId : null;
 
     broadcastGameState();
     startGameIfReady();

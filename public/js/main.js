@@ -661,10 +661,9 @@ function renderHub() {
     selectedHubTeamId = teams[0]?.id ?? null;
   }
 
-  hubTeamGrid.innerHTML = teams
-    .map((team) => {
-      const playable = isTeamPlayable(team);
-      return `
+  const renderCard = (team) => {
+    const playable = isTeamPlayable(team);
+    return `
         <button type="button"
           class="hub-team-card ${team.id === selectedHubTeamId ? "selected" : ""} ${playable ? "" : "is-invalid"}"
           data-team-id="${escapeHtml(team.id)}">
@@ -672,8 +671,21 @@ function renderHub() {
           ${playable ? "" : '<span class="hub-team-invalid">Unavailable — fix it in Manage teams</span>'}
         </button>
       `;
-    })
-    .join("");
+  };
+  const renderSection = (title, note, list) =>
+    list.length === 0
+      ? ""
+      : `
+        <div class="hub-section-head">
+          <h3>${title}</h3>
+          <p>${note}</p>
+        </div>
+        <div class="hub-team-grid">${list.map(renderCard).join("")}</div>
+      `;
+
+  hubTeamGrid.innerHTML =
+    renderSection("Prebuilt", "Starter line-ups from the base game.", teamStore.getPrebuilt()) +
+    renderSection("My teams", "Saved to your account.", teamStore.getCustom());
 
   updateHubActionState();
 }
@@ -718,6 +730,7 @@ hubFindMatchBtn.addEventListener("click", () => {
   hubStatus.textContent = "Searching for a match…";
   updateHubActionState();
   socket.emit("readyWithTeam", {
+    teamId: team.id,
     champions: team.champions,
     emblems: team.emblems,
   });

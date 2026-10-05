@@ -63,6 +63,7 @@ function normalizeCustomTeam(raw) {
 export class TeamStore {
   constructor() {
     this.userId = null;
+    this.maxCustomTeams = 25;
     this.custom = [];
     this.selectedId = null;
     this.onSyncError = null;
@@ -102,7 +103,9 @@ export class TeamStore {
     if (legacy.length === 0) return 0;
 
     const known = new Set(this.custom.map((team) => team.id));
-    const fresh = legacy.filter((team) => !known.has(team.id));
+    const fresh = legacy
+      .filter((team) => !known.has(team.id))
+      .slice(0, Math.max(0, this.maxCustomTeams - this.custom.length));
     if (fresh.length > 0) {
       const { error } = await supabase
         .from("teams")
@@ -130,6 +133,10 @@ export class TeamStore {
     return this.custom.map((team) => structuredClone(team)).sort((a, b) => b.updatedAt - a.updatedAt);
   }
 
+  isFull() {
+    return this.custom.length >= this.maxCustomTeams;
+  }
+
   getAll() {
     return [...this.getPrebuilt(), ...this.getCustom()];
   }
@@ -152,8 +159,12 @@ export class TeamStore {
     );
   }
 
-  /** Inserts or replaces a custom team by id; stamps origin and updatedAt. */
+  /** Inserts or replaces a custom team by id; stamps origin and updatedAt.
+   *  Returns null when a new team would exceed maxCustomTeams. */
   saveCustom(team) {
+    const exists = this.custom.some((entry) => entry.id === team.id);
+    if (!exists && this.isFull()) return null;
+
     const stamped = {
       id: team.id || generateId("team"),
       name: team.name,
