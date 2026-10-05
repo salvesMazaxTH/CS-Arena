@@ -49,7 +49,7 @@ const silasSkills = [
     name: "Where No Guard Stands",
 
     bf: 60,
-    unguardedBf: 100,
+    unguardedBf: 110,
 
     contact: true,
     damageMode: "standard",
@@ -60,8 +60,8 @@ const silasSkills = [
 
     description() {
       return {
-        en: `Silas does not hurry the work, because hurrying it has never once been necessary: he waits out the half-second in which nothing at all stands over the chosen target, and closes it. Deals physical damage equal to <b>${this.bf}%</b> of his <b>Attack</b>, rising to <b>${this.unguardedBf}%</b> against a target carrying no positive status effect and no shield.`,
-        pt: `Silas nunca tem pressa no trabalho, porque apressá-lo nunca foi necessário: ele espera o instante em que nada mais protege o alvo escolhido, e golpeia exatamente aí. Causa dano físico igual a <b>${this.bf}%</b> do seu <b>Ataque</b>, subindo para <b>${this.unguardedBf}%</b> contra um alvo sem nenhum efeito positivo e sem escudo.`,
+        en: `Silas does not hurry the work, because hurrying it has never once been necessary: he waits out the half-second in which nothing at all stands over the chosen target, and closes it. Deals physical damage equal to <b>${this.bf}%</b> of his <b>Attack</b>, rising to <b>${this.unguardedBf}%</b> against a target carrying no positive status effect, no shield, and no temporary <b>Defense</b> or <b>damage reduction</b> boost.`,
+        pt: `Silas nunca tem pressa no trabalho, porque apressá-lo nunca foi necessário: ele espera o instante em que nada mais protege o alvo escolhido, e golpeia exatamente aí. Causa dano físico igual a <b>${this.bf}%</b> do seu <b>Ataque</b>, subindo para <b>${this.unguardedBf}%</b> contra um alvo sem nenhum efeito positivo, sem escudo e sem aumento temporário de <b>Defesa</b> ou de <b>redução de dano</b>.`,
       };
     },
 
@@ -74,7 +74,28 @@ const silasSkills = [
       const hasPositiveEffect = [...enemy.statusEffects.values()].some(
         (effect) => effect?.type === "buff",
       );
-      const unguarded = !hasShield && !hasPositiveEffect;
+      // Only cover someone put up counts: permanent grants (emblems, innate
+      // passives) are always there, so they never close the gap. An aura
+      // held up by a champion on the field counts as cover.
+      const currentTurn = context.currentTurn ?? 0;
+      const hasDefenseBoost = (enemy.statModifiers ?? []).some(
+        (mod) =>
+          mod?.statName === "Defense" &&
+          mod.amount > 0 &&
+          (!mod.isPermanent || mod.sustainedById != null),
+      );
+      const hasDamageReduction = (enemy.damageReductionModifiers ?? []).some(
+        (mod) =>
+          mod?.amount > 0 &&
+          (mod.sustainedById != null ||
+            (mod.expiresAtTurn !== undefined &&
+              mod.expiresAtTurn > currentTurn)),
+      );
+      const unguarded =
+        !hasShield &&
+        !hasPositiveEffect &&
+        !hasDefenseBoost &&
+        !hasDamageReduction;
 
       const bf = unguarded ? this.unguardedBf : this.bf;
       const baseDamage = (user.Attack * bf) / 100;
