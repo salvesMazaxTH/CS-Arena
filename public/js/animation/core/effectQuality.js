@@ -17,8 +17,10 @@ const FRAMES_TO_RECOVER = 12; // longer streak required to trust a recovery
 const MAX_TRANSITIONS = 4;
 const REDUCED_SCALE = 0.45;
 // Longest step an effect advances in one frame, so a hitch slows the effect
-// down instead of teleporting its particles.
-const MAX_STEP = 1 / 30;
+// down instead of teleporting its particles. Kept loose enough that a device
+// running at a few fps still finishes a sub-second effect in a few seconds
+// rather than crawling through it for most of a minute.
+const MAX_STEP = 1 / 8;
 
 let streak = 0;
 let reduced = false;

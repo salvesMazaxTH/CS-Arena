@@ -42,7 +42,10 @@ async function buildStage() {
   camera.updateMatrixWorld();
 
   renderer.setClearColor(0x000000, 1);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // Touch devices render the full-screen bloom at 1x: at their native 3x
+  // it costs several times the fill-rate and drags every frame.
+  const coarse = window.matchMedia?.("(pointer: coarse)").matches;
+  renderer.setPixelRatio(coarse ? 1 : Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.domElement.style.position = "absolute";
   renderer.domElement.style.top = "0";

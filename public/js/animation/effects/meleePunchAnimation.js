@@ -189,7 +189,7 @@ const textureLoader = new THREE.TextureLoader();
 const punchTexture = textureLoader.load("/assets/punch_silouete.png");
 
 class MeleePunchEffect {
-  constructor(scene, userPos, targetPos, big, palette, weight) {
+  constructor(scene, userPos, targetPos, big, palette, weight, fit = 1) {
     this.scene = scene;
     this.age = 0;
     this.big = big;
@@ -201,7 +201,7 @@ class MeleePunchEffect {
     this.direction = new THREE.Vector3(dx, dy, 0).normalize();
     const angle = Math.atan2(dy, dx);
 
-    const sizeScale = big ? 1.5 : 1;
+    const sizeScale = (big ? 1.5 : 1) * fit;
     this.weight = weight;
     this.travelDur = weight.travel;
     this.postDur = weight.fade;
@@ -270,7 +270,8 @@ class MeleePunchEffect {
 
       // Smoke pushed in direction of punch + radial expansion
       const theta = Math.random() * Math.PI * 2;
-      const speed = (Math.random() * speedRange + speedMin) * (big ? 1.8 : 1);
+      const speed =
+        (Math.random() * speedRange + speedMin) * (big ? 1.8 : 1) * fit;
       pVel[i * 3] = (Math.cos(theta) * 0.5 + this.direction.x) * speed;
       pVel[i * 3 + 1] = (Math.sin(theta) * 0.5 + this.direction.y) * speed;
       pVel[i * 3 + 2] = (Math.random() - 0.5) * speed;
@@ -335,6 +336,20 @@ class MeleePunchEffect {
   }
 }
 
+// Portrait height, in world units, the punch sizes were tuned against. The
+// stage always shows the same world height, so on a phone, where a portrait
+// covers far fewer of those units, the punch shrinks to match it.
+const PUNCH_REFERENCE_PORTRAIT = 1.8;
+
+function punchFit(camera, targetEl) {
+  const worldHeight =
+    2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  const portrait =
+    (targetEl.getBoundingClientRect().height / window.innerHeight) *
+    worldHeight;
+  return Math.min(1, Math.max(0.35, portrait / PUNCH_REFERENCE_PORTRAIT));
+}
+
 /** A punch player of the given PUNCH_WEIGHTS entry. */
 export function createMeleePunch(weight = PUNCH_WEIGHTS.standard) {
   return (opts) => playMeleePunch({ ...opts, weight });
@@ -363,6 +378,7 @@ export async function playMeleePunch({
       big,
       palette,
       weight,
+      punchFit(camera, targetEl),
     );
   }, big ? 3.2 : 2.5);
 }
