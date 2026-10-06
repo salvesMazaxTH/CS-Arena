@@ -49,6 +49,12 @@ export default {
     onBeforeDmgTaking: {
       allowOnAbsolute: true,
     },
+    // Dropping below the threshold calls Tutu whatever the source: a DoT
+    // tick or a reaction hit counts as much as a direct blow.
+    onAfterDmgTaking: {
+      allowOnDot: true,
+      allowOnNestedDamage: true,
+    },
   },
 
   onBeforeDmgTaking({ owner, damage, context }) {
