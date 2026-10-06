@@ -689,6 +689,7 @@ export function createCombatAnimationManager(deps) {
       userId,
       sourceId,
       amount,
+      overkill,
       absorbedByShield,
       isCritical,
       isDot,
@@ -750,6 +751,9 @@ export function createCombatAnimationManager(deps) {
     const absorbedFromEvent = Math.max(0, Number(absorbedByShield) || 0);
     const hasShieldAbsorption = absorbedFromEvent > 0;
     const hasHpDamage = hpDamage > 0;
+    // The float shows the whole blow: a 1000 hit on 1 HP reads 1000, while
+    // the bar only drops by what was left.
+    const floatDamage = hpDamage + Math.max(0, Number(overkill) || 0);
 
     if (effect.immune) return await animateImmune(effect);
     if (effect.shieldBlocked) return await animateShieldBlock(effect);
@@ -780,10 +784,10 @@ export function createCombatAnimationManager(deps) {
         createFloatElement(portraitWrapper, "999", "damage-float", extraClass);
       } else {
         if (hasHpDamage) {
-          const damageTierClass = `damage-tier-${getDamageTier(Math.max(1, hpDamage))}`;
+          const damageTierClass = `damage-tier-${getDamageTier(Math.max(1, floatDamage))}`;
           createFloatElement(
             portraitWrapper,
-            `-${hpDamage}`,
+            `-${floatDamage}`,
             "damage-float",
             damageTierClass,
           );

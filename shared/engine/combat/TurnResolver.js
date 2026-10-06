@@ -1397,6 +1397,7 @@ export class TurnResolver {
           sourceId: sourceId || null,
           targetId: target.id,
           amount,
+          overkill: Math.max(0, Number(overkill) || 0),
           rawAmount: Number.isFinite(rawAmount) ? rawAmount : null,
           absorbedByShield: Number.isFinite(absorbedByShield)
             ? absorbedByShield
