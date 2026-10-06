@@ -41,7 +41,8 @@ const gorvakharrSkills = [
         attacker: user,
         defender: enemy,
         skill: this,
-            context,
+        type: "physical",
+        context,
         allChampions: context?.allChampions,
       }).execute();
 
@@ -94,7 +95,8 @@ const gorvakharrSkills = [
         attacker: user,
         defender: enemy,
         skill: this,
-            context,
+        type: "physical",
+        context,
         allChampions: context?.allChampions,
       }).execute();
 
@@ -152,7 +154,8 @@ const gorvakharrSkills = [
         attacker: user,
         defender: enemy,
         skill: this,
-            context,
+        type: "physical",
+        context,
         allChampions: context?.allChampions,
       }).execute();
     },
