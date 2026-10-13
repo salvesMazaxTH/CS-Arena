@@ -1,4 +1,4 @@
-import { regularShieldTotal } from "../../../core/championCombat.js";
+import { shieldAgainst } from "../../../core/championCombat.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
@@ -44,7 +44,7 @@ export default {
   onBeforeDmgTaking({ owner, defender, attacker, damage, mode, context }) {
     if (defender !== owner || !(damage > 0)) return;
     if (owner.runtime.clayAscended || owner.runtime.clayGrudgeSpent) return;
-    if (!owner.wouldBeLethal(damage)) return;
+    if (!owner.wouldBeLethal(damage, mode)) return;
 
     owner.runtime.clayGrudgeSpent = true;
 
@@ -74,7 +74,7 @@ export default {
     });
 
     return {
-      damageCap: Math.max(owner.HP + regularShieldTotal(owner) - survivalHP, 0),
+      damageCap: Math.max(owner.HP + shieldAgainst(owner, mode) - survivalHP, 0),
       log: {
         en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} refuses to go down with the debt unpaid.`,
         pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} se recusa a cair com a dívida em aberto.`,

@@ -63,48 +63,77 @@ async function buildStage() {
   composer.addPass(new RenderPass(scene, camera));
   composer.addPass(bloomPass);
 
-  window.addEventListener("resize", () => {
+  const onResize = () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
     composer.setSize(window.innerWidth, window.innerHeight);
-  });
+  };
+  window.addEventListener("resize", onResize);
 
-  return { renderer, composer, bloomPass, scene, camera, effects: [], raf: 0 };
+  const built = {
+    renderer, composer, bloomPass, scene, camera, onResize,
+    effects: [], raf: 0, lost: false,
+  };
+  renderer.domElement.addEventListener("webglcontextlost", () => {
+    built.lost = true;
+  });
+  renderer.domElement.addEventListener("webglcontextrestored", () => {
+    built.lost = false;
+  });
+  return built;
 }
 
-function startLoop() {
-  if (stage.raf) return;
-  stage.renderer.domElement.style.display = "";
+// Same rule as glStage: an idle stage whose context was lost and never came
+// back is dropped so the next punch builds a fresh one.
+function discardStage() {
+  window.removeEventListener("resize", stage.onResize);
+  try {
+    stage.composer.dispose();
+    stage.renderer.dispose();
+  } catch {
+    // A lost context can refuse cleanup calls; the canvas goes either way.
+  }
+  stage.renderer.domElement.remove();
+  stage = null;
+  stagePromise = null;
+}
+
+// The loop holds its own stage, so a later rebuild never strands its effects.
+function startLoop(own) {
+  if (own.raf) return;
+  own.renderer.domElement.style.display = "";
   let last = performance.now();
 
   const frame = (now) => {
     const dt = takeEffectStep(now, last);
     last = now;
 
-    for (let i = stage.effects.length - 1; i >= 0; i--) {
-      const entry = stage.effects[i];
+    for (let i = own.effects.length - 1; i >= 0; i--) {
+      const entry = own.effects[i];
       if (!entry.effect.update(dt)) {
-        entry.effect.dispose(stage.scene);
-        stage.effects.splice(i, 1);
+        entry.effect.dispose(own.scene);
+        own.effects.splice(i, 1);
         entry.resolve();
       }
     }
 
-    if (stage.effects.length === 0) {
-      stage.raf = 0;
-      stage.renderer.domElement.style.display = "none";
+    if (own.effects.length === 0) {
+      own.raf = 0;
+      own.renderer.domElement.style.display = "none";
       return;
     }
 
     // The strongest live punch sets the glow for the frame.
-    stage.bloomPass.strength = Math.max(
-      ...stage.effects.map((entry) => entry.bloomStrength),
+    own.bloomPass.strength = Math.max(
+      ...own.effects.map((entry) => entry.bloomStrength),
     );
-    stage.composer.render();
-    stage.raf = requestAnimationFrame(frame);
+    // The composer's render-target setup is not guarded against a lost
+    // context the way renderer.render() is; the effects still advance.
+    if (!own.lost) own.composer.render();
+    own.raf = requestAnimationFrame(frame);
   };
-  stage.raf = requestAnimationFrame(frame);
+  own.raf = requestAnimationFrame(frame);
 }
 
 /**
@@ -113,14 +142,16 @@ function startLoop() {
  * update(dt) and dispose(scene).
  */
 export async function runBloomEffect(buildEffect, bloomStrength) {
+  if (stage?.lost && stage.effects.length === 0) discardStage();
   stagePromise ??= buildStage();
-  stage = await stagePromise;
-  if (!stage) return;
+  const own = await stagePromise;
+  if (!own) return;
+  stage = own;
 
-  const effect = buildEffect({ scene: stage.scene, camera: stage.camera });
+  const effect = buildEffect({ scene: own.scene, camera: own.camera });
   await new Promise((resolve) => {
-    stage.effects.push({ effect, bloomStrength, resolve });
-    startLoop();
+    own.effects.push({ effect, bloomStrength, resolve });
+    startLoop(own);
   });
 }
 

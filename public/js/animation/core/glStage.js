@@ -7,7 +7,23 @@ import { takeEffectStep } from "./effectQuality.js";
 
 let stage = null;
 
+// A lost context that the browser never restores would leave every later
+// effect invisible, so an idle lost stage is thrown away and rebuilt. A busy
+// one is kept: its effects still resolve (Three skips rendering while lost),
+// and swapping it would orphan their promises.
+function discardStage() {
+  window.removeEventListener("resize", stage.onResize);
+  try {
+    stage.renderer.dispose();
+  } catch {
+    // A lost context can refuse cleanup calls; the canvas goes either way.
+  }
+  stage.renderer.domElement.remove();
+  stage = null;
+}
+
 export function ensureStage() {
+  if (stage?.lost && stage.effects.length === 0) discardStage();
   if (stage) return stage;
   const container = document.getElementById("webgl-container");
   if (!container || typeof THREE === "undefined") return null;
@@ -38,7 +54,15 @@ export function ensureStage() {
   renderer.domElement.style.left = "0";
   container.appendChild(renderer.domElement);
 
-  stage = { renderer, scene, camera, effects: [], raf: 0, last: 0 };
+  const own = { renderer, scene, camera, effects: [], raf: 0, last: 0, lost: false };
+  stage = own;
+
+  renderer.domElement.addEventListener("webglcontextlost", () => {
+    own.lost = true;
+  });
+  renderer.domElement.addEventListener("webglcontextrestored", () => {
+    own.lost = false;
+  });
 
   const onResize = () => {
     camera.aspect = window.innerWidth / window.innerHeight;

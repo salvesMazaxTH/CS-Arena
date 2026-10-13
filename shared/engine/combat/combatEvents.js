@@ -21,6 +21,15 @@ function runHook(kind, source, owner, fn) {
   }
 }
 
+/**
+ * Runs fn attributed to a passive, for code that creates modifiers outside an
+ * event dispatch (a scheduled action, for instance) and would otherwise leave
+ * them without an origin.
+ */
+export function runAsPassiveSource(passive, owner, fn) {
+  return runHook("passive", passive, owner, fn);
+}
+
 export function emitCombatEvent(eventName, payload, champions, options = {}) {
   const results = [];
 

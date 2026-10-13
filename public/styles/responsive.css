@@ -1,0 +1,275 @@
+/* ============================================
+   RESPONSIVE — rotate prompt, phone-landscape tuning, reduced motion
+   The match stage is a 1920x1080 design canvas scaled by matchViewport.js, so
+   "responsive" inside it means adjusting DESIGN px for the window's real size
+   (a 844x390 phone renders the stage at ~0.36x: anything under ~28 design px is unreadable).
+   Out-of-stage screens (login, hub, overlays) reflow normally.
+   ============================================ */
+
+/* ---- Rotate prompt: shown only while a match is up in portrait ---- */
+.rotate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-rotate);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  padding: var(--sp-5);
+  text-align: center;
+  background: radial-gradient(80% 60% at 50% 40%, var(--ink-3), var(--ink-0));
+}
+
+html.match-view.match-portrait .rotate-overlay {
+  display: flex;
+}
+
+.rotate-icon {
+  font-size: 4.5rem;
+  color: var(--brass-300);
+  filter: drop-shadow(0 0 18px rgba(224, 183, 101, 0.5));
+  animation: rotate-hint 2.4s var(--ease-in-out) infinite;
+}
+
+.rotate-text {
+  max-width: 24ch;
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  letter-spacing: 0.08em;
+  color: var(--text-hi);
+}
+
+@keyframes rotate-hint {
+  0%,
+  20% {
+    transform: rotate(0deg);
+  }
+  60%,
+  100% {
+    transform: rotate(90deg);
+  }
+}
+
+/* ---- Settings cog: keep clear of the stage's top-right corner on small windows ---- */
+@media (max-width: 1100px), (max-height: 560px) {
+  .settings-btn {
+    top: 6px;
+    right: 6px;
+    width: 36px;
+    min-width: 0;
+    height: 36px;
+    min-height: 0;
+    padding: 0;
+  }
+}
+
+/* ---- Short windows (phone landscape, 667–932 x 360–430): larger design-px chrome ----
+   The stage is scaled down ~0.35–0.4x, so bump the essential chrome and drop the extras. */
+@media (max-height: 560px) {
+  /* Pills on the plates and the log drawer text */
+  .plate-name {
+    font-size: 30px;
+  }
+
+  .plate-score-value {
+    font-size: 54px;
+  }
+
+  .plate-score-label {
+    font-size: 16px;
+  }
+
+  .turn-display p {
+    font-size: 34px;
+  }
+
+  /* stars: ~12px on the glass at 0.36x, so draw them bigger to keep all 3 moulds readable */
+  .match-star {
+    width: 48px;
+    height: 48px;
+  }
+
+  .plate-stars {
+    min-height: 48px;
+  }
+
+  .hud-surrender,
+  .hud-log-toggle {
+    min-height: 56px;
+  }
+
+  .hud-log-toggle {
+    width: 72px;
+    height: 72px;
+    font-size: 36px;
+  }
+
+  .hud-surrender {
+    font-size: 20px;
+  }
+
+  .arena-controls .ui-btn {
+    min-height: 64px;
+    font-size: 22px;
+  }
+
+  .arena-controls #end-turn-btn {
+    min-height: 72px;
+    font-size: 26px;
+  }
+
+  /* compact bar: the top champion shares this band and must not slide under the turn banner */
+  .action-bar {
+    padding: 8px 14px 10px;
+  }
+
+  .action-bar-header {
+    margin-bottom: 6px;
+    font-size: 20px;
+  }
+
+  /* keep all five skills on ONE line: a wrapped second row would push the top team into the turn banner */
+  .action-bar-skills {
+    gap: 8px;
+  }
+
+  .action-bar-skill-btn {
+    min-width: 0;
+    min-height: 58px;
+    padding: 0 14px;
+    font-size: 22px;
+    letter-spacing: 0.02em;
+  }
+
+  .action-bar-skill-btn.claim {
+    --claim-tip: 18px;
+    letter-spacing: 0.12em;
+  }
+
+  /* Champions: the stage is scaled ~0.36x here, so HP / Momentum numbers must be big in DESIGN px
+     to land around 11px on the glass */
+  .champion {
+    font-size: calc(16.5px * var(--card-scale, 1));
+  }
+
+  .stat-block > p {
+    font-size: 1.6em;
+  }
+
+  /* status icon + stack counter: ~12px on the glass otherwise, too small to read the number */
+  .portrait {
+    --ind-unit: 1.5em;
+  }
+
+  /* 8-champion fields (two rows) must fit the band below the turn banner: smaller art, same number size */
+  .team:has(.team-row:nth-of-type(2)) {
+    --card-scale: 0.4;
+    gap: 4px;
+  }
+
+  .team:has(.team-row:nth-of-type(2)) .stat-block > p {
+    font-size: 2.9em;
+  }
+
+  /* Portrait inspection card: must fit a 360-430px tall window without scrolling */
+  .portrait-overlay {
+    grid-template-columns: minmax(0, 34vh) minmax(0, 1fr);
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .portrait-overlay-name {
+    font-size: 16px;
+  }
+
+  .portrait-overlay-details {
+    padding-top: 0;
+    padding-right: 52px; /* keep the passive text clear of the ✕ */
+  }
+
+  .portrait-overlay::after {
+    top: 8px;
+    right: 8px;
+  }
+
+  .combat-log {
+    font-size: 28px;
+  }
+
+  .combat-log .turn-header {
+    font-size: 26px;
+  }
+
+  .combat-log-drawer {
+    width: 860px;
+  }
+
+  .combat-dialog-text {
+    font-size: 38px;
+  }
+
+  .lineup-banner-title {
+    font-size: 18px;
+  }
+
+  /* Out-of-stage overlays use real px: tighten them */
+  .ui-modal {
+    padding: var(--sp-3);
+  }
+
+  .ui-modal-card {
+    padding: var(--sp-4);
+  }
+
+  .game-over-message {
+    font-size: clamp(28px, 14vh, 64px);
+  }
+
+  .timer-overlay {
+    padding: var(--sp-3);
+    gap: var(--sp-2);
+  }
+
+  .match-stats {
+    padding: var(--sp-3);
+    gap: var(--sp-2);
+  }
+
+  .match-stats-avatar-wrap {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  .match-stats-table {
+    border-spacing: 0 3px;
+  }
+
+  .match-stats-table td {
+    padding: 3px var(--sp-2);
+  }
+
+  .turn-transition-number {
+    font-size: clamp(26px, 14vh, 56px);
+  }
+}
+
+/* ---- Reduced motion: keep state changes, drop sweeping motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .rotate-icon,
+  .arena-controls #end-turn-btn,
+  .hud-unread-dot {
+    animation: none;
+  }
+
+  .game-over.active .game-over-content,
+  .game-over.active .game-over-flare,
+  .timer-overlay.active .match-stats {
+    animation: none;
+  }
+
+  .combat-dialog.active,
+  .combat-dialog.leaving {
+    animation-duration: 1ms;
+  }
+}

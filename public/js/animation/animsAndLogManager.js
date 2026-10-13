@@ -29,6 +29,7 @@ import {
 import { EffectCanvasBatch } from "./core/effectCanvasBatch.js";
 import { createMatchStatsPanel } from "../ui/matchStats.js";
 import { createScoreboard } from "../ui/scoreboard.js";
+import { triggerArenaMood } from "../arena/arenaMood.js";
 
 // ============================================================
 //  AnimsAndLogManager.js — Combat Animation & Log System (v2)
@@ -202,6 +203,9 @@ function scrollIfNeeded(
     behavior = "smooth",
   } = {},
 ) {
+  // The match view is a fixed, non-scrolling stage: everything is already on screen.
+  if (document.documentElement.classList.contains("match-view")) return;
+
   const rect = el.getBoundingClientRect();
 
   const viewportHeight =
@@ -1335,6 +1339,8 @@ export function createCombatAnimationManager(deps) {
       userChampion?.skills?.find((s) => s?.key === skillKey)?.isUltimate ===
       true;
 
+    if (isUltimate) triggerArenaMood("ultimate");
+
     const nameClass = isUltimate ? ' class="ultimate-skill-name"' : "";
 
     const resolvedSkillName = skillName
@@ -1344,8 +1350,15 @@ export function createCombatAnimationManager(deps) {
     // Fully trust the server-provided target.
     const hasValidTarget = targetId && targetId !== userId && targetName;
 
+    const targetChampion = hasValidTarget
+      ? deps.activeChampions.get(targetId)
+      : null;
+    const resolvedTargetName = targetChampion
+      ? formatChampionName(targetChampion)
+      : targetName;
+
     const dialogText = hasValidTarget
-      ? `${resolvedUserName} used ${resolvedSkillName} on ${targetName}.`
+      ? `${resolvedUserName} used ${resolvedSkillName} on ${resolvedTargetName}.`
       : `${resolvedUserName} used ${resolvedSkillName}.`;
 
     await showDialog(dialogText, undefined, { ultimate: isUltimate });
@@ -1540,6 +1553,16 @@ export function createCombatAnimationManager(deps) {
       champion.runtime = {
         ...snap.runtime,
       };
+
+      // The server keeps a fully absorbed shield at amount 0 until the next
+      // turn's decay prunes it, so every later event snapshot (a heal, a buff)
+      // still lists it. updateUI drops such shields; do the same here, or the
+      // bubble flashes back between events until the next full sync.
+      if (Array.isArray(champion.runtime.shields)) {
+        champion.runtime.shields = champion.runtime.shields.filter(
+          (shield) => shield?.amount > 0,
+        );
+      }
     }
 
     // Runtime hook data (data-only, safe for client UI)
@@ -1719,6 +1742,7 @@ export function createCombatAnimationManager(deps) {
     } else if (!el.dataset.finishing) {
       // Apply dying class — triggers CSS collapse animation
       el.classList.add("dying");
+      triggerArenaMood("death");
 
       // Wait for the death animation to play
       await wait(TIMING.DEATH_ANIM);

@@ -851,8 +851,7 @@ export async function playDeathClaimEffect(championEl) {
       if (elapsed < 6000) {
         requestAnimationFrame(animate);
       } else {
-        // Limpeza Final
-        renderer.dispose();
+        // Final cleanup
         scytheGeo.dispose();
         scytheMat.dispose();
         auraMat.dispose();
@@ -864,6 +863,10 @@ export async function playDeathClaimEffect(championEl) {
         shadowSys.material.dispose();
         soulSys.geometry.dispose();
         soulSys.material.dispose();
+        renderer.dispose();
+        // dispose() keeps the GL context alive until garbage collection;
+        // each claim opens a new one, so release it now.
+        renderer.forceContextLoss();
 
         renderer.domElement.remove();
         resolve();

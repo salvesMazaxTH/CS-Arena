@@ -65,10 +65,10 @@ export default {
     };
   },
 
-  onBeforeDmgTaking({ defender, owner, damage, context }) {
+  onBeforeDmgTaking({ defender, owner, damage, mode, context }) {
     if (defender !== owner) return;
     if (owner.runtime.remainSpent) return;
-    if (!owner.wouldBeLethal(damage)) return;
+    if (!owner.wouldBeLethal(damage, mode)) return;
 
     // Her sister's binding answers the same lethal hit, and takes precedence.
     if (owner.runtime.hookEffects?.some((e) => e.key === "twin_departure"))
@@ -97,7 +97,7 @@ export default {
     });
 
     return {
-      damageCap: survivalDamage(owner, this.survivalHP),
+      damageCap: survivalDamage(owner, this.survivalHP, mode),
       log: {
         en: `${formatChampionName(owner)} holds on with ${this.survivalHP} HP${cleansed ? ", cleansed of all that afflicted her" : ""}.`,
         pt: `${formatChampionName(owner)} resiste com ${this.survivalHP} HP${cleansed ? ", purificada de tudo que a afligia" : ""}.`,

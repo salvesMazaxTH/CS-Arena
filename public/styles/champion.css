@@ -1,0 +1,1457 @@
+/* ============================================
+   CHAMPIONS — field cards, status indicators, state animations,
+   plus the body-appended inspection overlays (skill hover, glossary,
+   portrait card, modifier ledger, quick stats, targeting).
+
+   Card geometry is written in em: `.champion` sets its font-size from
+   --card-scale, so a second team row shrinks the whole card honestly
+   (no transform, the layout box shrinks with it).
+
+   Animation contract (animsAndLogManager.js): damage / heal / lifesteal /
+   evasion / buff / taunt animate the .champion element itself, because
+   waitForAnimation() resolves on animationend with target === the card.
+   dying / unmaking keep their final frame (forwards) until JS removes the node.
+   ============================================ */
+
+/* ---- Card ---- */
+/* A champion is a body on the field, not a card: no frame, the oval portrait IS the silhouette.
+   All state glows (damage, heal, shield...) therefore live on .portrait, never on .champion. */
+.champion {
+  --edge: var(--line-mid);
+  position: relative;
+  flex: none;
+  width: 12em;
+  font-size: calc(16px * var(--card-scale, 1));
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  padding: 0;
+  color: var(--text-hi);
+  transition: filter var(--dur-med);
+}
+
+.champion[data-entity-type]:not([data-entity-type="champion"]) {
+  /* summons / sentinels: slimmer, quieter than a full champion */
+  width: 9em;
+  --edge: var(--line-soft);
+}
+
+/* Side colour follows position: the local card row is always the top one (see match-stage.css) */
+.arena > .team-1 .champion,
+.arena.arena--mirrored > .team-2 .champion {
+  --edge: rgba(76, 176, 255, 0.45);
+}
+
+.arena > .team-2 .champion,
+.arena.arena--mirrored > .team-1 .champion {
+  --edge: rgba(255, 79, 98, 0.45);
+}
+
+.champion:hover .portrait {
+  box-shadow: var(--portrait-shadow), 0 0 1.6em -0.1em var(--edge);
+}
+
+.portrait-wrapper {
+  position: relative;
+}
+
+/* Oval glass-framed portrait. The ring is the padding: a translucent glass gradient, with a bright
+   arc that travels around it while idle. The art sits inside, clipped to the inner ellipse.
+   NOT overflow:hidden — status indicators and floats may overhang. */
+@property --sweep {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.portrait {
+  --portrait-shadow: 0 0.5em 0.9em rgba(0, 0, 0, 0.65), 0 0 1.1em -0.2em var(--edge),
+    inset 0 0 0.45em rgba(255, 255, 255, 0.35);
+  position: relative;
+  box-sizing: border-box;
+  aspect-ratio: 4 / 5;
+  padding: 0.3em;
+  border-radius: 50%;
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.1) 38%, rgba(255, 255, 255, 0.18) 62%, rgba(255, 255, 255, 0.55)),
+    var(--ink-1);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: var(--portrait-shadow);
+  cursor: zoom-in;
+  transition: box-shadow var(--dur-med);
+}
+
+.portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+  border-radius: 50%;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: auto;
+}
+
+/* Idle shimmer: a bright arc circling the glass ring */
+.portrait::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 0.3em;
+  border-radius: 50%;
+  background: conic-gradient(from var(--sweep), transparent 0 62%, rgba(255, 244, 214, 0.95) 80%, transparent 92%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+  animation: portrait-sweep 5.5s linear infinite;
+}
+
+.team-row .champion:nth-child(2) .portrait::before {
+  animation-delay: -1.4s;
+}
+
+.team-row .champion:nth-child(3) .portrait::before {
+  animation-delay: -2.8s;
+}
+
+.team-row .champion:nth-child(4) .portrait::before {
+  animation-delay: -4.1s;
+}
+
+@keyframes portrait-sweep {
+  to {
+    --sweep: 360deg;
+  }
+}
+
+/* Specular crescent on the glass, over the art */
+.portrait::after {
+  content: "";
+  position: absolute;
+  inset: 0.3em;
+  z-index: 2;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 62% 30% at 36% 10%, rgba(255, 255, 255, 0.24), transparent 72%);
+  pointer-events: none;
+}
+
+/* ---- Stat blocks ---- */
+.stat-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+  width: 90%;
+  margin: 0 auto;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+}
+
+.stat-block > p {
+  margin: 0;
+  font-family: var(--font-numeric);
+  font-size: 1.35em;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4em;
+}
+
+/* Two-row fields shrink the card, but numbers must stay crisp: give the text back some of the scale */
+.team:has(.team-row:nth-of-type(2)) .stat-block {
+  width: 100%;
+}
+
+.team:has(.team-row:nth-of-type(2)) .stat-block > p {
+  font-size: 1.85em;
+}
+
+.team:has(.team-row:nth-of-type(2)) .momentum-bar {
+  height: 0.9em;
+}
+
+.stat-block .hp {
+  color: var(--text-hi);
+}
+
+.stat-block .hp b {
+  color: var(--brass-300);
+}
+
+.stat-block .momentum {
+  color: var(--ember-300);
+}
+
+.stat-block .momentum::before {
+  content: "\26A1\FE0E";
+  margin-right: 0.3em;
+  font-size: 0.85em;
+}
+
+.hp-bar,
+.momentum-bar {
+  position: relative;
+  border-radius: var(--r-pill);
+  background: var(--ink-0);
+  border: 1px solid var(--line-soft);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.hp-bar {
+  height: 1em;
+  overflow: hidden;
+}
+
+.hp-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 100%;
+  border-radius: inherit;
+  /* JS sets background colour inline (red/amber/green) and width in % */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -2px 3px rgba(0, 0, 0, 0.35);
+  transition: width 450ms var(--ease-out), background-color var(--dur-med);
+}
+
+/* One notch per 50 HP, as many empty children as JS emits */
+.hp-segments {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  pointer-events: none;
+}
+
+.hp-segments > div {
+  flex: 1 1 0;
+  border-right: 1px solid rgba(0, 0, 0, 0.55);
+}
+
+.hp-segments > div:last-child {
+  border-right: 0;
+}
+
+.momentum-bar {
+  height: 0.75em;
+}
+
+.momentum-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  border-radius: inherit;
+  background: var(--ember-gradient);
+  box-shadow: 0 0 8px rgba(242, 102, 28, 0.6);
+  transition: width 450ms var(--ease-out);
+}
+
+.momentum-markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.momentum-threshold {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  width: 1px;
+  background: rgba(240, 213, 150, 0.55);
+  /* the digit sits under the bar */
+  font-size: 0;
+}
+
+.momentum-threshold::after {
+  content: attr(data-n);
+}
+
+.momentum-slowdown-warning {
+  position: absolute;
+  right: -0.2em;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 1.15em;
+  height: 1.15em;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--negative);
+  color: #1a0505;
+  font-size: 0.7em;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 0 10px rgba(255, 90, 90, 0.8);
+  animation: ui-pulse 0.9s ease-in-out infinite;
+}
+
+/* Shield badge inside the HP text */
+.champion.has-shield {
+  --edge: rgba(150, 210, 255, 0.85);
+}
+
+.champion.has-shield .portrait {
+  --portrait-shadow: 0 0.5em 0.9em rgba(0, 0, 0, 0.65), 0 0 1.5em 0.1em rgba(150, 210, 255, 0.6),
+    inset 0 0 0.45em rgba(255, 255, 255, 0.35);
+}
+
+/* ---- Edit-mode delete + arrival tag ---- */
+.champion .delete {
+  position: absolute;
+  top: 0.3em;
+  right: 0.3em;
+  z-index: 4;
+}
+
+.champion .delete-btn {
+  width: 2em;
+  height: 2em;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--negative);
+  background: var(--ink-2);
+  color: var(--negative);
+  cursor: pointer;
+}
+
+.champion .delete-btn:hover {
+  background: var(--negative);
+  color: var(--ink-0);
+}
+
+.champion .delete-btn i {
+  font-size: 1.1em;
+}
+
+.champion .champion-name {
+  font-family: var(--font-display);
+  font-size: 0.75em;
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: var(--text-mid);
+}
+
+.taking-the-field-tag {
+  position: absolute;
+  left: 50%;
+  bottom: -0.9em;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.2em 0.8em;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--brass-500);
+  background: var(--ink-1);
+  color: var(--brass-300);
+  font-size: 0.7em;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: var(--shadow-1), 0 0 12px rgba(224, 183, 101, 0.3);
+}
+
+.taking-the-field-lock {
+  font-size: 1.1em;
+}
+
+.champion.is-taking-the-field .portrait img {
+  /* greyed out = "cannot act this turn" at a glance */
+  filter: grayscale(1) brightness(0.8);
+}
+
+.champion.is-taking-the-field .portrait::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 2px rgba(224, 183, 101, 0.55), inset 0 0 18px rgba(224, 183, 101, 0.35);
+  animation: ui-pulse 2s ease-in-out infinite;
+}
+
+/* ---- Status indicators (children of .portrait) ----
+   JS rotates several indicators by flipping inline opacity, so they all share one anchor.
+   JS also sets an inline font-size on emoji indicators (1.75em); an em-based circle/badge used to inflate with it
+   (Bleeding came out huge, Poisoned normal). Every size below hangs off --ind-unit, a registered <length> that
+   resolves to the PORTRAIT's font-size once and is inherited as pixels, so all indicator types match. */
+@property --ind-unit {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 16px;
+}
+
+.portrait {
+  --ind-unit: 1em;
+}
+
+.status-indicator {
+  position: absolute;
+  top: 6%;
+  left: 2%;
+  z-index: 11; /* above every per-champion VFX canvas (vfxManager sets z-index 10 inline: shield, frozen...) */
+  width: calc(var(--ind-unit) * 2.9);
+  height: calc(var(--ind-unit) * 2.9);
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, rgba(30, 36, 34, 0.92), rgba(6, 8, 8, 0.95));
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  font-size: calc(var(--ind-unit) * 1.55) !important; /* wins over the inline emoji/text sizes */
+  line-height: 1;
+  user-select: none;
+  cursor: help;
+  pointer-events: auto;
+  transition: opacity 300ms ease;
+}
+
+.status-indicator-buff,
+.status-indicator-debuff {
+  font-size: calc(var(--ind-unit) * 0.9) !important; /* arrows carry their own 1.5em */
+}
+
+.status-indicator-buff {
+  border-color: rgba(120, 255, 170, 0.7);
+}
+
+.status-indicator-debuff {
+  border-color: rgba(255, 110, 110, 0.7);
+}
+
+.status-indicator .indicator-image {
+  max-width: 78%;
+  max-height: 78%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.status-indicator i {
+  pointer-events: none;
+}
+
+.status-indicator.visual-delay {
+  visibility: hidden;
+}
+
+.status-indicator-stack-badge {
+  --badge-fill: radial-gradient(circle at 32% 26%, #ff8f8f 0%, #e03a48 45%, #8f1424 100%);
+  --badge-glow: rgba(255, 79, 98, 0.75);
+  position: absolute;
+  right: calc(var(--ind-unit) * -0.7);
+  bottom: calc(var(--ind-unit) * -0.7);
+  z-index: 1;
+  min-width: calc(var(--ind-unit) * 1.6);
+  height: calc(var(--ind-unit) * 1.6);
+  padding: 0 calc(var(--ind-unit) * 0.25);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-pill);
+  background: var(--badge-fill);
+  /* brass rim + dark outer ring, like a coin pinned to the icon */
+  border: 2px solid var(--brass-200, #f0d596);
+  box-shadow:
+    0 0 0 1.5px rgba(0, 0, 0, 0.85),
+    0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 10px var(--badge-glow),
+    inset 0 1px 1px rgba(255, 255, 255, 0.5);
+  color: #fff;
+  font-family: var(--font-numeric);
+  font-size: calc(var(--ind-unit) * 0.9);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  /* heavy outline keeps the numeral crisp even when the stage is scaled down */
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.9),
+    1px 0 0 rgba(0, 0, 0, 0.9),
+    -1px 0 0 rgba(0, 0, 0, 0.9),
+    0 -1px 0 rgba(0, 0, 0, 0.9),
+    0 0 4px rgba(0, 0, 0, 0.8);
+}
+
+.status-indicator-stack-badge.is-positive {
+  --badge-fill: radial-gradient(circle at 32% 26%, #9dffc2 0%, #2fc46c 45%, #0f6b37 100%);
+  --badge-glow: rgba(78, 232, 138, 0.75);
+}
+
+/* ---- State animations on the card itself ---- */
+@keyframes champ-damage {
+  0% {
+    transform: translateX(0);
+    filter: brightness(1);
+  }
+  12% {
+    transform: translateX(-0.35em) rotate(-1deg);
+    filter: brightness(2.2) saturate(1.8) hue-rotate(-12deg);
+  }
+  28% {
+    transform: translateX(0.3em) rotate(0.8deg);
+    filter: brightness(1.5) saturate(1.5);
+  }
+  44% {
+    transform: translateX(-0.18em);
+  }
+  60% {
+    transform: translateX(0.1em);
+    filter: brightness(1.15);
+  }
+  100% {
+    transform: translateX(0);
+    filter: brightness(1);
+  }
+}
+
+.champion.damage {
+  animation: champ-damage 560ms ease-out;
+  --edge: var(--negative);
+}
+
+.champion.damage .portrait {
+  --portrait-shadow: 0 0 2em 0.2em rgba(255, 70, 70, 0.75), inset 0 0 0.6em rgba(255, 90, 90, 0.6);
+}
+
+@keyframes champ-heal {
+  0%,
+  100% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(56, 224, 138, 0));
+  }
+  35% {
+    filter: brightness(1.25) saturate(1.2) drop-shadow(0 0 1.4em rgba(56, 224, 138, 0.9));
+  }
+}
+
+.champion.heal {
+  animation: champ-heal 560ms ease-out;
+  --edge: var(--positive);
+}
+
+@keyframes champ-lifesteal {
+  0%,
+  100% {
+    filter: brightness(1) hue-rotate(0) drop-shadow(0 0 0 rgba(220, 40, 90, 0));
+  }
+  40% {
+    filter: brightness(1.2) hue-rotate(-30deg) saturate(1.4) drop-shadow(0 0 1.4em rgba(220, 40, 90, 0.9));
+  }
+}
+
+.champion.lifesteal {
+  animation: champ-lifesteal 740ms ease-out;
+  --edge: #e0305f;
+}
+
+@keyframes champ-drained {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: none;
+  }
+  45% {
+    transform: scale(0.97);
+    filter: brightness(0.75) saturate(0.6) hue-rotate(-20deg);
+  }
+}
+
+.champion.lifesteal-drained {
+  animation: champ-drained 740ms ease-in-out;
+}
+
+@keyframes champ-evasion {
+  0% {
+    transform: translateX(0) skewX(0);
+    opacity: 1;
+  }
+  25% {
+    transform: translateX(1.1em) skewX(-8deg);
+    opacity: 0.45;
+  }
+  55% {
+    transform: translateX(-0.7em) skewX(5deg);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateX(0) skewX(0);
+    opacity: 1;
+  }
+}
+
+.champion.evasion {
+  animation: champ-evasion 520ms var(--ease-in-out);
+}
+
+@keyframes champ-buff {
+  0%,
+  100% {
+    transform: translateY(0);
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 224, 120, 0));
+  }
+  40% {
+    transform: translateY(-0.4em);
+    filter: brightness(1.3) saturate(1.2) drop-shadow(0 0 1.4em rgba(255, 224, 120, 0.9));
+  }
+}
+
+.champion.buff {
+  animation: champ-buff 560ms var(--ease-out);
+  --edge: var(--warning);
+}
+
+@keyframes champ-taunt {
+  0%,
+  100% {
+    transform: rotate(0) scale(1);
+  }
+  20% {
+    transform: rotate(-3deg) scale(1.06);
+  }
+  40% {
+    transform: rotate(3deg) scale(1.06);
+  }
+  60% {
+    transform: rotate(-2deg) scale(1.03);
+  }
+  80% {
+    transform: rotate(1.5deg) scale(1.02);
+  }
+}
+
+.champion.taunt {
+  animation: champ-taunt 380ms ease-in-out;
+  --edge: var(--ember-400);
+}
+
+.champion.taunt .portrait {
+  --portrait-shadow: 0 0 1.8em 0.15em rgba(255, 138, 61, 0.75), inset 0 0 0.5em rgba(255, 170, 90, 0.5);
+}
+
+/* ---- Arrival: held out of sight until released, then revealed from an edge ---- */
+.champion.arriving > * {
+  visibility: hidden;
+}
+
+.champion.arriving {
+  filter: none;
+}
+
+@keyframes arrive-fade {
+  from {
+    opacity: 0;
+    filter: brightness(2.4) blur(2px);
+  }
+  to {
+    opacity: 1;
+    filter: none;
+  }
+}
+
+@keyframes arrive-down {
+  from {
+    clip-path: inset(0 0 100% 0);
+    filter: brightness(2);
+  }
+  to {
+    clip-path: inset(-20% -20% -20% -20%);
+    filter: none;
+  }
+}
+
+@keyframes arrive-hem {
+  from {
+    clip-path: inset(100% 0 0 0);
+    filter: brightness(2);
+  }
+  to {
+    clip-path: inset(-20% -20% -20% -20%);
+    filter: none;
+  }
+}
+
+.champion.materializing {
+  animation: arrive-fade var(--arrival-duration, 900ms) var(--ease-out) both;
+}
+
+.champion.materializing[data-arrival="down"] {
+  animation-name: arrive-down;
+}
+
+.champion.materializing[data-arrival="hem"] {
+  animation-name: arrive-hem;
+}
+
+/* ---- Exit: death collapse, unmaking (unravel / crumble) ---- */
+@keyframes champ-dying {
+  0% {
+    transform: scale(1);
+    filter: none;
+    opacity: 1;
+  }
+  35% {
+    transform: scale(1.04) translateY(-0.2em);
+    filter: brightness(2) saturate(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.82) translateY(1.2em);
+    filter: grayscale(1) brightness(0.25);
+    opacity: 0;
+  }
+}
+
+.champion.dying {
+  animation: champ-dying 950ms ease-in forwards;
+  pointer-events: none;
+}
+
+@keyframes unravel {
+  0% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+    filter: none;
+  }
+  100% {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0.2;
+    filter: brightness(2.2) blur(2px);
+  }
+}
+
+@keyframes crumble {
+  0% {
+    clip-path: inset(0 0 0 0);
+    transform: translateY(0);
+    filter: none;
+    opacity: 1;
+  }
+  35% {
+    transform: translateY(0.1em) scale(0.99);
+    filter: sepia(0.8) brightness(0.85);
+  }
+  100% {
+    clip-path: inset(100% 0 0 0);
+    transform: translateY(1.5em) scale(0.92);
+    filter: sepia(1) brightness(0.5);
+    opacity: 0;
+  }
+}
+
+.champion.unmaking {
+  animation: unravel 1000ms var(--ease-in-out) forwards;
+  pointer-events: none;
+}
+
+.champion.unmaking[data-unmaking="crumble"] {
+  animation-name: crumble;
+}
+
+/* A dying card's lingering husk, and cards parked out of play */
+.champion.dead,
+.champion.nothingness {
+  filter: grayscale(1) brightness(0.45);
+  opacity: 0.7;
+}
+
+.champion.nothingness {
+  filter: grayscale(0.4) hue-rotate(250deg) brightness(0.55);
+}
+
+.champion.nothingness .portrait {
+  border-style: dashed;
+}
+
+/* A finishing blow plays its own VFX before the removal pass */
+.champion[data-finishing] .portrait img {
+  filter: contrast(1.3) brightness(1.2);
+}
+
+/* ---- Hit-effect classes (JS toggles on the card/portrait for ~one beat) ---- */
+.slash-hit .portrait img {
+  filter: brightness(1.8) contrast(1.4) hue-rotate(-10deg);
+}
+.fire-hit .portrait img {
+  filter: sepia(1) saturate(4) hue-rotate(-18deg) brightness(1.3);
+}
+.ice-hit .portrait img,
+.cryo-hit .portrait img {
+  filter: saturate(1.6) hue-rotate(150deg) brightness(1.4);
+}
+.cryo-marked .portrait {
+  box-shadow: 0 0 14px 2px rgba(150, 220, 255, 0.8);
+  border-color: rgba(180, 235, 255, 0.9);
+}
+.water-hit .portrait img {
+  filter: saturate(1.8) hue-rotate(170deg) brightness(1.15);
+}
+.lightning-hit .portrait img {
+  filter: brightness(2.4) contrast(1.5) saturate(0.4);
+}
+.shot-hit .portrait img,
+.arrow-hit .portrait img {
+  filter: brightness(1.5) contrast(1.3);
+}
+.air-hit .portrait img {
+  filter: brightness(1.25) saturate(0.7);
+}
+.earth-hit .portrait img {
+  filter: sepia(0.8) brightness(0.85) contrast(1.2);
+}
+.steel-hit .portrait img {
+  filter: grayscale(0.7) brightness(1.5) contrast(1.4);
+}
+.radiant-hit .portrait img {
+  filter: brightness(2) saturate(1.3) sepia(0.4);
+}
+.root-hit .portrait img {
+  filter: saturate(1.5) hue-rotate(60deg) brightness(0.9);
+}
+
+/* ---- Skill hover overlay (body-appended, real viewport pixels) ---- */
+.skill-hover-overlay {
+  box-sizing: border-box;
+  width: 340px;
+  max-width: min(340px, calc(100vw - 24px));
+  padding: 14px 16px 14px;
+  border-radius: var(--r-md);
+  background: var(--panel-gradient);
+  border: 1px solid var(--line-hard);
+  box-shadow: var(--shadow-3), var(--glow-brass), var(--inset-bevel);
+  color: var(--text-hi);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.45;
+  opacity: 0;
+  transition: opacity var(--dur-med) var(--ease-out);
+}
+
+.skill-hover-overlay.active {
+  opacity: 1;
+}
+
+.skill-overlay-title {
+  margin: 0 0 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-soft);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--brass-100);
+}
+
+.skill-overlay-claim-value {
+  margin-bottom: 8px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #c3a4ff; /* Claim = violet; gold is for ultimates/Momentum */
+}
+
+.skill-overlay-meta-primary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-bottom: 8px;
+}
+
+.skill-meta-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--ink-1);
+  border: 1px solid var(--line-soft);
+}
+
+.skill-meta-item .meta-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-lo);
+}
+
+.skill-meta-item .meta-value {
+  font-family: var(--font-numeric);
+  font-weight: 700;
+  color: var(--ember-300);
+}
+
+.skill-overlay-element-row,
+.skill-overlay-contact-row,
+.skill-overlay-content-priority-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  color: var(--text-mid);
+  font-size: 12px;
+}
+
+.skill-overlay-element-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.skill-overlay-desc {
+  color: var(--text-mid);
+}
+
+.skill-overlay-desc p {
+  margin: 0 0 6px;
+}
+
+.skill-overlay-desc p:last-child {
+  margin-bottom: 0;
+}
+
+.skill-overlay-desc b,
+.skill-overlay-desc strong {
+  color: var(--text-hi);
+}
+
+.glossary-statusEffect {
+  color: var(--brass-300);
+  border-bottom: 1px dotted var(--brass-500);
+  cursor: help;
+  font-weight: 600;
+}
+
+/* ---- Glossary panel ---- */
+.skill-glossary-panel {
+  box-sizing: border-box;
+  width: 340px;
+  max-width: min(340px, calc(100vw - 24px));
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: var(--r-md);
+  background: rgba(10, 10, 14, 0.96);
+  border: 1px solid var(--line-mid);
+  box-shadow: var(--shadow-3);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.glossary-item + .glossary-item {
+  padding-top: 8px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.glossary-title {
+  margin: 0 0 2px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass-300);
+}
+
+.glossary-desc {
+  margin: 0;
+  color: var(--text-mid);
+}
+
+/* ---- Quick stats ---- */
+.quick-stats-overlay {
+  box-sizing: border-box;
+  min-width: 180px;
+  max-width: min(260px, calc(100vw - 24px));
+  border-radius: var(--r-md);
+  background: var(--glass-2);
+  border: 1px solid var(--line-mid);
+  box-shadow: var(--shadow-3);
+  font-size: 12px;
+}
+
+.quick-stats-content {
+  padding: 10px 12px;
+}
+
+.quick-stats-title {
+  margin-bottom: 6px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brass-300);
+}
+
+.quick-stats-list {
+  display: grid;
+  gap: 3px;
+}
+
+.quick-stat-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.quick-stat-label {
+  color: var(--text-mid);
+}
+
+.quick-stat-value {
+  font-family: var(--font-numeric);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Portrait inspection card ----
+   Not full-viewport on purpose: skill-hover glossary placement uses this
+   element's own rect. A fixed ::before supplies the scrim; a click on it
+   targets the overlay, which JS treats as "close". */
+.portrait-overlay {
+  position: fixed;
+  /* centred with auto margins, NOT translate(): a transform would make the fixed ::before scrim
+     relative to the card instead of the viewport, so clicks outside the card could never close it */
+  inset: 0;
+  margin: auto;
+  height: fit-content;
+  z-index: var(--z-portrait-overlay);
+  box-sizing: border-box;
+  width: min(980px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 20px;
+  padding: 20px;
+  border-radius: var(--r-lg);
+  background: var(--panel-gradient);
+  border: 1px solid var(--line-hard);
+  box-shadow: var(--shadow-3), var(--glow-brass), var(--inset-bevel);
+  opacity: 0;
+  transition: opacity var(--dur-med) var(--ease-out);
+  cursor: default;
+}
+
+/* Close button drawn by CSS: a click on a pseudo-element targets the overlay itself, which JS treats as "close" */
+.portrait-overlay::after {
+  content: "\2715";
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--ink-2);
+  border: 1px solid var(--line-hard);
+  color: var(--text-hi);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-2);
+}
+
+.portrait-overlay::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--scrim);
+  backdrop-filter: blur(3px);
+}
+
+.portrait-overlay.active {
+  opacity: 1;
+}
+
+.portrait-overlay-content {
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.portrait-overlay-img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  object-position: center 18%;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-mid);
+  box-shadow: var(--shadow-2);
+}
+
+.portrait-overlay-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: var(--brass-100);
+}
+
+.portrait-overlay-details {
+  grid-column: 2;
+  min-width: 0;
+  padding-top: 40px; /* room for the ✕ in the card corner */
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.portrait-overlay-details-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.portrait-overlay-details-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--brass-400);
+}
+
+.portrait-overlay-passive-list {
+  display: grid;
+  gap: 10px;
+}
+
+.portrait-overlay-passive {
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: var(--ink-1);
+  border: 1px solid var(--line-soft);
+}
+
+.portrait-overlay-passive-name {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  color: var(--text-hi);
+}
+
+.portrait-overlay-passive-desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-mid);
+}
+
+.portrait-overlay-enemy-claim,
+.portrait-overlay-enemy-skills {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.portrait-overlay-enemy-claim-value {
+  font-family: var(--font-numeric);
+  font-size: 18px;
+  font-weight: 700;
+  color: #c3a4ff;
+}
+
+.portrait-overlay-enemy-skills-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.portrait-overlay-enemy-skill-btn {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-mid);
+  background: linear-gradient(180deg, var(--ink-4), var(--ink-2));
+  color: var(--text-hi);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  cursor: help;
+}
+
+.portrait-overlay-enemy-skill-btn:hover {
+  border-color: var(--brass-300);
+  box-shadow: var(--glow-brass);
+}
+
+.portrait-overlay-enemy-skill-btn.ultimate {
+  border-color: var(--ember-400);
+  background: var(--ember-gradient);
+  color: #fff7ea;
+}
+
+/* ---- Modifier ledger ---- */
+.modifier-ledger {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.ledger-panel {
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: var(--ink-1);
+  border: 1px solid var(--line-soft);
+}
+
+.modifier-ledger-empty {
+  margin: 0;
+  color: var(--text-lo);
+  font-size: 13px;
+  text-align: center;
+}
+
+.ledger-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.ledger-col {
+  --tone: var(--neutral);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ledger-col[data-tone="positive"] {
+  --tone: var(--positive);
+}
+
+.ledger-col[data-tone="negative"] {
+  --tone: var(--negative);
+}
+
+.ledger-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--tone);
+}
+
+.ledger-label {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+
+.ledger-total {
+  font-family: var(--font-numeric);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--tone);
+}
+
+.ledger-balance {
+  display: flex;
+  height: 6px;
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  background: var(--ink-0);
+}
+
+.ledger-balance-down,
+.ledger-balance-up {
+  /* --share is a 0..1 ratio set inline by JS */
+  flex: 0 0 calc(var(--share, 0) * 100%);
+  min-width: 0;
+}
+
+.ledger-balance-down {
+  background: var(--negative);
+}
+
+.ledger-balance-up {
+  background: var(--positive);
+}
+
+.ledger-sub {
+  font-size: 11px;
+  color: var(--text-lo);
+}
+
+.ledger-rows,
+.ledger-chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ledger-rows {
+  display: grid;
+  gap: 4px;
+}
+
+.ledger-row {
+  --tone: var(--neutral);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 0 3px 8px;
+  border-left: 3px solid var(--tone);
+  font-size: 12px;
+}
+
+.ledger-row[data-tone="positive"] {
+  --tone: var(--positive);
+}
+
+.ledger-row[data-tone="negative"] {
+  --tone: var(--negative);
+}
+
+.ledger-source {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-mid);
+}
+
+.ledger-count,
+.ledger-turns {
+  font-family: var(--font-numeric);
+  font-size: 11px;
+  color: var(--text-lo);
+}
+
+.ledger-value {
+  font-family: var(--font-numeric);
+  font-weight: 700;
+  color: var(--tone);
+  font-variant-numeric: tabular-nums;
+}
+
+.ledger-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ledger-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-mid);
+  background: var(--ink-2);
+  font-size: 11px;
+  color: var(--text-mid);
+}
+
+/* ---- Target selection overlay ---- */
+.targetSelectionOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px;
+  background: var(--scrim);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  transition: opacity var(--dur-med) var(--ease-out);
+}
+
+.targetSelectionOverlay.active {
+  opacity: 1;
+}
+
+.targetSelectionOverlay h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--brass-100);
+  text-align: center;
+  text-shadow: 0 0 22px rgba(224, 183, 101, 0.45);
+}
+
+.target-candidates {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+}
+
+.target-candidate {
+  width: 150px;
+  padding: 10px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--r-md);
+  background: var(--panel-gradient);
+  border: 1px solid var(--line-mid);
+  box-shadow: var(--shadow-2), var(--inset-bevel);
+  cursor: pointer;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    border-color var(--dur-med),
+    box-shadow var(--dur-med);
+}
+
+.target-candidate:hover,
+.target-candidate:focus-visible {
+  transform: translateY(-4px);
+  border-color: var(--ember-400);
+  box-shadow: var(--shadow-3), var(--glow-ember);
+}
+
+.target-candidate img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  object-position: center 18%;
+  border-radius: var(--r-sm);
+}
+
+.target-candidate h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  text-align: center;
+  color: var(--text-hi);
+}
+
+.target-candidate p {
+  margin: 0;
+  font-family: var(--font-numeric);
+  font-size: 13px;
+  color: var(--text-mid);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .champion.damage,
+  .champion.heal,
+  .champion.lifesteal,
+  .champion.lifesteal-drained,
+  .champion.evasion,
+  .champion.buff,
+  .champion.taunt {
+    /* keep the animation (JS waits on animationend) but make it a quick, still flash */
+    animation-duration: 120ms;
+  }
+}

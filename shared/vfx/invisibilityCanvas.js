@@ -1,178 +1,128 @@
+// Invisible: the champion is turning to glass. Cold cyan-white, translucent, hologram-like —
+// a marching dashed contour, hologram scan lines, a cloak glint sweeping across the body and
+// motes of the figure dissolving upward. The portrait art itself is faded by `.is-invisible`
+// in combat-fx.css, so the body reads see-through, not just decorated.
+
+import { runStatusCanvas, clipToOval, makeGlowSprite } from "./statusCanvasKit.js";
+
+const MOTE_COUNT = 20;
+const TAU = Math.PI * 2;
+
 export function startInvisibilityCanvas(canvas) {
-  const ctx = canvas.getContext("2d");
-  let running = true;
-  let time = 0;
+  const mote = makeGlowSprite(48, [214, 246, 255]);
+  const motes = Array.from({ length: MOTE_COUNT }, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    rise: 0.08 + Math.random() * 0.14,
+    sway: Math.random() * TAU,
+    size: 0.05 + Math.random() * 0.07,
+  }));
 
-  const box = canvas.parentElement;
-  let lastW = 0;
-  let lastH = 0;
+  let scanPattern = null;
+  let scanPatternFor = 0;
 
-  function syncSize() {
-    const w = box?.clientWidth || 0;
-    const h = box?.clientHeight || 0;
-    if (!w || !h) return;
+  // Thin horizontal lines, baked once per size: the "projection" texture.
+  function getScanPattern(ctx, u) {
+    const step = Math.max(4, Math.round(u * 0.045));
+    if (scanPattern && scanPatternFor === step) return { pattern: scanPattern, step };
 
-    if (w !== lastW || h !== lastH) {
-      canvas.width = w;
-      canvas.height = h;
-      lastW = w;
-      lastH = h;
-    }
+    const tile = document.createElement("canvas");
+    tile.width = 4;
+    tile.height = step;
+    const tctx = tile.getContext("2d");
+    tctx.fillStyle = "rgba(196, 240, 255, 0.34)";
+    tctx.fillRect(0, 0, 4, Math.max(1.5, step * 0.22));
+    scanPattern = ctx.createPattern(tile, "repeat");
+    scanPatternFor = step;
+    return { pattern: scanPattern, step };
   }
 
-  syncSize();
-  window.addEventListener("resize", syncSize);
+  function draw(ctx, g, t, dt) {
+    const { cx, cy, rx, ry, u, w, h } = g;
+    const breathe = 0.5 + 0.5 * Math.sin(t * 2.1);
 
-  const W = () => canvas.width;
-  const H = () => canvas.height;
+    ctx.save();
+    clipToOval(ctx, g);
 
-  class VeilMote {
-    constructor() {
-      this.reset(true);
-    }
+    // glass body tint, brighter at the rim: the figure is a lens, not a solid
+    const tint = ctx.createRadialGradient(cx, cy, u * 0.1, cx, cy, Math.max(rx, ry));
+    tint.addColorStop(0, `rgba(150, 220, 255, ${0.1 + breathe * 0.05})`);
+    tint.addColorStop(0.7, `rgba(150, 224, 255, ${0.12 + breathe * 0.05})`);
+    tint.addColorStop(1, "rgba(190, 240, 255, 0.3)");
+    ctx.fillStyle = tint;
+    ctx.fillRect(0, 0, w, h);
 
-    reset(initial = false) {
-      const minR = Math.min(W(), H()) * 0.22;
-      const maxR = Math.min(W(), H()) * 0.49;
+    // hologram scan lines crawling down the body
+    const { pattern, step } = getScanPattern(ctx, u);
+    ctx.save();
+    ctx.translate(0, (t * step * 2.2) % step);
+    ctx.fillStyle = pattern;
+    ctx.globalAlpha = 0.55 + breathe * 0.25;
+    ctx.fillRect(0, -step, w, h + step * 2);
+    ctx.restore();
 
-      this.theta = Math.random() * Math.PI * 2;
-      this.radius = minR + Math.random() * (maxR - minR);
-      this.speed = 0.0012 + Math.random() * 0.0024;
-      this.size = 1 + Math.random() * 2.4;
-      this.alpha = 0.08 + Math.random() * 0.18;
-      this.twinkle = Math.random() * Math.PI * 2;
-      this.twinkleSpeed = 0.001 + Math.random() * 0.0025;
+    // cloak glint: a bright diagonal band that slides across every few seconds
+    const cycle = (t % 2.6) / 2.6;
+    const bandX = -u * 0.5 + cycle * (w + u);
+    const band = ctx.createLinearGradient(bandX - u * 0.28, 0, bandX + u * 0.28, 0);
+    band.addColorStop(0, "rgba(220, 250, 255, 0)");
+    band.addColorStop(0.5, "rgba(236, 252, 255, 0.42)");
+    band.addColorStop(1, "rgba(220, 250, 255, 0)");
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(-0.38);
+    ctx.translate(-cx, -cy);
+    ctx.fillStyle = band;
+    ctx.fillRect(bandX - u * 0.28, -h, u * 0.56, h * 3);
+    ctx.restore();
 
-      if (!initial) {
-        this.theta = Math.random() * Math.PI * 2;
+    // motes: pieces of the figure lifting off and dissolving
+    ctx.globalCompositeOperation = "lighter";
+    for (const m of motes) {
+      m.y -= m.rise * dt;
+      if (m.y < -0.05) {
+        m.y = 1.02;
+        m.x = Math.random();
       }
+      const fade = Math.min(1, m.y * 3.2, (1.05 - m.y) * 5);
+      const px = cx + (m.x - 0.5) * rx * 1.7 + Math.sin(t * 1.6 + m.sway) * u * 0.03;
+      const py = cy + (m.y - 0.5) * ry * 2;
+      const size = u * m.size * 2.6;
+      ctx.globalAlpha = Math.max(0, fade) * 0.95;
+      ctx.drawImage(mote, px - size / 2, py - size / 2, size, size);
     }
+    ctx.restore();
 
-    update() {
-      this.theta += this.speed;
-      this.twinkle += this.twinkleSpeed;
-      if (this.theta > Math.PI * 2) this.theta -= Math.PI * 2;
-    }
-
-    draw(cx, cy) {
-      const x = cx + Math.cos(this.theta) * this.radius;
-      const y = cy + Math.sin(this.theta * 1.08) * this.radius * 0.72;
-      const pulse = 0.65 + 0.35 * Math.sin(this.twinkle);
-
-      ctx.beginPath();
-      ctx.arc(x, y, this.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(186, 232, 255, ${this.alpha * pulse})`;
-      ctx.fill();
-    }
-  }
-
-  const motes = Array.from({ length: 18 }, () => new VeilMote());
-
-  function drawVeil(cx, cy, radius) {
-    const pulse = 0.88 + Math.sin(time * 0.0017) * 0.12;
-
-    const veil = ctx.createRadialGradient(
-      cx,
-      cy,
-      radius * 0.22,
-      cx,
-      cy,
-      radius * 1.05,
-    );
-    veil.addColorStop(0, `rgba(130, 210, 255, ${0.06 * pulse})`);
-    veil.addColorStop(0.5, `rgba(150, 230, 255, ${0.11 * pulse})`);
-    veil.addColorStop(1, "rgba(110, 180, 230, 0)");
-
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.fillStyle = veil;
-    ctx.fill();
-  }
-
-  function drawRefractionRings(cx, cy, radius) {
+    // contour: a marching dashed ring with a soft halo; flickers like a failing cloak
+    const flicker = Math.sin(t * 23) > 0.93 ? 0.35 : 1;
+    const dash = u * 0.11;
     ctx.save();
-    ctx.globalCompositeOperation = "screen";
+    ctx.globalCompositeOperation = "lighter";
+    ctx.globalAlpha = flicker;
 
-    const outer = radius * 0.95;
-    const inner = radius * 0.72;
-
-    ctx.setLineDash([8, 11]);
-    ctx.lineDashOffset = -time * 0.04;
-    ctx.strokeStyle = "rgba(184, 236, 255, 0.26)";
-    ctx.lineWidth = 1.6;
+    ctx.lineWidth = Math.max(5, u * 0.06);
+    ctx.strokeStyle = "rgba(120, 214, 255, 0.28)";
     ctx.beginPath();
-    ctx.arc(cx, cy, outer, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, rx * 0.97, ry * 0.97, 0, 0, TAU);
     ctx.stroke();
 
-    ctx.setLineDash([3, 9]);
-    ctx.lineDashOffset = time * 0.06;
-    ctx.strokeStyle = "rgba(205, 244, 255, 0.18)";
-    ctx.lineWidth = 1.1;
+    ctx.setLineDash([dash, dash * 0.7]);
+    ctx.lineDashOffset = -t * u * 0.35;
+    ctx.lineWidth = Math.max(3, u * 0.028);
+    ctx.strokeStyle = "rgba(226, 250, 255, 0.95)";
     ctx.beginPath();
-    ctx.arc(cx, cy, inner, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, rx * 0.97, ry * 0.97, 0, 0, TAU);
     ctx.stroke();
 
+    ctx.setLineDash([dash * 0.4, dash * 1.3]);
+    ctx.lineDashOffset = t * u * 0.5;
+    ctx.lineWidth = Math.max(2, u * 0.016);
+    ctx.strokeStyle = "rgba(170, 228, 255, 0.8)";
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx * 0.82, ry * 0.82, 0, 0, TAU);
+    ctx.stroke();
     ctx.restore();
   }
 
-  function drawShimmerBands(cx, cy, radius) {
-    const bandCount = 3;
-
-    for (let i = 0; i < bandCount; i++) {
-      const phase = time * 0.0024 + i * 1.7;
-      const y = cy + Math.sin(phase) * radius * 0.46;
-      const width = radius * (1.25 + Math.sin(phase * 1.4) * 0.2);
-      const alpha = 0.06 + (Math.sin(phase * 1.6) * 0.5 + 0.5) * 0.08;
-
-      const grad = ctx.createLinearGradient(cx - width, y, cx + width, y);
-      grad.addColorStop(0, "rgba(170, 220, 255, 0)");
-      grad.addColorStop(0.5, `rgba(206, 245, 255, ${alpha})`);
-      grad.addColorStop(1, "rgba(170, 220, 255, 0)");
-
-      ctx.fillStyle = grad;
-      ctx.fillRect(cx - width, y - 1.2, width * 2, 2.4);
-    }
-  }
-
-  function render() {
-    if (!running) return;
-
-    syncSize();
-    ctx.clearRect(0, 0, W(), H());
-
-    const cx = W() / 2;
-    const cy = H() / 2;
-    const radius = Math.max(10, Math.min(W(), H()) * 0.49);
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.clip();
-
-    drawVeil(cx, cy, radius);
-    drawShimmerBands(cx, cy, radius);
-
-    for (const mote of motes) {
-      mote.update();
-      mote.draw(cx, cy);
-    }
-
-    ctx.restore();
-
-    drawRefractionRings(cx, cy, radius);
-
-    time += 16;
-    requestAnimationFrame(render);
-  }
-
-  render();
-
-  return {
-    stop() {
-      running = false;
-      window.removeEventListener("resize", syncSize);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.setLineDash([]);
-    },
-  };
+  return runStatusCanvas(canvas, draw);
 }

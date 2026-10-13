@@ -57,7 +57,7 @@ export default {
     },
   },
 
-  onBeforeDmgTaking({ owner, damage, context }) {
+  onBeforeDmgTaking({ owner, damage, mode, context }) {
     owner.runtime.lana ??= {
       triggered: false,
     };
@@ -65,7 +65,7 @@ export default {
     if (owner.runtime.lana.triggered) return;
     // Tutu blocks a blow, not a poison or burn tick.
     if (context.isDot) return;
-    if (!owner.wouldBeLethal(damage)) return;
+    if (!owner.wouldBeLethal(damage, mode)) return;
 
     owner.runtime.lana.triggered = true;
 

@@ -1,4 +1,5 @@
 import { formatChampionName } from "../ui/formatters.js";
+import { SpawnProtection } from "../engine/combat/spawnProtection.js";
 import {
   emitCombatEvent,
   getRunningHook,
@@ -166,8 +167,11 @@ export function _checkAndConsumeShieldBlock(champion, context, damageType) {
   return false;
 }
 
-/** Apply a taunt from taunterId to the champion, lasting `duration` turns. */
+/** Apply a taunt from taunterId to the champion, lasting `duration` turns.
+ *  Returns null, with no effect or dialog, for a champion still taking the field. */
 export function applyTaunt(champion, taunterId, duration, context) {
+  if (SpawnProtection.isActive(champion)) return null;
+
   champion.tauntEffects.push({
     taunterId: taunterId,
     expiresAtTurn: context.currentTurn + duration,
@@ -679,18 +683,30 @@ export function regularShieldTotal(champion) {
   );
 }
 
-/** A hit is lethal only once the champion's regular shields cannot cover it. */
-export function wouldBeLethal(champion, damage) {
-  return champion.HP + regularShieldTotal(champion) - damage <= 0;
+// Absolute damage goes straight to HP: no regular shield stands in its way.
+const SHIELD_BYPASS_MODE = "absolute";
+
+/** The regular shield a hit of this mode actually has to chew through. */
+export function shieldAgainst(champion, mode) {
+  return mode === SHIELD_BYPASS_MODE ? 0 : regularShieldTotal(champion);
 }
 
-/** Apply raw damage, letting regular shields absorb first, then reducing HP. */
-export function takeDamage(champion, amount, context) {
+/** A hit is lethal only once the shields it can reach cannot cover it. */
+export function wouldBeLethal(champion, damage, mode) {
+  return champion.HP + shieldAgainst(champion, mode) - damage <= 0;
+}
+
+/**
+ * Apply raw damage, letting regular shields absorb first, then reducing HP.
+ * Absolute damage skips the shields and lands on HP.
+ */
+export function takeDamage(champion, amount, context, mode) {
   if (!champion.alive) return;
 
   amount = Math.floor(amount);
 
   for (const shield of champion.runtime.shields) {
+    if (mode === SHIELD_BYPASS_MODE) break;
     // Spell and Supreme shields don't absorb HP — they block whole hits.
     if (shield.type && shield.type !== "regular") continue;
     if (amount <= 0) break;

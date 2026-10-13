@@ -37,6 +37,7 @@ import { SpawnProtection } from "../shared/engine/combat/spawnProtection.js";
 import { Nothingness } from "../shared/engine/combat/nothingness.js";
 import { rosterChampionKey } from "../shared/engine/match/championTransformation.js";
 import { formatChampionName } from "../shared/ui/formatters.js";
+import { planTurn, chooseFirstChampion, BOT_TUNING } from "./ai/mediumBot.js";
 
 import { emitCombatEvent } from "../shared/engine/combat/combatEvents.js";
 import { Action } from "../shared/engine/combat/Action.js";
@@ -135,6 +136,10 @@ const envelopeBuilder = new CombatEnvelopeBuilder(match.combat);
 let waitingForAnimations = false;
 let animationStragglerTimer = null;
 let gameOverEmitted = false;
+// The AI opponent holding the other slot, or null in a PvP match:
+// { slot, socketId, player }. Its socketId is fake and never reaches io.
+let botSession = null;
+let botSessionCounter = 0;
 
 // ============================================================
 //  STATE SERIALIZATION
@@ -605,20 +610,20 @@ function flushFieldDepartures() {
  * Whether a champion may REQUEST a skill use. Called in "requestSkillUse" —
  * rejects immediately over the socket.
  */
-function validateActionIntent(user, skill, socket) {
+function validateActionIntent(user, skill, reply) {
   if (!user.alive) {
-    socket.emit("skillDenied", "Dead champion.");
+    reply.emit("skillDenied", "Dead champion.");
     return false;
   }
 
   const hardCCDenial = getHardCCActionDenial(user);
   if (hardCCDenial) {
-    socket.emit("skillDenied", hardCCDenial.message);
+    reply.emit("skillDenied", hardCCDenial.message);
     return false;
   }
 
   if (!editMode.actMultipleTimesPerTurn && user.hasActedThisTurn) {
-    socket.emit("skillDenied", "Already acted this turn.");
+    reply.emit("skillDenied", "Already acted this turn.");
     return false;
   }
 
@@ -633,7 +638,7 @@ function validateActionIntent(user, skill, socket) {
 
   for (const res of intentResults) {
     if (res?.deny) {
-      socket.emit("skillDenied", res.message || "This action is unavailable.");
+      reply.emit("skillDenied", res.message || "This action is unavailable.");
       return false;
     }
   }
@@ -706,6 +711,8 @@ function getMatchFormStats() {
 
 function uploadMatchResult(winnerTeam) {
   if (!isEditModeClean(editMode)) return;
+  // A match against the AI says nothing about champion balance.
+  if (botSession) return;
 
   recordMatchResult({
     winnerTeam,
@@ -867,6 +874,11 @@ function handleEndTurn() {
 
   if (!match.isGameEnded()) {
     match.nextTurn();
+  }
+
+  // The AI has no animations to play, so it reports done straight away.
+  if (botSession && waitingForAnimations) {
+    match.addFinishedAnimationSocket(botSession.socketId);
   }
 
   // Signal clients that every combat event has been emitted.
@@ -1221,6 +1233,7 @@ function handleStartTurn() {
   match.combat.phase = match.isGameEnded() ? "ended" : "planning";
   broadcastGameState();
   flushFieldArrivals();
+  scheduleBotTurn();
 }
 
 // ============================================================
@@ -1234,6 +1247,7 @@ function resetGameState() {
   waitingForAnimations = false;
   cancelAnimationStragglerWatch();
   gameOverEmitted = false;
+  botSession = null;
 }
 
 /** Empties the field and rebuilds each reserve from its roster (debug/test only). */
@@ -1286,6 +1300,450 @@ function cancelTeamPendingActions(playerSlot) {
     match.removeReadyPlayer(playerSlot);
     io.emit("playerCanceledEndTurn", playerSlot);
   }
+}
+
+// ============================================================
+//  PLAYER ACTIONS (shared by the socket handlers and the AI opponent)
+// ============================================================
+
+/** Summons a line-up champion for a slot; failures go back through `reply`. */
+function summonForSlot(playerSlot, championKey, reply) {
+  const player = match.getPlayer(playerSlot);
+  if (!player) return;
+
+  if (match.isGameEnded() || match.combat.phase !== "planning") {
+    return reply.emit(
+      "actionFailed",
+      match.isGameEnded()
+        ? "The combat has already ended."
+        : "You cannot summon while the turn is being resolved.",
+    );
+  }
+
+  const team = player.team;
+
+  if (!editMode.unrestrictedSummon) {
+    // Line-up summons are blocked on the first turn.
+    if (match.getCurrentTurn() === 1) {
+      return reply.emit(
+        "actionFailed",
+        "You cannot summon line-up champions on the first turn.",
+      );
+    }
+
+    if (match.hasSummonedThisTurn(team)) {
+      return reply.emit(
+        "actionFailed",
+        "You have already summoned a line-up champion this turn.",
+      );
+    }
+  }
+
+  const reserve = match.combat.reserveQueues.get(team) || [];
+  const entering = championKey ? resolveSummonGroup(championKey) : [];
+
+  if (!entering.length || !entering.every((key) => reserve.includes(key))) {
+    return reply.emit(
+      "actionFailed",
+      "That champion is not available to be summoned.",
+    );
+  }
+
+  // The champion cap binds line-up summons only; every type counts toward the entity cap.
+  const summonEntityType = championDB[championKey].entityType ?? "champion";
+
+  if (
+    !match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM, {
+      entityType: summonEntityType,
+      requiredSlots: entering.length,
+    })
+  ) {
+    return reply.emit(
+      "actionFailed",
+      entering.length > 1
+        ? `${getDuoForCore(championKey).name} enter together and need ${entering.length} free spaces on the battlefield.`
+        : "There is no free space on the battlefield to summon more champions.",
+    );
+  }
+
+  const spawnedGroup = entering.map((key) =>
+    spawnChampion({
+      championKey: key,
+      team,
+      trackSnapshot: true,
+      emitState: false,
+      spawnProtection: !editMode.summonWithoutSpawnProtection,
+    }),
+  );
+
+  if (spawnedGroup.some((spawned) => !spawned)) {
+    return reply.emit("actionFailed", "This champion could not be summoned.");
+  }
+
+  match.combat.reserveQueues.set(
+    team,
+    reserve.filter((key) => !entering.includes(key)),
+  );
+  match.markSummonedThisTurn(team);
+
+  // The opponent is still choosing actions, so this reinforcement stays hidden
+  // from them until the turn locks and resolution begins.
+  spawnedGroup.forEach((spawned) => concealedSummonIds.add(spawned.id));
+
+  // Emitted only after the bookkeeping above, so the payload's summon
+  // availability already reflects this summon.
+  broadcastGameState();
+
+  spawnedGroup.forEach((spawned) =>
+    match.logTurnEvent("championSummoned", {
+      championId: spawned.id,
+      championKey: spawned.championKey,
+      team,
+    }),
+  );
+}
+
+/** Queues one action for a slot's champion; failures go back through `reply`. */
+function enqueuePlayerAction(playerSlot, { userId, skillKey, targetIds }, reply) {
+  const player = match.players[playerSlot];
+  const user = match.combat.activeChampions.get(userId);
+
+  if (skillKey === CLAIM_ACTION_KEY) {
+    if (!player || !user || user.team !== player.team) {
+      return reply.emit(
+        "actionFailed",
+        "You are not allowed to use CLAIM with this champion.",
+      );
+    }
+
+    if (!validateActionIntent(user, null, reply)) return;
+
+    const action = new Action({ userId, skillKey, targetIds: {} });
+    action.priority = 0;
+    action.speed = user.Speed;
+    action.turn = match.getCurrentTurn();
+    action.momentumCost = 0;
+    action.type = "claim";
+
+    match.enqueueAction(action);
+
+    reply.emit(
+      "combatLog",
+      `${formatChampionName(user)} prepared CLAIM. Action pending.`,
+    );
+    return;
+  }
+
+  if (!player || !user || user.team !== player.team) {
+    return reply.emit(
+      "actionFailed",
+      "You are not allowed to use skills with this champion.",
+    );
+  }
+
+  const skill = user.skills.find((s) => s.key === skillKey);
+  if (!skill) {
+    return reply.emit("actionFailed", "Skill not found.");
+  }
+
+  if (!validateActionIntent(user, skill, reply)) return;
+
+  // Only ultimates have a cost. Momentum is actually spent by the TurnResolver
+  // when the action resolves, not here.
+  let cost = 0;
+
+  if (skill.isUltimate === true) {
+    cost = user.getSkillCost(skill);
+
+    if (!editMode.freeCostSkills && user.momentum < cost) {
+      return reply.emit("actionFailed", "Not enough Momentum.");
+    }
+  }
+
+  const action = new Action({ userId, skillKey, targetIds });
+  action.priority = skill.priority || 0;
+  action.speed = user.Speed;
+  action.turn = match.getCurrentTurn();
+  action.momentumCost = cost;
+
+  match.enqueueAction(action);
+
+  reply.emit(
+    "combatLog",
+    `${formatChampionName(user)} used ${skill.name}. Action pending.`,
+  );
+}
+
+/** Locks a slot's turn in; the turn resolves once both slots have. */
+function confirmEndTurn(playerSlot, reply) {
+  if (match.isGameEnded()) {
+    reply.emit("actionFailed", "The game has already ended.");
+    return;
+  }
+
+  if (playerSlot === undefined) {
+    reply.emit("actionFailed", "You are not in a valid player slot.");
+    return;
+  }
+
+  match.addReadyPlayer(playerSlot);
+  io.emit("playerConfirmedEndTurn", playerSlot);
+
+  if (match.getReadyPlayersCount() === 2) {
+    // Make sure both are still connected.
+    if (!match.areBothPlayersConnected()) {
+      match.clearTurnReadiness();
+      reply.emit(
+        "actionFailed",
+        "Your opponent was disconnected. The turn was canceled.",
+      );
+      return;
+    }
+    handleEndTurn();
+  } else {
+    reply.emit(
+      "waitingForOpponentEndTurn",
+      "Waiting for the other player to confirm the end of the turn.",
+    );
+  }
+}
+
+// ============================================================
+//  AI OPPONENT
+// ============================================================
+
+/** The AI's stand-in for a socket: anything the server would tell it is only logged. */
+const botReply = {
+  emit(event, message) {
+    console.log(`[bot] ${event}:`, message);
+  },
+};
+
+function toTeamPayload(raw) {
+  return {
+    champions: Array.isArray(raw?.champions) ? raw.champions : [],
+    emblems: Array.isArray(raw?.emblems) ? raw.emblems : [],
+  };
+}
+
+/** Seats the AI in the free slot and starts a match against the human in `humanSlot`. */
+function startBotMatch(humanSlot, rawHumanTeam, rawBotTeam) {
+  const human = match.getPlayer(humanSlot);
+  if (!human) return { ok: false, error: "You are not in an active match." };
+
+  const botSlot = humanSlot === 0 ? 1 : 0;
+  if (match.getPlayer(botSlot)) {
+    return { ok: false, error: "Another player is already in the arena." };
+  }
+
+  const humanTeam = toTeamPayload(rawHumanTeam);
+  const botTeam = toTeamPayload(rawBotTeam);
+  const rules = { championDB, emblems: EMBLEMS, editMode };
+
+  const humanCheck = validateTeamComposition(humanTeam, rules);
+  if (!humanCheck.ok) return { ok: false, error: humanCheck.errors[0] };
+  const botCheck = validateTeamComposition(botTeam, rules);
+  if (!botCheck.ok) {
+    return { ok: false, error: `AI team: ${botCheck.errors[0]}` };
+  }
+
+  human.setSelectedChampionKeys([...humanTeam.champions]);
+  human.setEmblems(resolveEmblems(humanTeam.emblems));
+  human.teamId = null;
+
+  const socketId = `bot:${++botSessionCounter}`;
+  const bot = new Player({
+    id: `player${botSlot + 1}`,
+    team: botSlot + 1,
+    username: BOT_TUNING.username,
+    userId: null,
+  });
+  bot.setSocket(socketId);
+  bot.clearChampionSelection();
+  bot.setSelectedChampionKeys([...botTeam.champions]);
+  bot.setEmblems(resolveEmblems(botTeam.emblems));
+  bot.teamId = null;
+
+  match.setPlayer(botSlot, bot);
+  match.assignSocketToSlot(socketId, botSlot);
+  botSession = { slot: botSlot, socketId, player: bot };
+
+  io.emit("playerCountUpdate", match.getConnectedCount());
+  io.emit("playerNamesUpdate", match.getPlayerNamesEntries());
+  io.to(human.socketId).emit("allPlayersConnected");
+
+  broadcastGameState();
+  startGameIfReady();
+  return { ok: true };
+}
+
+/** Plans and locks in the AI's turn once a planning window opens. */
+function scheduleBotTurn() {
+  const session = botSession;
+  if (!session || match.combat.phase !== "planning") return;
+
+  setTimeout(() => {
+    if (botSession !== session) return;
+    if (match.combat.phase !== "planning" || match.isGameEnded()) return;
+    runBotTurn(session);
+  }, BOT_TUNING.thinkDelayMs);
+}
+
+function runBotTurn(session) {
+  const team = session.player.team;
+
+  try {
+    // The AI reads the board exactly as its client would: disguises applied,
+    // the opponent's concealed summons left out.
+    const champions = Array.from(match.combat.activeChampions.values());
+    const perceived = applyDisguises(
+      champions.map((champion) => champion.serialize()),
+      team,
+    );
+    const perceivedById = new Map(perceived.map((entry) => [entry.id, entry]));
+    const visibleChampions = champions.filter(
+      (champion) => champion.team === team || !concealedSummonIds.has(champion.id),
+    );
+
+    const plan = planTurn({
+      champions: visibleChampions,
+      perceivedById,
+      team,
+      currentTurn: match.getCurrentTurn(),
+      scores: match.combat.playerScores,
+      summonableKeys: getLineupSummonAvailability(team).champions,
+      championDB,
+      players: match.players,
+      editMode,
+    });
+
+    if (plan.summonKey) summonForSlot(session.slot, plan.summonKey, botReply);
+    for (const action of plan.actions) {
+      enqueuePlayerAction(session.slot, action, botReply);
+    }
+  } catch (err) {
+    console.error("[bot] turn planning failed, ending the turn without actions:", err);
+  }
+
+  confirmEndTurn(session.slot, botReply);
+}
+
+// ============================================================
+//  MATCH START
+// ============================================================
+
+function startGameIfReady() {
+  if (!checkAllTeamsSelected()) return;
+
+  // Both players just locked in fresh teams, so any combat still flagged as
+  // started belongs to an abandoned match that never got a full reset (it only
+  // happens when the slots empty out one at a time and the count never reaches
+  // zero). Wipe it, otherwise the old state would be restored instead.
+  if (match.isCombatStarted()) match.combat.reset();
+
+  // A match that ended without the slots ever emptying (surrender, or the
+  // players leaving one at a time) leaves this flag set, and the new match's
+  // win would then never reach the clients.
+  gameOverEmitted = false;
+
+  match.combat.start();
+
+  // Populate each team's reserve queue with its confirmed roster, then start
+  // the first-champion (initial 1v1) choice phase.
+  match.players.forEach((player) => {
+    if (!player) return;
+    match.combat.reserveQueues.set(player.team, [
+      ...player.selectedChampionKeys,
+    ]);
+  });
+
+  startFirstChampionChoicePhase();
+}
+
+/** Starts the first-champion (1v1) choice phase. */
+function startFirstChampionChoicePhase() {
+  match.players.forEach((player) => {
+    if (!player) return;
+
+    const team = match.getPlayerTeam(player.socketId);
+    const roster = match.combat.reserveQueues.get(team) || [];
+
+    if (botSession?.player === player) {
+      const session = botSession;
+      setTimeout(() => {
+        if (botSession !== session) return;
+        handleFirstChampionChoice(
+          session.socketId,
+          chooseFirstChampion(roster, championDB),
+        );
+      }, BOT_TUNING.firstChoiceDelayMs);
+      return;
+    }
+
+    io.to(player.socketId).emit("requestFirstChampionSelection", {
+      roster,
+      timeout: FIRST_CHOICE_TIMEOUT,
+    });
+
+    // Schedule the auto-pick timeout: a random champion from the roster.
+    const timeoutId = setTimeout(() => {
+      if (!match.combat.firstChampionChoices.has(player.socketId)) {
+        console.log(
+          `[TIMEOUT] Player ${player.username} did not choose. Auto-selecting at random.`,
+        );
+        const autoSelectedChampion =
+          roster[Math.floor(Math.random() * roster.length)];
+        if (autoSelectedChampion) {
+          handleFirstChampionChoice(player.socketId, autoSelectedChampion);
+        }
+      }
+    }, FIRST_CHOICE_TIMEOUT);
+
+    match.setFirstChoiceTimer(player.socketId, timeoutId);
+  });
+}
+
+/** Processes a player's first-champion choice. */
+function handleFirstChampionChoice(socketId, championKey) {
+  const player = match.getPlayerBySocketId(socketId);
+  if (!player) return;
+
+  // Clears the timeout and records the choice in GameMatch.
+  const alreadyChosen = !match.setFirstChampionChoice(socketId, championKey);
+  if (alreadyChosen) return;
+
+  console.log(
+    `Player ${player.username} chose ${formatChampionName(
+      championDB[championKey],
+    )} for the 1v1.`,
+  );
+
+  if (match.combat.firstChampionChoices.size === 2) {
+    handleAllFirstChampionsChosen();
+  }
+}
+
+/** When both players have chosen their initial champion. */
+function handleAllFirstChampionsChosen() {
+  // Prevents multiple executions.
+  if (match.combat.activeChampions.size > 0) return;
+
+  console.log("Both players have chosen. Starting the 1v1.");
+
+  // Finalize the choice phase in GameMatch (spawns, updates reserves).
+  const { choices } = match.finalizeFirstChampionChoices(spawnChampion);
+
+  io.emit("firstChampionChoicesFinalized", { choices });
+  broadcastGameState();
+
+  // Start the first turn after a small UI delay.
+  setTimeout(() => {
+    handleStartTurn();
+    io.emit("turnStart", {
+      turn: match.combat.currentTurn,
+      activeChampions: Array.from(match.combat.activeChampions.keys()),
+    });
+  }, 1000);
 }
 
 // ============================================================
@@ -1572,108 +2030,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  function startGameIfReady() {
-    if (!checkAllTeamsSelected()) return;
-
-    // Both players just locked in fresh teams, so any combat still flagged as
-    // started belongs to an abandoned match that never got a full reset (it only
-    // happens when the slots empty out one at a time and the count never reaches
-    // zero). Wipe it, otherwise the old state would be restored instead.
-    if (match.isCombatStarted()) match.combat.reset();
-
-    // A match that ended without the slots ever emptying (surrender, or the
-    // players leaving one at a time) leaves this flag set, and the new match's
-    // win would then never reach the clients.
-    gameOverEmitted = false;
-
-    match.combat.start();
-
-    // Populate each team's reserve queue with its confirmed roster, then start
-    // the first-champion (initial 1v1) choice phase.
-    match.players.forEach((player) => {
-      if (!player) return;
-      match.combat.reserveQueues.set(player.team, [
-        ...player.selectedChampionKeys,
-      ]);
-    });
-
-    startFirstChampionChoicePhase();
-  }
-
-  /** Starts the first-champion (1v1) choice phase. */
-  function startFirstChampionChoicePhase() {
-    match.players.forEach((player) => {
-      if (!player) return;
-
-      const team = match.getPlayerTeam(player.socketId);
-      const roster = match.combat.reserveQueues.get(team) || [];
-
-      io.to(player.socketId).emit("requestFirstChampionSelection", {
-        roster,
-        timeout: FIRST_CHOICE_TIMEOUT,
-      });
-
-      // Schedule the auto-pick timeout: a random champion from the roster.
-      const timeoutId = setTimeout(() => {
-        if (!match.combat.firstChampionChoices.has(player.socketId)) {
-          console.log(
-            `[TIMEOUT] Player ${player.username} did not choose. Auto-selecting at random.`,
-          );
-          const autoSelectedChampion =
-            roster[Math.floor(Math.random() * roster.length)];
-          if (autoSelectedChampion) {
-            handleFirstChampionChoice(player.socketId, autoSelectedChampion);
-          }
-        }
-      }, FIRST_CHOICE_TIMEOUT);
-
-      match.setFirstChoiceTimer(player.socketId, timeoutId);
-    });
-  }
-
-  /** Processes a player's first-champion choice. */
-  function handleFirstChampionChoice(socketId, championKey) {
-    const player = match.getPlayerBySocketId(socketId);
-    if (!player) return;
-
-    // Clears the timeout and records the choice in GameMatch.
-    const alreadyChosen = !match.setFirstChampionChoice(socketId, championKey);
-    if (alreadyChosen) return;
-
-    console.log(
-      `Player ${player.username} chose ${formatChampionName(
-        championDB[championKey],
-      )} for the 1v1.`,
-    );
-
-    if (match.combat.firstChampionChoices.size === 2) {
-      handleAllFirstChampionsChosen();
-    }
-  }
-
-  /** When both players have chosen their initial champion. */
-  function handleAllFirstChampionsChosen() {
-    // Prevents multiple executions.
-    if (match.combat.activeChampions.size > 0) return;
-
-    console.log("Both players have chosen. Starting the 1v1.");
-
-    // Finalize the choice phase in GameMatch (spawns, updates reserves).
-    const { choices } = match.finalizeFirstChampionChoices(spawnChampion);
-
-    io.emit("firstChampionChoicesFinalized", { choices });
-    broadcastGameState();
-
-    // Start the first turn after a small UI delay.
-    setTimeout(() => {
-      handleStartTurn();
-      io.emit("turnStart", {
-        turn: match.combat.currentTurn,
-        activeChampions: Array.from(match.combat.activeChampions.keys()),
-      });
-    }, 1000);
-  }
-
   // =============================
   //  disconnect
   // =============================
@@ -1747,6 +2103,15 @@ io.on("connection", (socket) => {
     match.removeSocket(socket.id);
     match.removeReadyPlayer(disconnectedSlot);
     match.clearActions();
+
+    // The human left a match against the AI: the AI leaves with them.
+    if (botSession) {
+      resetGameState();
+      io.emit("playerCountUpdate", match.getConnectedCount());
+      io.emit("playerNamesUpdate", match.getPlayerNamesEntries());
+      broadcastGameState();
+      return;
+    }
 
     const connectedCount = match.getConnectedCount();
     io.emit("playerCountUpdate", connectedCount);
@@ -1842,6 +2207,18 @@ io.on("connection", (socket) => {
   });
 
   // =============================
+  //  startBotMatch (hub → match against the AI)
+  // =============================
+  socket.on("startBotMatch", ({ playerTeam, botTeam } = {}) => {
+    const result = startBotMatch(
+      match.getSlotBySocket(socket.id),
+      playerTeam,
+      botTeam,
+    );
+    if (!result.ok) socket.emit("botMatchRejected", result.error);
+  });
+
+  // =============================
   //  chooseFirstChampion (1v1 initial)
   // =============================
   socket.on("chooseFirstChampion", ({ championKey } = {}) => {
@@ -1852,100 +2229,7 @@ io.on("connection", (socket) => {
   //  summonFromLineup (brings a line-up champion onto the field)
   // =============================
   socket.on("summonFromLineup", ({ championKey } = {}) => {
-    const playerSlot = match.getSlotBySocket(socket.id);
-    const player = match.getPlayer(playerSlot);
-    if (!player) return;
-
-    if (match.isGameEnded() || match.combat.phase !== "planning") {
-      return socket.emit(
-        "actionFailed",
-        match.isGameEnded()
-          ? "The combat has already ended."
-          : "You cannot summon while the turn is being resolved.",
-      );
-    }
-
-    const team = player.team;
-
-    if (!editMode.unrestrictedSummon) {
-      // Line-up summons are blocked on the first turn.
-      if (match.getCurrentTurn() === 1) {
-        return socket.emit(
-          "actionFailed",
-          "You cannot summon line-up champions on the first turn.",
-        );
-      }
-
-      if (match.hasSummonedThisTurn(team)) {
-        return socket.emit(
-          "actionFailed",
-          "You have already summoned a line-up champion this turn.",
-        );
-      }
-    }
-
-    const reserve = match.combat.reserveQueues.get(team) || [];
-    const entering = championKey ? resolveSummonGroup(championKey) : [];
-
-    if (!entering.length || !entering.every((key) => reserve.includes(key))) {
-      return socket.emit(
-        "actionFailed",
-        "That champion is not available to be summoned.",
-      );
-    }
-
-    // The champion cap binds line-up summons only; every type counts toward the entity cap.
-    const summonEntityType = championDB[championKey].entityType ?? "champion";
-
-    if (
-      !match.combat.canSpawnOnTeam(team, ACTIVE_PER_TEAM, {
-        entityType: summonEntityType,
-        requiredSlots: entering.length,
-      })
-    ) {
-      return socket.emit(
-        "actionFailed",
-        entering.length > 1
-          ? `${getDuoForCore(championKey).name} enter together and need ${entering.length} free spaces on the battlefield.`
-          : "There is no free space on the battlefield to summon more champions.",
-      );
-    }
-
-    const spawnedGroup = entering.map((key) =>
-      spawnChampion({
-        championKey: key,
-        team,
-        trackSnapshot: true,
-        emitState: false,
-        spawnProtection: !editMode.summonWithoutSpawnProtection,
-      }),
-    );
-
-    if (spawnedGroup.some((spawned) => !spawned)) {
-      return socket.emit("actionFailed", "This champion could not be summoned.");
-    }
-
-    match.combat.reserveQueues.set(
-      team,
-      reserve.filter((key) => !entering.includes(key)),
-    );
-    match.markSummonedThisTurn(team);
-
-    // The opponent is still choosing actions, so this reinforcement stays hidden
-    // from them until the turn locks and resolution begins.
-    spawnedGroup.forEach((spawned) => concealedSummonIds.add(spawned.id));
-
-    // Emitted only after the bookkeeping above, so the payload's summon
-    // availability already reflects this summon.
-    broadcastGameState();
-
-    spawnedGroup.forEach((spawned) =>
-      match.logTurnEvent("championSummoned", {
-        championId: spawned.id,
-        championKey: spawned.championKey,
-        team,
-      }),
-    );
+    summonForSlot(match.getSlotBySocket(socket.id), championKey, socket);
   });
 
   socket.on("requestSkillUse", ({ userId, skillKey, targetId }) => {
@@ -1994,73 +2278,10 @@ io.on("connection", (socket) => {
   // =============================
 
   socket.on("useSkill", ({ userId, skillKey, targetIds }) => {
-    const playerSlot = match.getSlotBySocket(socket.id);
-    const player = match.players[playerSlot];
-    const user = match.combat.activeChampions.get(userId);
-
-    if (skillKey === CLAIM_ACTION_KEY) {
-      if (!player || !user || user.team !== player.team) {
-        return socket.emit(
-          "actionFailed",
-          "You are not allowed to use CLAIM with this champion.",
-        );
-      }
-
-      if (!validateActionIntent(user, null, socket)) return;
-
-      const action = new Action({ userId, skillKey, targetIds: {} });
-      action.priority = 0;
-      action.speed = user.Speed;
-      action.turn = match.getCurrentTurn();
-      action.momentumCost = 0;
-      action.type = "claim";
-
-      match.enqueueAction(action);
-
-      io.to(socket.id).emit(
-        "combatLog",
-        `${formatChampionName(user)} prepared CLAIM. Action pending.`,
-      );
-      return;
-    }
-
-    if (!player || !user || user.team !== player.team) {
-      return socket.emit(
-        "actionFailed",
-        "You are not allowed to use skills with this champion.",
-      );
-    }
-
-    const skill = user.skills.find((s) => s.key === skillKey);
-    if (!skill) {
-      return socket.emit("actionFailed", "Skill not found.");
-    }
-
-    if (!validateActionIntent(user, skill, socket)) return;
-
-    // Only ultimates have a cost. Momentum is actually spent by the TurnResolver
-    // when the action resolves, not here.
-    let cost = 0;
-
-    if (skill.isUltimate === true) {
-      cost = user.getSkillCost(skill);
-
-      if (!editMode.freeCostSkills && user.momentum < cost) {
-        return socket.emit("actionFailed", "Not enough Momentum.");
-      }
-    }
-
-    const action = new Action({ userId, skillKey, targetIds });
-    action.priority = skill.priority || 0;
-    action.speed = user.Speed;
-    action.turn = match.getCurrentTurn();
-    action.momentumCost = cost;
-
-    match.enqueueAction(action);
-
-    io.to(socket.id).emit(
-      "combatLog",
-      `${formatChampionName(user)} used ${skill.name}. Action pending.`,
+    enqueuePlayerAction(
+      match.getSlotBySocket(socket.id),
+      { userId, skillKey, targetIds },
+      socket,
     );
   });
 
@@ -2105,37 +2326,7 @@ io.on("connection", (socket) => {
   // =============================
 
   socket.on("endTurn", () => {
-    if (match.isGameEnded()) {
-      socket.emit("actionFailed", "The game has already ended.");
-      return;
-    }
-
-    const playerSlot = match.getSlotBySocket(socket.id);
-    if (playerSlot === undefined) {
-      socket.emit("actionFailed", "You are not in a valid player slot.");
-      return;
-    }
-
-    match.addReadyPlayer(playerSlot);
-    io.emit("playerConfirmedEndTurn", playerSlot);
-
-    if (match.getReadyPlayersCount() === 2) {
-      // Make sure both are still connected.
-      if (!match.areBothPlayersConnected()) {
-        match.clearTurnReadiness();
-        socket.emit(
-          "actionFailed",
-          "Your opponent was disconnected. The turn was canceled.",
-        );
-        return;
-      }
-      handleEndTurn();
-    } else {
-      socket.emit(
-        "waitingForOpponentEndTurn",
-        "Waiting for the other player to confirm the end of the turn.",
-      );
-    }
+    confirmEndTurn(match.getSlotBySocket(socket.id), socket);
   });
 });
 

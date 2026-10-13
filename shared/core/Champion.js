@@ -310,6 +310,14 @@ export class Champion {
       }
     }
 
+    // A fully absorbed shield stays in runtime.shields at amount 0 until the
+    // next turn's decay prunes it (some skills still read it as "had a shield").
+    // It is already gone as far as any viewer is concerned, so never ship it:
+    // otherwise every later event snapshot redraws the shield bubble.
+    if (Array.isArray(runtime.shields)) {
+      runtime.shields = runtime.shields.filter((shield) => shield?.amount > 0);
+    }
+
     const statusEffects = Array.from(this.statusEffects.entries()).map(
       ([key, value]) => {
         const safeValue = { ...value };
@@ -634,8 +642,8 @@ export class Champion {
     return breakShields(this, amount, options);
   }
 
-  wouldBeLethal(damage) {
-    return wouldBeLethal(this, damage);
+  wouldBeLethal(damage, mode) {
+    return wouldBeLethal(this, damage, mode);
   }
 
   applyTaunt(taunterId, duration, context) {
@@ -677,8 +685,8 @@ export class Champion {
     return removeHookEffects(this, predicate);
   }
 
-  takeDamage(amount, context) {
-    return takeDamage(this, amount, context);
+  takeDamage(amount, context, mode) {
+    return takeDamage(this, amount, context, mode);
   }
 
   heal(amount) {

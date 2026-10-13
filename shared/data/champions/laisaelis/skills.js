@@ -275,12 +275,12 @@ const laisaelisSkills = [
             },
           },
 
-          onBeforeDmgTaking({ defender, owner, damage, context }) {
+          onBeforeDmgTaking({ defender, owner, damage, mode, context }) {
             if (defender !== owner) return;
             // Laiserisa's own binding answers the same hit and outranks this.
             if (owner.runtime.hookEffects?.some((e) => e.key === "twin_departure"))
               return;
-            if (!owner.wouldBeLethal(damage)) return;
+            if (!owner.wouldBeLethal(damage, mode)) return;
 
             owner.runtime.preventFinishingUntilTurn = context.currentTurn + 1;
 
@@ -300,7 +300,7 @@ const laisaelisSkills = [
             });
 
             return {
-              damageCap: survivalDamage(owner, survivalHP),
+              damageCap: survivalDamage(owner, survivalHP, mode),
               log: {
                 en: `${formatChampionName(owner)} is kept on the field with ${survivalHP} HP.`,
                 pt: `${formatChampionName(owner)} é mantida em campo com ${survivalHP} HP.`,

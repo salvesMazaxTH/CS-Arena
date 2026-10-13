@@ -552,6 +552,7 @@ class CombatState {
       turns = 1,
       returnState = null,
       ruptureSourceId = null,
+      takesSpace = true,
       championKey = null,
       team = null,
       asEntityType = null,
@@ -579,6 +580,7 @@ class CombatState {
         turns,
         returnState,
         ruptureSourceId,
+        takesSpace,
         context: mutationContext,
       });
     }

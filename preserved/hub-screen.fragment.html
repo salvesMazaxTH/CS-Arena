@@ -1,0 +1,74 @@
+<!--
+  PRESERVED, READ-ONLY. The pre-match lobby (team selection) markup.
+  Paste it into your new index.html as-is: public/js/main.js (hub section) and public/styles/hub.css depend on these ids/classes.
+-->
+    <!-- Pre-match hub: pick a saved team, then queue for a match -->
+    <div id="hub-screen" class="hub-screen hidden">
+      <div class="hub-container">
+        <div class="hub-head">
+          <div>
+            <span id="hubEyebrow" class="hub-eyebrow">Ready up</span>
+            <h2 id="hubTitle">Choose your team</h2>
+          </div>
+          <div class="hub-toolbar">
+            <a
+              class="hub-manage-link"
+              href="/teamsManager.html"
+              target="_blank"
+              rel="noopener"
+            >
+              <i class="bx bx-cog"></i> Manage teams
+            </a>
+            <button id="hubRenameBtn" class="hub-manage-link" type="button">
+              <i class="bx bx-edit"></i> Display name
+            </button>
+            <button
+              id="hubSignOutBtn"
+              class="hub-manage-link hub-signout"
+              type="button"
+            >
+              <i class="bx bx-log-out"></i> Sign out
+            </button>
+          </div>
+        </div>
+
+        <div id="hubTeamGrid" class="hub-team-lists"></div>
+        <p id="hubEmpty" class="hub-empty" hidden>
+          You have no teams. Open “Manage teams” to build one.
+        </p>
+
+        <div class="hub-actions">
+          <p id="hubStatus" class="hub-status"></p>
+          <button
+            id="hubCancelBtn"
+            class="secondary-action-btn"
+            type="button"
+            hidden
+          >
+            Cancel
+          </button>
+          <button
+            id="hubPlayAiBtn"
+            class="secondary-action-btn"
+            type="button"
+            disabled
+          >
+            Play vs AI
+          </button>
+          <button id="hubFindMatchBtn" type="button" disabled>
+            Find match
+          </button>
+          <button
+            id="hubAiBackBtn"
+            class="secondary-action-btn"
+            type="button"
+            hidden
+          >
+            Back
+          </button>
+          <button id="hubAiStartBtn" type="button" hidden disabled>
+            Start match
+          </button>
+        </div>
+      </div>
+    </div>

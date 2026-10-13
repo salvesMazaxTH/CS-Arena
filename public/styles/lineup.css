@@ -1,0 +1,369 @@
+/* ============================================
+   LINEUPS — side rails, chips, emblem strips, first-choice + summon reminder overlays
+   Opponent chips that are not yet revealed render as "?" only (JS decides; CSS never un-hides).
+   ============================================ */
+
+/* ---- Rails ---- */
+.lineup-banner {
+  --rail: var(--ally);
+  --rail-glow: var(--ally-glow);
+  align-self: center;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  background: var(--glass-2);
+  border: 1px solid var(--line-mid);
+  border-top: 3px solid var(--rail);
+  box-shadow: var(--inset-bevel), var(--shadow-2), 0 -8px 28px -16px var(--rail-glow);
+  transition: opacity var(--dur-med), filter var(--dur-med);
+}
+
+.lineup-banner--opponent {
+  --rail: var(--enemy);
+  --rail-glow: var(--enemy-glow);
+}
+
+/* Mirrored arena: team 2 is local, but banners are position-bound (player rail on top). */
+.lineup-banner-title {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* Locked while a pick is being resolved / not the player's moment to choose */
+.lineup-banner.input-locked {
+  opacity: 0.6;
+  filter: saturate(0.6);
+}
+
+.lineup-banner.input-locked .lineup-chip {
+  cursor: not-allowed;
+}
+
+/* ---- Chips grid: 8 champions, rows of 4 ---- */
+.lineup-chips {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.lineup-chip {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  border-radius: var(--r-md);
+  background: linear-gradient(180deg, var(--ink-4), var(--ink-2));
+  border: 1px solid var(--line-mid);
+  box-shadow: var(--inset-bevel), var(--shadow-1);
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    border-color var(--dur-med),
+    box-shadow var(--dur-med),
+    filter var(--dur-med);
+}
+
+.lineup-chip:hover {
+  transform: translateY(-2px);
+  border-color: var(--brass-300);
+  box-shadow: var(--inset-bevel), var(--shadow-2), var(--glow-brass);
+}
+
+.lineup-chip:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.lineup-chip-slot-number {
+  font-family: var(--font-numeric);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-lo);
+}
+
+.lineup-chip-inner {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.lineup-chip-portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  display: block;
+}
+
+/* Identity badges (element + class) sit on a dark ribbon at the bottom */
+.lineup-chip-identity-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  padding: 10px 2px 3px;
+  background: linear-gradient(0deg, rgba(5, 5, 7, 0.92), transparent);
+}
+
+.lineup-chip-identity-row .champion-identity-badge {
+  width: 18px;
+  height: 18px;
+}
+
+.lineup-chip-unknown {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--text-lo);
+}
+
+/* ---- Chip states ---- */
+.lineup-chip.selected {
+  border-color: var(--ember-400);
+  box-shadow: var(--inset-bevel), 0 0 0 2px var(--ember-500), 0 0 22px rgba(242, 102, 28, 0.55);
+  transform: translateY(-3px);
+}
+
+.lineup-chip.duo-chip {
+  border-color: var(--brass-400);
+}
+
+.lineup-chip.duo-chip::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brass-300);
+  box-shadow: 0 0 8px var(--brass-300);
+}
+
+/* Already on the field */
+.lineup-chip.materialized {
+  filter: grayscale(0.85) brightness(0.55);
+  cursor: default;
+}
+
+.lineup-chip.materialized:hover {
+  transform: none;
+  border-color: var(--line-mid);
+  box-shadow: var(--inset-bevel), var(--shadow-1);
+}
+
+/* Fallen: the art goes dark and grey, but the chip itself is NOT filtered, or the
+   red cross would be greyed out with it. Two corner-to-corner strokes make the X. */
+.lineup-chip.is-dead {
+  filter: none;
+  border-color: rgba(255, 77, 77, 0.45);
+  cursor: not-allowed;
+}
+
+.lineup-chip.is-dead .lineup-chip-inner {
+  filter: grayscale(1) brightness(0.4);
+}
+
+.lineup-chip.is-dead::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(to top right, transparent calc(50% - 2px), #ff4d4d calc(50% - 2px) calc(50% + 2px), transparent calc(50% + 2px)),
+    linear-gradient(to bottom right, transparent calc(50% - 2px), #ff4d4d calc(50% - 2px) calc(50% + 2px), transparent calc(50% + 2px));
+  filter: drop-shadow(0 0 4px rgba(255, 77, 77, 0.85));
+}
+
+.lineup-chip.in-nothingness {
+  filter: grayscale(0.6) hue-rotate(250deg) brightness(0.6);
+  border-style: dashed;
+}
+
+.lineup-chip.summon-locked {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.lineup-chip.summon-locked:hover {
+  transform: none;
+  border-color: var(--line-mid);
+  box-shadow: var(--inset-bevel), var(--shadow-1);
+}
+
+.lineup-chip.unrevealed {
+  cursor: default;
+  background: repeating-linear-gradient(135deg, var(--ink-3) 0 6px, var(--ink-2) 6px 12px);
+}
+
+.lineup-chip.unrevealed:hover {
+  transform: none;
+  border-color: var(--line-mid);
+  box-shadow: var(--inset-bevel), var(--shadow-1);
+}
+
+/* ---- Emblem strips ---- */
+.lineup-emblems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.lineup-emblem-chip {
+  min-width: 44px;
+  height: 32px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--brass-500);
+  background: linear-gradient(180deg, var(--ink-4), var(--ink-2));
+  color: var(--brass-100);
+  box-shadow: var(--inset-bevel);
+  transition: border-color var(--dur-med), box-shadow var(--dur-med), transform var(--dur-fast);
+}
+
+.lineup-emblem-chip:hover {
+  border-color: var(--brass-300);
+  box-shadow: var(--inset-bevel), var(--glow-brass);
+  transform: translateY(-1px);
+}
+
+.lineup-emblem-chip-code {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* ---- First-choice overlay ---- */
+.first-choice-card {
+  width: min(640px, 100%);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.first-choice-hint {
+  color: var(--text-mid);
+  font-size: var(--fs-sm);
+  max-width: 44ch;
+}
+
+.first-choice-chips {
+  width: 100%;
+  margin: var(--sp-2) 0;
+  gap: 12px;
+}
+
+.first-choice-chips .lineup-chip {
+  border-radius: var(--r-md);
+}
+
+.first-choice-chips .lineup-chip-identity-row .champion-identity-badge {
+  width: 22px;
+  height: 22px;
+}
+
+/* "Waiting for opponent..." placeholder JS drops into the chip host */
+.first-choice-chips > div:not(.lineup-chip) {
+  grid-column: 1 / -1;
+  padding: var(--sp-4);
+  font-family: var(--font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brass-300) !important;
+  animation: ui-pulse 1.6s ease-in-out infinite;
+}
+
+/* ---- Summon reminder ---- */
+.summon-reminder-card {
+  width: min(560px, 100%);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.summon-reminder-hint {
+  color: var(--text-mid);
+  font-size: var(--fs-sm);
+  max-width: 44ch;
+}
+
+.summon-reminder-chips {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: var(--sp-2) 0;
+}
+
+.summon-reminder-chips.is-busy {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.summon-reminder-chip {
+  width: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--text-hi);
+}
+
+.summon-reminder-chip .lineup-chip {
+  width: 92px;
+  pointer-events: none;
+}
+
+.summon-reminder-chip:hover .lineup-chip,
+.summon-reminder-chip:focus-visible .lineup-chip {
+  transform: translateY(-2px);
+  border-color: var(--brass-300);
+  box-shadow: var(--inset-bevel), var(--shadow-2), var(--glow-brass);
+}
+
+.summon-reminder-chip.is-pending .lineup-chip {
+  border-color: var(--ember-400);
+  animation: ui-pulse 1s ease-in-out infinite;
+}
+
+.summon-reminder-chip-name {
+  max-width: 100%;
+  font-size: var(--fs-xs);
+  color: var(--text-mid);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summon-reminder-check {
+  margin-top: var(--sp-1);
+}
+
+/* Reminder fades over 300ms before JS re-adds .hidden */
+.summon-reminder:not(.active) {
+  opacity: 0;
+  transition: opacity var(--dur-med) var(--ease-in-out);
+}

@@ -1,4 +1,4 @@
-import { regularShieldTotal } from "../../../core/championCombat.js";
+import { shieldAgainst } from "../../../core/championCombat.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 
 export default {
@@ -38,10 +38,10 @@ export default {
     },
   },
 
-  onBeforeDmgTaking({ owner, defender, damage, context }) {
+  onBeforeDmgTaking({ owner, defender, damage, mode, context }) {
     if (defender !== owner || !(damage > 0)) return;
     if (owner.runtime.shadowflameArrivedTurn === context.currentTurn) return;
-    if (!owner.wouldBeLethal(damage)) return;
+    if (!owner.wouldBeLethal(damage, mode)) return;
 
     const stacks = owner.runtime.emberStacks || 0;
     if (stacks < this.minEmbersToSurvive) return;
@@ -63,7 +63,7 @@ export default {
 
     return {
       damageCap: Math.max(
-        owner.HP + regularShieldTotal(owner) - survivalHP,
+        owner.HP + shieldAgainst(owner, mode) - survivalHP,
         0,
       ),
       log: {

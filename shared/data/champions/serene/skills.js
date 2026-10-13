@@ -1,4 +1,4 @@
-import { regularShieldTotal } from "../../../core/championCombat.js";
+import { shieldAgainst } from "../../../core/championCombat.js";
 import { DamageEvent } from "../../../engine/combat/DamageEvent.js";
 import { effectConnected } from "../../../engine/combat/effectApplication.js";
 import { formatChampionName } from "../../../ui/formatters.js";
@@ -198,11 +198,11 @@ const sereneSkills = [
             onBeforeDmgTaking: { allowOnAbsolute: true },
           },
 
-          onBeforeDmgTaking({ defender, owner, damage, context }) {
+          onBeforeDmgTaking({ defender, owner, damage, mode, context }) {
             if (defender !== owner) return;
 
             // Not lethal: the Threshold stays shut.
-            if (!owner.wouldBeLethal(damage)) return;
+            if (!owner.wouldBeLethal(damage, mode)) return;
 
             // Must outlive this hook: the finishing step reads it after the
             // damage lands.
@@ -211,7 +211,7 @@ const sereneSkills = [
             const lockedHP = surviveHP;
 
             const adjustedDamage = Math.max(
-              owner.HP + regularShieldTotal(owner) - lockedHP,
+              owner.HP + shieldAgainst(owner, mode) - lockedHP,
               0,
             );
 

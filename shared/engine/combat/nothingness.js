@@ -38,6 +38,15 @@ export class Nothingness {
     );
   }
 
+  /** Whether this champion fills the Nothingness's single place. */
+  static occupies(champion) {
+    return this.isVanished(champion) && champion.runtime.nothingness.takesSpace;
+  }
+
+  /**
+   * Holds one at a time: a send that takes space fails while someone else
+   * fills it. A send with `takesSpace: false` neither counts nor is blocked.
+   */
   static send(
     combat,
     championId,
@@ -45,11 +54,21 @@ export class Nothingness {
       turns = 1,
       returnState = null,
       ruptureSourceId = null,
+      takesSpace = true,
       context = null,
     } = {},
   ) {
     const champion = combat.activeChampions.get(championId);
     if (!champion) return null;
+
+    if (
+      takesSpace &&
+      [...combat.inactiveChampions.values()].some((other) =>
+        this.occupies(other),
+      )
+    ) {
+      return null;
+    }
 
     combat.swapOut(championId);
     delete champion.runtime.currentContext;
@@ -58,6 +77,7 @@ export class Nothingness {
       returnAtTurn: combat.currentTurn + Math.max(1, turns),
       returnState,
       ruptureSourceId,
+      takesSpace,
     };
 
     this.emit(combat, "onChampionVanished", champion, context);

@@ -53,6 +53,9 @@ import {
 } from "./teamsManager/emblemPanel.js";
 import { createOverlays } from "./ui/overlays.js";
 import { createTargeting } from "./ui/targeting.js";
+import { createMatchViewport } from "./ui/matchViewport.js";
+import { createArenaBackdrop } from "./arena/arenaBackdrop.js";
+import { attachArenaMood } from "./arena/arenaMood.js";
 import {
   ELEMENT_IDENTITIES,
   CLASS_IDENTITIES,
@@ -155,6 +158,11 @@ const TEAM_SIZE = 8;
 const teamStore = new TeamStore();
 let selectedHubTeamId = null;
 let matchmaking = false;
+// "player" picks your own team; "ai" picks the AI opponent's team.
+let hubMode = "player";
+let selectedAiTeamId = null;
+let botMatchStarting = false;
+let arenaPlayerCount = 0;
 
 // --- Timers ---
 let disconnectionCountdownInterval = null;
@@ -198,6 +206,14 @@ const disconnectionMessage = document.getElementById("disconnection-message");
 
 // --- Main content (arena) ---
 const mainContent = document.getElementById("main-content");
+// Follows mainContent's visibility on its own (match-view class, scaling, log drawer).
+const arenaBackdrop = createArenaBackdrop(document.getElementById("arena-backdrop"));
+attachArenaMood(arenaBackdrop);
+createMatchViewport({
+  // Cosmetic scenery pick: each match rolls its own, clients need not agree.
+  onEnter: () => arenaBackdrop.start(Math.random()),
+  onLeave: () => arenaBackdrop.stop(),
+});
 const skipSlotBtn = document.querySelector("#skip-slot-btn");
 const endTurnBtn = document.querySelector("#end-turn-btn");
 const combatDialog = document.getElementById("combat-dialog");
@@ -210,6 +226,9 @@ const hubEmpty = document.getElementById("hubEmpty");
 const hubStatus = document.getElementById("hubStatus");
 const hubFindMatchBtn = document.getElementById("hubFindMatchBtn");
 const hubCancelBtn = document.getElementById("hubCancelBtn");
+const hubPlayAiBtn = document.getElementById("hubPlayAiBtn");
+const hubAiBackBtn = document.getElementById("hubAiBackBtn");
+const hubAiStartBtn = document.getElementById("hubAiStartBtn");
 
 // --- Game Over ---
 const gameOverOverlay = document.getElementById("gameOverOverlay");
@@ -650,6 +669,18 @@ function openHub() {
   mainContent.classList.remove("visible");
   mainContent.classList.add("hidden");
   selectedHubTeamId = teamStore.getSelectedId();
+  setHubMode("player");
+}
+
+function setHubMode(mode) {
+  hubMode = mode;
+  const picksAiTeam = mode === "ai";
+  document.getElementById("hubEyebrow").textContent = picksAiTeam
+    ? "Play vs AI"
+    : "Ready up";
+  document.getElementById("hubTitle").textContent = picksAiTeam
+    ? "Choose the AI's team"
+    : "Choose your team";
   renderHub();
 }
 
@@ -660,12 +691,16 @@ function renderHub() {
   if (!teams.some((team) => team.id === selectedHubTeamId)) {
     selectedHubTeamId = teams[0]?.id ?? null;
   }
+  if (!teams.some((team) => team.id === selectedAiTeamId)) {
+    selectedAiTeamId = teams.find(isTeamPlayable)?.id ?? null;
+  }
+  const selectedId = hubMode === "ai" ? selectedAiTeamId : selectedHubTeamId;
 
   const renderCard = (team) => {
     const playable = isTeamPlayable(team);
     return `
         <button type="button"
-          class="hub-team-card ${team.id === selectedHubTeamId ? "selected" : ""} ${playable ? "" : "is-invalid"}"
+          class="hub-team-card ${team.id === selectedId ? "selected" : ""} ${playable ? "" : "is-invalid"}"
           data-team-id="${escapeHtml(team.id)}">
           ${renderTeamSummary(team)}
           ${playable ? "" : '<span class="hub-team-invalid">Unavailable — fix it in Manage teams</span>'}
@@ -691,33 +726,50 @@ function renderHub() {
 }
 
 function updateHubActionState() {
-  hubFindMatchBtn.disabled =
-    matchmaking || !isTeamPlayable(teamStore.getById(selectedHubTeamId));
-  hubFindMatchBtn.hidden = matchmaking;
-  hubCancelBtn.hidden = !matchmaking;
+  const picksAiTeam = hubMode === "ai";
+  const ownTeamPlayable = isTeamPlayable(teamStore.getById(selectedHubTeamId));
+  const busy = matchmaking || botMatchStarting;
+
+  hubFindMatchBtn.hidden = picksAiTeam || matchmaking;
+  hubFindMatchBtn.disabled = busy || !ownTeamPlayable;
+  hubCancelBtn.hidden = picksAiTeam || !matchmaking;
+  // The AI takes the arena's free slot, so it needs you to be alone in it.
+  hubPlayAiBtn.hidden = picksAiTeam || matchmaking;
+  hubPlayAiBtn.disabled = busy || !ownTeamPlayable || arenaPlayerCount > 1;
+
+  hubAiBackBtn.hidden = !picksAiTeam;
+  hubAiBackBtn.disabled = botMatchStarting;
+  hubAiStartBtn.hidden = !picksAiTeam;
+  hubAiStartBtn.disabled =
+    botMatchStarting ||
+    arenaPlayerCount > 1 ||
+    !isTeamPlayable(teamStore.getById(selectedAiTeamId));
+
   hubTeamGrid.querySelectorAll(".hub-team-card").forEach((card) => {
-    card.disabled = matchmaking || card.classList.contains("is-invalid");
+    card.disabled = busy || card.classList.contains("is-invalid");
   });
 }
 
 hubTeamGrid.addEventListener("click", (event) => {
   const card = event.target.closest(".hub-team-card");
   if (!card || card.disabled) return;
-  selectedHubTeamId = card.dataset.teamId;
+  if (hubMode === "ai") selectedAiTeamId = card.dataset.teamId;
+  else selectedHubTeamId = card.dataset.teamId;
   hubTeamGrid
     .querySelectorAll(".hub-team-card")
     .forEach((el) => el.classList.toggle("selected", el === card));
   updateHubActionState();
 });
 
-hubFindMatchBtn.addEventListener("click", () => {
+/** Checks your selected team and loads it into the match UI; null if it can't play. */
+function takeSelectedHubTeam() {
   const team = teamStore.getById(selectedHubTeamId);
   const check = team
     ? validateTeamComposition(team, { championDB, emblems: EMBLEMS, editMode })
     : { ok: false, errors: ["Pick a team first."] };
   if (!check.ok) {
     hubStatus.textContent = check.errors[0];
-    return;
+    return null;
   }
 
   teamStore.setSelectedId(team.id);
@@ -725,6 +777,12 @@ hubFindMatchBtn.addEventListener("click", () => {
   playerEmblems = team.emblems.slice();
   renderPlayerEmblemStrip();
   renderLineupBanner();
+  return team;
+}
+
+hubFindMatchBtn.addEventListener("click", () => {
+  const team = takeSelectedHubTeam();
+  if (!team) return;
 
   matchmaking = true;
   hubStatus.textContent = "Searching for a match…";
@@ -741,6 +799,46 @@ hubCancelBtn.addEventListener("click", () => {
   hubStatus.textContent = "";
   updateHubActionState();
   socket.emit("cancelReadyWithTeam");
+});
+
+hubPlayAiBtn.addEventListener("click", () => {
+  if (!isTeamPlayable(teamStore.getById(selectedHubTeamId))) return;
+  hubStatus.textContent = "";
+  setHubMode("ai");
+});
+
+hubAiBackBtn.addEventListener("click", () => {
+  hubStatus.textContent = "";
+  setHubMode("player");
+});
+
+hubAiStartBtn.addEventListener("click", () => {
+  const botTeam = teamStore.getById(selectedAiTeamId);
+  if (!isTeamPlayable(botTeam)) {
+    hubStatus.textContent = "Pick a valid team for the AI.";
+    return;
+  }
+  const team = takeSelectedHubTeam();
+  if (!team) return;
+
+  botMatchStarting = true;
+  hubStatus.textContent = "Starting the match…";
+  updateHubActionState();
+  socket.emit("startBotMatch", {
+    playerTeam: { champions: team.champions, emblems: team.emblems },
+    botTeam: { champions: botTeam.champions, emblems: botTeam.emblems },
+  });
+});
+
+socket.on("botMatchRejected", (message) => {
+  botMatchStarting = false;
+  hubStatus.textContent = message || "The server could not start the match.";
+  updateHubActionState();
+});
+
+socket.on("playerCountUpdate", (count) => {
+  arenaPlayerCount = count;
+  updateHubActionState();
 });
 
 teamStore.onSyncError = () => {
@@ -790,6 +888,8 @@ socket.on("readyWithTeamRejected", (message) => {
 
 socket.on("allTeamsSelected", () => {
   matchmaking = false;
+  botMatchStarting = false;
+  hubMode = "player";
   hubStatus.textContent = "";
   hideOverlay(hubScreen);
   mainContent.classList.remove("hidden");

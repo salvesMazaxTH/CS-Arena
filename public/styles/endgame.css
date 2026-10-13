@@ -1,0 +1,331 @@
+/* ============================================
+   ENDGAME — surrender confirm, game-over banner, post-match report + return countdown
+   All overlays are siblings of #match-stage (position:fixed in real viewport px).
+   JS lifecycle: game over shows 10s, then #timerOverlay + matchStats.show().
+   ============================================ */
+
+/* ---- Surrender confirm ---- */
+.surrender-card {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  border-color: rgba(255, 90, 90, 0.4);
+}
+
+.surrender-icon {
+  font-size: 3rem;
+  color: var(--negative);
+  filter: drop-shadow(0 0 14px rgba(255, 90, 90, 0.5));
+}
+
+.surrender-card p {
+  color: var(--text-mid);
+  max-width: 36ch;
+}
+
+.surrender-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+
+/* ---- Game over ---- */
+.game-over {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-game-over);
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  background: rgba(3, 3, 6, 0.78);
+  backdrop-filter: blur(4px);
+}
+
+.game-over.active {
+  animation: ui-fade 600ms var(--ease-out) both;
+}
+
+.game-over.win-background {
+  background: radial-gradient(70% 55% at 50% 50%, rgba(224, 183, 101, 0.28), rgba(3, 3, 6, 0.85) 75%);
+}
+
+.game-over.lose-background {
+  background: radial-gradient(70% 55% at 50% 50%, rgba(255, 79, 98, 0.24), rgba(3, 3, 6, 0.9) 75%);
+}
+
+.game-over.draw-background {
+  background: radial-gradient(70% 55% at 50% 50%, rgba(168, 168, 184, 0.2), rgba(3, 3, 6, 0.88) 75%);
+}
+
+.game-over-content {
+  position: relative;
+  width: 100%;
+  padding: clamp(24px, 6vh, 64px) var(--sp-5);
+  text-align: center;
+  overflow: hidden;
+  border-top: 2px solid var(--game-over-accent, var(--brass-400));
+  border-bottom: 2px solid var(--game-over-accent, var(--brass-400));
+  background: linear-gradient(90deg, transparent, rgba(8, 8, 12, 0.92) 15%, rgba(8, 8, 12, 0.92) 85%, transparent);
+}
+
+.game-over.active .game-over-content {
+  animation: game-over-band 700ms var(--ease-spring) both;
+}
+
+.game-over-content.win {
+  --game-over-accent: var(--brass-300);
+}
+
+.game-over-content.lose {
+  --game-over-accent: var(--enemy);
+}
+
+.game-over-content.draw {
+  --game-over-accent: var(--neutral);
+}
+
+.game-over-flare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.16) 50%, transparent 65%);
+  transform: translateX(-100%);
+}
+
+.game-over.active .game-over-flare {
+  animation: turn-flare 1200ms var(--ease-out) 350ms both;
+}
+
+.game-over-message {
+  position: relative;
+  margin: 0;
+  padding-left: 0.3em;
+  font-family: var(--font-display);
+  font-size: clamp(36px, 11vh, 120px);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--game-over-accent, var(--brass-100));
+  text-shadow: 0 0 44px currentColor, 0 4px 10px rgba(0, 0, 0, 0.8);
+}
+
+.game-over-content.win .game-over-message {
+  color: var(--brass-100);
+  text-shadow: 0 0 48px rgba(224, 183, 101, 0.8), 0 4px 10px rgba(0, 0, 0, 0.8);
+}
+
+.game-over-content.lose .game-over-message {
+  color: #ffd9de;
+  text-shadow: 0 0 48px rgba(255, 79, 98, 0.75), 0 4px 10px rgba(0, 0, 0, 0.8);
+}
+
+@keyframes game-over-band {
+  from {
+    opacity: 0;
+    transform: scaleY(0.1);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+/* ---- Timer overlay: post-match report + return ---- */
+.timer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-timer);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  padding: var(--sp-5);
+  background: radial-gradient(80% 60% at 50% 40%, rgba(20, 20, 30, 0.9), rgba(3, 3, 6, 0.97));
+}
+
+.timer-overlay.active {
+  animation: ui-fade 500ms var(--ease-out) both;
+}
+
+.timer-overlay.active .match-stats {
+  animation: ui-rise 520ms var(--ease-out) both;
+}
+
+.timer-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+}
+
+.timer-countdown {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  letter-spacing: 0.1em;
+  color: var(--text-mid);
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-countdown:empty {
+  display: none;
+}
+
+/* ---- Match statistics panel ---- */
+.match-stats {
+  width: min(760px, 100%);
+  max-height: min(100%, 720px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-5) var(--sp-5) var(--sp-4);
+  min-height: 0;
+}
+
+.match-stats-head {
+  position: relative;
+  text-align: center;
+}
+
+.match-stats-tabs {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.match-stats-tab {
+  min-height: 34px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-mid);
+  background: transparent;
+  color: var(--text-mid);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast), box-shadow var(--dur-fast);
+}
+
+.match-stats-tab:hover {
+  color: var(--text-hi);
+  border-color: var(--brass-400);
+}
+
+.match-stats-tab:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.match-stats-tab.active {
+  color: var(--text-on-brass);
+  background: var(--brass-gradient);
+  border-color: var(--brass-300);
+  box-shadow: var(--glow-brass);
+}
+
+.match-stats-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.match-stats-tab-panel {
+  display: none;
+}
+
+.match-stats-tab-panel.active {
+  display: block;
+  animation: ui-fade var(--dur-med) var(--ease-out) both;
+}
+
+.match-stats-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+}
+
+.match-stats-table td {
+  padding: 6px var(--sp-3);
+  background: var(--glass-1);
+  font-family: var(--font-numeric);
+  font-size: var(--fs-md);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-hi);
+  vertical-align: middle;
+}
+
+.match-stats-table td:first-child {
+  width: 3.2rem;
+  border-radius: var(--r-md) 0 0 var(--r-md);
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--brass-300);
+}
+
+.match-stats-table td:last-child {
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  text-align: right;
+  font-weight: 700;
+}
+
+.match-stats-table tr:first-child td:first-child {
+  color: var(--warning);
+  text-shadow: 0 0 10px rgba(255, 204, 61, 0.6);
+}
+
+.match-stats-table td:nth-child(2) {
+  width: 4.4rem;
+}
+
+.match-stats-avatar-wrap {
+  --avatar-ring: var(--neutral);
+  display: block;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: 2px solid var(--avatar-ring);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--avatar-ring) 55%, transparent);
+  overflow: hidden;
+  background: var(--ink-2);
+}
+
+.match-stats-avatar-wrap.ally {
+  --avatar-ring: var(--ally);
+}
+
+.match-stats-avatar-wrap.enemy {
+  --avatar-ring: var(--enemy);
+}
+
+.match-stats-portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  display: block;
+}
+
+.match-stats-table td.match-stats-empty {
+  width: auto;
+  border-radius: var(--r-md);
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  color: var(--text-lo);
+}

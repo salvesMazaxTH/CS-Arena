@@ -66,10 +66,10 @@ export default {
     };
   },
 
-  onBeforeDmgTaking({ defender, owner, damage, context }) {
+  onBeforeDmgTaking({ defender, owner, damage, mode, context }) {
     if (defender !== owner) return;
     if (owner.runtime.leaveSpent && !owner.runtime.leavePending) return;
-    if (!owner.wouldBeLethal(damage)) return;
+    if (!owner.wouldBeLethal(damage, mode)) return;
 
     // Either binding answers the same lethal hit, and outranks the passive:
     // twin_departure takes both sisters, keep_you_here shields this one for free.
@@ -95,6 +95,7 @@ export default {
         mode: "vanish",
         turns: this.vanishTurns,
         returnState: { hpRatio: this.returnHPPercent / 100 },
+        takesSpace: false,
       });
 
       context.registerDialog({
@@ -108,7 +109,7 @@ export default {
     }
 
     return {
-      damageCap: survivalDamage(owner, 1),
+      damageCap: survivalDamage(owner, 1, mode),
       log: {
         en: `${formatChampionName(owner)} holds on by a thread.`,
         pt: `${formatChampionName(owner)} se segura por um fio.`,

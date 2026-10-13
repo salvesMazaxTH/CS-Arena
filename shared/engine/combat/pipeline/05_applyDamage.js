@@ -36,7 +36,7 @@ export function applyDamage(event) {
   const damageToApply = Math.floor(event.damage);
   const wasAlive = event.defender.alive;
 
-  event.defender.takeDamage(damageToApply, event.context);
+  event.defender.takeDamage(damageToApply, event.context, event.mode);
 
   event.hpAfter = event.defender.HP;
   event.actualDmg = hpBefore - event.hpAfter;

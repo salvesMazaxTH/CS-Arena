@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import basicShot from "../generic/basicShot.js";
+import { Nothingness } from "../../../engine/combat/nothingness.js";
 import {
   findTwin,
   spendUltimateSave,
@@ -117,6 +118,20 @@ const laiserisaSkills = [
     resolve({ user, targets, context }) {
       const [target] = targets;
 
+      // The Nothingness holds one at a time; the sisters never fill it.
+      const occupant = (context.matchChampions ?? []).find((champion) =>
+        Nothingness.occupies(champion),
+      );
+
+      if (occupant) {
+        const message = {
+          en: `<b>${this.name}</b> — the Nothingness is already holding ${formatChampionName(occupant)}, and has no room for ${formatChampionName(target)}.`,
+          pt: `<b>${this.name}</b> — o Nada já guarda ${formatChampionName(occupant)}, e não tem espaço para ${formatChampionName(target)}.`,
+        };
+        context.registerDialog({ message, sourceId: user.id, targetId: target.id });
+        return { log: message };
+      }
+
       context.requestChampionMutation({
         mode: "vanish",
         targetId: target.id,
@@ -214,9 +229,9 @@ const laiserisaSkills = [
           },
         },
 
-        onBeforeDmgTaking({ defender, owner, damage, context }) {
+        onBeforeDmgTaking({ defender, owner, damage, mode, context }) {
           if (defender !== owner) return;
-          if (!owner.wouldBeLethal(damage)) return;
+          if (!owner.wouldBeLethal(damage, mode)) return;
 
           owner.runtime.preventFinishingUntilTurn = context.currentTurn + 1;
           spendUltimateSave(user, skill);
@@ -231,6 +246,7 @@ const laiserisaSkills = [
               mode: "vanish",
               turns: vanishTurns,
               returnState: { hpRatio, groupId },
+              takesSpace: false,
             });
           }
 
@@ -244,7 +260,7 @@ const laiserisaSkills = [
           });
 
           return {
-            damageCap: survivalDamage(owner, 1),
+            damageCap: survivalDamage(owner, 1, mode),
             log: {
               en: `${formatChampionName(user)} and ${formatChampionName(twin)} are bound for the Nothingness together.`,
               pt: `${formatChampionName(user)} e ${formatChampionName(twin)} são atadas ao Nada juntas.`,

@@ -1,305 +1,100 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Champions Showdown Arena (CSA)</title>
-    <!-- Base styles: resets and global defaults -->
-    <link rel="stylesheet" href="./styles/base.css" />
-    <!-- Layout: main structure and containers -->
-    <link rel="stylesheet" href="./styles/layout.css" />
-    <!-- UI Components: buttons, overlays, bars, dialogs -->
-    <link rel="stylesheet" href="./styles/ui.css" />
-    <!-- Animations: combat effects and transitions -->
-    <link rel="stylesheet" href="./styles/animations.css" />
-    <!-- VFX: visual effects and canvas rendering -->
-    <link rel="stylesheet" href="./styles/vfx.css" />
-    <!-- Pre-match hub (team pick + matchmaking) -->
-    <link rel="stylesheet" href="./styles/teamCard.css" />
-    <link rel="stylesheet" href="./styles/hub.css" />
-    <link
-      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
-      rel="stylesheet"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#050507" />
+    <title>Champion Showdown Arena</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:wght@500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
       rel="stylesheet"
     />
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+
+    <!-- Preserved (read-only) -->
+    <link rel="stylesheet" href="./styles/base.css" />
+    <link rel="stylesheet" href="./styles/shared.css" />
+    <link rel="stylesheet" href="./styles/teamCard.css" />
+    <link rel="stylesheet" href="./styles/hub.css" />
+    <!-- Design system -->
+    <link rel="stylesheet" href="./styles/tokens.css" />
+    <link rel="stylesheet" href="./styles/ui-base.css" />
+    <link rel="stylesheet" href="./styles/login.css" />
+    <link rel="stylesheet" href="./styles/settings.css" />
+    <link rel="stylesheet" href="./styles/match-stage.css" />
+    <link rel="stylesheet" href="./styles/match-hud.css" />
+    <link rel="stylesheet" href="./styles/lineup.css" />
+    <link rel="stylesheet" href="./styles/champion.css" />
+    <link rel="stylesheet" href="./styles/combat-fx.css" />
+    <link rel="stylesheet" href="./styles/endgame.css" />
+    <link rel="stylesheet" href="./styles/responsive.css" />
   </head>
+
   <body>
+    <!-- ================= LOGIN ================= -->
     <div id="login-screen" class="login-screen active">
-      <div class="login-container">
-        <h2>Welcome to the Champions Showdown Arena (CSA)!</h2>
-        <button id="google-login-btn" class="gsi-button" type="button" hidden>
-          <svg class="gsi-icon" viewBox="0 0 48 48" aria-hidden="true">
-            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-          </svg>
-          <span>Sign in with Google</span>
+      <div class="login-backdrop" aria-hidden="true">
+        <span class="login-ray login-ray--a"></span>
+        <span class="login-ray login-ray--b"></span>
+        <span class="login-embers"></span>
+      </div>
+      <main class="login-card ui-panel">
+        <svg class="login-crest" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+          <defs>
+            <linearGradient id="crestBrass" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fbefd2" />
+              <stop offset="0.55" stop-color="#c99a45" />
+              <stop offset="1" stop-color="#5e4519" />
+            </linearGradient>
+          </defs>
+          <path d="M60 6 106 24v34c0 28-19 46-46 56C33 104 14 86 14 58V24Z" fill="#0a0a0e" stroke="url(#crestBrass)" stroke-width="3" />
+          <path d="M60 16 96 30v28c0 22-14 36-36 45-22-9-36-23-36-45V30Z" fill="none" stroke="url(#crestBrass)" stroke-width="1" opacity="0.55" />
+          <path d="M44 38 60 74 76 38M36 70l24-10 24 10M60 74v18" fill="none" stroke="url(#crestBrass)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="60" cy="30" r="4" fill="#ff8a3d" />
+        </svg>
+        <p class="ui-eyebrow" data-i18n="login.eyebrow">Turn-based arena duels</p>
+        <h1 class="login-title ui-title">Champion Showdown Arena</h1>
+        <hr class="ui-rule" />
+        <p id="login-message" class="login-message" role="status" aria-live="polite"></p>
+
+        <button id="google-login-btn" class="ui-btn ui-btn--primary login-google" type="button" hidden>
+          <i class="bx bxl-google"></i>
+          <span data-i18n="login.google">Sign in with Google</span>
         </button>
-        <div id="display-name-step" hidden>
-          <p>Choose your display name (3–20 characters).</p>
-          <input
-            type="text"
-            id="display-name-input"
-            maxlength="20"
-            placeholder="Display name"
-            autocomplete="off"
-          />
-          <button id="display-name-save-btn">Save and enter</button>
+
+        <div id="display-name-step" class="login-name-step" hidden>
+          <label for="display-name-input" class="login-name-label" data-i18n="login.nameLabel">Choose your display name</label>
+          <div class="login-name-row">
+            <input
+              id="display-name-input"
+              class="ui-input"
+              type="text"
+              maxlength="24"
+              autocomplete="nickname"
+              spellcheck="false"
+              data-i18n-placeholder="login.namePlaceholder"
+              placeholder="Your champion name"
+            />
+            <button id="display-name-save-btn" class="ui-btn ui-btn--brass" type="button" data-i18n="common.save">Save</button>
+          </div>
         </div>
-        <p id="login-message"></p>
-      </div>
+      </main>
     </div>
 
-    <div id="main-content" class="main-content hidden">
-      <div id="disconnection-message" class="message hidden"></div>
-      <!-- New disconnection message element -->
-      <header class="game-header">
-        <div class="header-brand">
-          <h1>Champions Showdown Arena (CSA) - UCLA RPG</h1>
-        </div>
-
-        <div class="header-status">
-          <div class="turn-display" aria-label="Current turn">
-            <p>Turn 1</p>
-          </div>
-        </div>
-
-        <div class="header-actions" aria-label="Match actions">
-          <div class="turn-controls" aria-label="Turn controls">
-            <button id="undo-actions-btn" disabled>Undo actions</button>
-            <button id="skip-slot-btn" disabled>
-              <i class="bx bx-skip-next"></i> Skip slot
-            </button>
-            <button id="end-turn-btn" class="end-turn-btn hidden" type="button">
-              <i class="bx bx-check"></i> End turn
-            </button>
-          </div>
-
-          <div class="game-controls" aria-label="General match settings">
-            <button id="settings-btn" class="settings-btn" title="Settings">
-              <i class="bx bx-cog"></i>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <div class="battle-stage">
-        <!-- Line-up do jogador -->
-        <div
-          id="playerLineupBanner"
-          class="lineup-banner hidden"
-          aria-hidden="true"
-          data-team-id="player"
-        >
-          <div class="lineup-title">Your Line-up</div>
-          <div class="lineup-meta-row">
-            <span class="lineup-meta-label">Global Passives</span>
-            <div
-              id="playerLineupEmblems"
-              class="lineup-emblems"
-              aria-label="Emblems ativos do jogador"
-            ></div>
-          </div>
-          <div id="playerLineupChips" class="lineup-chips" role="list"></div>
-        </div>
-
-        <!-- Arena -->
-        <main class="arena">
-          <div class="player-plate" data-team="1">
-            <span class="player-plate-identity">
-              <span id="player1-name-display" class="player-plate-name"
-                >Player 1</span
-              >
-              <span class="player-plate-you">you</span>
-            </span>
-            <span
-              id="player1-stars"
-              class="player-plate-stars"
-              role="img"
-            ></span>
-            <span class="player-plate-score">
-              <span id="player1-score-display" class="player-name-score"
-                >0</span
-              >
-              <span
-                id="player1-score-penalty"
-                class="player-plate-penalty"
-                role="img"
-                tabindex="0"
-                hidden
-                >½</span
-              >
-            </span>
-            <span class="player-plate-track">
-              <span id="player1-progress-fill" class="player-plate-fill"></span>
-            </span>
-          </div>
-
-          <div class="team-container team-1" data-team="1"></div>
-
-          <div class="player-plate" data-team="2">
-            <span class="player-plate-identity">
-              <span id="player2-name-display" class="player-plate-name"
-                >Player 2</span
-              >
-              <span class="player-plate-you">you</span>
-            </span>
-            <span
-              id="player2-stars"
-              class="player-plate-stars"
-              role="img"
-            ></span>
-            <span class="player-plate-score">
-              <span id="player2-score-display" class="player-name-score"
-                >0</span
-              >
-              <span
-                id="player2-score-penalty"
-                class="player-plate-penalty"
-                role="img"
-                tabindex="0"
-                hidden
-                >½</span
-              >
-            </span>
-            <span class="player-plate-track">
-              <span id="player2-progress-fill" class="player-plate-fill"></span>
-            </span>
-          </div>
-
-          <div class="team-container team-2" data-team="2"></div>
-        </main>
-
-        <!-- Line-up do oponente -->
-        <div
-          id="opponentLineupBanner"
-          class="lineup-banner hidden"
-          aria-hidden="true"
-          data-team-id="opponent"
-        >
-          <div class="lineup-title">Opponent's Line-up</div>
-          <div class="lineup-meta-row">
-            <span class="lineup-meta-label">Global Passives</span>
-            <div
-              id="opponentLineupEmblems"
-              class="lineup-emblems"
-              aria-label="Revealed opponent emblems"
-            ></div>
-          </div>
-          <div id="opponentLineupChips" class="lineup-chips" role="list"></div>
-        </div>
-      </div>
-
-      <!-- First-choice overlay (initial 1v1 prompt) - placed before script load so it's available to main.js -->
-      <div
-        id="firstChoiceOverlay"
-        class="first-choice-overlay hidden"
-        role="dialog"
-        aria-modal="true"
-      >
-        <div class="first-choice-dialog">
-          <h2>Choose your first champion for the battle</h2>
-          <p class="first-choice-sub">
-            Click on a champion from your line-up to select.
-          </p>
-          <div id="firstChoiceChips" class="first-choice-chips"></div>
-          <div class="first-choice-actions">
-            <button id="firstChoiceCancel" class="btn">Cancel</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Unused line-up summon reminder, raised when the player is about to end
-           the turn while a summon is still available to them -->
-      <div
-        id="summonReminderOverlay"
-        class="summon-reminder-overlay hidden"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="summonReminderTitle"
-      >
-        <div class="summon-reminder-dialog">
-          <span class="summon-reminder-eyebrow">Line-up reserve</span>
-          <h2 id="summonReminderTitle" class="summon-reminder-title">
-            You still have a summon this turn
-          </h2>
-          <p class="summon-reminder-subtitle">
-            One champion may enter the battlefield per turn. Choose one, or end
-            the turn without reinforcements.
-          </p>
-
-          <div
-            id="summonReminderChips"
-            class="summon-reminder-chips"
-            role="list"
-          ></div>
-
-          <div class="summon-reminder-actions">
-            <button
-              id="summonReminderDismiss"
-              class="summon-reminder-dismiss"
-              type="button"
-            >
-              End turn anyway
-            </button>
-          </div>
-
-          <label class="summon-reminder-dont-show">
-            <input type="checkbox" id="summonReminderDontShow" />
-            Don't show this again
-          </label>
-        </div>
-      </div>
-
-      <!-- Surrender Confirmation Overlay -->
-      <div id="surrender-overlay" class="surrender-overlay hidden">
-        <div class="surrender-dialog">
-          <p class="surrender-dialog-title">Are you sure?</p>
-          <p class="surrender-dialog-subtitle">
-            This decision is irreversible. You will grant victory to your
-            opponent.
-          </p>
-          <div class="surrender-dialog-actions">
-            <button id="surrender-cancel" class="surrender-cancel">
-              Cancel
-            </button>
-            <button id="surrender-confirm" class="surrender-confirm">
-              Surrender
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!--
-      <div
-        class="back-champion-display hidden"
-        id="backChampionDisplayTeam1"
-        data-team="1"
-      ></div>
-      <div
-        class="back-champion-display hidden"
-        id="backChampionDisplayTeam2"
-        data-team="2"
-      ></div>
-      -->
-      <div id="combat-log">
-        <h1 id="combat-log-header">Combat Log</h1>
-      </div>
-    </div>
-
+    <!--
+  PRESERVED, READ-ONLY. The pre-match lobby (team selection) markup.
+  Paste it into your new index.html as-is: public/js/main.js (hub section) and public/styles/hub.css depend on these ids/classes.
+-->
     <!-- Pre-match hub: pick a saved team, then queue for a match -->
     <div id="hub-screen" class="hub-screen hidden">
       <div class="hub-container">
         <div class="hub-head">
           <div>
-            <span class="hub-eyebrow">Ready up</span>
-            <h2>Choose your team</h2>
+            <span id="hubEyebrow" class="hub-eyebrow">Ready up</span>
+            <h2 id="hubTitle">Choose your team</h2>
           </div>
           <div class="hub-toolbar">
             <a
@@ -338,26 +133,298 @@
           >
             Cancel
           </button>
+          <button
+            id="hubPlayAiBtn"
+            class="secondary-action-btn"
+            type="button"
+            disabled
+          >
+            Play vs AI
+          </button>
           <button id="hubFindMatchBtn" type="button" disabled>
             Find match
+          </button>
+          <button
+            id="hubAiBackBtn"
+            class="secondary-action-btn"
+            type="button"
+            hidden
+          >
+            Back
+          </button>
+          <button id="hubAiStartBtn" type="button" hidden disabled>
+            Start match
           </button>
         </div>
       </div>
     </div>
 
-    <div
-      id="webgl-container"
-      style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 9999;
-        mix-blend-mode: screen;
-      "
-    ></div>
+    <!-- ================= SETTINGS ================= -->
+    <button
+      id="settings-btn"
+      class="ui-icon-btn settings-btn"
+      type="button"
+      aria-haspopup="dialog"
+      aria-controls="settings-overlay"
+      data-i18n-aria="settings.open"
+      data-i18n-title="settings.title"
+      aria-label="Settings"
+      title="Settings"
+    >
+      <i class="bx bx-cog"></i>
+    </button>
+
+    <div id="settings-overlay" class="ui-modal settings-overlay hidden" role="presentation">
+      <section class="ui-modal-card ui-panel settings-card" role="dialog" aria-modal="true" aria-labelledby="settings-heading">
+        <header class="settings-head">
+          <div>
+            <p class="ui-eyebrow" data-i18n="settings.eyebrow">Preferences</p>
+            <h2 id="settings-heading" class="ui-title" data-i18n="settings.title">Settings</h2>
+          </div>
+          <button id="settings-close" class="ui-icon-btn" type="button" data-i18n-aria="common.close" aria-label="Close">
+            <i class="bx bx-x"></i>
+          </button>
+        </header>
+        <hr class="ui-rule" />
+
+        <div class="settings-group">
+          <h3 class="settings-group-title"><i class="bx bx-music"></i><span data-i18n="settings.music">Music</span></h3>
+          <div class="settings-row">
+            <label class="settings-label" for="music-toggle" data-i18n="settings.enabled">Enabled</label>
+            <label class="ui-switch"><input id="music-toggle" type="checkbox" /><span class="ui-switch-track"></span></label>
+          </div>
+          <div class="settings-row">
+            <label class="settings-label" for="music-volume" data-i18n="settings.volume">Volume</label>
+            <input id="music-volume" class="ui-range" type="range" min="0" max="1" step="0.01" value="0.5" />
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <h3 class="settings-group-title"><i class="bx bx-volume-full"></i><span data-i18n="settings.sfx">Sound effects</span></h3>
+          <div class="settings-row">
+            <label class="settings-label" for="sfx-toggle" data-i18n="settings.enabled">Enabled</label>
+            <label class="ui-switch"><input id="sfx-toggle" type="checkbox" /><span class="ui-switch-track"></span></label>
+          </div>
+          <div class="settings-row">
+            <label class="settings-label" for="sfx-volume" data-i18n="settings.volume">Volume</label>
+            <input id="sfx-volume" class="ui-range" type="range" min="0" max="1" step="0.01" value="0.5" />
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <h3 class="settings-group-title"><i class="bx bx-globe"></i><span data-i18n="settings.language">Language</span></h3>
+          <div class="settings-row">
+            <label class="settings-label" for="locale-select" data-i18n="settings.language">Language</label>
+            <select id="locale-select" class="ui-select">
+              <option value="en">English</option>
+              <option value="pt">Português</option>
+            </select>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= MATCH ================= -->
+    <div id="main-content" class="hidden">
+      <div id="arena-backdrop" aria-hidden="true">
+        <div class="arena-backdrop-fallback"></div>
+      </div>
+
+      <div id="match-stage">
+        <header class="hud-top">
+          <button id="surrender-btn" class="ui-btn ui-btn--ghost hud-surrender" type="button">
+            <i class="bx bx-flag"></i><span data-i18n="match.surrender">Surrender</span>
+          </button>
+          <div class="turn-display"><p>Turn 1</p></div>
+          <button
+            id="log-toggle-btn"
+            class="ui-icon-btn hud-log-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="combat-log-drawer"
+            data-i18n-aria="match.log"
+            data-i18n-title="match.log"
+            aria-label="Combat log"
+            title="Combat log (L)"
+          >
+            <i class="bx bx-book-open"></i>
+            <span class="hud-unread-dot hidden" aria-hidden="true"></span>
+          </button>
+        </header>
+
+        <div class="arena">
+          <aside class="player-plate" data-team="1" data-self="false">
+            <h2 id="player1-name-display" class="plate-name">Waiting…</h2>
+            <div class="plate-score">
+              <span class="plate-score-label" data-i18n="match.points">Points</span>
+              <span id="player1-score-display" class="plate-score-value">0</span>
+              <span id="player1-score-penalty" class="plate-penalty" hidden><i class="bx bx-error-alt"></i></span>
+            </div>
+            <div class="plate-progress"><span id="player1-progress-fill" class="plate-progress-fill"></span></div>
+            <div id="player1-stars" class="plate-stars" role="img"></div>
+          </aside>
+
+          <aside class="player-plate" data-team="2" data-self="false">
+            <h2 id="player2-name-display" class="plate-name">Waiting…</h2>
+            <div class="plate-score">
+              <span class="plate-score-label" data-i18n="match.points">Points</span>
+              <span id="player2-score-display" class="plate-score-value">0</span>
+              <span id="player2-score-penalty" class="plate-penalty" hidden><i class="bx bx-error-alt"></i></span>
+            </div>
+            <div class="plate-progress"><span id="player2-progress-fill" class="plate-progress-fill"></span></div>
+            <div id="player2-stars" class="plate-stars" role="img"></div>
+          </aside>
+
+          <div class="team team-1"></div>
+          <div class="team team-2"></div>
+
+          <!-- Local player's lineup: always the top rail, whichever team number they are -->
+          <div id="playerLineupBanner" class="lineup-banner lineup-banner--player hidden">
+            <p class="lineup-banner-title ui-eyebrow" data-i18n="match.yourLineup">Your lineup</p>
+            <div id="playerLineupChips" class="lineup-chips"></div>
+            <div id="playerLineupEmblems" class="lineup-emblems hidden"></div>
+          </div>
+
+          <!-- Opponent's lineup: bottom rail. Unrevealed entries render as "?" only. -->
+          <div id="opponentLineupBanner" class="lineup-banner lineup-banner--opponent hidden">
+            <p class="lineup-banner-title ui-eyebrow" data-i18n="match.opponentLineup">Opponent lineup</p>
+            <div id="opponentLineupChips" class="lineup-chips" aria-hidden="true"></div>
+            <div id="opponentLineupEmblems" class="lineup-emblems hidden"></div>
+          </div>
+
+          <div class="arena-controls">
+            <button id="skip-slot-btn" class="ui-btn ui-btn--ghost" type="button" disabled>
+              <i class="bx bx-skip-next"></i><span data-i18n="match.skip">Skip slot</span>
+            </button>
+            <button id="undo-actions-btn" class="ui-btn ui-btn--ghost" type="button" disabled>
+              <i class="bx bx-undo"></i><span data-i18n="match.undo">Undo</span>
+            </button>
+            <button id="end-turn-btn" class="ui-btn ui-btn--primary hidden" type="button">
+              <i class="bx bx-check-shield"></i><span data-i18n="match.endTurn">End turn</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="combat-dialog" class="combat-dialog hidden" role="status" aria-live="polite">
+          <p id="combat-dialog-text" class="combat-dialog-text"></p>
+        </div>
+
+        <div id="combat-log-scrim" class="combat-log-scrim" aria-hidden="true"></div>
+        <aside id="combat-log-drawer" class="combat-log-drawer ui-panel" aria-labelledby="combat-log-title">
+          <header class="combat-log-head">
+            <h2 id="combat-log-title" class="ui-title" data-i18n="match.log">Combat log</h2>
+            <button id="combat-log-close" class="ui-icon-btn" type="button" aria-label="Close"><i class="bx bx-x"></i></button>
+          </header>
+          <hr class="ui-rule" />
+          <div id="combat-log" class="combat-log" role="log" aria-live="off"></div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ================= WINDOW-SPANNING OVERLAYS (siblings of the stage) ================= -->
+
+    <div id="turnTransitionOverlay" class="turn-transition" aria-hidden="true">
+      <div class="turn-transition-band">
+        <span class="turn-transition-flare"></span>
+        <p id="turnTransitionNumber" class="turn-transition-number">TURN 1</p>
+      </div>
+    </div>
+
+    <div id="firstChoiceOverlay" class="ui-modal first-choice hidden" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="firstChoiceTitle">
+      <div class="ui-modal-card ui-panel first-choice-card">
+        <p class="ui-eyebrow" data-i18n="firstChoice.eyebrow">The duel begins</p>
+        <h2 id="firstChoiceTitle" class="ui-title" data-i18n="firstChoice.title">Choose your first champion</h2>
+        <p class="first-choice-hint" data-i18n="firstChoice.hint">This champion takes the field alone for the opening exchange.</p>
+        <div id="firstChoiceChips" class="lineup-chips first-choice-chips"></div>
+        <button id="firstChoiceCancel" class="ui-btn ui-btn--ghost" type="button" data-i18n="common.cancel">Cancel</button>
+      </div>
+    </div>
+
+    <div id="summonReminderOverlay" class="ui-modal summon-reminder hidden" role="dialog" aria-modal="true" aria-labelledby="summonReminderTitle">
+      <div class="ui-modal-card ui-panel summon-reminder-card">
+        <p class="ui-eyebrow" data-i18n="summon.eyebrow">Reinforcements</p>
+        <h2 id="summonReminderTitle" class="ui-title" data-i18n="summon.title">Summon your allies</h2>
+        <p class="summon-reminder-hint" data-i18n="summon.hint">Pick a lineup champion below the arena to bring it onto the field.</p>
+        <div id="summonReminderChips" class="summon-reminder-chips" role="list"></div>
+        <label class="ui-check summon-reminder-check">
+          <input id="summonReminderDontShow" type="checkbox" />
+          <span data-i18n="summon.dontShow">Don't show this again</span>
+        </label>
+        <button id="summonReminderDismiss" class="ui-btn ui-btn--brass" type="button" data-i18n="common.gotIt">Got it</button>
+      </div>
+    </div>
+
+    <div id="surrender-overlay" class="ui-modal surrender-overlay hidden" role="alertdialog" aria-modal="true" aria-labelledby="surrenderTitle">
+      <div class="ui-modal-card ui-panel surrender-card">
+        <i class="bx bx-flag surrender-icon" aria-hidden="true"></i>
+        <h2 id="surrenderTitle" class="ui-title" data-i18n="surrender.title">Surrender the duel?</h2>
+        <p data-i18n="surrender.body">Your opponent will be declared the winner.</p>
+        <div class="surrender-actions">
+          <button id="surrender-cancel" class="ui-btn ui-btn--ghost" type="button" data-i18n="surrender.stay">Keep fighting</button>
+          <button id="surrender-confirm" class="ui-btn ui-btn--danger" type="button" data-i18n="surrender.confirm">Surrender</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="gameOverOverlay" class="game-over hidden" role="dialog" aria-live="assertive">
+      <div class="game-over-content hidden">
+        <span class="game-over-flare" aria-hidden="true"></span>
+        <p id="gameOverMessage" class="game-over-message"></p>
+      </div>
+    </div>
+
+    <div id="timerOverlay" class="timer-overlay hidden">
+      <section id="matchStatsPanel" class="match-stats ui-panel hidden" aria-labelledby="matchStatsTitle">
+        <header class="match-stats-head">
+          <p class="ui-eyebrow" data-i18n="stats.eyebrow">Post-match report</p>
+          <h2 id="matchStatsTitle" class="ui-title" data-i18n="stats.title">Match statistics</h2>
+        </header>
+        <div class="match-stats-tabs" role="tablist">
+          <button class="match-stats-tab active" type="button" role="tab" data-tab="damage" data-i18n="stats.damage">Damage dealt</button>
+          <button class="match-stats-tab" type="button" role="tab" data-tab="healingReceived" data-i18n="stats.healingReceived">Healing received</button>
+          <button class="match-stats-tab" type="button" role="tab" data-tab="healingDone" data-i18n="stats.healingDone">Healing done</button>
+          <button class="match-stats-tab" type="button" role="tab" data-tab="rawTaken" data-i18n="stats.rawTaken">Damage taken</button>
+          <button class="match-stats-tab" type="button" role="tab" data-tab="damageMitigated" data-i18n="stats.damageMitigated">Mitigated</button>
+          <button class="match-stats-tab" type="button" role="tab" data-tab="points" data-i18n="stats.points">Points</button>
+        </div>
+        <div class="match-stats-body">
+          <div class="match-stats-tab-panel active" data-tab-panel="damage" role="tabpanel">
+            <table class="match-stats-table"><tbody id="matchStatsDamageBody"></tbody></table>
+          </div>
+          <div class="match-stats-tab-panel" data-tab-panel="healingReceived" role="tabpanel">
+            <table class="match-stats-table"><tbody id="matchStatsHealingReceivedBody"></tbody></table>
+          </div>
+          <div class="match-stats-tab-panel" data-tab-panel="healingDone" role="tabpanel">
+            <table class="match-stats-table"><tbody id="matchStatsHealingDoneBody"></tbody></table>
+          </div>
+          <div class="match-stats-tab-panel" data-tab-panel="rawTaken" role="tabpanel">
+            <table class="match-stats-table"><tbody id="matchStatsRawTakenBody"></tbody></table>
+          </div>
+          <div class="match-stats-tab-panel" data-tab-panel="damageMitigated" role="tabpanel">
+            <table class="match-stats-table"><tbody id="matchStatsDamageMitigatedBody"></tbody></table>
+          </div>
+          <div class="match-stats-tab-panel" data-tab-panel="points" role="tabpanel">
+            <table class="match-stats-table"><tbody id="matchStatsPointsBody"></tbody></table>
+          </div>
+        </div>
+      </section>
+      <div class="timer-footer">
+        <p id="returnToLoginCountdown" class="timer-countdown" role="timer"></p>
+        <button id="returnToLoginBtn" class="ui-btn ui-btn--brass" type="button">
+          <i class="bx bx-log-in"></i><span data-i18n="timer.return">Return to login</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="rotate-overlay" class="rotate-overlay" role="alert" aria-hidden="true">
+      <i class="bx bx-rotate-right rotate-icon" aria-hidden="true"></i>
+      <p id="rotate-overlay-text" class="rotate-text"></p>
+    </div>
+
+    <div id="disconnection-message" class="disconnection-toast hidden" role="alert"></div>
+
+    <!-- ================= MANDATED END-OF-BODY BOILERPLATE ================= -->
+    <div id="webgl-container" style="position:fixed;inset:0;pointer-events:none;z-index:9999;mix-blend-mode:screen"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
     <script type="importmap">
       {
@@ -370,297 +437,7 @@
     </script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/config.js"></script>
+    <script type="module" src="/js/i18n-static.js"></script>
     <script type="module" src="/js/main.js"></script>
-    <!--  <script type="module" src="../exportChampionsToJson.js"></script> -->
-    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>
-      eruda.init();
-    </script>
-    <!-- Game Over Overlay -->
-    <!-- Overlay de Vitória/Derrota (10 segundos) -->
-    <div id="gameOverOverlay" class="game-over-overlay hidden">
-      <div id="gameOverContent" class="game-over-content">
-        <h2 id="gameOverMessage"></h2>
-      </div>
-    </div>
-
-    <!-- Timer Overlay (120 segundos - aparece depois) -->
-    <div id="timerOverlay" class="timer-overlay hidden">
-      <aside id="matchStatsPanel" class="match-stats-panel hidden">
-        <div class="match-stats-header">Match Stats</div>
-
-        <div class="match-stats-tabs" role="tablist" aria-label="Stats tabs">
-          <button
-            class="match-stats-tab active"
-            data-tab="damage"
-            role="tab"
-            type="button"
-          >
-            Damage Dealt
-          </button>
-          <button
-            class="match-stats-tab"
-            data-tab="healingReceived"
-            role="tab"
-            type="button"
-          >
-            HP restored
-          </button>
-          <button
-            class="match-stats-tab"
-            data-tab="healingDone"
-            role="tab"
-            type="button"
-          >
-            Healing Done
-          </button>
-          <button
-            class="match-stats-tab"
-            data-tab="rawTaken"
-            role="tab"
-            type="button"
-          >
-            Raw Damage Taken
-          </button>
-          <button
-            class="match-stats-tab"
-            data-tab="damageMitigated"
-            role="tab"
-            type="button"
-          >
-            Damage Mitigated
-          </button>
-          <button
-            class="match-stats-tab"
-            data-tab="points"
-            role="tab"
-            type="button"
-          >
-            Points Earned
-          </button>
-        </div>
-
-        <div class="match-stats-panels">
-          <section
-            class="match-stats-tab-panel active"
-            data-tab-panel="damage"
-            role="tabpanel"
-          >
-            <table class="match-stats-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Character</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody id="matchStatsDamageBody"></tbody>
-            </table>
-          </section>
-
-          <section
-            class="match-stats-tab-panel"
-            data-tab-panel="healingReceived"
-            role="tabpanel"
-          >
-            <table class="match-stats-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Character</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody id="matchStatsHealingReceivedBody"></tbody>
-            </table>
-          </section>
-
-          <section
-            class="match-stats-tab-panel"
-            data-tab-panel="healingDone"
-            role="tabpanel"
-          >
-            <table class="match-stats-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Character</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody id="matchStatsHealingDoneBody"></tbody>
-            </table>
-          </section>
-
-          <section
-            class="match-stats-tab-panel"
-            data-tab-panel="rawTaken"
-            role="tabpanel"
-          >
-            <table class="match-stats-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Character</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody id="matchStatsRawTakenBody"></tbody>
-            </table>
-          </section>
-
-          <section
-            class="match-stats-tab-panel"
-            data-tab-panel="damageMitigated"
-            role="tabpanel"
-          >
-            <table class="match-stats-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Character</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody id="matchStatsDamageMitigatedBody"></tbody>
-            </table>
-          </section>
-
-          <section
-            class="match-stats-tab-panel"
-            data-tab-panel="points"
-            role="tabpanel"
-          >
-            <table class="match-stats-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Character</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody id="matchStatsPointsBody"></tbody>
-            </table>
-          </section>
-        </div>
-      </aside>
-
-      <div class="timer-overlay-content">
-        <p id="returnToLoginCountdown"></p>
-        <button id="returnToLoginBtn">Voltar ao Login Agora</button>
-      </div>
-    </div>
-
-    <div
-      class="turn-transition-overlay"
-      id="turnTransitionOverlay"
-      aria-hidden="true"
-    >
-      <div class="turn-transition-banner">
-        <div class="turn-transition-eyebrow">BATTLE PHASE</div>
-        <div class="turn-transition-number" id="turnTransitionNumber">
-          TURN 1
-        </div>
-        <div class="turn-transition-line"></div>
-      </div>
-    </div>
-
-    <div id="combat-dialog" class="combat-dialog hidden" aria-live="polite">
-      <div class="combat-dialog-bubble">
-        <span class="dialog-sparks" aria-hidden="true"
-          ><i></i><i></i><i></i
-        ></span>
-        <p id="combat-dialog-text"></p>
-      </div>
-    </div>
-
-    <!-- Settings Overlay -->
-    <div id="settings-overlay" class="settings-overlay hidden">
-      <div class="settings-dialog">
-        <div class="settings-header">
-          <h3>Match Settings</h3>
-          <button id="settings-close" class="settings-close-btn">
-            &times;
-          </button>
-        </div>
-        <div class="settings-content">
-          <div class="settings-group">
-            <div class="settings-label">
-              <span>Language / Idioma</span>
-              <select id="locale-select">
-                <option value="en">English</option>
-                <option value="pt">Português</option>
-              </select>
-            </div>
-          </div>
-          <div class="settings-group">
-            <div class="settings-label">
-              <span>Background Music</span>
-              <label class="switch">
-                <input type="checkbox" id="music-toggle" checked />
-                <span class="slider round"></span>
-              </label>
-            </div>
-            <input
-              type="range"
-              id="music-volume"
-              min="0"
-              max="1"
-              step="0.05"
-              value="0.5"
-            />
-          </div>
-          <div class="settings-group">
-            <div class="settings-label">
-              <span>Sound Effects (SFX)</span>
-              <label class="switch">
-                <input type="checkbox" id="sfx-toggle" checked />
-                <span class="slider round"></span>
-              </label>
-            </div>
-            <input
-              type="range"
-              id="sfx-volume"
-              min="0"
-              max="1"
-              step="0.05"
-              value="0.5"
-            />
-          </div>
-        </div>
-
-        <div class="settings-actions">
-          <button
-            id="surrender-btn"
-            class="surrender-btn settings-surrender-btn"
-            title="Surrender"
-            type="button"
-          >
-            <span class="settings-surrender-btn-copy">
-              <span class="settings-surrender-btn-title">Surrender</span>
-              <span class="settings-surrender-btn-subtitle">
-                Opens the match end confirmation
-              </span>
-            </span>
-            <i class="bx bx-shield-x"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-    <button id="undo-actions-btn" hidden>Undo Actions</button>
-
-    <script>
-      // Only on the machine running the dev server: the livereload sidecar binds
-      // localhost:35729, so from any other device this script tag would block the
-      // HTML parser on a dead socket until it times out.
-      if (
-        location.hostname === "localhost" ||
-        location.hostname === "127.0.0.1"
-      ) {
-        document.write(
-          '<script src="http://localhost:35729/livereload.js?snipver=1"><\/script>',
-        );
-      }
-    </script>
   </body>
 </html>

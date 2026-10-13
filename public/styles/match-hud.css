@@ -1,0 +1,473 @@
+/* ============================================
+   MATCH HUD — top bar, player plates + scoreboard, action bar, combat log drawer
+   ============================================ */
+
+/* ---- Top bar (inside the stage) ---- */
+.hud-top {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 84px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 40px;
+  /* the fixed settings cog (outside the stage) overlays the right 120 design px */
+  padding-right: 120px;
+  background: linear-gradient(180deg, rgba(5, 5, 7, 0.85), transparent);
+  z-index: 3;
+}
+
+.hud-surrender {
+  justify-self: start;
+  min-height: 40px;
+  padding: 0 var(--sp-4);
+  font-size: var(--fs-xs);
+  color: var(--text-mid);
+}
+
+.hud-surrender:hover:not(:disabled) {
+  color: #ffd9de;
+  border-color: var(--enemy);
+  box-shadow: 0 0 20px var(--enemy-glow);
+}
+
+.hud-log-toggle {
+  justify-self: end;
+  position: relative;
+}
+
+.hud-unread-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ember-400);
+  border: 2px solid var(--ink-1);
+  box-shadow: 0 0 10px var(--ember-400);
+  animation: ui-pulse 1.4s ease-in-out infinite;
+}
+
+.turn-display {
+  position: relative;
+  min-width: 220px;
+  padding: 8px 40px 10px;
+  text-align: center;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 24px) 100%, 24px 100%);
+  background: linear-gradient(180deg, var(--ink-3), var(--ink-1));
+  border-bottom: 2px solid var(--brass-400);
+}
+
+.turn-display p {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--brass-100);
+  text-shadow: 0 0 16px rgba(224, 183, 101, 0.45);
+}
+
+/* ---- Player plate ---- */
+.player-plate {
+  --side: var(--enemy);
+  --side-deep: var(--enemy-deep);
+  --side-glow: var(--enemy-glow);
+  align-self: center;
+  position: relative;
+  display: grid;
+  gap: 10px;
+  padding: 18px 18px 16px;
+  border-radius: var(--r-lg);
+  background: var(--panel-gradient);
+  border: 1px solid var(--line-mid);
+  border-left: 5px solid var(--side);
+  box-shadow: var(--inset-bevel), var(--shadow-2), -10px 0 36px -14px var(--side-glow);
+}
+
+.player-plate[data-self="true"] {
+  --side: var(--ally);
+  --side-deep: var(--ally-deep);
+  --side-glow: var(--ally-glow);
+}
+
+.plate-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-hi);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-plate[data-self="true"] .plate-name::after {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 10px;
+  border-radius: 50%;
+  background: var(--side);
+  box-shadow: 0 0 10px var(--side);
+  vertical-align: middle;
+}
+
+.plate-score {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.plate-score-label {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--text-lo);
+}
+
+.plate-score-value {
+  position: relative;
+  font-family: var(--font-numeric);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--side);
+  text-shadow: 0 0 18px var(--side-glow);
+  font-variant-numeric: tabular-nums;
+}
+
+.plate-score-value.score-changing {
+  animation: score-pop 700ms var(--ease-spring);
+}
+
+.plate-score-value.score-increased {
+  color: var(--positive);
+}
+
+.plate-score-value.score-decreased {
+  color: var(--negative);
+}
+
+.plate-score-value.score-changing::after {
+  content: attr(data-score-delta);
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 0;
+  font-size: 20px;
+  opacity: 0;
+  animation: score-delta 700ms ease-out;
+}
+
+@keyframes score-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes score-delta {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+
+.plate-penalty {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  align-self: center;
+  border-radius: 50%;
+  background: rgba(255, 90, 90, 0.15);
+  border: 1px solid var(--negative);
+  color: var(--negative);
+  font-size: 16px;
+  cursor: help;
+}
+
+.plate-progress {
+  height: 10px;
+  border-radius: var(--r-pill);
+  background: var(--ink-0);
+  border: 1px solid var(--line-soft);
+  overflow: hidden;
+}
+
+.plate-progress-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--side-deep), var(--side));
+  box-shadow: 0 0 12px var(--side-glow);
+  transition: width 600ms var(--ease-out);
+}
+
+.plate-stars {
+  display: flex;
+  gap: 8px;
+  min-height: 34px;
+}
+
+/* The SVG is a solid black star used as a MASK, so the fill colour is ours:
+   empty = a soft slate "mould" that stays visible on any plate (and is not confused with the blue/red score),
+   earned = fully gold-filled. */
+.match-star {
+  width: 34px;
+  height: 34px;
+  background: #5b6072;
+  -webkit-mask: url("/assets/indicators/match_star.svg") center / contain no-repeat;
+  mask: url("/assets/indicators/match_star.svg") center / contain no-repeat;
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.45));
+  transition: background 400ms, filter 400ms, transform 400ms var(--ease-spring);
+}
+
+.match-star.earned {
+  background: linear-gradient(180deg, #ffe27a 0%, #ffc61f 55%, #e89a00 100%);
+  filter: drop-shadow(0 0 6px rgba(255, 204, 61, 0.65));
+}
+
+.match-star.star-gained {
+  animation: star-gain 900ms var(--ease-spring);
+}
+
+@keyframes star-gain {
+  0% {
+    transform: scale(0.2) rotate(-90deg);
+    filter: brightness(3) drop-shadow(0 0 24px #fff);
+  }
+  60% {
+    transform: scale(1.5) rotate(10deg);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ---- Action bar (built by main.js, appended to the local .team) ---- */
+.action-bar {
+  width: 100%; /* use the whole field width: buttons grow into the side space before any name gets cut */
+  margin-top: 6px;
+  padding: 14px 20px 18px;
+  border-radius: var(--r-lg);
+  background: var(--glass-2);
+  border: 1px solid var(--line-mid);
+  box-shadow: var(--inset-bevel), var(--shadow-2), 0 0 32px rgba(242, 102, 28, 0.12);
+  animation: ui-rise var(--dur-med) var(--ease-out) both;
+}
+
+.action-bar-header {
+  margin-bottom: 12px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brass-300);
+  text-align: center;
+}
+
+.action-bar-skills {
+  display: flex;
+  /* one line ALWAYS: a wrapped second row makes the bar taller and pushes the top champion under the turn banner */
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.action-bar-skill-btn {
+  position: relative;
+  flex: 1 1 auto; /* share all free width; shrink (with ellipsis) only when the row is truly full */
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: center; /* long skill names (e.g. an ultimate) get "…" instead of widening the bar */
+  min-width: 110px;
+  min-height: 62px;
+  padding: 0 22px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-mid);
+  background: linear-gradient(180deg, var(--ink-4), var(--ink-2));
+  color: var(--text-hi);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 19px;
+  letter-spacing: 0.06em;
+  box-shadow: var(--inset-bevel), var(--shadow-1);
+  transition: transform var(--dur-fast), border-color var(--dur-med), box-shadow var(--dur-med);
+}
+
+.action-bar-skill-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: var(--brass-300);
+  box-shadow: var(--inset-bevel), var(--shadow-2), var(--glow-brass);
+}
+
+.action-bar-skill-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.action-bar-skill-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  filter: grayscale(0.7);
+}
+
+/* CLAIM: a faceted violet "gem" with pointed left/right ends. Gold/ember stay reserved for ultimates + Momentum.
+   clip-path eats borders and shadows, so the rim is the button's own background and ::before is the inset face. */
+.action-bar-skill-btn.claim {
+  --claim-tip: 22px;
+  --claim-rim: 2px;
+  isolation: isolate;
+  padding: 0 calc(var(--claim-tip) + 14px);
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(180deg, #d9c2ff 0%, #8b5cf6 50%, #4c1d95 100%);
+  color: #f6f0ff;
+  letter-spacing: 0.18em;
+  text-shadow: 0 1px 2px rgba(20, 4, 48, 0.85);
+  box-shadow: none;
+  clip-path: polygon(
+    var(--claim-tip) 0,
+    calc(100% - var(--claim-tip)) 0,
+    100% 50%,
+    calc(100% - var(--claim-tip)) 100%,
+    var(--claim-tip) 100%,
+    0 50%
+  );
+}
+
+.action-bar-skill-btn.claim::before {
+  content: "";
+  position: absolute;
+  inset: var(--claim-rim);
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 48%),
+    linear-gradient(180deg, #7f4fe0 0%, #5b2fc4 55%, #3a1a8c 100%);
+  clip-path: polygon(
+    calc(var(--claim-tip) - 1px) 0,
+    calc(100% - var(--claim-tip) + 1px) 0,
+    100% 50%,
+    calc(100% - var(--claim-tip) + 1px) 100%,
+    calc(var(--claim-tip) - 1px) 100%,
+    0 50%
+  );
+}
+
+.action-bar-skill-btn.claim:hover:not(:disabled) {
+  background: linear-gradient(180deg, #f1e6ff 0%, #b58cff 50%, #6d35d8 100%);
+  box-shadow: none;
+}
+
+.action-bar-skill-btn.ultimate {
+  background: var(--ember-gradient);
+  border-color: var(--ember-300);
+  color: #fff7ea;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--inset-bevel), 0 0 22px rgba(242, 102, 28, 0.45);
+}
+
+/* ---- Combat log drawer ---- */
+.combat-log-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: calc(var(--z-drawer) - 1);
+  background: rgba(3, 3, 6, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-med);
+}
+
+html.log-open .combat-log-scrim {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.combat-log-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-drawer);
+  width: 620px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 24px 20px;
+  border-radius: var(--r-lg) 0 0 var(--r-lg);
+  transform: translateX(105%);
+  visibility: hidden;
+  transition:
+    transform 380ms var(--ease-out),
+    visibility 0s linear 380ms;
+}
+
+html.log-open .combat-log-drawer {
+  transform: none;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.combat-log-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.combat-log-head .ui-title {
+  font-size: 32px;
+}
+
+.combat-log {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 8px;
+  font-size: 21px;
+  line-height: 1.5;
+  color: var(--text-mid);
+  user-select: text;
+}
+
+.combat-log .turn-header {
+  position: sticky;
+  top: 0;
+  margin: 14px 0 6px;
+  padding: 4px 0;
+  font-family: var(--font-display);
+  font-size: 21px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--brass-300);
+  background: linear-gradient(180deg, var(--ink-2) 70%, transparent);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.combat-log p {
+  padding: 5px 0 5px 12px;
+  border-left: 2px solid var(--line-soft);
+}
+
+.combat-log p:hover {
+  border-left-color: var(--brass-400);
+  color: var(--text-hi);
+}

@@ -1,4 +1,5 @@
 import { formatChampionName } from "../../../ui/formatters.js";
+import { runAsPassiveSource } from "../../../engine/combat/combatEvents.js";
 
 const BUFFS_PER_DEATH = [
   { stat: "Attack", amount: 15, isPercent: true },
@@ -42,13 +43,17 @@ function scheduleRevival(champion, context, passiveName) {
         revived.HP = Math.floor(revived.maxHP * (REVIVE_HP_PERCENT / 100));
 
         // Buff from Jeff's own death, since onChampionDeath skips the owner.
-        BUFFS_PER_DEATH.forEach((buff) => {
-          revived.modifyStat({
-            statName: buff.stat,
-            amount: buff.amount,
-            context: spawnContext,
-            isPermanent: true,
-            isPercent: buff.isPercent,
+        // Spawn runs outside any hook, so attribute it to the passive here or
+        // the stat breakdown shows "Unknown source".
+        runAsPassiveSource(revived.passive, revived, () => {
+          BUFFS_PER_DEATH.forEach((buff) => {
+            revived.modifyStat({
+              statName: buff.stat,
+              amount: buff.amount,
+              context: spawnContext,
+              isPermanent: true,
+              isPercent: buff.isPercent,
+            });
           });
         });
       },

@@ -1,0 +1,598 @@
+/* ============================================
+   COMBAT FX — dialog bubble, turn banner, floating numbers, skill glows.
+   Everything here is DOM/CSS only; canvas + WebGL effects layer above (998–9999).
+   JS timings these must respect:
+     float lifetime 1900ms (+200 removal) · dialog leave (TIMING.DIALOG_LEAVE) ·
+     turn banner: visible 700ms → is-changing 230ms → 700ms → hidden.
+   ============================================ */
+
+/* ---- Combat dialog (single shared element inside the stage) ----
+   JS: remove .hidden + add .active (same frame) → keyframe in; add .leaving → keyframe out. */
+.combat-dialog {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 6;
+  width: min(760px, 70%);
+  padding: 18px 36px 20px;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  border-radius: var(--r-md);
+  background:
+    linear-gradient(180deg, rgba(20, 20, 28, 0.94), rgba(8, 8, 12, 0.94));
+  border: 1px solid var(--brass-500);
+  box-shadow: var(--shadow-3), 0 0 36px rgba(224, 183, 101, 0.22), var(--inset-bevel);
+  clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+}
+
+.combat-dialog.active {
+  animation: dialogIn 260ms var(--ease-out) both;
+}
+
+.combat-dialog.leaving {
+  animation: dialogOut 240ms var(--ease-in-out) both;
+}
+
+.combat-dialog-text {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  color: var(--text-hi);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+.combat-dialog-text b,
+.combat-dialog-text strong {
+  color: var(--brass-300);
+}
+
+/* Champion names (formatChampionName wraps them in span.team-N): bold azure for the
+   local player's champion, bold crimson for the opponent's. perspective-team2 is set
+   on <body> when the local player is team 2, so the colours follow the viewer, not
+   the raw team number. Same rule for the combat log. */
+.combat-dialog-text .team-1,
+.combat-log .team-1 {
+  font-weight: 800;
+  color: var(--ally);
+}
+
+.combat-dialog-text .team-2,
+.combat-log .team-2 {
+  font-weight: 800;
+  color: var(--enemy);
+}
+
+body.perspective-team2 .combat-dialog-text .team-1,
+body.perspective-team2 .combat-log .team-1 {
+  color: var(--enemy);
+}
+
+body.perspective-team2 .combat-dialog-text .team-2,
+body.perspective-team2 .combat-log .team-2 {
+  color: var(--ally);
+}
+
+/* Ultimate: ember frame, bigger type, the skill name is the headline */
+.combat-dialog.ultimate {
+  border-color: var(--ember-400);
+  box-shadow: var(--shadow-3), 0 0 56px rgba(242, 102, 28, 0.5), var(--inset-bevel);
+  background: linear-gradient(180deg, rgba(48, 18, 8, 0.95), rgba(12, 6, 4, 0.95));
+}
+
+.combat-dialog.ultimate .combat-dialog-text {
+  font-size: 30px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff3df;
+  text-shadow: 0 0 18px rgba(242, 102, 28, 0.8), 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+.ultimate-skill-name {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.25em;
+  color: var(--ember-300);
+}
+
+@keyframes dialogIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 18px)) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes dialogOut {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 14px)) scale(0.98);
+  }
+}
+
+/* ---- Turn transition banner (full-window, sibling of the stage) ---- */
+.turn-transition {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-turn-transition);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  background: radial-gradient(60% 40% at 50% 50%, rgba(5, 5, 8, 0.65), transparent 100%);
+  transition: opacity 260ms var(--ease-out), visibility 0s linear 260ms;
+}
+
+.turn-transition.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.turn-transition-band {
+  position: relative;
+  width: 100%;
+  padding: clamp(14px, 3vh, 30px) 0;
+  text-align: center;
+  background: linear-gradient(90deg, transparent, rgba(8, 8, 12, 0.92) 18%, rgba(8, 8, 12, 0.92) 82%, transparent);
+  border-top: 1px solid var(--brass-500);
+  border-bottom: 1px solid var(--brass-500);
+  transform: scaleY(0.2);
+  transition: transform 340ms var(--ease-spring);
+}
+
+.turn-transition.is-visible .turn-transition-band {
+  transform: scaleY(1);
+}
+
+.turn-transition-flare {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 35%, rgba(240, 213, 150, 0.22) 50%, transparent 65%);
+  transform: translateX(-100%);
+  pointer-events: none;
+}
+
+.turn-transition.is-visible .turn-transition-flare {
+  animation: turn-flare 900ms var(--ease-out) 120ms both;
+}
+
+@keyframes turn-flare {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.turn-transition-number {
+  position: relative;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 9vh, 88px);
+  font-weight: 700;
+  letter-spacing: 0.34em;
+  /* trailing letter-spacing would push the text off-centre */
+  padding-left: 0.34em;
+  text-transform: uppercase;
+  color: var(--brass-100);
+  text-shadow: 0 0 36px rgba(224, 183, 101, 0.55), 0 4px 10px rgba(0, 0, 0, 0.8);
+  transition: opacity 230ms ease, filter 230ms ease, transform 230ms ease;
+}
+
+.turn-transition-number.is-changing {
+  opacity: 0;
+  filter: blur(8px);
+  transform: scale(1.12);
+}
+
+/* ---- Floating numbers (children of .portrait-wrapper; JS removes after 2100ms) ---- */
+.damage-float,
+.shield-float,
+.heal-float,
+.buff-float,
+.taunt-float,
+.resource-float {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  z-index: 6;
+  white-space: nowrap;
+  pointer-events: none;
+  font-family: var(--font-numeric);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  text-shadow:
+    0 0 3px #000,
+    0 2px 0 #000,
+    0 0 14px currentColor;
+  animation: float-rise 1900ms var(--ease-out) forwards;
+}
+
+@keyframes float-rise {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -20%) scale(0.5);
+  }
+  9% {
+    opacity: 1;
+    transform: translate(-50%, -60%) scale(1.35);
+  }
+  18% {
+    transform: translate(-50%, -70%) scale(1);
+  }
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -230%) scale(0.95);
+  }
+}
+
+/* damage tiers: bigger and hotter as the hit grows */
+.damage-float {
+  font-size: 1.7em;
+  color: #ffe9c9;
+}
+
+.damage-tier-1 {
+  font-size: 1.5em;
+  color: #fff1dc;
+}
+.damage-tier-2 {
+  font-size: 1.85em;
+  color: #ffd98a;
+}
+.damage-tier-3 {
+  font-size: 2.2em;
+  color: #ffb347;
+}
+.damage-tier-4 {
+  font-size: 2.6em;
+  color: #ff8a3d;
+}
+.damage-tier-5 {
+  font-size: 3.1em;
+  color: #ff5a3a;
+}
+.damage-tier-6 {
+  font-size: 3.6em;
+  color: #ff2f4b;
+  animation-name: float-rise-heavy;
+}
+
+.damage-float.obliterate {
+  font-size: 3.6em;
+  color: #ff2f4b;
+  letter-spacing: 0.08em;
+  animation-name: float-rise-heavy;
+}
+
+.damage-float.finishing {
+  font-size: 4.4em;
+  color: #fff;
+  text-shadow:
+    0 0 4px #000,
+    0 0 24px #ff2f4b,
+    0 0 48px #ff2f4b;
+  animation-name: float-rise-heavy;
+}
+
+@keyframes float-rise-heavy {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -20%) scale(0.4) rotate(-6deg);
+  }
+  8% {
+    opacity: 1;
+    transform: translate(-50%, -55%) scale(1.7) rotate(3deg);
+  }
+  16% {
+    transform: translate(-50%, -62%) scale(1.15) rotate(-1deg);
+  }
+  74% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -220%) scale(1);
+  }
+}
+
+.shield-float {
+  top: 26%;
+  font-size: 1.4em;
+  color: #9fd8ff;
+}
+
+.shield-float.shield-absorbed-float {
+  font-size: 1.2em;
+  color: #cfe9ff;
+}
+
+.heal-float {
+  font-size: 2em;
+  color: var(--positive);
+}
+
+.heal-float.lifesteal-float {
+  color: #ff5d8f;
+}
+
+.buff-float {
+  top: 24%;
+  font-size: 1.3em;
+  letter-spacing: 0.1em;
+  color: var(--warning);
+}
+
+.taunt-float {
+  top: 24%;
+  font-size: 1.25em;
+  letter-spacing: 0.14em;
+  color: var(--ember-400);
+}
+
+/* Resource floats live inside the momentum bar: small, rise out of the bar */
+.resource-float {
+  left: 50%;
+  top: 0;
+  font-size: 1.15em;
+  animation-duration: 1500ms;
+}
+
+.resource-float-momentum {
+  color: var(--ember-300);
+}
+
+.resource-float-momentum.resource-float-gain::before {
+  content: "";
+}
+
+.resource-float-spend {
+  color: var(--text-mid);
+}
+
+/* ---- Skill-affect glows (children of .champion) ---- */
+.skill-affect-glow {
+  /* the champion has no frame: the glow hugs the oval portrait (first child, 4:5), not the stat block */
+  position: absolute;
+  inset: -4px -4px auto -4px;
+  aspect-ratio: 4 / 5;
+  z-index: 2;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  animation: glow-in 260ms var(--ease-out) forwards;
+}
+
+.skill-affect-glow.is-leaving {
+  animation: glow-out 280ms var(--ease-in-out) forwards;
+}
+
+.skill-affect-glow--user {
+  box-shadow: 0 0 0 2px var(--brass-300), 0 0 26px 4px rgba(224, 183, 101, 0.65), inset 0 0 22px rgba(224, 183, 101, 0.3);
+}
+
+.skill-affect-glow--harm {
+  box-shadow: 0 0 0 2px var(--negative), 0 0 26px 4px rgba(255, 70, 70, 0.6), inset 0 0 22px rgba(255, 70, 70, 0.28);
+}
+
+.skill-affect-glow--boon {
+  box-shadow: 0 0 0 2px var(--positive), 0 0 26px 4px rgba(56, 224, 138, 0.55), inset 0 0 22px rgba(56, 224, 138, 0.26);
+}
+
+@keyframes glow-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes glow-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* ---- Layering of effect canvases/containers owned by JS ---- */
+#webgl-container canvas {
+  display: block;
+}
+
+#arena-backdrop.arena-backdrop--live .arena-backdrop-fallback {
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+
+/* ---- Per-champion VFX canvases (shared/vfx/vfxManager.js appends them to .portrait-wrapper) ----
+   Default: the canvas bleeds 20px past the wrapper on every side (the shield oval, fire stance,
+   molted scales and the like draw their halo there) and ignores the pointer. */
+.portrait-wrapper > .vfx-canvas {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  pointer-events: none;
+}
+
+/* These effects size their bitmap from the wrapper's own clientWidth/Height: fit it exactly */
+.portrait-wrapper > .vfx-frozen,
+.portrait-wrapper > .vfx-concealed,
+.portrait-wrapper > .vfx-invisible,
+.portrait-wrapper > .vfx-invisibility,
+.portrait-wrapper > .vfx-waterBubble,
+.portrait-wrapper > .vfx-deathsEmbraceMark,
+.portrait-wrapper > .vfx-deathsInevitabilityMark,
+.portrait-wrapper > .vfx-shadowstormMark {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- Finishing blow: crack overlay + cut canvas are children of .portrait ---- */
+.portrait > .finishing-crack,
+.portrait > .finishing-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.portrait > .finishing-crack {
+  z-index: 4;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.portrait > .finishing-canvas {
+  z-index: 3;
+}
+
+.portrait.finishing-flash {
+  animation: finishing-flash 350ms var(--ease-out) both;
+}
+
+@keyframes finishing-flash {
+  0% {
+    filter: brightness(2.4) contrast(1.2);
+  }
+  100% {
+    filter: brightness(1) contrast(1);
+  }
+}
+
+/* Bleached: the portrait itself is wrung of colour while the canvas draws the bleach */
+.champion.is-bleached .portrait img {
+  filter: grayscale(0.85) brightness(1.18) contrast(0.9);
+  transition: filter var(--dur-med) var(--ease-out);
+}
+
+/* Reduced visibility, two different readings of it.
+   Invisible = glass: the art goes translucent and cold, with a cyan glow on the frame.
+   Concealed = shadow: the art is dimmed and cooled to near-black, with a violet-black frame.
+   The canvases (shared/vfx/invisibilityCanvas.js, concealedCanvas.js) draw the rest. */
+.champion.is-invisible .portrait {
+  --portrait-shadow: 0 0.5em 0.9em rgba(0, 0, 0, 0.5), 0 0 1.6em 0.1em rgba(130, 220, 255, 0.75),
+    inset 0 0 0.6em rgba(190, 240, 255, 0.55);
+}
+
+.champion.is-invisible .portrait img {
+  opacity: 0.4;
+  filter: saturate(0.45) brightness(1.3) contrast(0.85) hue-rotate(-12deg);
+  animation: invisible-ghost 3.4s ease-in-out infinite;
+}
+
+@keyframes invisible-ghost {
+  0%,
+  100% {
+    opacity: 0.42;
+    transform: translateX(0);
+  }
+  38% {
+    opacity: 0.3;
+  }
+  60% {
+    opacity: 0.46;
+  }
+  /* a brief cloak glitch: the figure jumps sideways and almost vanishes */
+  74% {
+    opacity: 0.42;
+    transform: translateX(0);
+  }
+  76% {
+    opacity: 0.14;
+    transform: translateX(-3%);
+  }
+  78% {
+    opacity: 0.5;
+    transform: translateX(2%);
+  }
+  80% {
+    opacity: 0.42;
+    transform: translateX(0);
+  }
+}
+
+.champion.is-concealed .portrait {
+  --portrait-shadow: 0 0.5em 0.9em rgba(0, 0, 0, 0.8), 0 0 1.5em 0.15em rgba(70, 40, 130, 0.8),
+    inset 0 0 0.7em rgba(0, 0, 0, 0.8);
+}
+
+.champion.is-concealed .portrait img {
+  filter: brightness(0.6) saturate(0.45) contrast(1.15) hue-rotate(12deg);
+  animation: concealed-breathe 4.2s ease-in-out infinite;
+}
+
+@keyframes concealed-breathe {
+  0%,
+  100% {
+    filter: brightness(0.5) saturate(0.4) contrast(1.15) hue-rotate(12deg);
+  }
+  50% {
+    filter: brightness(0.72) saturate(0.5) contrast(1.1) hue-rotate(12deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-transition-band,
+  .champion.is-invisible .portrait img,
+  .champion.is-concealed .portrait img {
+    animation: none;
+  }
+
+  .turn-transition-number {
+    transition-duration: 1ms;
+  }
+
+  .turn-transition.is-visible .turn-transition-flare {
+    animation: none;
+  }
+
+  .damage-float,
+  .shield-float,
+  .heal-float,
+  .buff-float,
+  .taunt-float,
+  .resource-float {
+    /* still removed by JS on a timer; keep readable without the swoop */
+    animation-name: float-fade;
+  }
+
+  @keyframes float-fade {
+    0%,
+    80% {
+      opacity: 1;
+      transform: translate(-50%, -80%);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -80%);
+    }
+  }
+}

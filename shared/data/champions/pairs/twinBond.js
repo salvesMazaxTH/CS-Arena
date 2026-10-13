@@ -1,4 +1,4 @@
-import { regularShieldTotal } from "../../../core/championCombat.js";
+import { shieldAgainst } from "../../../core/championCombat.js";
 import { formatChampionName } from "../../../ui/formatters.js";
 import { getDuoForCore } from "../../duos.js";
 
@@ -25,10 +25,11 @@ export function findTwin(champion, context) {
 
 /**
  * Damage a cheat-death hook should return so the champion lands at exactly
- * `survivalHP`: regular shields drain first, as they would against the real blow.
+ * `survivalHP`: regular shields drain first, as they would against the real blow
+ * (an Absolute blow skips them).
  */
-export function survivalDamage(champion, survivalHP) {
-  return Math.max(champion.HP + regularShieldTotal(champion) - survivalHP, 0);
+export function survivalDamage(champion, survivalHP, mode) {
+  return Math.max(champion.HP + shieldAgainst(champion, mode) - survivalHP, 0);
 }
 
 /**
