@@ -89,6 +89,7 @@ const selinaSkills = [
         label: { en: "Blade", pt: "Lâmina" },
         bf: 35,
         type: "physical",
+        element: null,
         contact: true,
         hitVfx: "slash",
       },
