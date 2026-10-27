@@ -7,10 +7,16 @@ export default {
   maxPrayers: 4,
   reductionPerPrayer: 10, // % less damage taken per Prayer held
 
-  description() {
+  description(champion) {
+    const held = champion?.runtime?.nerithiaPrayers || 0;
+
     return {
-      en: `Nerithia turns every kindness into a prayer. Each time she <b>heals another ally</b> she gains <b>1</b> Prayer, up to <b>${this.maxPrayers}</b>. Each Prayer held makes her take <b>${this.reductionPerPrayer}%</b> less damage (up to <b>${this.maxPrayers * this.reductionPerPrayer}%</b>), and her ultimate spends them all. <b>Absolute Damage</b> and damage over time ignore the reduction.`,
-      pt: `Nerithia transforma cada gentileza em uma prece. Sempre que <b>cura outro aliado</b>, ela ganha <b>1</b> Prece, até <b>${this.maxPrayers}</b>. Cada Prece mantida faz com que ela receba <b>${this.reductionPerPrayer}%</b> menos dano (até <b>${this.maxPrayers * this.reductionPerPrayer}%</b>), e sua suprema gasta todas elas. <b>Dano Absoluto</b> e dano ao longo do tempo ignoram a redução.`,
+      en: `Nerithia turns every kindness into a prayer. Each time she <b>heals another ally</b> she gains <b>1</b> Prayer, up to <b>${this.maxPrayers}</b>. Each Prayer held makes her take <b>${this.reductionPerPrayer}%</b> less damage (up to <b>${this.maxPrayers * this.reductionPerPrayer}%</b>), and her ultimate spends them all. <b>Absolute Damage</b> and damage over time ignore the reduction.
+
+      <b>Prayers held: ${held}/${this.maxPrayers}</b> (<b>${held * this.reductionPerPrayer}%</b> less damage taken).`,
+      pt: `Nerithia transforma cada gentileza em uma prece. Sempre que <b>cura outro aliado</b>, ela ganha <b>1</b> Prece, até <b>${this.maxPrayers}</b>. Cada Prece mantida faz com que ela receba <b>${this.reductionPerPrayer}%</b> menos dano (até <b>${this.maxPrayers * this.reductionPerPrayer}%</b>), e sua suprema gasta todas elas. <b>Dano Absoluto</b> e dano ao longo do tempo ignoram a redução.
+
+      <b>Preces mantidas: ${held}/${this.maxPrayers}</b> (<b>${held * this.reductionPerPrayer}%</b> menos dano recebido).`,
     };
   },
 
