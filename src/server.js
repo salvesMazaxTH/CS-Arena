@@ -29,7 +29,7 @@ process.on("SIGTERM", () => {
 
 import { GameMatch } from "../shared/engine/match/GameMatch.js";
 import { Player } from "../shared/engine/match/Player.js";
-import { STAR_SCORE_THRESHOLD } from "../shared/engine/match/matchRules.js";
+import { STAR_SCORE_THRESHOLD, STARS_TO_WIN } from "../shared/engine/match/matchRules.js";
 
 import { championDB } from "../shared/data/championDB.js";
 import { getDuoForCore } from "../shared/data/duos.js";
@@ -929,6 +929,73 @@ function emitTurnEndStars(resolver) {
   });
 }
 
+/** Whether the current turn ends on a star checkpoint, and which turn is the next one. */
+function starCheckpointInfo() {
+  return match.combat.getStarCheckpoint({
+    everyTurnIsCheckpoint: !!editMode.everyTurnIsStarCheckpoint,
+  });
+}
+
+/** The turn header payload; the client reads `checkpoint` to stage the turn. */
+function turnUpdatePayload() {
+  return { turn: match.combat.currentTurn, checkpoint: starCheckpointInfo() };
+}
+
+/**
+ * Opens a checkpoint turn with a dialog that names the stake: who would earn
+ * the star if the turn ended now, and whether that star would end the match.
+ */
+function emitStarCheckpointAlert(resolver) {
+  if (match.isGameEnded() || !starCheckpointInfo().active) return;
+
+  const nameOf = (slot) => match.players[slot]?.username ?? `Player ${slot + 1}`;
+  const { player1, player2, stars } = match.getScorePayload();
+  const starsBySlot = [stars.player1, stars.player2];
+  const lead = Math.abs(player1 - player2);
+  const earners = player1 === player2 ? [0, 1] : [player1 > player2 ? 0 : 1];
+
+  const standing =
+    earners.length === 2
+      ? {
+          en: `If the turn ended now, <b>both</b> would earn the star (tied at <b>${player1}</b>).`,
+          pt: `Se o turno acabasse agora, <b>ambos</b> ganhariam a estrela (empate em <b>${player1}</b>).`,
+        }
+      : {
+          en: `If the turn ended now, <b>${nameOf(earners[0])}</b> would earn the star (ahead by <b>${lead}</b>).`,
+          pt: `Se o turno acabasse agora, <b>${nameOf(earners[0])}</b> ganharia a estrela (à frente por <b>${lead}</b>).`,
+        };
+  const deciders = earners.filter((slot) => starsBySlot[slot] === STARS_TO_WIN - 1);
+  const decider = deciders.length
+    ? {
+        en: ` That star would bring ${deciders.map((slot) => `<b>${nameOf(slot)}</b>`).join(" and ")} to <b>${STARS_TO_WIN}</b> stars.`,
+        pt: ` Essa estrela levaria ${deciders.map((slot) => `<b>${nameOf(slot)}</b>`).join(" e ")} a <b>${STARS_TO_WIN}</b> estrelas.`,
+      }
+    : { en: "", pt: "" };
+
+  // Two short dialogs played in sequence: the rule, then the live preview.
+  const context = resolver.createBaseContext({ sourceId: null });
+  context.registerDialog({
+    message: {
+      en: `<b>Star checkpoint!</b> Whoever leads on points at the end of this turn earns a <b>star</b>.`,
+      pt: `<b>Checkpoint de estrela!</b> Quem liderar nos pontos ao fim deste turno ganha uma <b>estrela</b>.`,
+    },
+    sourceId: null,
+    targetId: null,
+  });
+  context.registerDialog({
+    message: { en: `${standing.en}${decider.en}`, pt: `${standing.pt}${decider.pt}` },
+    sourceId: null,
+    targetId: null,
+  });
+
+  emitCombatEnvelopesFromContext({
+    user: null,
+    skill: { key: "star_checkpoint", name: "Star Checkpoint" },
+    context,
+    scorePayload: match.getScorePayload(),
+  });
+}
+
 function handleScheduledEffect(effect, context) {
   switch (effect.type) {
     case "spawnChampion": {
@@ -1092,7 +1159,7 @@ function handleStartTurn() {
 
   // Flip the client's turn header before any start-of-turn log or animation is
   // emitted, so DoT ticks and scheduled detonations group under the new turn.
-  io.emit("turnUpdate", currentTurn);
+  io.emit("turnUpdate", turnUpdatePayload());
 
   const currentTurnEffects = [];
   const futureEffects = [];
@@ -1233,6 +1300,10 @@ function handleStartTurn() {
   // Start-of-turn hooks (e.g. Jeff's Inevitabilidade da Morte) can kill the
   // last real champion outside the regular end-turn action flow.
   emitGameOverIfNeeded();
+
+  // Last in the start-of-turn queue, so the stake it names already counts
+  // every point the turn start awarded.
+  emitStarCheckpointAlert(resolver);
 
   // This is the only point at which a new planning window becomes available.
   // Set it before broadcasting so the client state and server validation agree.
@@ -1799,6 +1870,7 @@ io.on("connection", (socket) => {
     io.emit("combatReset", {
       turn: match.getCurrentTurn(),
       score: match.getScorePayload(),
+      checkpoint: starCheckpointInfo(),
     });
 
     broadcastGameState();
@@ -1970,6 +2042,7 @@ io.on("connection", (socket) => {
     socket.emit("matchResumed", {
       turn: match.getCurrentTurn(),
       score: match.getScorePayload(),
+      checkpoint: starCheckpointInfo(),
       phase: match.combat.phase,
       roster: player.selectedChampionKeys,
       firstChoicePending,
@@ -1988,7 +2061,7 @@ io.on("connection", (socket) => {
       match.combat.phase === "planning" &&
       match.combat.activeChampions.size > 0
     ) {
-      socket.emit("turnUpdate", match.combat.currentTurn);
+      socket.emit("turnUpdate", turnUpdatePayload());
     }
 
     const opponent = match.getOpponent(slot);

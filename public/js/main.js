@@ -921,7 +921,7 @@ socket.on("allTeamsSelected", () => {
 
 // The account dropped mid-match and came back inside the reconnection window:
 // skip the hub and go straight back into the match. The log starts empty.
-socket.on("matchResumed", ({ turn, score, phase, roster, firstChoicePending: choicePending }) => {
+socket.on("matchResumed", ({ turn, score, checkpoint, phase, roster, firstChoicePending: choicePending }) => {
   matchmaking = false;
   if (skipSlotBtn) {
     skipSlotBtn.removeEventListener("click", skipCurrentSlot);
@@ -950,7 +950,7 @@ socket.on("matchResumed", ({ turn, score, phase, roster, firstChoicePending: cho
   firstChoiceResolved = !choicePending;
   syncLineupBannerLock();
 
-  combatAnimations.handleCombatReset({ turn, score });
+  combatAnimations.handleCombatReset({ turn, score, checkpoint });
   renderLineupBanner();
 });
 
@@ -1881,7 +1881,7 @@ socket.on("actionFailed", (message) => {
   combatAnimations.handleActionFailed(message);
 });
 
-socket.on("combatReset", ({ turn = 1, score } = {}) => {
+socket.on("combatReset", ({ turn = 1, score, checkpoint } = {}) => {
   currentTurn = turn;
   hasConfirmedEndTurn = false;
   isResolvingTurn = false;
@@ -1892,7 +1892,7 @@ socket.on("combatReset", ({ turn = 1, score } = {}) => {
 
   closeSummonReminder();
   removeActionBar();
-  combatAnimations.handleCombatReset({ turn, score });
+  combatAnimations.handleCombatReset({ turn, score, checkpoint });
 });
 
 socket.on("turnLocked", () => {
@@ -1904,8 +1904,8 @@ socket.on("turnLocked", () => {
   removeActionBar();
 });
 
-socket.on("turnUpdate", (turn) => {
-  combatAnimations.handleTurnUpdate(turn);
+socket.on("turnUpdate", (payload) => {
+  combatAnimations.handleTurnUpdate(payload);
 });
 
 socket.on("gameOver", (data) => {

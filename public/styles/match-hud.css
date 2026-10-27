@@ -69,6 +69,72 @@
   text-shadow: 0 0 16px rgba(224, 183, 101, 0.45);
 }
 
+/* Countdown to the next star checkpoint; the whole plate turns gold on the checkpoint turn itself. */
+.turn-checkpoint-chip {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--brass-300);
+  opacity: 0.8;
+}
+
+.turn-checkpoint-chip[hidden] {
+  display: none;
+}
+
+.turn-checkpoint-chip.is-next {
+  color: var(--ember-400);
+  opacity: 1;
+  animation: ui-pulse 1.6s ease-in-out infinite;
+}
+
+.turn-display.is-checkpoint {
+  background: linear-gradient(180deg, #3a2a08, var(--ink-1));
+  border-bottom-color: #ffc61f;
+}
+
+.turn-display.is-checkpoint p {
+  color: #ffe27a;
+  text-shadow: 0 0 18px rgba(255, 198, 31, 0.7);
+}
+
+.turn-display.is-checkpoint .turn-checkpoint-chip {
+  color: #ffc61f;
+  opacity: 1;
+  animation: checkpoint-breathe 1.8s ease-in-out infinite;
+}
+
+/* light sweep across the plate, clipped by its trapezoid */
+.turn-display.is-checkpoint::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 35%, rgba(255, 226, 122, 0.28) 50%, transparent 65%);
+  transform: translateX(-100%);
+  animation: checkpoint-sheen 3.2s var(--ease-out) infinite;
+  pointer-events: none;
+}
+
+@keyframes checkpoint-breathe {
+  50% {
+    text-shadow: 0 0 12px rgba(255, 198, 31, 0.9);
+  }
+}
+
+@keyframes checkpoint-sheen {
+  0% {
+    transform: translateX(-100%);
+  }
+  45%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 /* ---- Player plate ---- */
 .player-plate {
   --side: var(--enemy);
@@ -247,6 +313,25 @@
 
 .match-star.star-gained {
   animation: star-gain 900ms var(--ease-spring);
+}
+
+/* Checkpoint turn: the slot the current leader would fill if the turn ended now.
+   Kept a muted, translucent khaki with a pale glow so it never reads as an earned (saturated gold) star. */
+.match-star.at-stake:not(.earned) {
+  background: #8c8058;
+  animation: star-at-stake 1.6s ease-in-out infinite;
+}
+
+@keyframes star-at-stake {
+  0%,
+  100% {
+    opacity: 0.5;
+    filter: drop-shadow(0 0 1px rgba(255, 240, 190, 0.4));
+  }
+  50% {
+    opacity: 0.85;
+    filter: drop-shadow(0 0 5px rgba(255, 240, 190, 0.6));
+  }
 }
 
 @keyframes star-gain {
@@ -460,6 +545,11 @@ html.log-open .combat-log-drawer {
   color: var(--brass-300);
   background: linear-gradient(180deg, var(--ink-2) 70%, transparent);
   border-bottom: 1px solid var(--line-soft);
+}
+
+.combat-log .turn-header.is-checkpoint {
+  color: #ffc61f;
+  border-bottom-color: rgba(255, 198, 31, 0.5);
 }
 
 .combat-log p {

@@ -238,7 +238,7 @@
           <button id="surrender-btn" class="ui-btn ui-btn--ghost hud-surrender" type="button">
             <i class="bx bx-flag"></i><span data-i18n="match.surrender">Surrender</span>
           </button>
-          <div class="turn-display"><p>Turn 1</p></div>
+          <div class="turn-display"><p>Turn 1</p><span class="turn-checkpoint-chip" hidden></span></div>
           <button
             id="log-toggle-btn"
             class="ui-icon-btn hud-log-toggle"
@@ -330,6 +330,7 @@
       <div class="turn-transition-band">
         <span class="turn-transition-flare"></span>
         <p id="turnTransitionNumber" class="turn-transition-number">TURN 1</p>
+        <p id="turnTransitionTag" class="turn-transition-tag" hidden></p>
       </div>
     </div>
 

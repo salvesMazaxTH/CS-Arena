@@ -16,8 +16,8 @@ import { getHardCCActionDenial } from "../../shared/core/championStatus.js";
 import { getChampionClassKeys } from "../../shared/data/championClasses.js";
 import { StatusEffectsRegistry } from "../../shared/data/statusEffects/effectsRegistry.js";
 import {
-  STAR_CHECKPOINT_TURNS,
   STAR_SCORE_THRESHOLD,
+  isStarCheckpointTurn,
 } from "../../shared/engine/match/matchRules.js";
 
 export const BOT_TUNING = {
@@ -585,9 +585,9 @@ function claimScore(user, board, args) {
   const points = getClaimPoints(user, board.currentTurn);
   let score = c.base + points * c.perPoint;
 
-  const checkpointNow =
-    board.editMode.everyTurnIsCheckpoint || STAR_CHECKPOINT_TURNS.includes(board.currentTurn);
-  const checkpointNext = STAR_CHECKPOINT_TURNS.includes(board.currentTurn + 1);
+  const everyTurn = !!board.editMode.everyTurnIsStarCheckpoint;
+  const checkpointNow = isStarCheckpointTurn(board.currentTurn, { everyTurn });
+  const checkpointNext = isStarCheckpointTurn(board.currentTurn + 1, { everyTurn });
   const lead = board.myScore - board.opponentScore;
 
   if (checkpointNow && lead < c.comfortableLead) score += c.checkpointBonus;

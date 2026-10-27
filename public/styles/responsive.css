@@ -80,8 +80,18 @@ html.match-view.match-portrait .rotate-overlay {
     font-size: 16px;
   }
 
+  .turn-display {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
   .turn-display p {
     font-size: 34px;
+  }
+
+  .turn-checkpoint-chip {
+    font-size: 20px;
+    letter-spacing: 0.1em;
   }
 
   /* stars: ~12px on the glass at 0.36x, so draw them bigger to keep all 3 moulds readable */
@@ -252,14 +262,30 @@ html.match-view.match-portrait .rotate-overlay {
   .turn-transition-number {
     font-size: clamp(26px, 14vh, 56px);
   }
+
+  .turn-transition-tag {
+    font-size: clamp(13px, 5vh, 22px);
+    letter-spacing: 0.18em;
+    padding-left: 0.18em;
+  }
 }
 
 /* ---- Reduced motion: keep state changes, drop sweeping motion ---- */
 @media (prefers-reduced-motion: reduce) {
   .rotate-icon,
   .arena-controls #end-turn-btn,
-  .hud-unread-dot {
+  .hud-unread-dot,
+  .turn-checkpoint-chip.is-next,
+  .turn-display.is-checkpoint .turn-checkpoint-chip,
+  .turn-display.is-checkpoint::after {
     animation: none;
+  }
+
+  /* a steady pale glow instead of the pulse */
+  .match-star.at-stake:not(.earned) {
+    animation: none;
+    opacity: 0.7;
+    filter: drop-shadow(0 0 4px rgba(255, 240, 190, 0.55));
   }
 
   .game-over.active .game-over-content,

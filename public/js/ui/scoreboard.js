@@ -102,8 +102,37 @@ export function createScoreboard() {
     container.setAttribute("aria-label", `${earned} of ${STARS_TO_WIN} stars`);
   }
 
+  let lastScore = null;
+  let checkpointActive = false;
+
+  const totalStars = (score) =>
+    (Number(score?.stars?.player1) || 0) + (Number(score?.stars?.player2) || 0);
+
+  /** On a checkpoint turn, pulses the star slot the points leader (both teams
+   *  on a tie) would fill if the turn ended now. */
+  function markStakes() {
+    const scores = [Number(lastScore?.player1) || 0, Number(lastScore?.player2) || 0];
+    [1, 2].forEach((team, index) => {
+      const container = document.getElementById(`player${team}-stars`);
+      const leads = checkpointActive && scores[index] >= scores[1 - index];
+      const earned = Number(lastScore?.stars?.[`player${team}`]) || 0;
+      Array.from(container.children).forEach((star, slot) => {
+        star.classList.toggle("at-stake", leads && slot === earned);
+      });
+    });
+  }
+
+  function setCheckpoint(active) {
+    checkpointActive = !!active;
+    markStakes();
+  }
+
   function update(score) {
     if (!score) return;
+
+    // Stars are only awarded at the end of a turn, so a rise means the stake resolved.
+    if (lastScore && totalStars(score) > totalStars(lastScore)) checkpointActive = false;
+    lastScore = score;
 
     updateStars(
       document.getElementById("player1-stars"),
@@ -133,6 +162,8 @@ export function createScoreboard() {
       document.getElementById("player2-score-penalty"),
       score.player2 ?? 0,
     );
+
+    markStakes();
   }
 
   async function animateClaim(score) {
@@ -147,5 +178,5 @@ export function createScoreboard() {
     await wait(900);
   }
 
-  return { update, animateClaim };
+  return { update, animateClaim, setCheckpoint };
 }

@@ -337,7 +337,7 @@ export function createCombatAnimationManager(deps) {
         break;
 
       case "turnUpdate":
-        processTurnUpdate(item.data);
+        await processTurnUpdate(item.data);
         break;
 
       case "championRemoved":
@@ -1712,8 +1712,23 @@ export function createCombatAnimationManager(deps) {
   //  TURN UPDATE
   // ============================================================
 
-  function processTurnUpdate(turn) {
+  // The server's read of the current turn: whether it ends on a star
+  // checkpoint, and which turn is the next one (null once none is left).
+  const NO_CHECKPOINT = { active: false, nextTurn: null };
+  let starCheckpoint = NO_CHECKPOINT;
+
+  function setStarCheckpoint(checkpoint) {
+    starCheckpoint = checkpoint ?? NO_CHECKPOINT;
+    scoreboard.setCheckpoint(starCheckpoint.active);
+  }
+
+  async function processTurnUpdate({ turn, checkpoint }) {
+    setStarCheckpoint(checkpoint);
     deps.applyTurnUpdate(turn);
+
+    // A checkpoint turn holds the queue until its banner has closed, so the
+    // turn's first animation and its checkpoint dialog never play under it.
+    if (starCheckpoint.active) await turnTransitionClosed;
   }
 
   // ============================================================
@@ -1825,7 +1840,8 @@ export function createCombatAnimationManager(deps) {
       lastLoggedTurn = currentTurn;
       const turnHeader = document.createElement("h2");
       turnHeader.classList.add("turn-header");
-      turnHeader.textContent = `${getLocale() === "pt" ? "Turno" : "Turn"} ${currentTurn}`;
+      turnHeader.classList.toggle("is-checkpoint", starCheckpoint.active);
+      turnHeader.textContent = `${getLocale() === "pt" ? "Turno" : "Turn"} ${currentTurn}${starCheckpoint.active ? " ★" : ""}`;
       log.appendChild(turnHeader);
     }
 
@@ -1861,22 +1877,62 @@ export function createCombatAnimationManager(deps) {
   let turnTransitionSequence = 0;
   let isFirstTurnUpdate = true;
   let lastDisplayedTurn = null;
+  // Settles when the banner closes or a newer one replaces it.
+  let turnTransitionClosed = Promise.resolve();
+  let settleTurnTransition = () => {};
+
+  // A checkpoint banner stays up twice as long as a regular one.
+  const TURN_BANNER_HOLD = 700;
+  const CHECKPOINT_BANNER_HOLD = 1400;
+
+  /** The banner line under the turn number: the checkpoint itself, or a
+   *  warning when the next turn is one. */
+  function checkpointBannerTag(turn) {
+    const isPt = getLocale() === "pt";
+    if (starCheckpoint.active) {
+      return {
+        text: isPt ? "★ Checkpoint de estrela ★" : "★ Star checkpoint ★",
+        variant: "is-checkpoint",
+      };
+    }
+    if (starCheckpoint.nextTurn === turn + 1) {
+      return {
+        text: isPt ? "Checkpoint de estrela no próximo turno" : "Star checkpoint next turn",
+        variant: "is-warning",
+      };
+    }
+    return null;
+  }
 
   function showTurnTransition(turn) {
     const overlay = document.getElementById("turnTransitionOverlay");
     const number = document.getElementById("turnTransitionNumber");
+    const tag = document.getElementById("turnTransitionTag");
 
     if (!overlay || !number) return;
 
     const sequence = ++turnTransitionSequence;
 
     clearTimeout(turnTransitionTimer);
+    settleTurnTransition();
+    turnTransitionClosed = new Promise((resolve) => {
+      settleTurnTransition = resolve;
+    });
+    const settle = settleTurnTransition;
 
     const isPt = getLocale() === "pt";
     const turnLabel =
       turn === 20
         ? isPt ? "ÚLTIMO TURNO" : "LAST TURN"
         : `${isPt ? "TURNO" : "TURN"} ${turn}`;
+
+    const bannerTag = checkpointBannerTag(turn);
+    overlay.classList.toggle("is-checkpoint", bannerTag?.variant === "is-checkpoint");
+    overlay.classList.toggle("is-warning", bannerTag?.variant === "is-warning");
+    if (tag) {
+      tag.textContent = bannerTag?.text ?? "";
+      tag.hidden = !bannerTag;
+    }
 
     // Ensure the overlay starts showing the new turn.
     number.textContent = turnLabel;
@@ -1912,21 +1968,50 @@ export function createCombatAnimationManager(deps) {
           if (sequence !== turnTransitionSequence) return;
 
           overlay.classList.remove("is-visible");
+          settle();
         }, 700);
       }, 230);
-    }, 700);
+    }, starCheckpoint.active ? CHECKPOINT_BANNER_HOLD : TURN_BANNER_HOLD);
   }
 
-  function updateTurnDisplay(turn) {
+  /** The HUD turn plate and its checkpoint chip: lit gold on a checkpoint
+   *  turn, otherwise a countdown to the next one (hidden once none is left). */
+  function renderTurnDisplay(turn) {
     const turnDisplay = document.querySelector(".turn-display");
-    const turnText = turnDisplay?.querySelector("p");
+    if (!turnDisplay) return;
 
+    const isPt = getLocale() === "pt";
+    const turnText = turnDisplay.querySelector("p");
     if (turnText) {
       turnText.textContent =
         turn === 20
-          ? getLocale() === "pt" ? "Último Turno" : "Last Turn"
-          : `${getLocale() === "pt" ? "Turno" : "Turn"} ${turn}`;
+          ? isPt ? "Último Turno" : "Last Turn"
+          : `${isPt ? "Turno" : "Turn"} ${turn}`;
     }
+
+    const { active, nextTurn } = starCheckpoint;
+    const turnsLeft = nextTurn == null ? null : nextTurn - turn;
+    turnDisplay.classList.toggle("is-checkpoint", active);
+
+    const chip = turnDisplay.querySelector(".turn-checkpoint-chip");
+    if (!chip) return;
+    chip.hidden = turnsLeft == null;
+    chip.classList.toggle("is-next", !active && turnsLeft === 1);
+    if (active) {
+      chip.textContent = isPt ? "★ Checkpoint de estrela ★" : "★ Star checkpoint ★";
+    } else if (turnsLeft === 1) {
+      chip.textContent = isPt ? "★ Checkpoint no próximo turno" : "★ Checkpoint next turn";
+    } else if (turnsLeft != null) {
+      chip.textContent = isPt ? `★ Checkpoint em ${turnsLeft} turnos` : `★ Checkpoint in ${turnsLeft} turns`;
+    }
+  }
+
+  document.addEventListener("localechange", () => {
+    if (lastDisplayedTurn != null) renderTurnDisplay(lastDisplayedTurn);
+  });
+
+  function updateTurnDisplay(turn) {
+    renderTurnDisplay(turn);
 
     if (isFirstTurnUpdate) {
       isFirstTurnUpdate = false;
@@ -1958,20 +2043,21 @@ export function createCombatAnimationManager(deps) {
     handleGameStateUpdate(gameState) {
       enqueue("gameStateUpdate", gameState);
     },
-    handleCombatReset({ turn = 1, score } = {}) {
+    handleCombatReset({ turn = 1, score, checkpoint } = {}) {
       reset();
 
       const log = document.getElementById("combat-log");
       if (log) log.innerHTML = "";
 
       scoreboard.update(score);
+      setStarCheckpoint(checkpoint);
       deps.setCurrentTurn(turn);
 
       isFirstTurnUpdate = true;
       updateTurnDisplay(turn);
     },
-    handleTurnUpdate(turn) {
-      enqueue("turnUpdate", turn);
+    handleTurnUpdate(payload) {
+      enqueue("turnUpdate", payload);
     },
     handleChampionRemoved(payload) {
       enqueue("championRemoved", payload);

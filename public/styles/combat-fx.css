@@ -195,6 +195,64 @@ body.perspective-team2 .combat-log .team-2 {
   transform: scale(1.12);
 }
 
+/* Star checkpoint line under the number: gold on the checkpoint turn, ember the turn before it. */
+.turn-transition-tag {
+  position: relative;
+  margin: clamp(4px, 1vh, 10px) 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(14px, 2.6vh, 24px);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  padding-left: 0.3em;
+  text-transform: uppercase;
+  color: var(--brass-300);
+}
+
+.turn-transition-tag[hidden] {
+  display: none;
+}
+
+.turn-transition.is-warning .turn-transition-tag {
+  color: var(--ember-400);
+  text-shadow: 0 0 16px rgba(255, 120, 40, 0.5);
+}
+
+.turn-transition.is-checkpoint {
+  background: radial-gradient(65% 45% at 50% 50%, rgba(48, 34, 4, 0.75), transparent 100%);
+}
+
+.turn-transition.is-checkpoint .turn-transition-band {
+  border-top: 2px solid #ffc61f;
+  border-bottom: 2px solid #ffc61f;
+  box-shadow: 0 0 40px rgba(255, 198, 31, 0.25);
+}
+
+.turn-transition.is-checkpoint .turn-transition-flare {
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 226, 122, 0.4) 50%, transparent 70%);
+}
+
+.turn-transition.is-checkpoint .turn-transition-number {
+  color: #ffe27a;
+  text-shadow: 0 0 44px rgba(255, 198, 31, 0.75), 0 4px 10px rgba(0, 0, 0, 0.8);
+}
+
+.turn-transition.is-checkpoint .turn-transition-tag {
+  color: #ffc61f;
+  text-shadow: 0 0 18px rgba(255, 198, 31, 0.8);
+}
+
+.turn-transition.is-checkpoint.is-visible .turn-transition-tag {
+  animation: checkpoint-tag-in 520ms var(--ease-spring) 220ms both;
+}
+
+@keyframes checkpoint-tag-in {
+  from {
+    opacity: 0;
+    transform: scale(1.4);
+    filter: blur(6px);
+  }
+}
+
 /* ---- Floating numbers (children of .portrait-wrapper; JS removes after 2100ms) ---- */
 .damage-float,
 .shield-float,
@@ -570,7 +628,8 @@ body.perspective-team2 .combat-log .team-2 {
     transition-duration: 1ms;
   }
 
-  .turn-transition.is-visible .turn-transition-flare {
+  .turn-transition.is-visible .turn-transition-flare,
+  .turn-transition.is-checkpoint.is-visible .turn-transition-tag {
     animation: none;
   }
 

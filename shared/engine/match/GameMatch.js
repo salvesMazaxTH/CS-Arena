@@ -1,10 +1,11 @@
 import { getClaimMaxPoints, getClaimPoints } from "../combat/claim.js";
 import {
   ARENA_ROW_SIZE,
-  STAR_CHECKPOINT_TURNS,
   STAR_SCORE_THRESHOLD,
   STARS_TO_WIN,
   applyGenericScoreHalving,
+  isStarCheckpointTurn,
+  nextStarCheckpointTurn,
 } from "./matchRules.js";
 import { championDB } from "../../data/championDB.js";
 import { getDuoForCore } from "../../data/duos.js";
@@ -816,10 +817,7 @@ class CombatState {
       if (thresholdSlots.length) this.thresholdStarAwarded = true;
     }
 
-    if (
-      everyTurnIsCheckpoint ||
-      STAR_CHECKPOINT_TURNS.includes(this.currentTurn)
-    ) {
+    if (isStarCheckpointTurn(this.currentTurn, { everyTurn: everyTurnIsCheckpoint })) {
       const score1 = this.playerScores[0] || 0;
       const score2 = this.playerScores[1] || 0;
       if (score1 >= score2) checkpointSlots.push(0);
@@ -828,6 +826,15 @@ class CombatState {
     }
 
     return { thresholdSlots, checkpointSlots };
+  }
+
+  /** Whether the current turn ends on a star checkpoint, and which turn is the next one (null once none is left). */
+  getStarCheckpoint({ everyTurnIsCheckpoint = false } = {}) {
+    const options = { everyTurn: everyTurnIsCheckpoint };
+    return {
+      active: isStarCheckpointTurn(this.currentTurn, options),
+      nextTurn: nextStarCheckpointTurn(this.currentTurn, options),
+    };
   }
 
   resolveWinnerSlot() {
