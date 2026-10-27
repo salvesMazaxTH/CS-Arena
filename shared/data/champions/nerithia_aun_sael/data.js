@@ -5,7 +5,7 @@ export default {
 
   HP: 340,
   Attack: 140,
-  Defense: 135,
+  Defense: 165,
   Speed: 40,
 
   elementalAffinities: ["light"],
