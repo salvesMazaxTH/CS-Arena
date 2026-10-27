@@ -1627,9 +1627,12 @@ function sortTeamContainersByCombatSlot() {
       }
       rows.get(rowIndex).appendChild(el);
     });
+    // A mid-turn resync (e.g. a DoT death at turn start) re-runs this while the
+    // action bar is up: rows must go back above it, not after it.
+    const actionBar = teamContainer.querySelector(".action-bar");
     [...rows.keys()]
       .sort((a, b) => a - b)
-      .forEach((rowIndex) => teamContainer.appendChild(rows.get(rowIndex)));
+      .forEach((rowIndex) => teamContainer.insertBefore(rows.get(rowIndex), actionBar));
   }
 }
 

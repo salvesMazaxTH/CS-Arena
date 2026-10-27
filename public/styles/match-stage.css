@@ -164,7 +164,7 @@
   --card-scale: 1;
 }
 
-.team:has(.team-row:nth-of-type(2)) {
+.team:has(.team-row ~ .team-row) {
   --card-scale: 0.49;
   gap: 6px;
 }

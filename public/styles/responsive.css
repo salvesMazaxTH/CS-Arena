@@ -163,12 +163,12 @@ html.match-view.match-portrait .rotate-overlay {
   }
 
   /* 8-champion fields (two rows) must fit the band below the turn banner: smaller art, same number size */
-  .team:has(.team-row:nth-of-type(2)) {
+  .team:has(.team-row ~ .team-row) {
     --card-scale: 0.4;
     gap: 4px;
   }
 
-  .team:has(.team-row:nth-of-type(2)) .stat-block > p {
+  .team:has(.team-row ~ .team-row) .stat-block > p {
     font-size: 2.9em;
   }
 

@@ -162,15 +162,15 @@
 }
 
 /* Two-row fields shrink the card, but numbers must stay crisp: give the text back some of the scale */
-.team:has(.team-row:nth-of-type(2)) .stat-block {
+.team:has(.team-row ~ .team-row) .stat-block {
   width: 100%;
 }
 
-.team:has(.team-row:nth-of-type(2)) .stat-block > p {
+.team:has(.team-row ~ .team-row) .stat-block > p {
   font-size: 1.85em;
 }
 
-.team:has(.team-row:nth-of-type(2)) .momentum-bar {
+.team:has(.team-row ~ .team-row) .momentum-bar {
   height: 0.9em;
 }
 
