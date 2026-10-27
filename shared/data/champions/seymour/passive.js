@@ -61,7 +61,10 @@ export default {
     }
 
     context.registerDialog({
-      message: `<b>[Passive — ${this.name}]</b> the hour is kept — ${formatChampionName(owner)}'s star burns over the enemy line.`,
+      message: {
+        en: `<b>[Passive — ${this.name}]</b> the hour is kept — ${formatChampionName(owner)}'s star burns over the enemy line.`,
+        pt: `<b>[Passiva — ${this.name}]</b> a hora é cumprida — a estrela de ${formatChampionName(owner)} arde sobre a linha inimiga.`,
+      },
       sourceId: owner.id,
     });
 

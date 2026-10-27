@@ -20,7 +20,10 @@ export function getBlindMiss(user, skill, targets, context) {
   if (Math.random() >= BLIND_MISS_CHANCE) return null;
 
   return {
-    message: `${formatChampionName(user)} is Blind — ${skill.name || "the strike"} goes wide and finds nothing.`,
+    message: {
+      en: `${formatChampionName(user)} is Blind — ${skill.name || "the strike"} goes wide and finds nothing.`,
+      pt: `${formatChampionName(user)} está Cego — ${skill.name || "o golpe"} passa longe e não acerta nada.`,
+    },
   };
 }
 

@@ -36,7 +36,10 @@ export function detonateThunder(owner, context) {
     }).execute();
 
     context.registerDialog({
-      message: `The sound finally reaches ${formatChampionName(champion)}.`,
+      message: {
+        en: `The sound finally reaches ${formatChampionName(champion)}.`,
+        pt: `O som finalmente alcança ${formatChampionName(champion)}.`,
+      },
       sourceId: owner.id,
       targetId: champion.id,
     });

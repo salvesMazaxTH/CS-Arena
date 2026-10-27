@@ -54,7 +54,10 @@ export default {
     defender.removeStatusEffect("conductor");
 
     context.registerDialog({
-      message: `${formatChampionName(defender)} was consumed by <b>"Conductor"</b>!`,
+      message: {
+        en: `${formatChampionName(defender)} was consumed by <b>"Conductor"</b>!`,
+        pt: `${formatChampionName(defender)} foi consumido pelo <b>"Condutor"</b>!`,
+      },
       sourceId: attacker.id,
       targetId: defender.id,
       duration: 1000,

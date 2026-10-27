@@ -196,7 +196,10 @@ const ysvaneSkills = [
             if (!lockedOutStatusKeys.includes(statusEffect?.key)) return;
             return {
               cancel: true,
-              message: `${formatChampionName(owner)} is Held Fast: ${statusEffect.name} finds no grip.`,
+              message: {
+                en: `${formatChampionName(owner)} is Held Fast: ${statusEffect.name} finds no grip.`,
+                pt: `${formatChampionName(owner)} está firme no Cofre: ${statusEffect.namePt ?? statusEffect.name} não encontra pegada.`,
+              },
             };
           },
         },
@@ -254,7 +257,10 @@ const ysvaneSkills = [
           crystallized.push(ally);
 
           context.registerDialog({
-            message: `The Keep closes over ${formatChampionName(ally)} and does not open again.`,
+            message: {
+              en: `The Keep closes over ${formatChampionName(ally)} and does not open again.`,
+              pt: `O Cofre se fecha sobre ${formatChampionName(ally)} e não volta a se abrir.`,
+            },
             sourceId: user.id,
             targetId: ally.id,
           });

@@ -43,7 +43,10 @@ const tharoxSkills = [
         user.runtime.tauntStreak = 0;
 
         context.registerDialog({
-          message: `But it failed.`,
+          message: {
+            en: `But it failed.`,
+            pt: `Mas falhou.`,
+          },
           sourceId: user.id,
           targetId: user.id,
         });

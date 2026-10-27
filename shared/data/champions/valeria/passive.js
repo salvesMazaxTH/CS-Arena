@@ -30,7 +30,10 @@ export default {
     owner.runtime.judgmentReady = true;
 
     context?.registerDialog?.({
-      message: `${formatChampionName(owner)} weighs the scales — someone is about to pay for that.`,
+      message: {
+        en: `${formatChampionName(owner)} weighs the scales — someone is about to pay for that.`,
+        pt: `${formatChampionName(owner)} pesa a balança — alguém está prestes a pagar por isso.`,
+      },
       sourceId: owner.id,
       targetId: owner.id,
     });
@@ -76,7 +79,10 @@ export default {
 
     return {
       cancel: true,
-      message: `${formatChampionName(target)} simply takes to the air — the ground has nothing left to hold.`,
+      message: {
+        en: `${formatChampionName(target)} simply takes to the air — the ground has nothing left to hold.`,
+        pt: `${formatChampionName(target)} simplesmente alça voo — o chão não tem mais o que prender.`,
+      },
     };
   },
 };

@@ -22,7 +22,10 @@ export class ElementalInteractions {
       percent: this.SHATTER_MAXHP_PERCENT,
       key: "shatter",
       name: "Shatter",
-      dialog: `The ice around ${formatChampionName(target)} shatters!`,
+      dialog: {
+        en: `The ice around ${formatChampionName(target)} shatters!`,
+        pt: `O gelo em volta de ${formatChampionName(target)} se estilhaça!`,
+      },
     });
   }
 
@@ -51,7 +54,10 @@ export class ElementalInteractions {
       percent: this.ELECTROCUTE_MAXHP_PERCENT,
       key: "electrocute",
       name: "Electrocute",
-      dialog: `The water carries the charge — ${formatChampionName(target)} is electrocuted!`,
+      dialog: {
+        en: `The water carries the charge — ${formatChampionName(target)} is electrocuted!`,
+        pt: `A água conduz a carga — ${formatChampionName(target)} é eletrocutado!`,
+      },
     });
   }
 
@@ -62,7 +68,10 @@ export class ElementalInteractions {
       percent: this.VAPORIZE_MAXHP_PERCENT,
       key: "vaporize",
       name: "Vaporize",
-      dialog: `${formatChampionName(target)} is swallowed by scalding steam!`,
+      dialog: {
+        en: `${formatChampionName(target)} is swallowed by scalding steam!`,
+        pt: `${formatChampionName(target)} é engolido por um vapor escaldante!`,
+      },
     });
   }
 
@@ -94,7 +103,10 @@ export class ElementalInteractions {
     return {
       name,
       damage: result?.totalDamage ?? 0,
-      log: `${formatChampionName(target)} takes ${result?.totalDamage ?? 0} damage from <b>${name}</b>.`,
+      log: {
+        en: `${formatChampionName(target)} takes ${result?.totalDamage ?? 0} damage from <b>${name}</b>.`,
+        pt: `${formatChampionName(target)} sofre ${result?.totalDamage ?? 0} de dano de <b>${name}</b>.`,
+      },
     };
   }
 }

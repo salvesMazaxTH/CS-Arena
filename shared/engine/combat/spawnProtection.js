@@ -46,11 +46,17 @@ export class SpawnProtection {
     return {
       denied: true,
       reason: "takingTheField",
-      message: `${formatChampionName(champion)} is still taking the field and cannot act this turn.`,
+      message: {
+        en: `${formatChampionName(champion)} is still taking the field and cannot act this turn.`,
+        pt: `${formatChampionName(champion)} ainda está entrando em campo e não pode agir neste turno.`,
+      },
     };
   }
 
   static unreachableMessage(champion) {
-    return `${formatChampionName(champion)} is still taking the field and cannot be reached.`;
+    return {
+      en: `${formatChampionName(champion)} is still taking the field and cannot be reached.`,
+      pt: `${formatChampionName(champion)} ainda está entrando em campo e não pode ser alcançado.`,
+    };
   }
 }

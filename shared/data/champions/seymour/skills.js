@@ -79,7 +79,10 @@ const seymourSkills = [
         );
 
         context.registerDialog?.({
-          message: `${formatChampionName(user)} leaves ${formatChampionName(enemy)} <b>Bleached</b> — their wounds will barely close.`,
+          message: {
+            en: `${formatChampionName(user)} leaves ${formatChampionName(enemy)} <b>Bleached</b> — their wounds will barely close.`,
+            pt: `${formatChampionName(user)} deixa ${formatChampionName(enemy)} <b>Descolorido</b> — suas feridas mal vão fechar.`,
+          },
           sourceId: user.id,
           targetId: enemy.id,
         });

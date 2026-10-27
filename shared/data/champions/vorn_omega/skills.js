@@ -152,7 +152,10 @@ const vornOmegaSkills = [
 
       if (shed > 0) {
         context.registerDialog?.({
-          message: `${formatChampionName(user)} opens the core — the last ${shed === 1 ? "plate goes" : `${shed} plates go`} with it.`,
+          message: {
+            en: `${formatChampionName(user)} opens the core — the last ${shed === 1 ? "plate goes" : `${shed} plates go`} with it.`,
+            pt: `${formatChampionName(user)} abre o núcleo — ${shed === 1 ? "a última placa vai" : `as últimas ${shed} placas vão`} junto.`,
+          },
           sourceId: user.id,
           targetId: user.id,
         });

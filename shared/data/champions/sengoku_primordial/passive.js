@@ -21,7 +21,10 @@ export default {
 
     return {
       deny: true,
-      message: `${formatChampionName(actionSource)} buckles under a colossal presence and fails to act against ${formatChampionName(owner)}!`,
+      message: {
+        en: `${formatChampionName(actionSource)} buckles under a colossal presence and fails to act against ${formatChampionName(owner)}!`,
+        pt: `${formatChampionName(actionSource)} cede diante de uma presença colossal e não consegue agir contra ${formatChampionName(owner)}!`,
+      },
     };
   },
 };

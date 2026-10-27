@@ -19,7 +19,10 @@ const snared = {
 
     return {
       deny: true,
-      message: `${formatChampionName(actionSource)} is Snared and cannot use the contact ability "${skillName}"!`,
+      message: {
+        en: `${formatChampionName(actionSource)} is Snared and cannot use the contact ability "${skillName}"!`,
+        pt: `${formatChampionName(actionSource)} está Enredado e não pode usar a habilidade de contato "${skillName}"!`,
+      },
     };
   },
 

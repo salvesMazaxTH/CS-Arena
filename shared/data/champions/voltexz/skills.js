@@ -19,7 +19,10 @@ function applyOverchargeRecoil({ user, baseDamage, context }) {
   if (recoilDamage <= 0) return [];
 
   context.registerDialog({
-    message: `${formatChampionName(user)} is torn by her own current — <b>Unstable Overcharge</b>.`,
+    message: {
+      en: `${formatChampionName(user)} is torn by her own current — <b>Unstable Overcharge</b>.`,
+      pt: `${formatChampionName(user)} é dilacerada pela própria corrente — <b>Unstable Overcharge</b>.`,
+    },
     sourceId: user.id,
     targetId: user.id,
   });

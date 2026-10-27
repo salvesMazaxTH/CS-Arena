@@ -186,7 +186,10 @@ export class Champion {
           if (immunity) {
             return {
               cancel: true,
-              message: `${formatChampionName(target)} is immune to <b>${statusEffect.name}</b>!`,
+              message: {
+                en: `${formatChampionName(target)} is immune to <b>${statusEffect.name}</b>!`,
+                pt: `${formatChampionName(target)} é imune a <b>${statusEffect.namePt ?? statusEffect.name}</b>!`,
+              },
             };
           }
         },

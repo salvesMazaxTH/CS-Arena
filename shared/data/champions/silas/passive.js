@@ -27,7 +27,10 @@ export default {
 
     return {
       cancel: true,
-      message: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} keeps his own time — his Speed holds.`,
+      message: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} keeps his own time — his Speed holds.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} segue o próprio tempo — sua Velocidade se mantém.`,
+      },
     };
   },
 
@@ -54,7 +57,10 @@ export default {
     if (!gained) return;
 
     context?.registerDialog?.({
-      message: `<b>[Passive — ${this.name}]</b> nothing reached ${formatChampionName(owner)} last turn — +${gained} Momentum.`,
+      message: {
+        en: `<b>[Passive — ${this.name}]</b> nothing reached ${formatChampionName(owner)} last turn — +${gained} Momentum.`,
+        pt: `<b>[Passiva — ${this.name}]</b> nada alcançou ${formatChampionName(owner)} no último turno — +${gained} de Momentum.`,
+      },
       sourceId: owner.id,
       targetId: owner.id,
     });

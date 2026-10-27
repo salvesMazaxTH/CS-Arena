@@ -768,7 +768,7 @@ export function createCombatAnimationManager(deps) {
     // ========================
 
     if (isDot) {
-      await showDialog(`${targetName} took damage.`);
+      await showDialog({ en: `${targetName} took damage.`, pt: `${targetName} sofreu dano.` });
     }
 
     // ========================
@@ -835,7 +835,10 @@ export function createCombatAnimationManager(deps) {
 
     if (isCritical) {
       await showDialog(
-        `A CRITICAL HIT! ${targetName} took a devastating blow!`,
+        {
+          en: `A CRITICAL HIT! ${targetName} took a devastating blow!`,
+          pt: `UM ACERTO CRÍTICO! ${targetName} sofreu um golpe devastador!`,
+        },
       );
     }
 
@@ -888,7 +891,7 @@ export function createCombatAnimationManager(deps) {
     if (!target) return;
     const { championEl, portraitWrapper, name } = target;
 
-    await showDialog(`${name} restored health.`);
+    await showDialog({ en: `${name} restored health.`, pt: `${name} recuperou vida.` });
 
     // The glow, the float and the bar all fire from the mote's arrival.
     let glow = Promise.resolve();
@@ -918,7 +921,7 @@ export function createCombatAnimationManager(deps) {
 
     const drainedEl = fromTargetId ? getChampionElement(fromTargetId) : null;
 
-    await showDialog(`${name} drained life from the target.`);
+    await showDialog({ en: `${name} drained life from the target.`, pt: `${name} drenou vida do alvo.` });
 
     // Reuses the healing SFX with its own visual signature for lifesteal.
     audioManager.play("heal");
@@ -974,7 +977,7 @@ export function createCombatAnimationManager(deps) {
       await waitForAnimation(championEl, 600);
 
       championEl.classList.remove("evasion");
-      await showDialog(`${name} evaded the attack!`);
+      await showDialog({ en: `${name} evaded the attack!`, pt: `${name} esquivou do ataque!` });
     }
   }
 
@@ -992,7 +995,7 @@ export function createCombatAnimationManager(deps) {
     if (!target) return;
     const { championEl, portraitWrapper } = target;
 
-    await showDialog(`${target.name} gained a shield.`);
+    await showDialog({ en: `${target.name} gained a shield.`, pt: `${target.name} recebeu um escudo.` });
 
     let glow = Promise.resolve();
     const onLand = () => {
@@ -1331,9 +1334,10 @@ export function createCombatAnimationManager(deps) {
 
     const userChampion = deps.activeChampions.get(userId);
 
+    const locale = getLocale();
     const resolvedUserName = userChampion
       ? formatChampionName(userChampion)
-      : userName || "Someone";
+      : userName || (locale === "pt" ? "Alguém" : "Someone");
 
     const isUltimate =
       userChampion?.skills?.find((s) => s?.key === skillKey)?.isUltimate ===
@@ -1345,7 +1349,7 @@ export function createCombatAnimationManager(deps) {
 
     const resolvedSkillName = skillName
       ? `<b${nameClass}>${typeof skillName === "object" ? skillName.name : skillName}</b>`
-      : `<b${nameClass}>a skill</b>`;
+      : `<b${nameClass}>${locale === "pt" ? "uma habilidade" : "a skill"}</b>`;
 
     // Fully trust the server-provided target.
     const hasValidTarget = targetId && targetId !== userId && targetName;
@@ -1358,8 +1362,14 @@ export function createCombatAnimationManager(deps) {
       : targetName;
 
     const dialogText = hasValidTarget
-      ? `${resolvedUserName} used ${resolvedSkillName} on ${resolvedTargetName}.`
-      : `${resolvedUserName} used ${resolvedSkillName}.`;
+      ? {
+          en: `${resolvedUserName} used ${resolvedSkillName} on ${resolvedTargetName}.`,
+          pt: `${resolvedUserName} usou ${resolvedSkillName} em ${resolvedTargetName}.`,
+        }
+      : {
+          en: `${resolvedUserName} used ${resolvedSkillName}.`,
+          pt: `${resolvedUserName} usou ${resolvedSkillName}.`,
+        };
 
     await showDialog(dialogText, undefined, { ultimate: isUltimate });
   }
@@ -1734,7 +1744,7 @@ export function createCombatAnimationManager(deps) {
 
       await playDeathClaimEffect(el);
 
-      await showDialog(`The Death claims ${name}!`);
+      await showDialog({ en: `The Death claims ${name}!`, pt: `A Morte reclama ${name}!` });
 
       await wait(TIMING.DEATH_CLAIM_EFFECT);
 

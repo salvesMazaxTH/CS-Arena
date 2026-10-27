@@ -15,7 +15,10 @@ const stunned = {
   onValidateAction({ actionSource }) {
     return {
       deny: true,
-      message: `${formatChampionName(actionSource)} is Stunned and cannot act!`,
+      message: {
+        en: `${formatChampionName(actionSource)} is Stunned and cannot act!`,
+        pt: `${formatChampionName(actionSource)} está Atordoado e não pode agir!`,
+      },
     };
   },
 

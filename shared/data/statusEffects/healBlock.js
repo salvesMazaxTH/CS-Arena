@@ -20,7 +20,10 @@ const healBlock = {
     if (amount <= 0) return;
 
     context?.registerDialog?.({
-      message: `${formatChampionName(healTarget)} has <b>${this.name}</b> and cannot be healed!`,
+      message: {
+        en: `${formatChampionName(healTarget)} has <b>${this.name}</b> and cannot be healed!`,
+        pt: `${formatChampionName(healTarget)} está sob <b>${this.namePt}</b> e não pode ser curado!`,
+      },
       sourceId: healTarget.id,
       targetId: healTarget.id,
     });

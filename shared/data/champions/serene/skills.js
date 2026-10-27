@@ -253,7 +253,10 @@ const sereneSkills = [
                 if (applied <= 0) return;
 
                 context.registerDialog({
-                  message: `${formatChampionName(owner)} crosses back from the Threshold, restored by ${applied} HP!`,
+                  message: {
+                    en: `${formatChampionName(owner)} crosses back from the Threshold, restored by ${applied} HP!`,
+                    pt: `${formatChampionName(owner)} atravessa de volta o Limiar, restaurada em ${applied} de HP!`,
+                  },
                   sourceId: owner.id,
                   targetId: owner.id,
                 });
@@ -261,7 +264,10 @@ const sereneSkills = [
             }, context);
 
             context.registerDialog({
-              message: `${formatChampionName(owner)} is held at the Threshold, and death lets go!`,
+              message: {
+                en: `${formatChampionName(owner)} is held at the Threshold, and death lets go!`,
+                pt: `${formatChampionName(owner)} é detida no Limiar, e a morte a solta!`,
+              },
               sourceId: owner.id,
               targetId: owner.id,
             });

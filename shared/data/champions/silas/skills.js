@@ -29,7 +29,10 @@ function dissolveMirage(mirage, context) {
   }
 
   context.registerDialog?.({
-    message: `The second Silas thins out, and there was never anybody standing there.`,
+    message: {
+      en: `The second Silas thins out, and there was never anybody standing there.`,
+      pt: `O segundo Silas se desfaz, e nunca houve ninguém ali.`,
+    },
     sourceId: mirage.id,
     targetId: mirage.id,
   });
@@ -102,7 +105,10 @@ const silasSkills = [
 
       if (unguarded) {
         context.registerDialog?.({
-          message: `Nothing stands over ${formatChampionName(enemy)}, and ${formatChampionName(user)} steps into the gap.`,
+          message: {
+            en: `Nothing stands over ${formatChampionName(enemy)}, and ${formatChampionName(user)} steps into the gap.`,
+            pt: `Nada protege ${formatChampionName(enemy)}, e ${formatChampionName(user)} avança pela brecha.`,
+          },
           sourceId: user.id,
           targetId: enemy.id,
         });
@@ -169,7 +175,10 @@ const silasSkills = [
 
         if (broken) {
           context.registerDialog?.({
-            message: `${formatChampionName(user)} shatters every shield on ${formatChampionName(enemy)} before the blade bites.`,
+            message: {
+              en: `${formatChampionName(user)} shatters every shield on ${formatChampionName(enemy)} before the blade bites.`,
+              pt: `${formatChampionName(user)} estilhaça todos os escudos de ${formatChampionName(enemy)} antes que a lâmina morda.`,
+            },
             sourceId: user.id,
             targetId: enemy.id,
           });

@@ -64,7 +64,10 @@ export default {
     if (!context?.allChampions) return;
 
     context.registerDialog?.({
-      message: `${formatChampionName(owner)} activated <b>Absolute Cold</b> and dealt ${this.passiveDamage} Absolute Damage to ${formatChampionName(target)}!`,
+      message: {
+        en: `${formatChampionName(owner)} activated <b>Absolute Cold</b> and dealt ${this.passiveDamage} Absolute Damage to ${formatChampionName(target)}!`,
+        pt: `${formatChampionName(owner)} ativou <b>Absolute Cold</b> e causou ${this.passiveDamage} de Dano Absoluto a ${formatChampionName(target)}!`,
+      },
       sourceId: owner.id,
       targetId: target.id,
     });

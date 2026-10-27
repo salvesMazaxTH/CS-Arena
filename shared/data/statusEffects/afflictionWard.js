@@ -13,7 +13,7 @@ const afflictionWard = {
     onHookEffectIncoming: "target",
   },
 
-  turnAway(target, effectName) {
+  turnAway(target, effectName, effectNamePt = effectName) {
     if (this.spent) return;
 
     this.spent = true;
@@ -21,13 +21,16 @@ const afflictionWard = {
 
     return {
       cancel: true,
-      message: `${formatChampionName(target)} has <b>${this.name}</b>: <b>${effectName}</b> never takes hold.`,
+      message: {
+        en: `${formatChampionName(target)} has <b>${this.name}</b>: <b>${effectName}</b> never takes hold.`,
+        pt: `${formatChampionName(target)} tem <b>${this.namePt}</b>: <b>${effectNamePt}</b> não chega a se firmar.`,
+      },
     };
   },
 
   onStatusEffectIncoming({ target, statusEffect }) {
     if (statusEffect.type !== "debuff") return;
-    return this.turnAway(target, statusEffect.name);
+    return this.turnAway(target, statusEffect.name, statusEffect.namePt ?? statusEffect.name);
   },
 
   onHookEffectIncoming({ target, hookEffect }) {

@@ -231,7 +231,7 @@ const laisaelisSkills = [
     disabledReason({ user }) {
       return ultimateSavesLeft(user, this) > 0
         ? null
-        : ULTIMATE_SPENT_TEXT.en(this.name);
+        : { en: ULTIMATE_SPENT_TEXT.en(this.name), pt: ULTIMATE_SPENT_TEXT.pt(this.name) };
     },
 
     resolve({ user, context = {} }) {

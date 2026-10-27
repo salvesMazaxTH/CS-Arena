@@ -89,7 +89,10 @@ const arenMarevothSkills = [
           const stripped = stripPositiveEffects(enemy, this.positiveEffectsStripped);
 
           context.registerDialog?.({
-            message: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing ${this.tideBonusDamage} bonus damage and stripping ${stripped} positive effect(s)!`,
+            message: {
+              en: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing ${this.tideBonusDamage} bonus damage and stripping ${stripped} positive effect(s)!`,
+              pt: `${formatChampionName(user)} consumiu toda a <b>Maré</b> sobre ${formatChampionName(enemy)}, causando ${this.tideBonusDamage} de dano bônus e removendo ${stripped} efeito(s) positivo(s)!`,
+            },
             sourceId: user.id,
             targetId: enemy.id,
           });
@@ -235,7 +238,10 @@ const arenMarevothSkills = [
         const stripped = stripPositiveEffects(enemy, this.positiveEffectsStripped);
 
         context.registerDialog?.({
-          message: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing ${this.tideBonusDamage} bonus damage and stripping ${stripped} positive effect(s)!`,
+          message: {
+            en: `${formatChampionName(user)} consumed all <b>Tide</b> on ${formatChampionName(enemy)}, dealing ${this.tideBonusDamage} bonus damage and stripping ${stripped} positive effect(s)!`,
+            pt: `${formatChampionName(user)} consumiu toda a <b>Maré</b> sobre ${formatChampionName(enemy)}, causando ${this.tideBonusDamage} de dano bônus e removendo ${stripped} efeito(s) positivo(s)!`,
+          },
           sourceId: user.id,
           targetId: enemy.id,
         });

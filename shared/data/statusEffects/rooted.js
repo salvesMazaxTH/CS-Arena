@@ -19,7 +19,10 @@ const rooted = {
 
     return {
       deny: true,
-      message: `${formatChampionName(actionSource)} is Rooted and cannot use the contact ability "${skillName}"!`,
+      message: {
+        en: `${formatChampionName(actionSource)} is Rooted and cannot use the contact ability "${skillName}"!`,
+        pt: `${formatChampionName(actionSource)} está Enraizado e não pode usar a habilidade de contato "${skillName}"!`,
+      },
     };
   },
 

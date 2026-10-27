@@ -415,8 +415,10 @@ export function applyStatusEffect(
 
     context.registerDialog({
       message:
-        validation.message ??
-        `${formatChampionName(champion)} cannot receive "${definition?.name || statusEffectKey}".`,
+        validation.message ?? {
+          en: `${formatChampionName(champion)} cannot receive "${definition?.name || statusEffectKey}".`,
+          pt: `${formatChampionName(champion)} não pode receber "${definition?.namePt ?? definition?.name ?? statusEffectKey}".`,
+        },
       sourceId: champion.id,
       targetId: champion.id,
     });
@@ -581,12 +583,18 @@ export function getHardCCActionDenial(champion) {
 
   const primaryEffect = blockingEffects[0];
   const effectName = primaryEffect?.name || "under Hard CC";
+  const effectNamePt = primaryEffect
+    ? (StatusEffectsRegistry[primaryEffect.key]?.namePt ?? primaryEffect.name)
+    : "sob efeito de Controle";
 
   return {
     denied: true,
     reason: "hardCC",
     statusEffectKey: primaryEffect?.key ?? null,
-    message: `${formatChampionName(champion)} is ${effectName} and cannot act!`,
+    message: {
+      en: `${formatChampionName(champion)} is ${effectName} and cannot act!`,
+      pt: `${formatChampionName(champion)} está ${effectNamePt} e não pode agir!`,
+    },
   };
 }
 

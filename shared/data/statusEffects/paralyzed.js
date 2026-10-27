@@ -24,7 +24,10 @@ const paralyzed = {
     });
 
     return {
-      message: `${formatChampionName(owner)} was Paralyzed! Speed reduced, but may still be unable to act!`,
+      message: {
+        en: `${formatChampionName(owner)} was Paralyzed! Speed reduced, but may still be unable to act!`,
+        pt: `${formatChampionName(owner)} foi Paralisado! Velocidade reduzida, e ainda pode ficar sem agir!`,
+      },
     };
   },
 
@@ -39,7 +42,10 @@ const paralyzed = {
     if (roll >= chanceOfActing) {
       return {
         deny: true,
-        message: `${formatChampionName(actionSource)} is Paralyzed and cannot act!`,
+        message: {
+          en: `${formatChampionName(actionSource)} is Paralyzed and cannot act!`,
+          pt: `${formatChampionName(actionSource)} está Paralisado e não pode agir!`,
+        },
       };
     }
   },

@@ -35,7 +35,10 @@ const frozen = {
     });
 
     return {
-      message: `${formatChampionName(owner)} was ${this.name}!`,
+      message: {
+        en: `${formatChampionName(owner)} was ${this.name}!`,
+        pt: `${formatChampionName(owner)} foi ${this.namePt}!`,
+      },
     };
   },
 
@@ -47,7 +50,10 @@ const frozen = {
   onValidateAction({ actionSource }) {
     return {
       deny: true,
-      message: `${formatChampionName(actionSource)} is Frozen and cannot act!`,
+      message: {
+        en: `${formatChampionName(actionSource)} is Frozen and cannot act!`,
+        pt: `${formatChampionName(actionSource)} está Congelado e não pode agir!`,
+      },
     };
   },
 
@@ -71,8 +77,12 @@ const frozen = {
       });
 
       return {
-        log: `${formatChampionName(defender)} breaks out of the ice!
-${reaction.log}`,
+        log: {
+          en: `${formatChampionName(defender)} breaks out of the ice!
+${reaction.log.en}`,
+          pt: `${formatChampionName(defender)} se liberta do gelo!
+${reaction.log.pt}`,
+        },
       };
     }
 

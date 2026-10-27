@@ -209,9 +209,10 @@ const toxViprannaSkills = [
       }, context);
 
       context.registerDialog({
-        message: `${formatChampionName(
-          user,
-        )} activates <b>Toxic Coating</b>!`,
+        message: {
+          en: `${formatChampionName(user)} activates <b>Toxic Coating</b>!`,
+          pt: `${formatChampionName(user)} ativa <b>Toxic Coating</b>!`,
+        },
         sourceId: user.id,
       });
 

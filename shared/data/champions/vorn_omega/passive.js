@@ -41,7 +41,10 @@ export default {
 
     return {
       cancel: true,
-      message: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} runs at the rate he was built to — his Speed holds.`,
+      message: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} runs at the rate he was built to — his Speed holds.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} opera no ritmo para o qual foi construído — sua Velocidade se mantém.`,
+      },
     };
   },
 
@@ -49,7 +52,10 @@ export default {
     if (amount <= 0) return;
 
     context?.registerDialog?.({
-      message: `<b>[Passive — ${this.name}]</b> there is no one left who knows how to mend ${formatChampionName(owner)} — nothing closes.`,
+      message: {
+        en: `<b>[Passive — ${this.name}]</b> there is no one left who knows how to mend ${formatChampionName(owner)} — nothing closes.`,
+        pt: `<b>[Passiva — ${this.name}]</b> não resta ninguém que saiba consertar ${formatChampionName(owner)} — nada se fecha.`,
+      },
       sourceId: owner.id,
       targetId: owner.id,
     });
@@ -69,7 +75,10 @@ export default {
 
     return {
       cancel: true,
-      message: `${formatChampionName(target)} has nothing left for a Control effect to hold.`,
+      message: {
+        en: `${formatChampionName(target)} has nothing left for a Control effect to hold.`,
+        pt: `${formatChampionName(target)} não tem mais nada que um efeito de Controle possa prender.`,
+      },
     };
   },
 
@@ -91,7 +100,10 @@ export default {
     if (shed <= 0) return;
 
     context.registerDialog?.({
-      message: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} throws off ${shed === 1 ? "a governor plate" : `${shed} governor plates`} — ${platesShed(owner)}/${MAX_PLATES} gone, and none of them are coming back.`,
+      message: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} throws off ${shed === 1 ? "a governor plate" : `${shed} governor plates`} — ${platesShed(owner)}/${MAX_PLATES} gone, and none of them are coming back.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} descarta ${shed === 1 ? "uma placa reguladora" : `${shed} placas reguladoras`} — ${platesShed(owner)}/${MAX_PLATES} perdidas, e nenhuma delas vai voltar.`,
+      },
       sourceId: owner.id,
       targetId: owner.id,
     });

@@ -22,7 +22,10 @@ const concealed = {
 
     owner.removeStatusEffect(this.key);
     context?.registerDialog?.({
-      message: `${formatChampionName(owner)} is dragged back into sight.`,
+      message: {
+        en: `${formatChampionName(owner)} is dragged back into sight.`,
+        pt: `${formatChampionName(owner)} é arrastado de volta à vista.`,
+      },
       sourceId: owner.id,
       targetId: owner.id,
     });
@@ -34,7 +37,10 @@ const concealed = {
 
     owner.removeStatusEffect(this.key);
     context?.registerDialog?.({
-      message: `${formatChampionName(owner)} breaks from cover.`,
+      message: {
+        en: `${formatChampionName(owner)} breaks from cover.`,
+        pt: `${formatChampionName(owner)} sai do esconderijo.`,
+      },
       sourceId: owner.id,
     });
   },

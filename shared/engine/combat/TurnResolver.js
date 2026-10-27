@@ -569,7 +569,10 @@ export class TurnResolver {
         action,
         results: [
           {
-            log: `${formatChampionName(user)} used <b>CLAIM</b> and scored ${claimPoints} point(s).`,
+            log: {
+              en: `${formatChampionName(user)} used <b>CLAIM</b> and scored ${claimPoints} point(s).`,
+              pt: `${formatChampionName(user)} usou <b>RECLAMAR</b> e marcou ${claimPoints} ponto(s).`,
+            },
           },
           ...normalizedActionResolvedResults,
           ...registeredResults,

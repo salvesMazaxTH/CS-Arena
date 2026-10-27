@@ -15,7 +15,10 @@ const inert = {
   onValidateAction({ actionSource }) {
     return {
       deny: true,
-      message: `${formatChampionName(actionSource)} is Inert and cannot act!`,
+      message: {
+        en: `${formatChampionName(actionSource)} is Inert and cannot act!`,
+        pt: `${formatChampionName(actionSource)} está Inerte e não pode agir!`,
+      },
     };
   },
 
