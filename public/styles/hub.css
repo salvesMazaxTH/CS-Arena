@@ -12,8 +12,9 @@
   padding: 40px 20px;
   overflow-y: auto;
   background:
-    radial-gradient(1200px 600px at 50% -10%, rgba(0, 255, 150, 0.09), transparent 60%),
-    rgba(0, 0, 0, 0.96);
+    radial-gradient(120% 90% at 50% 115%, rgba(242, 102, 28, 0.16), transparent 60%),
+    radial-gradient(80% 60% at 50% -10%, rgba(224, 183, 101, 0.12), transparent 70%),
+    var(--ink-0);
 }
 
 /* Same specificity as `.hub-screen`, so the shared `.hidden` utility needs the
@@ -29,11 +30,13 @@
   flex-direction: column;
   gap: 18px;
   padding: 26px 28px;
-  border-radius: 20px;
-  border: 2px solid rgba(0, 255, 150, 0.5);
-  background: linear-gradient(180deg, #1a1a1a, #0a0a0a);
-  box-shadow: 0 0 40px rgba(0, 255, 150, 0.35);
-  color: #e6fff2;
+  position: relative;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line-mid);
+  background: var(--panel-gradient);
+  box-shadow: var(--inset-bevel), var(--shadow-3);
+  color: var(--text-hi);
+  z-index: 1;
 }
 
 .hub-head {
@@ -46,17 +49,21 @@
 
 .hub-eyebrow {
   display: block;
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
+  font-family: var(--font-display);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: rgba(148, 255, 209, 0.8);
+  color: var(--brass-400);
 }
 
 .hub-head h2 {
   margin-top: 2px;
-  font-family: "Chakra Petch", "Montserrat", sans-serif;
+  font-family: var(--font-display);
   font-size: 1.5rem;
-  color: #00ff99;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--brass-100);
+  text-shadow: 0 2px 12px rgba(224, 183, 101, 0.28);
 }
 
 .hub-manage-link {
@@ -65,16 +72,17 @@
   gap: 6px;
   padding: 8px 14px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-  color: #d7fff0;
+  border: 1px solid var(--line-mid);
+  background: rgba(240, 213, 150, 0.05);
+  color: var(--brass-300);
   text-decoration: none;
   font-weight: 700;
   font-size: 0.82rem;
 }
 
 .hub-manage-link:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(240, 213, 150, 0.12);
+  border-color: var(--line-hard);
 }
 
 button.hub-manage-link {
@@ -112,25 +120,27 @@ button.hub-manage-link {
 }
 
 .hub-section-head h3 {
-  font-family: "Chakra Petch", "Montserrat", sans-serif;
+  font-family: var(--font-display);
   font-size: 1.05rem;
-  color: #f4f7ff;
+  letter-spacing: 0.04em;
+  color: var(--brass-300);
 }
 
 .hub-section-head p {
   margin-top: 3px;
   font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-lo);
 }
 
 .hub-team-card {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  position: relative;
   padding: 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(0, 255, 150, 0.28);
-  background: linear-gradient(180deg, #181818, #0d0d0d);
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(180deg, var(--ink-3), var(--ink-1));
   color: inherit;
   font: inherit;
   text-align: left;
@@ -143,12 +153,13 @@ button.hub-manage-link {
 
 .hub-team-card:hover:not(:disabled) {
   transform: translateY(-2px);
-  border-color: rgba(0, 255, 150, 0.55);
+  border-color: var(--line-hard);
 }
 
 .hub-team-card.selected {
-  border-color: #00ff99;
-  box-shadow: 0 0 0 2px rgba(0, 255, 150, 0.35), 0 12px 28px rgba(0, 0, 0, 0.4);
+  border-color: var(--brass-400);
+  background: linear-gradient(180deg, #221d14, var(--ink-1));
+  box-shadow: 0 0 0 1px var(--brass-500), var(--glow-brass), 0 12px 28px rgba(0, 0, 0, 0.4);
 }
 
 .hub-team-card.is-invalid {
@@ -166,9 +177,9 @@ button.hub-manage-link {
 .hub-empty {
   padding: 20px;
   text-align: center;
-  border: 1px dashed rgba(255, 255, 255, 0.18);
-  border-radius: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  border: 1px dashed var(--line-mid);
+  border-radius: var(--r-md);
+  color: var(--text-mid);
   font-size: 0.85rem;
 }
 
@@ -178,15 +189,15 @@ button.hub-manage-link {
   justify-content: flex-end;
   gap: 12px;
   flex-wrap: wrap;
-  padding-top: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  padding-top: 16px;
 }
 
 .hub-status {
   flex: 1;
   min-width: 160px;
   font-size: 0.85rem;
-  color: #caffea;
+  color: var(--text-mid);
 }
 
 .hub-actions button {
@@ -196,38 +207,485 @@ button.hub-manage-link {
   letter-spacing: 0.4px;
   padding: 10px 20px;
   cursor: pointer;
-  color: #fff;
-  border: none;
-  background: linear-gradient(180deg, #00ff99, #00b36b);
-  box-shadow: 0 0 14px rgba(0, 255, 150, 0.4);
+  position: relative;
+  overflow: hidden;
+  color: #fff7ea;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--ember-300);
+  background: var(--ember-gradient);
+  box-shadow: var(--inset-bevel), var(--shadow-2);
   transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease;
 }
 
 .hub-actions button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 0 20px rgba(0, 255, 150, 0.65);
+  border-color: #fff0d6;
+  box-shadow: var(--inset-bevel), var(--shadow-2), var(--glow-ember);
 }
 
 .hub-actions button:disabled {
-  background: linear-gradient(180deg, #555, #333);
-  color: #aaa;
+  background: linear-gradient(180deg, var(--ink-5), var(--ink-3));
+  border-color: var(--line-soft);
+  color: var(--text-lo);
+  text-shadow: none;
   cursor: not-allowed;
   box-shadow: none;
 }
 
 .hub-actions button.secondary-action-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #e8f7ff;
+  background: rgba(240, 213, 150, 0.05);
+  border: 1px solid var(--line-mid);
+  color: var(--brass-300);
+  text-shadow: none;
   box-shadow: none;
 }
 
 .hub-actions button.secondary-action-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(240, 213, 150, 0.12);
+  border-color: var(--line-hard);
+}
+
+/* ============================================
+   FLOURISHES — pseudo-elements only: the hub markup is a preserved fragment.
+   ============================================ */
+
+@property --hub-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* --- Ambience: drifting embers and a slow light shaft behind the panel --- */
+
+.hub-screen::before,
+.hub-screen::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hub-screen::before {
+  background-image:
+    radial-gradient(2px 2px at 8% 88%, rgba(255, 176, 102, 0.9), transparent 60%),
+    radial-gradient(1.5px 1.5px at 19% 72%, rgba(255, 138, 61, 0.75), transparent 60%),
+    radial-gradient(2px 2px at 33% 94%, rgba(255, 176, 102, 0.7), transparent 60%),
+    radial-gradient(1.5px 1.5px at 47% 80%, rgba(240, 213, 150, 0.7), transparent 60%),
+    radial-gradient(2px 2px at 61% 91%, rgba(255, 138, 61, 0.85), transparent 60%),
+    radial-gradient(1.5px 1.5px at 74% 76%, rgba(255, 176, 102, 0.75), transparent 60%),
+    radial-gradient(2px 2px at 86% 86%, rgba(255, 138, 61, 0.8), transparent 60%),
+    radial-gradient(1.5px 1.5px at 95% 70%, rgba(240, 213, 150, 0.6), transparent 60%);
+  animation: hub-embers 9s linear infinite;
+}
+
+.hub-screen::after {
+  left: 50%;
+  right: auto;
+  width: 46vmax;
+  margin-left: -23vmax;
+  top: -25%;
+  bottom: auto;
+  height: 120%;
+  background: linear-gradient(180deg, rgba(240, 213, 150, 0.09), transparent 65%);
+  filter: blur(26px);
+  transform-origin: top center;
+  animation: hub-sway 14s ease-in-out infinite alternate;
+}
+
+/* --- Panel: a light that travels around the brass frame, plus corner brackets --- */
+
+.hub-screen:not(.hidden) .hub-container {
+  animation: ui-rise var(--dur-slow) var(--ease-out) both;
+}
+
+.hub-container::before,
+.hub-container::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.hub-container::before {
+  inset: -1px;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--hub-angle),
+    transparent 0deg,
+    rgba(251, 239, 210, 0.9) 18deg,
+    rgba(224, 183, 101, 0.35) 40deg,
+    transparent 70deg 180deg,
+    rgba(255, 138, 61, 0.7) 198deg,
+    transparent 230deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  animation: hub-orbit 9s linear infinite;
+}
+
+.hub-container::after {
+  --hub-bracket: var(--brass-400);
+  inset: 8px;
+  background:
+    linear-gradient(var(--hub-bracket), var(--hub-bracket)) top left / 18px 1px,
+    linear-gradient(var(--hub-bracket), var(--hub-bracket)) top left / 1px 18px,
+    linear-gradient(var(--hub-bracket), var(--hub-bracket)) top right / 18px 1px,
+    linear-gradient(var(--hub-bracket), var(--hub-bracket)) top right / 1px 18px,
+    linear-gradient(var(--hub-bracket), var(--hub-bracket)) bottom left / 18px 1px,
+    linear-gradient(var(--hub-bracket), var(--hub-bracket)) bottom left / 1px 18px,
+    linear-gradient(var(--hub-bracket), var(--hub-bracket)) bottom right / 18px 1px,
+    linear-gradient(var(--hub-bracket), var(--hub-bracket)) bottom right / 1px 18px;
+  background-repeat: no-repeat;
+  opacity: 0.7;
+}
+
+/* --- Heading: ornamented eyebrow, gilded title with a one-shot glint --- */
+
+.hub-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hub-eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  transform: rotate(45deg);
+  background: var(--ember-400);
+  box-shadow: 0 0 8px var(--ember-500);
+}
+
+.hub-eyebrow::after {
+  content: "";
+  width: 56px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--brass-500), transparent);
+}
+
+.hub-head h2 {
+  background:
+    linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.95) 50%, transparent 60%)
+      no-repeat,
+    linear-gradient(180deg, var(--brass-100), var(--brass-300) 70%, var(--brass-400));
+  background-size: 250% 100%, 100% 100%;
+  background-position: 150% 0, 0 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 2px 10px rgba(224, 183, 101, 0.3));
+}
+
+.hub-screen:not(.hidden) .hub-head h2 {
+  animation: hub-glint 1.4s var(--ease-out) 0.35s both;
+}
+
+.hub-manage-link {
+  transition:
+    background var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-med) ease,
+    color var(--dur-fast) ease;
+}
+
+.hub-manage-link:hover {
+  color: var(--brass-100);
+  box-shadow: 0 0 14px rgba(224, 183, 101, 0.22);
+}
+
+/* --- Section heads: brass tick and a fading rule --- */
+
+.hub-section-head {
+  position: relative;
+  padding-bottom: 9px;
+}
+
+.hub-section-head::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--brass-500), var(--line-soft) 40%, transparent);
+}
+
+.hub-section-head h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.hub-section-head h3::before {
+  content: "";
+  width: 3px;
+  height: 0.95em;
+  border-radius: 2px;
+  background: var(--brass-gradient);
+  box-shadow: 0 0 8px rgba(224, 183, 101, 0.5);
+}
+
+/* --- Team cards: staggered deal-in, hover glint, a seal on the chosen one --- */
+
+/* Fill-mode backwards only, so the hover lift keeps owning transform afterwards. */
+.hub-team-card {
+  animation: hub-card-in 0.42s var(--ease-out) backwards;
+}
+
+.hub-team-card:nth-child(2) { animation-delay: 40ms; }
+.hub-team-card:nth-child(3) { animation-delay: 80ms; }
+.hub-team-card:nth-child(4) { animation-delay: 120ms; }
+.hub-team-card:nth-child(5) { animation-delay: 160ms; }
+.hub-team-card:nth-child(6) { animation-delay: 200ms; }
+.hub-team-card:nth-child(n + 7) { animation-delay: 240ms; }
+
+/* The glint moves by background-position so the card needs no overflow clip,
+   which keeps the seal free to sit on the border. */
+.hub-team-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 236, 200, 0.1) 50%, transparent 60%)
+    no-repeat;
+  background-size: 250% 100%;
+  background-position: 150% 0;
+  transition: background-position 0.7s var(--ease-out);
+}
+
+.hub-team-card:hover:not(:disabled)::after {
+  background-position: -50% 0;
+}
+
+.hub-team-card .team-portrait {
+  border-color: rgba(240, 213, 150, 0.28);
+  transition:
+    transform var(--dur-med) var(--ease-spring),
+    border-color var(--dur-med) ease,
+    box-shadow var(--dur-med) ease;
+}
+
+.hub-team-card .team-portrait:nth-child(2) { transition-delay: 25ms; }
+.hub-team-card .team-portrait:nth-child(3) { transition-delay: 50ms; }
+.hub-team-card .team-portrait:nth-child(4) { transition-delay: 75ms; }
+.hub-team-card .team-portrait:nth-child(5) { transition-delay: 100ms; }
+.hub-team-card .team-portrait:nth-child(n + 6) { transition-delay: 125ms; }
+
+.hub-team-card:hover:not(:disabled) .team-portrait {
+  transform: translateY(-3px);
+  border-color: var(--line-hard);
+}
+
+.hub-team-card.selected .team-portrait {
+  border-color: var(--brass-400);
+  box-shadow: 0 0 8px rgba(224, 183, 101, 0.35);
+}
+
+.hub-team-card .team-emblem-chip {
+  transition: transform var(--dur-med) var(--ease-spring), box-shadow var(--dur-med) ease;
+}
+
+.hub-team-card:hover:not(:disabled) .team-emblem-chip {
+  transform: translateY(-1px);
+}
+
+.hub-team-card.selected .team-emblem-chip {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 0 0 1px rgba(224, 183, 101, 0.45),
+    0 0 10px rgba(224, 183, 101, 0.25);
+}
+
+.hub-team-card.selected::before {
+  content: "\2713";
+  position: absolute;
+  top: -10px;
+  right: 14px;
+  z-index: 3;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--ink-1);
+  background: var(--brass-gradient);
+  color: var(--text-on-brass);
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+  animation:
+    hub-seal-pop 0.38s var(--ease-spring) both,
+    hub-seal-breathe 2.6s ease-in-out 0.38s infinite;
+}
+
+/* --- Actions: ornamental divider, live status pip, shimmering call to action --- */
+
+.hub-actions::before,
+.hub-actions::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+}
+
+.hub-actions::before {
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line-hard) 50%, transparent);
+}
+
+.hub-actions::after {
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--ink-2);
+  border: 1px solid var(--brass-400);
+  box-shadow: 0 0 8px rgba(224, 183, 101, 0.45);
+}
+
+.hub-status:not(:empty)::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 9px;
+  vertical-align: 0.08em;
+  border-radius: 50%;
+  background: var(--ember-400);
+  box-shadow: 0 0 10px var(--ember-500);
+  animation: ui-pulse 1.2s ease-in-out infinite;
+}
+
+.hub-actions button:not(.secondary-action-btn):not(:disabled)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 248, 230, 0.45) 50%, transparent 65%)
+    no-repeat;
+  background-size: 250% 100%;
+  background-position: 150% 0;
+  animation: hub-cta-shimmer 3.6s ease-in-out 1s infinite;
+}
+
+/* --- Keyframes --- */
+
+@keyframes hub-embers {
+  from {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateY(-18vh);
+    opacity: 0;
+  }
+}
+
+@keyframes hub-sway {
+  from {
+    transform: rotate(-7deg);
+  }
+  to {
+    transform: rotate(7deg);
+  }
+}
+
+@keyframes hub-orbit {
+  to {
+    --hub-angle: 360deg;
+  }
+}
+
+@keyframes hub-glint {
+  from {
+    background-position: 150% 0, 0 0;
+  }
+  to {
+    background-position: -50% 0, 0 0;
+  }
+}
+
+@keyframes hub-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+}
+
+@keyframes hub-seal-pop {
+  from {
+    transform: scale(0.2) rotate(-90deg);
+    opacity: 0;
+  }
+}
+
+@keyframes hub-seal-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 6px rgba(224, 183, 101, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(240, 213, 150, 0.85);
+  }
+}
+
+/* Sweeps once across the button, then rests off to the side for the rest of the cycle. */
+@keyframes hub-cta-shimmer {
+  0% {
+    background-position: 150% 0;
+  }
+  35%,
+  100% {
+    background-position: -50% 0;
+  }
 }
 
 @media (max-width: 620px) {
   .hub-team-grid {
     grid-template-columns: 1fr;
+  }
+
+  .hub-container::after {
+    display: none;
+  }
+
+  /* Phones: the orbiting ring repaints the whole masked frame every frame and the
+     shaft is a large blurred layer, so the ring holds still and the shaft goes. */
+  .hub-container::before {
+    animation: none;
+  }
+
+  .hub-screen::after {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hub-screen::before,
+  .hub-screen::after,
+  .hub-screen:not(.hidden) .hub-container,
+  .hub-container::before,
+  .hub-screen:not(.hidden) .hub-head h2,
+  .hub-team-card,
+  .hub-team-card.selected::before,
+  .hub-status:not(:empty)::before,
+  .hub-actions button:not(.secondary-action-btn):not(:disabled)::after {
+    animation: none;
+  }
+
+  .hub-team-card::after,
+  .hub-team-card .team-portrait,
+  .hub-team-card .team-emblem-chip {
+    transition: none;
   }
 }

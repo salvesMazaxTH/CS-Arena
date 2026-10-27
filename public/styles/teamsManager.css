@@ -10,14 +10,14 @@ html {
 }
 
 .tm-body {
-  --tm-ink: #090c0b;
-  --tm-slate: #161f1b;
-  --tm-raised: #1f2a25;
-  --tm-line: rgba(133, 184, 160, 0.24);
-  --tm-line-strong: rgba(133, 184, 160, 0.44);
-  --tm-text: #e9f3ee;
-  --tm-muted: #93ad9f;
-  --tm-signal: #00ff99;
+  --tm-ink: var(--ink-0);
+  --tm-slate: var(--ink-2);
+  --tm-raised: var(--ink-3);
+  --tm-line: var(--line-soft);
+  --tm-line-strong: var(--line-mid);
+  --tm-text: var(--text-hi);
+  --tm-muted: var(--text-mid);
+  --tm-signal: var(--brass-400);
 
   height: auto;
   min-height: 100%;
@@ -26,11 +26,8 @@ html {
   flex-direction: column;
   color: var(--tm-text);
   background:
-    radial-gradient(
-      1100px 520px at 50% -12%,
-      rgba(0, 255, 150, 0.06),
-      transparent 62%
-    ),
+    radial-gradient(1100px 520px at 50% -12%, rgba(224, 183, 101, 0.1), transparent 62%),
+    radial-gradient(1400px 700px at 50% 120%, rgba(242, 102, 28, 0.1), transparent 60%),
     var(--tm-ink);
 }
 
@@ -55,14 +52,17 @@ html {
 }
 
 .tm-body .tm-primary-btn {
-  color: #04140d;
-  background: linear-gradient(180deg, #00ff99, #00b36b);
-  box-shadow: 0 0 12px rgba(0, 255, 150, 0.28);
+  color: #fff7ea;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  border-color: var(--ember-300);
+  background: var(--ember-gradient);
+  box-shadow: var(--inset-bevel), 0 6px 16px rgba(0, 0, 0, 0.45);
 }
 
 .tm-body .tm-primary-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 0 18px rgba(0, 255, 150, 0.5);
+  border-color: #fff0d6;
+  box-shadow: var(--inset-bevel), 0 6px 16px rgba(0, 0, 0, 0.45), var(--glow-ember);
 }
 
 .tm-body .tm-primary-btn:active:not(:disabled) {
@@ -70,8 +70,10 @@ html {
 }
 
 .tm-body .tm-primary-btn:disabled {
-  background: #2a332f;
-  color: var(--tm-muted);
+  background: linear-gradient(180deg, var(--ink-5), var(--ink-3));
+  border-color: var(--line-soft);
+  color: var(--text-lo);
+  text-shadow: none;
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -120,8 +122,8 @@ html {
   padding: 13px 22px;
   background: linear-gradient(
     180deg,
-    rgba(10, 14, 12, 0.97),
-    rgba(10, 14, 12, 0.82)
+    rgba(12, 12, 17, 0.97),
+    rgba(8, 8, 12, 0.84)
   );
   border-bottom: 1px solid var(--tm-line-strong);
   backdrop-filter: blur(6px);
@@ -136,7 +138,9 @@ html {
 .tm-header h1 {
   font-family: "Chakra Petch", "Montserrat", sans-serif;
   font-size: 1.35rem;
-  color: var(--tm-signal);
+  letter-spacing: 0.05em;
+  color: var(--brass-100);
+  text-shadow: 0 2px 12px rgba(224, 183, 101, 0.3);
   margin: 0;
 }
 
@@ -148,7 +152,7 @@ html {
   border-radius: 999px;
   border: 1px solid var(--tm-line-strong);
   background: rgba(255, 255, 255, 0.03);
-  color: #d7fff0;
+  color: var(--brass-300);
   text-decoration: none;
   font-weight: 700;
   font-size: 0.85rem;
@@ -214,7 +218,7 @@ html {
   padding: 16px;
   border-radius: 16px;
   border: 1px solid var(--tm-line-strong);
-  background: linear-gradient(180deg, #181f1c, #0e1210);
+  background: linear-gradient(180deg, var(--ink-3), var(--ink-1));
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
 }
 
@@ -279,7 +283,7 @@ html {
 .tm-name-input:focus {
   outline: none;
   border-color: var(--tm-signal);
-  box-shadow: 0 0 0 3px rgba(0, 255, 150, 0.16);
+  box-shadow: 0 0 0 3px rgba(224, 183, 101, 0.18);
 }
 
 .tm-builder-actions {
@@ -308,8 +312,8 @@ html {
 }
 
 .tm-zone-tab.is-active {
-  color: #04140d;
-  background: linear-gradient(180deg, #00ff99, #00b36b);
+  color: var(--text-on-brass);
+  background: var(--brass-gradient);
   border-color: transparent;
 }
 
@@ -372,7 +376,7 @@ html {
   border-radius: 9px;
   border: 1px solid var(--tm-line-strong);
   background-color: rgba(0, 0, 0, 0.3);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2393ad9f' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23c4bda9' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 11px center;
   color: var(--tm-text);
@@ -474,10 +478,10 @@ img.tm-filter-chip-icon {
 }
 
 .tm-roster-tile.is-new {
-  border-color: rgba(0, 255, 153, 0.78);
+  border-color: rgba(224, 183, 101, 0.78);
   box-shadow:
-    0 0 0 1px rgba(0, 255, 153, 0.2),
-    0 0 18px rgba(0, 255, 153, 0.24);
+    0 0 0 1px rgba(224, 183, 101, 0.2),
+    0 0 18px rgba(224, 183, 101, 0.24);
 }
 
 .tm-new-champion-badge {
@@ -487,9 +491,9 @@ img.tm-filter-chip-icon {
   z-index: 2;
   padding: 3px 7px;
   border-radius: 999px;
-  color: #04140d;
+  color: var(--text-on-brass);
   background: var(--tm-signal);
-  box-shadow: 0 0 12px rgba(0, 255, 153, 0.55);
+  box-shadow: 0 0 12px rgba(224, 183, 101, 0.55);
   font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -500,10 +504,10 @@ img.tm-filter-chip-icon {
 @keyframes tm-new-champion-pulse {
   0%,
   100% {
-    box-shadow: 0 0 8px rgba(0, 255, 153, 0.4);
+    box-shadow: 0 0 8px rgba(224, 183, 101, 0.4);
   }
   50% {
-    box-shadow: 0 0 18px rgba(0, 255, 153, 0.8);
+    box-shadow: 0 0 18px rgba(224, 183, 101, 0.8);
   }
 }
 
@@ -538,8 +542,8 @@ img.tm-filter-chip-icon {
   place-items: center;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(4, 10, 8, 0.72);
-  color: #cfe8dd;
+  background: rgba(8, 8, 12, 0.72);
+  color: var(--brass-100);
   font-size: 0.95rem;
   cursor: pointer;
   opacity: 0.35;
@@ -569,7 +573,7 @@ img.tm-filter-chip-icon {
 
 .tm-roster-tile:hover {
   border-color: var(--tm-line-strong);
-  background: #202b27;
+  background: var(--ink-4);
 }
 
 .tm-roster-tile.is-focused {
@@ -577,8 +581,8 @@ img.tm-filter-chip-icon {
 }
 
 .tm-roster-tile.is-selected {
-  background: rgba(0, 255, 150, 0.1);
-  border-color: rgba(0, 255, 150, 0.45);
+  background: rgba(224, 183, 101, 0.1);
+  border-color: rgba(224, 183, 101, 0.55);
 }
 
 .tm-roster-tile.is-selected .tm-roster-portrait::after,
@@ -593,7 +597,7 @@ img.tm-filter-chip-icon {
   border-radius: 50%;
   font-size: 0.85rem;
   font-weight: 800;
-  color: #04140d;
+  color: var(--text-on-brass);
   background: var(--tm-signal);
 }
 
@@ -604,7 +608,7 @@ img.tm-filter-chip-icon {
 .tm-roster-tile:not(.is-selected):hover .tm-roster-portrait::after,
 .tm-roster-tile:not(.is-selected) .tm-roster-pick:focus-visible .tm-roster-portrait::after {
   content: "+";
-  background: rgba(0, 255, 150, 0.82);
+  background: rgba(240, 213, 150, 0.85);
 }
 
 .tm-roster-tile.dragging {
@@ -729,7 +733,7 @@ img.tm-filter-chip-icon {
   font-family: "Chakra Petch", "Montserrat", sans-serif;
   font-size: 2.75rem;
   line-height: 1.1;
-  color: #f2fff8;
+  color: var(--brass-100);
 }
 
 .tm-inspector-badges {
@@ -824,7 +828,7 @@ img.tm-filter-chip-icon {
   font-family: "Chakra Petch", "Montserrat", sans-serif;
   font-size: 0.98rem;
   font-weight: 600;
-  color: #f2fff8;
+  color: var(--brass-100);
 }
 
 .tm-kit-tag {
@@ -843,7 +847,7 @@ img.tm-filter-chip-icon {
 }
 
 .tm-kit-tag-ult {
-  color: #04140d;
+  color: var(--text-on-brass);
   background: var(--tm-signal);
 }
 
@@ -875,7 +879,7 @@ img.tm-filter-chip-icon {
 .tm-kit-body {
   font-size: 0.84rem;
   line-height: 1.55;
-  color: #d6e2dd;
+  color: var(--text-mid);
   max-width: 64ch;
   white-space: pre-line;
 }
@@ -912,7 +916,7 @@ img.tm-filter-chip-icon {
 .tm-team-emblems-head h4 {
   font-family: "Chakra Petch", "Montserrat", sans-serif;
   font-size: 0.95rem;
-  color: #f2fff8;
+  color: var(--brass-100);
 }
 
 .tm-lineup {
@@ -946,7 +950,7 @@ img.tm-filter-chip-icon {
 
 .tm-lineup-row.drag-over {
   border-color: var(--tm-signal);
-  background: rgba(0, 255, 150, 0.08);
+  background: rgba(224, 183, 101, 0.08);
 }
 
 .tm-lineup-ord {
@@ -1138,7 +1142,7 @@ img.tm-filter-chip-icon {
 .tm-emblem-overlay-head h3 {
   font-family: "Chakra Petch", "Montserrat", sans-serif;
   font-size: 1.1rem;
-  color: #f2fff8;
+  color: var(--brass-100);
 }
 
 .tm-emblem-overlay-close {
@@ -1309,12 +1313,112 @@ img.tm-filter-chip-icon {
   z-index: 80;
   padding: 12px 20px;
   border-radius: 999px;
-  background: rgba(0, 255, 150, 0.14);
-  border: 1px solid rgba(0, 255, 150, 0.5);
-  color: #d7fff0;
+  background: linear-gradient(180deg, rgba(40, 32, 18, 0.96), rgba(16, 13, 8, 0.96));
+  border: 1px solid var(--line-hard);
+  color: var(--brass-100);
   font-weight: 700;
   font-size: 0.85rem;
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+  animation: tm-toast-in var(--dur-med) var(--ease-spring) both;
+}
+
+/* --- Flourishes --- */
+
+/* A brass hairline that fades out toward both ends of the header bar. */
+.tm-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--brass-400) 50%, transparent);
+  opacity: 0.75;
+}
+
+.tm-section-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.tm-section-head h2::before {
+  content: "";
+  width: 3px;
+  height: 0.95em;
+  border-radius: 2px;
+  background: var(--brass-gradient);
+  box-shadow: 0 0 8px rgba(224, 183, 101, 0.5);
+}
+
+.tm-team-card {
+  position: relative;
+  transition:
+    transform var(--dur-med) var(--ease-out),
+    border-color var(--dur-med) ease,
+    box-shadow var(--dur-med) ease;
+}
+
+.tm-team-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 236, 200, 0.08) 50%, transparent 60%)
+    no-repeat;
+  background-size: 250% 100%;
+  background-position: 150% 0;
+  transition: background-position 0.7s var(--ease-out);
+}
+
+.tm-team-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-hard);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(224, 183, 101, 0.12);
+}
+
+.tm-team-card.is-invalid:hover {
+  border-color: rgba(255, 110, 110, 0.75);
+}
+
+.tm-team-card:hover::after {
+  background-position: -50% 0;
+}
+
+/* Keep the action buttons above the glint layer. */
+.tm-team-card-actions {
+  position: relative;
+  z-index: 1;
+}
+
+.tm-body .tm-primary-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.tm-body .tm-primary-btn:not(:disabled)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 248, 230, 0.4) 50%, transparent 65%)
+    no-repeat;
+  background-size: 250% 100%;
+  background-position: 150% 0;
+  transition: background-position 0.6s var(--ease-out);
+}
+
+.tm-body .tm-primary-btn:hover:not(:disabled)::after {
+  background-position: -50% 0;
+}
+
+@keyframes tm-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px) scale(0.96);
+  }
 }
 
 /* --- Responsive --- */
@@ -1390,8 +1494,15 @@ img.tm-filter-chip-icon {
 @media (prefers-reduced-motion: reduce) {
   .tm-body .tm-primary-btn,
   .tm-body .secondary-action-btn,
-  .tm-body .tm-danger-btn {
+  .tm-body .tm-danger-btn,
+  .tm-body .tm-primary-btn::after,
+  .tm-team-card,
+  .tm-team-card::after {
     transition: none;
+  }
+
+  .tm-toast {
+    animation: none;
   }
 }
 
@@ -1403,7 +1514,7 @@ img.tm-filter-chip-icon {
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid var(--tm-line);
-  background: rgba(9, 12, 11, 0.55);
+  background: rgba(8, 8, 12, 0.55);
   font-variant-numeric: tabular-nums;
 }
 

@@ -15,15 +15,15 @@
 }
 
 .team-summary-head h3 {
-  font-family: "Chakra Petch", "Montserrat", sans-serif;
+  font-family: var(--font-display);
   font-size: 1.05rem;
-  color: #eafff6;
+  color: var(--text-hi);
 }
 
 .team-summary-tagline {
   margin-top: 2px;
   font-size: 0.78rem;
-  color: rgba(202, 255, 234, 0.62);
+  color: var(--text-lo);
 }
 
 .team-origin-tag {
@@ -43,15 +43,15 @@
 }
 
 .team-origin-custom {
-  background: rgba(0, 255, 150, 0.14);
-  border: 1px solid rgba(0, 255, 150, 0.4);
-  color: #b6ffe1;
+  background: rgba(240, 213, 150, 0.12);
+  border: 1px solid var(--line-hard);
+  color: var(--brass-300);
 }
 
 .team-origin-test {
-  background: rgba(255, 196, 0, 0.14);
-  border: 1px solid rgba(255, 196, 0, 0.45);
-  color: #ffe6a3;
+  background: rgba(242, 102, 28, 0.14);
+  border: 1px solid rgba(255, 138, 61, 0.45);
+  color: var(--ember-300);
 }
 
 .team-portrait-strip {
@@ -80,20 +80,84 @@
   flex-wrap: wrap;
 }
 
+/* Painted like the picker tiles: the requirement colours under a dark veil,
+   each requirement's symbol watermarked behind the code, and a glass sheen. */
 .team-emblem-chip {
+  --emblem-requirement-tint: linear-gradient(180deg, #2a2f45, #171a28);
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 30px;
-  height: 24px;
-  padding: 0 8px;
+  min-width: 44px;
+  height: 28px;
+  padding: 0 10px;
+  overflow: hidden;
   border-radius: 8px;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  background: rgba(92, 110, 255, 0.16);
-  border: 1px solid rgba(128, 144, 255, 0.34);
-  color: #dfe8ff;
+  letter-spacing: 0.08em;
+  background:
+    linear-gradient(180deg, rgba(6, 9, 16, 0.18), rgba(6, 9, 16, 0.5)),
+    var(--emblem-requirement-tint);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -6px 10px rgba(0, 0, 0, 0.25),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.85),
+    0 0 6px rgba(0, 0, 0, 0.6);
+}
+
+.team-emblem-chip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.2), transparent 45%);
+}
+
+.team-emblem-chip-marks {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.team-emblem-chip-mark {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  opacity: 0.42;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+  font-size: 18px;
+  line-height: 26px;
+  text-align: center;
+  transform: rotate(-12deg) scale(1.15);
+}
+
+/* Two requirements: one symbol per side of the diagonal split. */
+.team-emblem-chip.is-mixed .team-emblem-chip-marks {
+  justify-content: space-between;
+  padding: 0 1px;
+}
+
+.team-emblem-chip.is-mixed .team-emblem-chip-mark {
+  width: 22px;
+  height: 22px;
+  font-size: 15px;
+  line-height: 22px;
+}
+
+.team-emblem-chip-code {
+  position: relative;
+  z-index: 1;
 }
 
 .team-emblem-chip-none {
@@ -103,4 +167,10 @@
   color: rgba(255, 255, 255, 0.45);
   letter-spacing: normal;
   font-weight: 600;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+.team-emblem-chip-none::after {
+  content: none;
 }

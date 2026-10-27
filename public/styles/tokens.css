@@ -6,7 +6,7 @@
    ============================================ */
 
 :root {
-  /* ---- Obsidian surfaces (neutral black, compatible with the mint hub) ---- */
+  /* ---- Obsidian surfaces (neutral black) ---- */
   --ink-0: #050507;
   --ink-1: #0a0a0e;
   --ink-2: #111116;
@@ -42,7 +42,6 @@
   --negative: #ff5a5a;
   --warning: #ffcc3d;
   --neutral: #a8a8b8;
-  --mint: #00ff99; /* the hub's own accent; only used to echo it */
 
   /* ---- Text ---- */
   --text-hi: #f6f0e2;
