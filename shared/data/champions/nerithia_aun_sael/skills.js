@@ -15,6 +15,25 @@ function strongestAlly(user, context) {
   );
 }
 
+// Raises Nerithia's own Attack to the lender's until the end of the turn, so
+// the borrowed strength shows on her overlay and feeds every hit she lands.
+function borrowAttack(user, context) {
+  const lender = strongestAlly(user, context);
+  const gap = lender.Attack - user.Attack;
+
+  if (lender !== user && gap > 0) {
+    user.modifyStat({
+      statName: "Attack",
+      amount: gap,
+      duration: 1,
+      context,
+      statModifierSrc: lender,
+    });
+  }
+
+  return lender;
+}
+
 const nerithiaSkills = [
   // ========================
   // Total Block (global)
@@ -80,8 +99,8 @@ const nerithiaSkills = [
 
     description() {
       return {
-        en: `Nerithia borrows the strength of the mightiest hand beside her and returns it as a bolt of judgement. Deals <b>magical damage</b> equal to <b>${this.attackPercent}%</b> of the <b>highest Attack among her living allies</b> (herself included).`,
-        pt: `Nerithia toma emprestada a força da mão mais poderosa ao seu lado e a devolve como um raio de julgamento. Causa <b>dano mágico</b> igual a <b>${this.attackPercent}%</b> do <b>maior Ataque entre seus aliados vivos</b> (ela incluída).`,
+        en: `Nerithia borrows the strength of the mightiest hand beside her and returns it as a bolt of judgement. Her <b>Attack</b> becomes that of her <b>strongest living ally</b> until the end of the turn, then she deals <b>magical damage</b> equal to <b>${this.attackPercent}%</b> of her Attack.`,
+        pt: `Nerithia toma emprestada a força da mão mais poderosa ao seu lado e a devolve como um raio de julgamento. Seu <b>Ataque</b> passa a ser o do seu <b>aliado vivo mais forte</b> até o fim do turno, e então ela causa <b>dano mágico</b> igual a <b>${this.attackPercent}%</b> do seu Ataque.`,
       };
     },
 
@@ -89,10 +108,10 @@ const nerithiaSkills = [
 
     resolve({ user, targets, context = {} }) {
       const [enemy] = targets;
-      const lender = strongestAlly(user, context);
+      borrowAttack(user, context);
 
       return new DamageEvent({
-        baseDamage: (lender.Attack * this.attackPercent) / 100,
+        baseDamage: (user.Attack * this.attackPercent) / 100,
         attacker: user,
         defender: enemy,
         skill: this,
@@ -110,8 +129,8 @@ const nerithiaSkills = [
     isUltimate: true,
     momentumCost: 55,
 
-    baseAttackPercent: 25,
-    attackPercentPerPrayer: 10,
+    baseAttackPercent: 40,
+    attackPercentPerPrayer: 7.5,
 
     contact: false,
     damageMode: "standard",
@@ -121,8 +140,8 @@ const nerithiaSkills = [
 
     description() {
       return {
-        en: `Nerithia descends the last step and every prayer she has kept answers at once, pouring the strength of her mightiest ally over the enemy line. Deals <b>magical damage</b> to all enemies equal to <b>${this.baseAttackPercent}%</b> of the <b>highest Attack among her living allies</b>, plus <b>${this.attackPercentPerPrayer}%</b> for each <b>Prayer</b> held. All her Prayers are spent.`,
-        pt: `Nerithia desce o último degrau e todas as preces que guardou respondem de uma só vez, derramando a força do aliado mais poderoso sobre a linha inimiga. Causa <b>dano mágico</b> a todos os inimigos igual a <b>${this.baseAttackPercent}%</b> do <b>maior Ataque entre seus aliados vivos</b>, mais <b>${this.attackPercentPerPrayer}%</b> por cada <b>Prece</b> mantida. Todas as suas Preces são gastas.`,
+        en: `Nerithia descends the last step and every prayer she has kept answers at once, pouring the strength of her mightiest ally over the enemy line. Her <b>Attack</b> becomes that of her <b>strongest living ally</b> until the end of the turn, then she deals <b>magical damage</b> to all enemies equal to <b>${this.baseAttackPercent}%</b> of her Attack, plus <b>${this.attackPercentPerPrayer}%</b> for each <b>Prayer</b> held. All her Prayers are spent.`,
+        pt: `Nerithia desce o último degrau e todas as preces que guardou respondem de uma só vez, derramando a força do aliado mais poderoso sobre a linha inimiga. Seu <b>Ataque</b> passa a ser o do seu <b>aliado vivo mais forte</b> até o fim do turno, e então ela causa <b>dano mágico</b> a todos os inimigos igual a <b>${this.baseAttackPercent}%</b> do seu Ataque, mais <b>${this.attackPercentPerPrayer}%</b> por cada <b>Prece</b> mantida. Todas as suas Preces são gastas.`,
       };
     },
 
@@ -130,12 +149,12 @@ const nerithiaSkills = [
 
     resolve({ user, targets, context = {} }) {
       const enemies = targets.filter((c) => c.team !== user.team && c.alive);
-      const lender = strongestAlly(user, context);
+      const lender = borrowAttack(user, context);
 
       user.runtime = user.runtime || {};
       const prayers = user.runtime.nerithiaPrayers || 0;
       const percent = this.baseAttackPercent + prayers * this.attackPercentPerPrayer;
-      const baseDamage = (lender.Attack * percent) / 100;
+      const baseDamage = (user.Attack * percent) / 100;
 
       // Spent before the hits land so the ultimate does not carry its own reduction.
       user.runtime.nerithiaPrayers = 0;
