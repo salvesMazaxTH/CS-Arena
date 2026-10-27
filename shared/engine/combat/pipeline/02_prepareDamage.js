@@ -40,6 +40,11 @@ const ELEMENTAL_MATRIX = {
     resists: ["ice", "water"],
   },
 
+  light: {
+    weakTo: ["poison"],
+    resists: ["light", "fire"],
+  },
+
   poison: {
     weakTo: ["fire", "water"],
     resists: ["poison", "plant", "earth"],

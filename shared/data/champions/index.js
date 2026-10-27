@@ -95,6 +95,7 @@ import zophirox from "./zophirox/index.js";
 import azhkharon from "./azhkharon/index.js";
 import xharkovar from "./xharkovar/index.js";
 import zaguroth from "./zaguroth/index.js";
+import nerithia_aun_sael from "./nerithia_aun_sael/index.js";
 
 const championDB = {
   atlas,
@@ -194,6 +195,7 @@ const championDB = {
   azhkharon,
   xharkovar,
   zaguroth,
+  nerithia_aun_sael,
 };
 
 export default championDB;

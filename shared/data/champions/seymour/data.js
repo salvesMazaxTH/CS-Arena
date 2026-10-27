@@ -8,6 +8,7 @@ export default {
   Defense: 70,
   Speed: 70,
 
+  elementalAffinities: ["light"],
   classKey: "mage",
   species: ["human"],
 };

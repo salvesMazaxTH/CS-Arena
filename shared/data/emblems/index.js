@@ -23,6 +23,8 @@ import { verdantRoot } from "./verdant_root.js";
 import { galeStep } from "./gale_step.js";
 import { creepingVenom } from "./creeping_venom.js";
 import { balancedParty } from "./balanced_party.js";
+import { firstLight } from "./first_light.js";
+import { radiantZenith } from "./radiant_zenith.js";
 
 export { evaluateEmblemEligibilityForRoster } from "./eligibility.js";
 
@@ -52,4 +54,6 @@ export const EMBLEMS = [
   galeStep,
   creepingVenom,
   balancedParty,
+  firstLight,
+  radiantZenith,
 ];

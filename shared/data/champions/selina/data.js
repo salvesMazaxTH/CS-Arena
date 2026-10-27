@@ -8,6 +8,7 @@ export default {
   Defense: 90,
   Speed: 90,
 
+  elementalAffinities: ["light"],
   classKey: ["enchanter", "mage"],
   species: ["demigod"],
 };

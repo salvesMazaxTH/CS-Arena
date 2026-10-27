@@ -64,6 +64,13 @@ const ELEMENT_IDENTITIES = Object.freeze({
     background: "rgba(46, 128, 74, 0.94)",
     border: "rgba(170, 236, 190, 0.7)",
   },
+  light: {
+    label: "Light",
+    icon: "☀️",
+    iconUrl: "/assets/indicators/light_element_icon.svg",
+    background: "rgba(222, 186, 108, 0.94)",
+    border: "rgba(255, 249, 222, 0.78)",
+  },
   air: {
     label: "Air",
     icon: "🌪️",

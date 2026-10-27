@@ -79,6 +79,7 @@ const selinaSkills = [
 
     contact: false,
     damageMode: "standard",
+    element: "light",
     priority: 1,
 
     hits: [
@@ -137,6 +138,7 @@ const selinaSkills = [
 
     contact: false,
     damageMode: "standard",
+    element: "light",
     isUltimate: true,
     momentumCost: 58,
     hitVfx: "radiant_bolt",

@@ -22,6 +22,7 @@ const seymourSkills = [
 
     contact: false,
     damageMode: "standard",
+    element: "light",
     hitVfx: "radiant_bolt",
     priority: 0,
 
@@ -100,6 +101,7 @@ const seymourSkills = [
 
     contact: false,
     damageMode: "standard",
+    element: "light",
     hitVfx: "radiant_bolt",
     priority: 1,
 
@@ -159,6 +161,7 @@ const seymourSkills = [
 
     contact: false,
     damageMode: "standard",
+    element: "light",
     hitVfx: "radiant_beam",
     priority: 0,
 
