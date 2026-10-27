@@ -155,7 +155,7 @@ const activeChampions = new Map();
 
 // --- Pre-match hub ---
 const TEAM_SIZE = 8;
-const teamStore = new TeamStore();
+const teamStore = new TeamStore({ editMode });
 let selectedHubTeamId = null;
 let matchmaking = false;
 // "player" picks your own team; "ai" picks the AI opponent's team.
@@ -414,17 +414,26 @@ async function enterWithAccount() {
 }
 
 async function boot() {
-  const session = await getSession();
-  accessToken = session?.access_token ?? null;
+  try {
+    const session = await getSession();
+    accessToken = session?.access_token ?? null;
 
-  if (session) {
-    currentUserId = session.user.id;
-    const profile = await getProfile(currentUserId);
-    if (!profile) {
-      loginMessage.textContent = "";
-      showLoginStep({ name: true });
-      return;
+    if (session) {
+      currentUserId = session.user.id;
+      const profile = await getProfile(currentUserId);
+      if (!profile) {
+        loginMessage.textContent = "";
+        showLoginStep({ name: true });
+        return;
+      }
     }
+  } catch (error) {
+    // An unreachable account server must not leave the splash hanging: go on
+    // without a session, which edit mode still lets through.
+    accessToken = null;
+    currentUserId = null;
+    loginMessage.textContent = "Could not reach the account server.";
+    reportClientError(`Session load failed: ${error?.message ?? error}`, error?.stack);
   }
   // Without a session the server still answers (edit-mode auto login) or
   // refuses with "unauthorized", which shows the Google button.
@@ -685,6 +694,12 @@ function setHubMode(mode) {
 }
 
 function renderHub() {
+  // An edit-mode guest has no account, so there is no name to change or session to end,
+  // but may still sign in to reach the account's teams.
+  document.getElementById("hubSignInBtn").hidden = !!currentUserId || !supabase;
+  document.getElementById("hubRenameBtn").hidden = !currentUserId;
+  document.getElementById("hubSignOutBtn").hidden = !currentUserId;
+
   const teams = teamStore.getAll();
   hubEmpty.hidden = teams.length > 0;
 
@@ -873,6 +888,10 @@ document.getElementById("hubRenameBtn").addEventListener("click", async () => {
   hubStatus.textContent = result.ok
     ? `Display name saved. "${result.profile.display_name}" applies the next time you sign in.`
     : NAME_ERRORS[result.reason];
+});
+
+document.getElementById("hubSignInBtn").addEventListener("click", () => {
+  signInWithGoogle();
 });
 
 document.getElementById("hubSignOutBtn").addEventListener("click", async () => {
@@ -2141,7 +2160,7 @@ function showActionBarSlot({ playerAdvanced = true } = {}) {
     });
     if (disabledReason) {
       btn.disabled = true;
-      btn.title = disabledReason;
+      btn.title = resolveText(disabledReason, getLocale());
     }
 
     skillsBar.appendChild(btn);

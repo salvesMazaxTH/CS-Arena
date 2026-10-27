@@ -67,6 +67,7 @@ const STATIC = {
 /* Preserved hub fragment: selector -> { en, pt }. Only the text node is replaced; icons stay. */
 const HUB = [
   ["a.hub-manage-link", { en: "Manage teams", pt: "Gerenciar times" }],
+  ["#hubSignInBtn", { en: "Sign in with Google", pt: "Entrar com Google" }],
   ["#hubRenameBtn", { en: "Display name", pt: "Nome de exibição" }],
   ["#hubSignOutBtn", { en: "Sign out", pt: "Sair" }],
   ["#hubEmpty", { en: "You have no teams. Open “Manage teams” to build one.", pt: "Você não tem times. Abra “Gerenciar times” para montar um." }],

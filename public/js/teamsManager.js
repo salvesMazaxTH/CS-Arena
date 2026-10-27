@@ -16,7 +16,7 @@ applyIdentityPaletteCssVariables(document.documentElement);
 // client mirrored to localStorage — this is what lets unreleased champions be
 // drafted while `unavailableChampions` is on for testing.
 const clientEditMode = readMirroredEditMode();
-const store = new TeamStore();
+const store = new TeamStore({ editMode: clientEditMode });
 
 const listView = document.getElementById("tm-list-view");
 const builderView = document.getElementById("tm-builder-view");

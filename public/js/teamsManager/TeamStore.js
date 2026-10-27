@@ -14,6 +14,7 @@ function teamFromRow(row) {
     champions: row.champions,
     emblems: row.emblems,
     derivedFrom: row.derived_from,
+    editMode: row.edit_mode,
     updatedAt: Number(row.updated_at),
   });
 }
@@ -27,6 +28,7 @@ function rowFromTeam(team, userId) {
     champions: team.champions,
     emblems: team.emblems,
     derived_from: team.derivedFrom,
+    edit_mode: team.editMode,
     updated_at: team.updatedAt,
   };
 }
@@ -49,6 +51,7 @@ function normalizeCustomTeam(raw) {
       : [],
     origin: "custom",
     derivedFrom: typeof raw.derivedFrom === "string" ? raw.derivedFrom : null,
+    editMode: raw.editMode === true,
     updatedAt: Number.isFinite(raw.updatedAt) ? raw.updatedAt : 0,
   };
 }
@@ -59,9 +62,14 @@ function normalizeCustomTeam(raw) {
  * update the cache at once and reach Supabase in the background, reporting
  * failures through `onSyncError`. Without an account (edit-mode auto login)
  * the cache simply lives for the page's lifetime.
+ *
+ * A team first saved in edit mode is a test team: it is kept in the account
+ * but only listed while edit mode is on. `editMode` is read live, so it may be
+ * the very object the server later overwrites.
  */
 export class TeamStore {
-  constructor() {
+  constructor({ editMode = {} } = {}) {
+    this.editMode = editMode;
     this.userId = null;
     this.maxCustomTeams = 25;
     this.custom = [];
@@ -130,7 +138,10 @@ export class TeamStore {
   }
 
   getCustom() {
-    return this.custom.map((team) => structuredClone(team)).sort((a, b) => b.updatedAt - a.updatedAt);
+    return this.custom
+      .filter((team) => !team.editMode || this.editMode.enabled === true)
+      .map((team) => structuredClone(team))
+      .sort((a, b) => b.updatedAt - a.updatedAt);
   }
 
   isFull() {
@@ -162,8 +173,8 @@ export class TeamStore {
   /** Inserts or replaces a custom team by id; stamps origin and updatedAt.
    *  Returns null when a new team would exceed maxCustomTeams. */
   saveCustom(team) {
-    const exists = this.custom.some((entry) => entry.id === team.id);
-    if (!exists && this.isFull()) return null;
+    const existing = this.custom.find((entry) => entry.id === team.id);
+    if (!existing && this.isFull()) return null;
 
     const stamped = {
       id: team.id || generateId("team"),
@@ -173,6 +184,8 @@ export class TeamStore {
       emblems: [...team.emblems],
       origin: "custom",
       derivedFrom: team.derivedFrom ?? null,
+      // Editing never moves a team between real and test.
+      editMode: existing ? existing.editMode : this.editMode.enabled === true,
       updatedAt: Date.now(),
     };
 

@@ -48,6 +48,12 @@
   color: #b6ffe1;
 }
 
+.team-origin-test {
+  background: rgba(255, 196, 0, 0.14);
+  border: 1px solid rgba(255, 196, 0, 0.45);
+  color: #ffe6a3;
+}
+
 .team-portrait-strip {
   display: flex;
   gap: 5px;

@@ -4,7 +4,10 @@ const config = window.CSA_CONFIG || {};
 
 export const supabase =
   config.supabaseUrl && config.supabaseAnonKey
-    ? createClient(config.supabaseUrl, config.supabaseAnonKey)
+    ? // CSA shares its Supabase project with another game, so its tables live in "csa".
+      createClient(config.supabaseUrl, config.supabaseAnonKey, {
+        db: { schema: "csa" },
+      })
     : null;
 
 export const DISPLAY_NAME_MIN = 3;

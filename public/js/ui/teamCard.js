@@ -27,9 +27,12 @@ function emblemChips(emblems) {
 
 /** The visual summary of a team: name, tagline, ordered portraits, emblem badges. */
 export function renderTeamSummary(team, { originTag = true } = {}) {
+  const origin =
+    team.origin === "prebuilt" ? "prebuilt" : team.editMode ? "test" : "custom";
+  const originLabel = { prebuilt: "Prebuilt", test: "Test", custom: "Custom" }[origin];
   const tag =
     originTag && team.origin
-      ? `<span class="team-origin-tag team-origin-${team.origin === "prebuilt" ? "prebuilt" : "custom"}">${team.origin === "prebuilt" ? "Prebuilt" : "Custom"}</span>`
+      ? `<span class="team-origin-tag team-origin-${origin}" title="${origin === "test" ? "Saved in edit mode; hidden outside it." : ""}">${originLabel}</span>`
       : "";
 
   return `

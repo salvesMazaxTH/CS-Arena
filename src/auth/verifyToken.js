@@ -9,7 +9,10 @@ function getClient() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;
 
-  client = createClient(url, key, { auth: { persistSession: false } });
+  client = createClient(url, key, {
+    auth: { persistSession: false },
+    db: { schema: "csa" },
+  });
   return client;
 }
 

@@ -612,7 +612,7 @@ function flushFieldDepartures() {
  */
 function validateActionIntent(user, skill, reply) {
   if (!user.alive) {
-    reply.emit("skillDenied", "Dead champion.");
+    reply.emit("skillDenied", { en: "Dead champion.", pt: "Campeão morto." });
     return false;
   }
 
@@ -623,7 +623,10 @@ function validateActionIntent(user, skill, reply) {
   }
 
   if (!editMode.actMultipleTimesPerTurn && user.hasActedThisTurn) {
-    reply.emit("skillDenied", "Already acted this turn.");
+    reply.emit("skillDenied", {
+      en: "Already acted this turn.",
+      pt: "Já agiu neste turno.",
+    });
     return false;
   }
 
@@ -638,7 +641,10 @@ function validateActionIntent(user, skill, reply) {
 
   for (const res of intentResults) {
     if (res?.deny) {
-      reply.emit("skillDenied", res.message || "This action is unavailable.");
+      reply.emit(
+        "skillDenied",
+        res.message || { en: "This action is unavailable.", pt: "Esta ação está indisponível." },
+      );
       return false;
     }
   }
@@ -951,9 +957,10 @@ function handleScheduledEffect(effect, context) {
 
         if (effect.payload.reviveFrom && context?.registerDialog) {
           context.registerDialog({
-            message: `${formatChampionName(
-              effect.payload.reviveFrom,
-            )} found no room on the battlefield and could not return.`,
+            message: {
+              en: `${formatChampionName(effect.payload.reviveFrom)} found no room on the battlefield and could not return.`,
+              pt: `${formatChampionName(effect.payload.reviveFrom)} não encontrou espaço no campo de batalha e não pôde retornar.`,
+            },
             sourceId: null,
             targetId: null,
           });
@@ -1752,12 +1759,14 @@ function handleAllFirstChampionsChosen() {
 
 // Every connection carries a Supabase access token; the account behind it, not
 // anything the client types, decides who the player is. editMode.autoLogin is
-// the development shortcut that skips this.
+// the development shortcut that lets a connection without one in as a guest.
 io.use(async (socket, next) => {
-  if (editMode.enabled && editMode.autoLogin) return next();
-
   const player = await getPlayerFromToken(socket.handshake.auth?.token);
-  if (!player) return next(new Error("unauthorized"));
+  if (!player) {
+    return editMode.enabled && editMode.autoLogin
+      ? next()
+      : next(new Error("unauthorized"));
+  }
 
   socket.data.userId = player.userId;
   socket.data.displayName = player.displayName;
@@ -2234,7 +2243,7 @@ io.on("connection", (socket) => {
 
   socket.on("requestSkillUse", ({ userId, skillKey, targetId }) => {
     const user = match.combat.activeChampions.get(userId);
-    if (!user) return socket.emit("skillDenied", "Not allowed.");
+    if (!user) return socket.emit("skillDenied", { en: "Not allowed.", pt: "Não permitido." });
 
     if (skillKey === CLAIM_ACTION_KEY) {
       if (!validateActionIntent(user, null, socket)) return;
@@ -2243,7 +2252,7 @@ io.on("connection", (socket) => {
     }
 
     const skill = user.skills.find((s) => s.key === skillKey);
-    if (!skill) return socket.emit("skillDenied", "Invalid skill.");
+    if (!skill) return socket.emit("skillDenied", { en: "Invalid skill.", pt: "Habilidade inválida." });
 
     if (!validateActionIntent(user, skill, socket)) return;
 
@@ -2254,7 +2263,10 @@ io.on("connection", (socket) => {
     const cost = user.getSkillCost(skill);
 
     if (!editMode.freeCostSkills && cost > user.momentum) {
-      return socket.emit("skillDenied", `Not enough Momentum.`);
+      return socket.emit("skillDenied", {
+        en: "Not enough Momentum.",
+        pt: "Momentum insuficiente.",
+      });
     }
 
     socket.emit("skillApproved", { userId, skillKey });
