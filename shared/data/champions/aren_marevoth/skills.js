@@ -165,7 +165,10 @@ const arenMarevothSkills = [
             }).execute();
 
             return {
-              log: `${formatChampionName(owner)} restored ${restored} HP and gained ${bonusClaimPoints} additional CLAIM point from Blessing of the Ocean Depths.`,
+              log: {
+                en: `${formatChampionName(owner)} restored ${restored} HP and gained ${bonusClaimPoints} additional CLAIM point from Blessing of the Ocean Depths.`,
+                pt: `${formatChampionName(owner)} recuperou ${restored} de HP e ganhou ${bonusClaimPoints} ponto(s) extra(s) de CLAIM com a Blessing of the Ocean Depths.`,
+              },
               type: "score",
               amount: bonusClaimPoints,
               scoringSlot: owner.team - 1,
@@ -175,7 +178,10 @@ const arenMarevothSkills = [
       }
 
       return {
-        log: `${formatChampionName(user)} activated <b>Blessing of the Ocean Depths</b>, gaining a Spellshield!`,
+        log: {
+          en: `${formatChampionName(user)} activated <b>Blessing of the Ocean Depths</b>, gaining a Spellshield!`,
+          pt: `${formatChampionName(user)} ativou <b>Blessing of the Ocean Depths</b> e ganhou um Escudo Mágico!`,
+        },
       };
     },
   },
@@ -290,7 +296,10 @@ const arenMarevothSkills = [
             });
 
             return {
-              log: `${formatChampionName(owner)} triggered Abyssal Depths (${claimPointsRequired}+ Value Points), permanently increasing Max HP by ${maxHPBonusPercent}% (+${hpBonus} HP)! (${owner.runtime.abyssalDepthsHpStacks}/${maxHPBonusStacks})`,
+              log: {
+                en: `${formatChampionName(owner)} triggered Abyssal Depths (${claimPointsRequired}+ Value Points), permanently increasing Max HP by ${maxHPBonusPercent}% (+${hpBonus} HP)! (${owner.runtime.abyssalDepthsHpStacks}/${maxHPBonusStacks})`,
+                pt: `${formatChampionName(owner)} ativou Abyssal Depths (${claimPointsRequired}+ Pontos de Valor), aumentando o HP Máximo em ${maxHPBonusPercent}% de forma permanente (+${hpBonus} HP)! (${owner.runtime.abyssalDepthsHpStacks}/${maxHPBonusStacks})`,
+              },
             };
           },
         }, context);

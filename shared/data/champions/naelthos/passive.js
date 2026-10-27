@@ -37,7 +37,10 @@ export default {
 
     const ownerName = formatChampionName(owner);
     return {
-      log: `[PASSIVE — Returning Sea] ${ownerName} restored ${heal} HP.`,
+      log: {
+        en: `[PASSIVE — Returning Sea] ${ownerName} restored ${heal} HP.`,
+        pt: `[PASSIVA — Returning Sea] ${ownerName} recuperou ${heal} de HP.`,
+      },
     };
   },
 };

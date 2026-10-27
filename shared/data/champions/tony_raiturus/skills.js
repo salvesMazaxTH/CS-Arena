@@ -144,7 +144,10 @@ const tonyRaiturusSkills = [
       });
 
       results.push({
-        log: `${formatChampionName(user)} stops holding the boy's shape and rises as his <b>Primordial Form</b> for ${this.transformDuration} turn(s)!`,
+        log: {
+          en: `${formatChampionName(user)} stops holding the boy's shape and rises as his <b>Primordial Form</b> for ${this.transformDuration} turn(s)!`,
+          pt: `${formatChampionName(user)} deixa de sustentar a forma de garoto e se ergue em sua <b>Primordial Form</b> por ${this.transformDuration} turno(s)!`,
+        },
       });
 
       results.push(...detonateThunder(user, context));

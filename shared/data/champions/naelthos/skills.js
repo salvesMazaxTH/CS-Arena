@@ -53,7 +53,7 @@ const naelthosSkills = [
           : [damageResult];
         results.push(...damageResults);
       }
-      let allyLog = "";
+      let allyLog;
 
       const mostWoundedAlly = context.aliveChampions
         .filter((champ) => champ.team === user.team && champ !== user)
@@ -76,13 +76,18 @@ const naelthosSkills = [
 
         const userName = formatChampionName(user);
         const allyName = formatChampionName(mostWoundedAlly);
-        const purificationLog = debuffStatusEffects.length
-          ? ` and purifies ${allyName} of ${debuffStatusEffects.length} negative effect(s)`
-          : "";
+        const purged = debuffStatusEffects.length;
+        const hpLine = `${mostWoundedAlly.HP}/${mostWoundedAlly.maxHP}`;
 
-        allyLog = `${userName} restores ${restored} HP to ${allyName}${purificationLog}. ${allyName} is now at ${mostWoundedAlly.HP}/${mostWoundedAlly.maxHP} HP.`;
+        allyLog = {
+          en: `${userName} restores ${restored} HP to ${allyName}${purged ? ` and purifies ${allyName} of ${purged} negative effect(s)` : ""}. ${allyName} is now at ${hpLine} HP.`,
+          pt: `${userName} restaura ${restored} de HP de ${allyName}${purged ? ` e remove ${purged} efeito(s) negativo(s)` : ""}. ${allyName} agora está com ${hpLine} de HP.`,
+        };
       } else {
-        allyLog = `${formatChampionName(user)} reaches for an ally to mend, but finds none.`;
+        allyLog = {
+          en: `${formatChampionName(user)} reaches for an ally to mend, but finds none.`,
+          pt: `${formatChampionName(user)} procura um aliado para curar, mas não encontra nenhum.`,
+        };
       }
 
       results.push({ log: allyLog });
@@ -259,7 +264,10 @@ const naelthosSkills = [
       const userName = formatChampionName(user);
       return [
         {
-          log: `${userName} invokes the Primordial Sea! Max HP +${appliedAmount}; the <b>Rising Sea</b> carries his attacks for ${this.effectDuration} turn(s).`,
+          log: {
+            en: `${userName} invokes the Primordial Sea! Max HP +${appliedAmount}; the <b>Rising Sea</b> carries his attacks for ${this.effectDuration} turn(s).`,
+            pt: `${userName} invoca o Mar Primordial! HP Máximo +${appliedAmount}; a <b>Rising Sea</b> impulsiona seus ataques por ${this.effectDuration} turno(s).`,
+          },
         },
       ];
     },

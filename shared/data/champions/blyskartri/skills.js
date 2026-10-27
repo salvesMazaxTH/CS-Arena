@@ -139,7 +139,10 @@ const blyskartriSkills = [
             context: deriveContext(context, { damageDepth: (context.damageDepth || 0) + 1 }),
           });
 
-          const counterLog = `${formatChampionName(user)} strikes back at ${formatChampionName(attacker)} for attacking his ally!`;
+          const counterLog = {
+            en: `${formatChampionName(user)} strikes back at ${formatChampionName(attacker)} for attacking his ally!`,
+            pt: `${formatChampionName(user)} revida contra ${formatChampionName(attacker)} por atacar seu aliado!`,
+          };
 
           context.registerDialog({
             message: counterLog,

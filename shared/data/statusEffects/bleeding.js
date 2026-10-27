@@ -58,12 +58,18 @@ const bleeding = {
 
     if (result?.immune) {
       return {
-        log: `${label} is immune to Bleeding damage!`,
+        log: {
+          en: `${label} is immune to Bleeding damage!`,
+          pt: `${label} está imune ao dano de Sangramento!`,
+        },
       };
     }
 
     return {
-      log: `${label} takes ${result?.totalDamage ?? dmgPerStack * stacks} Bleeding damage (<b>${stacks}x</b>).`,
+      log: {
+        en: `${label} takes ${result?.totalDamage ?? dmgPerStack * stacks} Bleeding damage (<b>${stacks}x</b>).`,
+        pt: `${label} sofre ${result?.totalDamage ?? dmgPerStack * stacks} de dano de Sangramento (<b>${stacks}x</b>).`,
+      },
     };
   },
 

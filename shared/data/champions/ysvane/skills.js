@@ -43,9 +43,14 @@ const wardOfTheKeep = {
     const allyName = formatChampionName(ally);
 
     return {
-      log: `${userName} sets ${
-        userName === allyName ? "herself" : allyName
-      } inside the Keep: Kept, under a ${this.shieldAmount} Shield.`,
+      log: {
+        en: `${userName} sets ${
+          user === ally ? "herself" : allyName
+        } inside the Keep: Kept, under a ${this.shieldAmount} Shield.`,
+        pt: user === ally
+          ? `${userName} se põe dentro da Guarda: Resguardada, sob um Escudo de ${this.shieldAmount}.`
+          : `${userName} põe ${allyName} dentro da Guarda: sob proteção, com um Escudo de ${this.shieldAmount}.`,
+      },
     };
   },
 
@@ -96,7 +101,10 @@ const wardOfTheKeep = {
           shield.amount = Math.min(shield.amount * 2, shieldCap);
 
           return {
-            log: `The Keep has not been opened: ${formatChampionName(owner)}'s Shield doubles to ${shield.amount}.`,
+            log: {
+              en: `The Keep has not been opened: ${formatChampionName(owner)}'s Shield doubles to ${shield.amount}.`,
+              pt: `A Guarda não foi aberta: o Escudo de ${formatChampionName(owner)} dobra para ${shield.amount}.`,
+            },
           };
         },
 
@@ -210,9 +218,14 @@ const ysvaneSkills = [
       const allyName = formatChampionName(ally);
 
       return {
-        log: `${userName} holds ${
-          userName === allyName ? "herself" : allyName
-        } fast: ${this.damageReductionPercent}% less damage and no hold takes.`,
+        log: {
+          en: `${userName} holds ${
+            user === ally ? "herself" : allyName
+          } fast: ${this.damageReductionPercent}% less damage and no hold takes.`,
+          pt: user === ally
+            ? `${userName} se mantém firme: ${this.damageReductionPercent}% menos dano e nenhum controle a prende.`
+            : `${userName} mantém ${allyName} firme: ${this.damageReductionPercent}% menos dano e imune a controles que prendem.`,
+        },
       };
     },
   },
@@ -278,12 +291,19 @@ const ysvaneSkills = [
         });
       }
 
+      const sealedNames = crystallized.map(formatChampionName).join(", ");
       const sealed = crystallized.length
-        ? ` The Keep seals over ${crystallized.map(formatChampionName).join(", ")}: Supreme Shield.`
-        : "";
+        ? {
+            en: ` The Keep seals over ${sealedNames}: Supreme Shield.`,
+            pt: ` A Guarda se fecha sobre ${sealedNames}: Escudo Supremo.`,
+          }
+        : { en: "", pt: "" };
 
       return {
-        log: `${formatChampionName(user)} lets the Keep out over the whole team: every ally cleansed and Kept in the long winter.${sealed}`,
+        log: {
+          en: `${formatChampionName(user)} lets the Keep out over the whole team: every ally cleansed and Kept in the long winter.${sealed.en}`,
+          pt: `${formatChampionName(user)} estende a Guarda sobre todo o time: cada aliado purificado e Resguardado no longo inverno.${sealed.pt}`,
+        },
       };
     },
   },

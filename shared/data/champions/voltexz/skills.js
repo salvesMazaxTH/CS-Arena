@@ -40,7 +40,10 @@ function applyOverchargeRecoil({ user, baseDamage, context }) {
   return [
     ...entries,
     {
-      log: `${userName} takes ${entries[0].totalDamage} Absolute recoil damage from <b>${unstableOvercharge.name}</b>.\nfinal HP of ${userName}: ${entries[0].finalHP}/${user.maxHP}`,
+      log: {
+        en: `${userName} takes ${entries[0].totalDamage} Absolute recoil damage from <b>${unstableOvercharge.name}</b>.\nfinal HP of ${userName}: ${entries[0].finalHP}/${user.maxHP}`,
+        pt: `${userName} sofre ${entries[0].totalDamage} de dano Absoluto de recuo de <b>${unstableOvercharge.name}</b>.\nHP final de ${userName}: ${entries[0].finalHP}/${user.maxHP}`,
+      },
     },
   ];
 }

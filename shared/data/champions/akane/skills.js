@@ -108,7 +108,10 @@ const akaneSkills = [
       );
 
       return {
-        log: `${formatChampionName(user)} bathes in blood, gaining +${this.lifeStealBuff}% Life Steal for ${this.buffDuration} turn(s) and readying a killing edge.`,
+        log: {
+          en: `${formatChampionName(user)} bathes in blood, gaining +${this.lifeStealBuff}% Life Steal for ${this.buffDuration} turn(s) and readying a killing edge.`,
+          pt: `${formatChampionName(user)} se banha em sangue, ganhando +${this.lifeStealBuff}% de Roubo de Vida por ${this.buffDuration} turno(s) e preparando um golpe mortal.`,
+        },
       };
     },
   },

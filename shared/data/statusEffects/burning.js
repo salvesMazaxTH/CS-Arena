@@ -58,12 +58,18 @@ const burning = {
 
     if (result?.immune) {
       return {
-        log: `${formatChampionName(owner)} is immune to Burn damage!`,
+        log: {
+          en: `${formatChampionName(owner)} is immune to Burn damage!`,
+          pt: `${formatChampionName(owner)} está imune ao dano de Queimadura!`,
+        },
       };
     }
 
     return {
-      log: `${formatChampionName(owner)} takes ${result?.totalDamage ?? damage} Burn damage.`,
+      log: {
+        en: `${formatChampionName(owner)} takes ${result?.totalDamage ?? damage} Burn damage.`,
+        pt: `${formatChampionName(owner)} sofre ${result?.totalDamage ?? damage} de dano de Queimadura.`,
+      },
     };
   },
 

@@ -1825,7 +1825,7 @@ export function createCombatAnimationManager(deps) {
       lastLoggedTurn = currentTurn;
       const turnHeader = document.createElement("h2");
       turnHeader.classList.add("turn-header");
-      turnHeader.textContent = `Turn ${currentTurn}`;
+      turnHeader.textContent = `${getLocale() === "pt" ? "Turno" : "Turn"} ${currentTurn}`;
       log.appendChild(turnHeader);
     }
 
@@ -1872,7 +1872,11 @@ export function createCombatAnimationManager(deps) {
 
     clearTimeout(turnTransitionTimer);
 
-    const turnLabel = turn === 20 ? "LAST TURN" : `TURN ${turn}`;
+    const isPt = getLocale() === "pt";
+    const turnLabel =
+      turn === 20
+        ? isPt ? "ÚLTIMO TURNO" : "LAST TURN"
+        : `${isPt ? "TURNO" : "TURN"} ${turn}`;
 
     // Ensure the overlay starts showing the new turn.
     number.textContent = turnLabel;
@@ -1918,7 +1922,10 @@ export function createCombatAnimationManager(deps) {
     const turnText = turnDisplay?.querySelector("p");
 
     if (turnText) {
-      turnText.textContent = turn === 20 ? "Last Turn" : `Turn ${turn}`;
+      turnText.textContent =
+        turn === 20
+          ? getLocale() === "pt" ? "Último Turno" : "Last Turn"
+          : `${getLocale() === "pt" ? "Turno" : "Turn"} ${turn}`;
     }
 
     if (isFirstTurnUpdate) {

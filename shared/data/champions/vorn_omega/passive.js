@@ -109,7 +109,10 @@ export default {
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} sheds ${shed} plate(s) and answers to that much less.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} sheds ${shed} plate(s) and answers to that much less.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} solta ${shed} placa(s) e passa a responder a tanto menos.`,
+      },
     };
   },
 };

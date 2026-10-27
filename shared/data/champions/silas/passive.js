@@ -66,7 +66,10 @@ export default {
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} went unwitnessed, and gains ${gained} Momentum.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} went unwitnessed, and gains ${gained} Momentum.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} passou despercebido e ganha ${gained} de Momentum.`,
+      },
     };
   },
 };

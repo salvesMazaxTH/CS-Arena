@@ -107,9 +107,10 @@ const tyrenSkills = [
         context.currentTurn < user.runtime.livingSteelAegisExpiresAtTurn
       ) {
         return {
-          log: `${formatChampionName(
-            user,
-          )} cannot use <b>Living Steel Aegis</b> while already under its effect.`,
+          log: {
+            en: `${formatChampionName(user)} cannot use <b>Living Steel Aegis</b> while already under its effect.`,
+            pt: `${formatChampionName(user)} não pode usar <b>Living Steel Aegis</b> enquanto já estiver sob seu efeito.`,
+          },
         };
       }
 
@@ -149,12 +150,20 @@ const tyrenSkills = [
       });
 
       return {
-        log:
-          `<b>[${this.name}]</b> ${formatChampionName(user)} ` +
-          `transmutes his body into Living Steel: ` +
-          `Attack ${originalAttack} → ${user.Attack}, ` +
-          `Defense ${originalDefense} → ${user.Defense}, ` +
-          `Speed ${originalSpeed} → ${user.Speed}.`,
+        log: {
+          en:
+            `<b>[${this.name}]</b> ${formatChampionName(user)} ` +
+            `transmutes his body into Living Steel: ` +
+            `Attack ${originalAttack} → ${user.Attack}, ` +
+            `Defense ${originalDefense} → ${user.Defense}, ` +
+            `Speed ${originalSpeed} → ${user.Speed}.`,
+          pt:
+            `<b>[${this.name}]</b> ${formatChampionName(user)} ` +
+            `transmuta seu corpo em Aço Vivo: ` +
+            `Ataque ${originalAttack} → ${user.Attack}, ` +
+            `Defesa ${originalDefense} → ${user.Defense}, ` +
+            `Velocidade ${originalSpeed} → ${user.Speed}.`,
+        },
       };
     },
   },

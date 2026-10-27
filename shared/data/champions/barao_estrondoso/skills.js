@@ -74,7 +74,10 @@ const baraoEstrondosoSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} reinforced his plating!`,
+        log: {
+          en: `${formatChampionName(user)} reinforced his plating!`,
+          pt: `${formatChampionName(user)} reforçou sua blindagem!`,
+        },
       };
     },
   },

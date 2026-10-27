@@ -43,7 +43,10 @@ export default {
     }
 
     return {
-      log: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} lets the CLAIM carry her venom — ${this.claimPoisonStacks} stacks of Poisoned scatter across the enemy line.`,
+      log: {
+        en: `[PASSIVE — ${this.name}] ${formatChampionName(owner)} lets the CLAIM carry her venom — ${this.claimPoisonStacks} stacks of Poisoned scatter across the enemy line.`,
+        pt: `[PASSIVA — ${this.name}] ${formatChampionName(owner)} deixa o CLAIM levar seu veneno — ${this.claimPoisonStacks} acúmulos de Envenenado se espalham pela linha inimiga.`,
+      },
     };
   },
 
@@ -70,7 +73,10 @@ export default {
     const ownerName = formatChampionName(owner);
 
     return {
-      log: `[PASSIVE — ${this.name}] ${ownerName} absorbs the venom and restores ${healed} HP (${before} → ${owner.HP}).`,
+      log: {
+        en: `[PASSIVE — ${this.name}] ${ownerName} absorbs the venom and restores ${healed} HP (${before} → ${owner.HP}).`,
+        pt: `[PASSIVA — ${this.name}] ${ownerName} absorve o veneno e recupera ${healed} de HP (${before} → ${owner.HP}).`,
+      },
     };
   },
 };

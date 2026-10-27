@@ -52,7 +52,10 @@ const tharoxSkills = [
         });
 
         return {
-          log: `${formatChampionName(user)} used <b>Primeval Taunt</b>, but it failed. Taunt Streak reset.`,
+          log: {
+            en: `${formatChampionName(user)} used <b>Primeval Taunt</b>, but it failed. Taunt Streak reset.`,
+            pt: `${formatChampionName(user)} usou <b>Primeval Taunt</b>, mas falhou. A sequência de Provocação foi zerada.`,
+          },
         };
       }
 
@@ -77,7 +80,10 @@ const tharoxSkills = [
       // Filter out falsy (e.g., if taunt not applied)
       const logs = tauntLogs.filter(Boolean);
       logs.unshift({
-        log: `${userName} executed <b>Primeval Taunt</b>. All enemies were taunted and ${userName} gained ${this.damageReductionAmount}% Damage Reduction.`,
+        log: {
+          en: `${userName} executed <b>Primeval Taunt</b>. All enemies were taunted and ${userName} gained ${this.damageReductionAmount}% Damage Reduction.`,
+          pt: `${userName} executou <b>Primeval Taunt</b>. Todos os inimigos foram provocados e ${userName} ganhou ${this.damageReductionAmount}% de Redução de Dano.`,
+        },
       });
       return logs;
     },
@@ -293,9 +299,10 @@ const tharoxSkills = [
           );
 
           return {
-            log:
-              `<b>[Apotheosis of the Monolith]</b> ${formatChampionName(defender)} ` +
-              `lost the SupremeShield and healed ${Math.floor(healingAmount)} HP.`,
+            log: {
+              en: `<b>[Apotheosis of the Monolith]</b> ${formatChampionName(defender)} lost the SupremeShield and healed ${Math.floor(healingAmount)} HP.`,
+              pt: `<b>[Apotheosis of the Monolith]</b> ${formatChampionName(defender)} perdeu o Escudo Supremo e curou ${Math.floor(healingAmount)} de HP.`,
+            },
           };
         },
 
@@ -333,12 +340,20 @@ const tharoxSkills = [
       }, context);
 
       return {
-        log:
-          `${userName} executed <b>Apotheosis of the Monolith</b>, ` +
-          `unleashing his war form. ` +
-          `Received +${this.defBonusWhileShielded} Defense while the SupremeShield was active ` +
-          `and healed ${Math.floor(proportionalHeal)} HP. ` +
-          `(Defense: ${user.Defense}, HP: ${user.HP}/${user.maxHP})`,
+        log: {
+          en:
+            `${userName} executed <b>Apotheosis of the Monolith</b>, ` +
+            `unleashing his war form. ` +
+            `Received +${this.defBonusWhileShielded} Defense while the SupremeShield was active ` +
+            `and healed ${Math.floor(proportionalHeal)} HP. ` +
+            `(Defense: ${user.Defense}, HP: ${user.HP}/${user.maxHP})`,
+          pt:
+            `${userName} executou <b>Apotheosis of the Monolith</b>, ` +
+            `liberando sua forma de guerra. ` +
+            `Recebeu +${this.defBonusWhileShielded} de Defesa enquanto o Escudo Supremo estiver ativo ` +
+            `e curou ${Math.floor(proportionalHeal)} de HP. ` +
+            `(Defesa: ${user.Defense}, HP: ${user.HP}/${user.maxHP})`,
+        },
       };
     },
   },

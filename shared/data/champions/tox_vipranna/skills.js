@@ -161,11 +161,10 @@ const toxViprannaSkills = [
           );
 
           return {
-            log: `<b>[${this.name}]</b> ${formatChampionName(
-              attacker,
-            )} is afflicted with ${this.poisonedStacks} stacks of <b>Poisoned</b> after attacking ${formatChampionName(
-              owner,
-            )}.`,
+            log: {
+              en: `<b>[${this.name}]</b> ${formatChampionName(attacker)} is afflicted with ${this.poisonedStacks} stacks of <b>Poisoned</b> after attacking ${formatChampionName(owner)}.`,
+              pt: `<b>[${this.name}]</b> ${formatChampionName(attacker)} recebe ${this.poisonedStacks} acúmulos de <b>Envenenado</b> após atacar ${formatChampionName(owner)}.`,
+            },
           };
         },
       }, context);
@@ -203,7 +202,10 @@ const toxViprannaSkills = [
           if (healed <= 0) return;
 
           return {
-            log: `<b>[Toxic Coating]</b> ${formatChampionName(owner)} draws the coating back in through the CLAIM, restoring ${healed} HP.`,
+            log: {
+              en: `<b>[Toxic Coating]</b> ${formatChampionName(owner)} draws the coating back in through the CLAIM, restoring ${healed} HP.`,
+              pt: `<b>[Toxic Coating]</b> ${formatChampionName(owner)} reabsorve o revestimento pelo CLAIM e recupera ${healed} de HP.`,
+            },
           };
         },
       }, context);
@@ -217,9 +219,10 @@ const toxViprannaSkills = [
       });
 
       return {
-        log: `${formatChampionName(
-          user,
-        )} activates <b>Toxic Coating</b>!`,
+        log: {
+          en: `${formatChampionName(user)} activates <b>Toxic Coating</b>!`,
+          pt: `${formatChampionName(user)} ativa <b>Toxic Coating</b>!`,
+        },
       };
     },
   },
@@ -258,7 +261,7 @@ const toxViprannaSkills = [
       const [enemy] = targets;
 
       if (!enemy?.hasStatusEffect("poisoned")) {
-        const failMessage = "But it failed.";
+        const failMessage = { en: "But it failed.", pt: "Mas falhou." };
 
         context.registerDialog({
           message: failMessage,

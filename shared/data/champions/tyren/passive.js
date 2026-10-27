@@ -73,10 +73,16 @@ export default {
       runtime.livingMetallurgyAdaptation = "physical";
 
       return {
-        log:
-          `<b>[Passive — ${this.name}]</b> ` +
-          `${formatChampionName(owner)}'s Living Steel hardens against the physical impact, ` +
-          `forming a ${shieldAmount} HP Shield and empowering his next attack.`,
+        log: {
+          en:
+            `<b>[Passive — ${this.name}]</b> ` +
+            `${formatChampionName(owner)}'s Living Steel hardens against the physical impact, ` +
+            `forming a ${shieldAmount} HP Shield and empowering his next attack.`,
+          pt:
+            `<b>[Passiva — ${this.name}]</b> ` +
+            `O Aço Vivo de ${formatChampionName(owner)} endurece contra o impacto físico, ` +
+            `formando um Escudo de ${shieldAmount} de HP e fortalecendo seu próximo ataque.`,
+        },
       };
     }
 
@@ -86,21 +92,34 @@ export default {
       runtime.livingMetallurgyAdaptation = "magical";
 
       return {
-        log:
-          `<b>[Passive — ${this.name}]</b> ` +
-          `${formatChampionName(owner)}'s Living Steel resonates with the magical impact, ` +
-          `forming a Spellshield and preparing his next damaging ability ` +
-          `to pierce ${this.piercingPercentage}% of the target's Defense.`,
+        log: {
+          en:
+            `<b>[Passive — ${this.name}]</b> ` +
+            `${formatChampionName(owner)}'s Living Steel resonates with the magical impact, ` +
+            `forming a Spellshield and preparing his next damaging ability ` +
+            `to pierce ${this.piercingPercentage}% of the target's Defense.`,
+          pt:
+            `<b>[Passiva — ${this.name}]</b> ` +
+            `O Aço Vivo de ${formatChampionName(owner)} ressoa com o impacto mágico, ` +
+            `formando um Escudo Mágico e preparando sua próxima habilidade de dano ` +
+            `para perfurar ${this.piercingPercentage}% da Defesa do alvo.`,
+        },
       };
     }
 
     // Other damage types still trigger the defensive adaptation,
     // but do not prepare an offensive adaptation.
     return {
-      log:
-        `<b>[Passive — ${this.name}]</b> ` +
-        `${formatChampionName(owner)}'s Living Steel adapts to the impact, ` +
-        `forming a ${shieldAmount} HP Shield.`,
+      log: {
+        en:
+          `<b>[Passive — ${this.name}]</b> ` +
+          `${formatChampionName(owner)}'s Living Steel adapts to the impact, ` +
+          `forming a ${shieldAmount} HP Shield.`,
+        pt:
+          `<b>[Passiva — ${this.name}]</b> ` +
+          `O Aço Vivo de ${formatChampionName(owner)} se adapta ao impacto, ` +
+          `formando um Escudo de ${shieldAmount} de HP.`,
+      },
     };
   },
 
@@ -124,11 +143,18 @@ export default {
 
       return {
         damage: newDamage,
-        log:
-          `<b>[Passive — ${this.name}]</b> ` +
-          `${formatChampionName(owner)} releases the hardened Living Steel, ` +
-          `increasing the damage of ${skill?.name ?? "his attack"} by ` +
-          `${this.bonusDamagePercent}%.`,
+        log: {
+          en:
+            `<b>[Passive — ${this.name}]</b> ` +
+            `${formatChampionName(owner)} releases the hardened Living Steel, ` +
+            `increasing the damage of ${skill?.name ?? "his attack"} by ` +
+            `${this.bonusDamagePercent}%.`,
+          pt:
+            `<b>[Passiva — ${this.name}]</b> ` +
+            `${formatChampionName(owner)} libera o Aço Vivo endurecido, ` +
+            `aumentando o dano de ${skill?.name ?? "seu ataque"} em ` +
+            `${this.bonusDamagePercent}%.`,
+        },
       };
     }
 
@@ -136,11 +162,18 @@ export default {
       return {
         mode: "piercing",
         piercingPercentage: this.piercingPercentage,
-        log:
-          `<b>[Passive — ${this.name}]</b> ` +
-          `${formatChampionName(owner)} channels the stored magical resonance, ` +
-          `causing ${skill?.name ?? "his ability"} to ignore ` +
-          `${this.piercingPercentage}% of the target's Defense.`,
+        log: {
+          en:
+            `<b>[Passive — ${this.name}]</b> ` +
+            `${formatChampionName(owner)} channels the stored magical resonance, ` +
+            `causing ${skill?.name ?? "his ability"} to ignore ` +
+            `${this.piercingPercentage}% of the target's Defense.`,
+          pt:
+            `<b>[Passiva — ${this.name}]</b> ` +
+            `${formatChampionName(owner)} canaliza a ressonância mágica armazenada, ` +
+            `fazendo ${skill?.name ?? "sua habilidade"} ignorar ` +
+            `${this.piercingPercentage}% da Defesa do alvo.`,
+        },
       };
     }
   },

@@ -399,7 +399,12 @@ export function applyStatModifier(
   champion[statName] = clamped;
 
   const isCappedMax = amount > 0 && appliedAmount === 0;
-  const capLog = isCappedMax ? `Stat ${statName} is already at maximum.` : null;
+  const capLog = isCappedMax
+    ? {
+        en: `Stat ${statName} is already at maximum.`,
+        pt: `O atributo ${statName} já está no máximo.`,
+      }
+    : null;
 
   const currentTurn = context?.currentTurn ?? 0;
 

@@ -175,7 +175,10 @@ const torrenSkills = [
               type: "score",
               amount: claimBonusPoints,
               scoringSlot: owner.team - 1,
-              log: `${formatChampionName(owner)} claims the ground with a scorned foe pinned to him — <b>Scorn the Weak</b> banks ${claimBonusPoints} extra point(s).`,
+              log: {
+                en: `${formatChampionName(owner)} claims the ground with a scorned foe pinned to him — <b>Scorn the Weak</b> banks ${claimBonusPoints} extra point(s).`,
+                pt: `${formatChampionName(owner)} domina o terreno com um inimigo desprezado preso a ele — <b>Scorn the Weak</b> rende ${claimBonusPoints} ponto(s) extra(s).`,
+              },
             };
           },
         },

@@ -1,5 +1,6 @@
 import { formatChampionName } from "../../../ui/formatters.js";
 import { HealEvent } from "../../../engine/combat/HealEvent.js";
+import { resolveText } from "../../../i18n/locale.js";
 
 export default {
   key: "unyielding_mass",
@@ -31,7 +32,10 @@ export default {
 
     if (owner.runtime.tharoxInerciaStacks < this.stacksNeeded) {
       return {
-        log: `<b>[Passive - Unyielding Mass]</b> ${formatChampionName(owner)} gained Inertia (${owner.runtime.tharoxInerciaStacks}/${this.stacksNeeded}).`,
+        log: {
+          en: `<b>[Passive - Unyielding Mass]</b> ${formatChampionName(owner)} gained Inertia (${owner.runtime.tharoxInerciaStacks}/${this.stacksNeeded}).`,
+          pt: `<b>[Passiva - Unyielding Mass]</b> ${formatChampionName(owner)} ganhou Inércia (${owner.runtime.tharoxInerciaStacks}/${this.stacksNeeded}).`,
+        },
       };
     }
 
@@ -44,10 +48,11 @@ export default {
       isPermanent: true,
     });
 
-    let log =
-      `<b>[Passive - Unyielding Mass]</b> ${formatChampionName(owner)} ` +
-      `consumed ${this.stacksNeeded} Inertia and gained +${this.defBonus} permanent Defense! ` +
-      `(Defense: ${owner.Defense}).`;
+    const ownerName = formatChampionName(owner);
+    const log = {
+      en: `<b>[Passive - Unyielding Mass]</b> ${ownerName} consumed ${this.stacksNeeded} Inertia and gained +${this.defBonus} permanent Defense! (Defense: ${owner.Defense}).`,
+      pt: `<b>[Passiva - Unyielding Mass]</b> ${ownerName} consumiu ${this.stacksNeeded} de Inércia e ganhou +${this.defBonus} de Defesa permanente! (Defesa: ${owner.Defense}).`,
+    };
 
     if (owner.HP / owner.maxHP <= this.sustainHpThreshold) {
       const defenseMultipliers = Math.floor(owner.Defense / this.defensePerHealingStep);
@@ -62,17 +67,22 @@ export default {
           source: owner,
         }).execute();
 
-        log += `\nHealed ${Math.floor(healingAmount)} HP (${defenseMultipliers} × ${this.healingPerMaxHP * 100}% of Max HP).`;
+        const healed = Math.floor(healingAmount);
+        const percent = this.healingPerMaxHP * 100;
+        log.en += `\nHealed ${healed} HP (${defenseMultipliers} × ${percent}% of Max HP).`;
+        log.pt += `\nCurou ${healed} de HP (${defenseMultipliers} × ${percent}% do HP Máximo).`;
       }
 
       const shieldAmount = owner.maxHP * this.shieldPercentage;
       owner.addShield(shieldAmount, 0, context, "regular");
 
-      log += `\nGained a shield of ${Math.floor(shieldAmount)} HP.`;
+      log.en += `\nGained a shield of ${Math.floor(shieldAmount)} HP.`;
+      log.pt += `\nGanhou um Escudo de ${Math.floor(shieldAmount)} de HP.`;
     }
 
     if (statResult?.log) {
-      log += `\n${statResult.log}`;
+      log.en += `\n${resolveText(statResult.log, "en")}`;
+      log.pt += `\n${resolveText(statResult.log, "pt")}`;
     }
 
     return { log };

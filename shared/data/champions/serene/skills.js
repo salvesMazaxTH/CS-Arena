@@ -45,9 +45,12 @@ const sereneSkills = [
       const allyName = formatChampionName(ally);
 
       return {
-        log: `${userName} grants ${shieldAmount} Shield to ${
-          userName === allyName ? "herself" : allyName
-        }.`,
+        log: {
+          en: `${userName} grants ${shieldAmount} Shield to ${user === ally ? "herself" : allyName}.`,
+          pt: user === ally
+            ? `${userName} concede ${shieldAmount} de Escudo a si mesma.`
+            : `${userName} concede ${shieldAmount} de Escudo a ${allyName}.`,
+        },
       };
     },
   },
@@ -165,7 +168,10 @@ const sereneSkills = [
 
       if (alreadyActive) {
         return {
-          log: `${formatChampionName(user)} reaches for the Threshold, but it already stands open...`,
+          log: {
+            en: `${formatChampionName(user)} reaches for the Threshold, but it already stands open...`,
+            pt: `${formatChampionName(user)} busca o Limiar, mas ele já está aberto...`,
+          },
         };
       }
 
@@ -274,7 +280,10 @@ const sereneSkills = [
 
             return {
               damageCap: adjustedDamage,
-              log: `${formatChampionName(owner)} is drawn back from the Threshold, Immune and holding on with ${lockedHP} HP!`,
+              log: {
+                en: `${formatChampionName(owner)} is drawn back from the Threshold, Immune and holding on with ${lockedHP} HP!`,
+                pt: `${formatChampionName(owner)} retorna do Limiar, Imune e resistindo com ${lockedHP} de HP!`,
+              },
             };
           },
         };
@@ -283,7 +292,10 @@ const sereneSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} crosses into the Quietude and reaches the Threshold of Existence. Her allies are wrapped in its stillness!`,
+        log: {
+          en: `${formatChampionName(user)} crosses into the Quietude and reaches the Threshold of Existence. Her allies are wrapped in its stillness!`,
+          pt: `${formatChampionName(user)} adentra a Quietude e alcança o Limiar da Existência. Seus aliados são envoltos em sua quietude!`,
+        },
       };
     },
   },

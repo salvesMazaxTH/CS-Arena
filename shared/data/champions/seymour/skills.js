@@ -71,7 +71,10 @@ const seymourSkills = [
               );
               return {
                 amount: reduced,
-                log: `<b>[Bleached]</b> the light lets almost nothing mend on ${formatChampionName(owner)} (${amount} → ${reduced}).`,
+                log: {
+                  en: `<b>[Bleached]</b> the light lets almost nothing mend on ${formatChampionName(owner)} (${amount} → ${reduced}).`,
+                  pt: `<b>[Bleached]</b> a luz quase não deixa nada se curar em ${formatChampionName(owner)} (${amount} → ${reduced}).`,
+                },
               };
             },
           },

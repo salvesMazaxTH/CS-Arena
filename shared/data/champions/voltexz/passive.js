@@ -66,7 +66,10 @@ export default {
 
     return {
       damage: damage + bonusDamage,
-      log: `⚡ HIT! ${formatChampionName(attacker)} discharges through the Conductor on ${formatChampionName(defender)} (+${this.conductorBonusPercent}% damage)!`,
+      log: {
+        en: `⚡ HIT! ${formatChampionName(attacker)} discharges through the Conductor on ${formatChampionName(defender)} (+${this.conductorBonusPercent}% damage)!`,
+        pt: `⚡ ACERTO! ${formatChampionName(attacker)} descarrega através do Condutor em ${formatChampionName(defender)} (+${this.conductorBonusPercent}% de dano)!`,
+      },
     };
   },
 };

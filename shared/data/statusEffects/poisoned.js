@@ -52,11 +52,18 @@ const poisoned = {
 
     if (result?.immune) {
       return {
-        log: `${label} is immune to Poison damage!`,
+        log: {
+          en: `${label} is immune to Poison damage!`,
+          pt: `${label} está imune ao dano de Veneno!`,
+        },
       };
     }
 
-    const dotSummary = `${label} takes ${result?.totalDamage ?? dmgPerStack * stacks} Poison damage (<b>${stacks}x</b>).`;
+    const dealt = result?.totalDamage ?? dmgPerStack * stacks;
+    const dotSummary = {
+      en: `${label} takes ${dealt} Poison damage (<b>${stacks}x</b>).`,
+      pt: `${label} sofre ${dealt} de dano de Veneno (<b>${stacks}x</b>).`,
+    };
 
     // The pipeline's own damage line is dropped in favour of the stack-aware
     // summary; every entry after it comes from reactive hooks and is kept.

@@ -52,7 +52,10 @@ const vulnaraSkills = [
       });
 
       return {
-        log: `${formatChampionName(user)} sharpens her instincts, gaining +${this.critBuff}% Critical and +${this.speedBuff} Speed for ${this.duration} turn(s)!`,
+        log: {
+          en: `${formatChampionName(user)} sharpens her instincts, gaining +${this.critBuff}% Critical and +${this.speedBuff} Speed for ${this.duration} turn(s)!`,
+          pt: `${formatChampionName(user)} aguça seus instintos, ganhando +${this.critBuff}% de Crítico e +${this.speedBuff} de Velocidade por ${this.duration} turno(s)!`,
+        },
       };
     },
   },

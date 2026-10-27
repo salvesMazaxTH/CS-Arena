@@ -51,9 +51,10 @@ export default {
       potentialTotal - owner.maxHP,
     );
 
-    let log = `[PASSIVE — Fountain of Life] ${formatChampionName(
-      owner,
-    )} restored ${applied} HP.`;
+    const log = {
+      en: `[PASSIVE — Fountain of Life] ${formatChampionName(owner)} restored ${applied} HP.`,
+      pt: `[PASSIVA — Fountain of Life] ${formatChampionName(owner)} recuperou ${applied} de HP.`,
+    };
 
     // Convert overheal into permanent Max HP.
     if (overheal > 0) {
@@ -83,11 +84,10 @@ export default {
         isPermanent: true,
       });
 
-      log += ` ${formatChampionName(
-        healTarget,
-      )} was below ${this.hpThreshold}% HP, so ${formatChampionName(
-        owner,
-      )} gained +${this.defBonus} Defense!`;
+      const targetName = formatChampionName(healTarget);
+      const ownerName = formatChampionName(owner);
+      log.en += ` ${targetName} was below ${this.hpThreshold}% HP, so ${ownerName} gained +${this.defBonus} Defense!`;
+      log.pt += ` ${targetName} estava abaixo de ${this.hpThreshold}% de HP, então ${ownerName} ganhou +${this.defBonus} de Defesa!`;
     }
 
     return { log };

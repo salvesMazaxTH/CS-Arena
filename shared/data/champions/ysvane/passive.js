@@ -40,7 +40,10 @@ export default {
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(actionSource)}'s CLAIM holds fast in the cold — ${this.claimBonusPoints} extra point(s).`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(actionSource)}'s CLAIM holds fast in the cold — ${this.claimBonusPoints} extra point(s).`,
+        pt: `<b>[Passiva — ${this.name}]</b> O CLAIM de ${formatChampionName(actionSource)} resiste firme no frio — ${this.claimBonusPoints} ponto(s) extra(s).`,
+      },
     };
   },
 
@@ -61,7 +64,10 @@ export default {
     });
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(deadChampion)} was under the Keep — ${reclaimed} point(s) come back out of it.`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(deadChampion)} was under the Keep — ${reclaimed} point(s) come back out of it.`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(deadChampion)} estava sob a Guarda — ${reclaimed} ponto(s) voltam de lá.`,
+      },
     };
   },
 };

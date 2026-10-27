@@ -27,13 +27,17 @@ function buildStatusEffectApplyResult(
   const statusDisplayName = (def?.name || statusEffectKey)
     .replace(/_/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
+  const statusDisplayNamePt = def?.namePt ?? statusDisplayName;
   const stackSuffix =
     Number.isFinite(effectInstance?.stacks) && effectInstance.stacks > 1
       ? ` x${effectInstance.stacks}`
       : "";
 
   return {
-    log: `${formatChampionName(champion)} gained <b>${statusDisplayName}</b>${stackSuffix}.`,
+    log: {
+      en: `${formatChampionName(champion)} gained <b>${statusDisplayName}</b>${stackSuffix}.`,
+      pt: `${formatChampionName(champion)} recebeu <b>${statusDisplayNamePt}</b>${stackSuffix}.`,
+    },
     statusEffectKey,
     targetId: champion.id,
     type: "statusEffectApply",

@@ -1322,8 +1322,8 @@ function summonForSlot(playerSlot, championKey, reply) {
     return reply.emit(
       "actionFailed",
       match.isGameEnded()
-        ? "The combat has already ended."
-        : "You cannot summon while the turn is being resolved.",
+        ? { en: "The combat has already ended.", pt: "O combate já terminou." }
+        : { en: "You cannot summon while the turn is being resolved.", pt: "Não é possível invocar enquanto o turno está sendo resolvido." },
     );
   }
 
@@ -1334,14 +1334,14 @@ function summonForSlot(playerSlot, championKey, reply) {
     if (match.getCurrentTurn() === 1) {
       return reply.emit(
         "actionFailed",
-        "You cannot summon line-up champions on the first turn.",
+        { en: "You cannot summon line-up champions on the first turn.", pt: "Não é possível invocar campeões da reserva no primeiro turno." },
       );
     }
 
     if (match.hasSummonedThisTurn(team)) {
       return reply.emit(
         "actionFailed",
-        "You have already summoned a line-up champion this turn.",
+        { en: "You have already summoned a line-up champion this turn.", pt: "Você já invocou um campeão da reserva neste turno." },
       );
     }
   }
@@ -1352,7 +1352,7 @@ function summonForSlot(playerSlot, championKey, reply) {
   if (!entering.length || !entering.every((key) => reserve.includes(key))) {
     return reply.emit(
       "actionFailed",
-      "That champion is not available to be summoned.",
+      { en: "That champion is not available to be summoned.", pt: "Esse campeão não está disponível para invocação." },
     );
   }
 
@@ -1368,8 +1368,11 @@ function summonForSlot(playerSlot, championKey, reply) {
     return reply.emit(
       "actionFailed",
       entering.length > 1
-        ? `${getDuoForCore(championKey).name} enter together and need ${entering.length} free spaces on the battlefield.`
-        : "There is no free space on the battlefield to summon more champions.",
+        ? {
+            en: `${getDuoForCore(championKey).name} enter together and need ${entering.length} free spaces on the battlefield.`,
+            pt: `${getDuoForCore(championKey).name} entram juntos e precisam de ${entering.length} espaços livres no campo de batalha.`,
+          }
+        : { en: "There is no free space on the battlefield to summon more champions.", pt: "Não há espaço livre no campo de batalha para invocar mais campeões." },
     );
   }
 
@@ -1384,7 +1387,7 @@ function summonForSlot(playerSlot, championKey, reply) {
   );
 
   if (spawnedGroup.some((spawned) => !spawned)) {
-    return reply.emit("actionFailed", "This champion could not be summoned.");
+    return reply.emit("actionFailed", { en: "This champion could not be summoned.", pt: "Não foi possível invocar este campeão." });
   }
 
   match.combat.reserveQueues.set(
@@ -1419,7 +1422,7 @@ function enqueuePlayerAction(playerSlot, { userId, skillKey, targetIds }, reply)
     if (!player || !user || user.team !== player.team) {
       return reply.emit(
         "actionFailed",
-        "You are not allowed to use CLAIM with this champion.",
+        { en: "You are not allowed to use CLAIM with this champion.", pt: "Você não pode usar CLAIM com este campeão." },
       );
     }
 
@@ -1436,7 +1439,10 @@ function enqueuePlayerAction(playerSlot, { userId, skillKey, targetIds }, reply)
 
     reply.emit(
       "combatLog",
-      `${formatChampionName(user)} prepared CLAIM. Action pending.`,
+      {
+        en: `${formatChampionName(user)} prepared CLAIM. Action pending.`,
+        pt: `${formatChampionName(user)} preparou CLAIM. Ação pendente.`,
+      },
     );
     return;
   }
@@ -1444,13 +1450,13 @@ function enqueuePlayerAction(playerSlot, { userId, skillKey, targetIds }, reply)
   if (!player || !user || user.team !== player.team) {
     return reply.emit(
       "actionFailed",
-      "You are not allowed to use skills with this champion.",
+      { en: "You are not allowed to use skills with this champion.", pt: "Você não pode usar habilidades com este campeão." },
     );
   }
 
   const skill = user.skills.find((s) => s.key === skillKey);
   if (!skill) {
-    return reply.emit("actionFailed", "Skill not found.");
+    return reply.emit("actionFailed", { en: "Skill not found.", pt: "Habilidade não encontrada." });
   }
 
   if (!validateActionIntent(user, skill, reply)) return;
@@ -1463,7 +1469,7 @@ function enqueuePlayerAction(playerSlot, { userId, skillKey, targetIds }, reply)
     cost = user.getSkillCost(skill);
 
     if (!editMode.freeCostSkills && user.momentum < cost) {
-      return reply.emit("actionFailed", "Not enough Momentum.");
+      return reply.emit("actionFailed", { en: "Not enough Momentum.", pt: "Momentum insuficiente." });
     }
   }
 
@@ -1477,19 +1483,22 @@ function enqueuePlayerAction(playerSlot, { userId, skillKey, targetIds }, reply)
 
   reply.emit(
     "combatLog",
-    `${formatChampionName(user)} used ${skill.name}. Action pending.`,
+    {
+      en: `${formatChampionName(user)} used ${skill.name}. Action pending.`,
+      pt: `${formatChampionName(user)} usou ${skill.name}. Ação pendente.`,
+    },
   );
 }
 
 /** Locks a slot's turn in; the turn resolves once both slots have. */
 function confirmEndTurn(playerSlot, reply) {
   if (match.isGameEnded()) {
-    reply.emit("actionFailed", "The game has already ended.");
+    reply.emit("actionFailed", { en: "The game has already ended.", pt: "A partida já terminou." });
     return;
   }
 
   if (playerSlot === undefined) {
-    reply.emit("actionFailed", "You are not in a valid player slot.");
+    reply.emit("actionFailed", { en: "You are not in a valid player slot.", pt: "Você não está em uma vaga de jogador válida." });
     return;
   }
 
@@ -1502,7 +1511,7 @@ function confirmEndTurn(playerSlot, reply) {
       match.clearTurnReadiness();
       reply.emit(
         "actionFailed",
-        "Your opponent was disconnected. The turn was canceled.",
+        { en: "Your opponent was disconnected. The turn was canceled.", pt: "Seu oponente se desconectou. O turno foi cancelado." },
       );
       return;
     }

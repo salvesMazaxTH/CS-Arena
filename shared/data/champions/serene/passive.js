@@ -53,7 +53,10 @@ export default {
     }).execute();
 
     return {
-      log: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} restores ${applied} HP (${before} → ${owner.HP}).`,
+      log: {
+        en: `<b>[Passive — ${this.name}]</b> ${formatChampionName(owner)} restores ${applied} HP (${before} → ${owner.HP}).`,
+        pt: `<b>[Passiva — ${this.name}]</b> ${formatChampionName(owner)} recupera ${applied} de HP (${before} → ${owner.HP}).`,
+      },
     };
   },
 };
