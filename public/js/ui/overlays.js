@@ -133,15 +133,28 @@ export function createOverlays({
     return container;
   }
 
+  // Fixed chrome of the skill overlay; the description itself arrives already bilingual.
+  const OVERLAY_LABELS = {
+    claimValue: { en: "CLAIM Value:", pt: "Valor de RECLAMAR:" },
+    points: { en: "points", pt: "pontos" },
+    cost: { en: "Cost:", pt: "Custo:" },
+    damageType: { en: "Damage Type:", pt: "Tipo de dano:" },
+    bf: { en: "BF:", pt: "BF:" },
+    perHit: { en: "per hit", pt: "por golpe" },
+    element: { en: "Element:", pt: "Elemento:" },
+    contact: { en: "Contact:", pt: "Contato:" },
+    priority: { en: "Priority:", pt: "Prioridade:" },
+    standard: { en: "Standard", pt: "Padrão" },
+    piercing: { en: "Piercing", pt: "Perfurante" },
+    absolute: { en: "Absolute", pt: "Absoluto" },
+  };
+
+  function overlayLabel(key) {
+    return resolveText(OVERLAY_LABELS[key], getLocale());
+  }
+
   function getDamageModeLabel(mode) {
-    switch (mode) {
-      case "standard":
-        return "Standard";
-      case "piercing":
-        return "Piercing";
-      case "absolute":
-        return "Absolute";
-    }
+    return OVERLAY_LABELS[mode] ? overlayLabel(mode) : undefined;
   }
 
   // --- Skill overlay ---
@@ -189,8 +202,8 @@ export function createOverlays({
     isClaim
       ? `
         <div class="skill-overlay-claim-value">
-          <span class="meta-label">CLAIM Value:</span>
-          <span class="meta-value">${claimPoints} points</span>
+          <span class="meta-label">${overlayLabel("claimValue")}</span>
+          <span class="meta-value">${claimPoints} ${overlayLabel("points")}</span>
         </div>
       `
       : `
@@ -200,7 +213,7 @@ export function createOverlays({
             momentumCost
               ? `
             <div class="skill-meta-item">
-              <span class="meta-label">Cost:</span>
+              <span class="meta-label">${overlayLabel("cost")}</span>
               <span class="meta-value">
                 ${momentumCost} Momentum
               </span>
@@ -213,7 +226,7 @@ export function createOverlays({
             skill.damageMode != null
               ? `
             <div class="skill-meta-item">
-              <span class="meta-label">Damage Type:</span>
+              <span class="meta-label">${overlayLabel("damageType")}</span>
               <span class="meta-value">
                 ${getDamageModeLabel(skill.damageMode)}
               </span>
@@ -226,9 +239,9 @@ export function createOverlays({
             skillBf || skill.bfPerHit
               ? `
             <div class="skill-meta-item">
-              <span class="meta-label">BF:</span>
+              <span class="meta-label">${overlayLabel("bf")}</span>
               <span class="meta-value">${
-                skillBf ? `${skillBf}%` : `${skill.bfPerHit}% per hit`
+                skillBf ? `${skillBf}%` : `${skill.bfPerHit}% ${overlayLabel("perHit")}`
               }</span>
             </div>
           `
@@ -241,7 +254,7 @@ export function createOverlays({
           skill.element
             ? `
           <div class="skill-overlay-element-row">
-            <span class="meta-label">Element:</span>
+            <span class="meta-label">${overlayLabel("element")}</span>
             <span class="meta-value">
               ${elementsOf(skill.element)
                 .map((el) =>
@@ -258,12 +271,12 @@ export function createOverlays({
         }
 
         <div class="skill-overlay-contact-row">
-          <span class="meta-label">Contact:</span>
+          <span class="meta-label">${overlayLabel("contact")}</span>
           <span class="meta-value">${skill.contact ? "✅" : "❌"}</span>
         </div>
 
         <div class="skill-overlay-content-priority-row">
-          <span class="meta-label">Priority:</span>
+          <span class="meta-label">${overlayLabel("priority")}</span>
           <span class="meta-value">
             ${
               skill.priority != null
