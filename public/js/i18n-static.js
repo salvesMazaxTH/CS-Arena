@@ -19,7 +19,7 @@ const STATIC = {
   "login.eyebrow": { en: "Turn-based arena duels", pt: "Duelos de arena por turnos" },
   "login.google": { en: "Sign in with Google", pt: "Entrar com Google" },
   "login.nameLabel": { en: "Choose your display name", pt: "Escolha seu nome de exibição" },
-  "login.namePlaceholder": { en: "Your champion name", pt: "Nome do seu campeão" },
+  "login.namePlaceholder": { en: "Your hero name", pt: "Seu nome de herói" },
   "settings.open": { en: "Settings", pt: "Configurações" },
   "settings.title": { en: "Settings", pt: "Configurações" },
   "settings.eyebrow": { en: "Preferences", pt: "Preferências" },
