@@ -59,11 +59,11 @@
    team-number -> row mapping, so side colours follow position, not team id. */
 .arena {
   position: absolute;
-  inset: 84px 40px 28px 40px;
+  inset: 84px 40px 16px 40px;
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr) 320px;
   /* the local (top) band also carries the action bar, so it gets the larger share */
-  grid-template-rows: minmax(0, 1.32fr) 92px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1.28fr) 92px minmax(0, 1fr);
   column-gap: 24px;
 }
 
@@ -161,12 +161,12 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  --card-scale: 1;
+  --card-scale: 1.14;
 }
 
 .team:has(.team-row ~ .team-row) {
-  --card-scale: 0.49;
-  gap: 6px;
+  --card-scale: 0.53;
+  gap: 4px;
 }
 
 /* Local (top) team hugs the divider so the action bar sits right above it */

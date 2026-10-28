@@ -351,7 +351,9 @@
 .action-bar {
   width: 100%; /* use the whole field width: buttons grow into the side space before any name gets cut */
   margin-top: 6px;
-  padding: 14px 20px 18px;
+  /* drops into the empty strip of the divider row above Skip/Undo, so the card above it can be taller */
+  margin-bottom: -14px;
+  padding: 10px 18px 12px;
   border-radius: var(--r-lg);
   background: var(--glass-2);
   border: 1px solid var(--line-mid);
@@ -360,9 +362,9 @@
 }
 
 .action-bar-header {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 17px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--brass-300);
@@ -386,7 +388,7 @@
   text-overflow: ellipsis;
   text-align: center; /* long skill names (e.g. an ultimate) get "…" instead of widening the bar */
   min-width: 110px;
-  min-height: 62px;
+  min-height: 56px;
   padding: 0 22px;
   border-radius: var(--r-md);
   border: 1px solid var(--line-mid);

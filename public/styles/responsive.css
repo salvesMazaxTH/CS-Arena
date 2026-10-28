@@ -132,6 +132,7 @@ html.match-view.match-portrait .rotate-overlay {
   /* compact bar: the top champion shares this band and must not slide under the turn banner */
   .action-bar {
     padding: 8px 14px 10px;
+    margin-bottom: -4px; /* the divider-row buttons are taller here, so the bar drops less */
   }
 
   .action-bar-header {
@@ -172,9 +173,14 @@ html.match-view.match-portrait .rotate-overlay {
     --ind-unit: 1.5em;
   }
 
+  /* the bigger HP / Momentum numbers make each card taller, so the art scales up less than on desktop */
+  .team {
+    --card-scale: 1.04;
+  }
+
   /* 8-champion fields (two rows) must fit the band below the turn banner: smaller art, same number size */
   .team:has(.team-row ~ .team-row) {
-    --card-scale: 0.4;
+    --card-scale: 0.46;
     gap: 4px;
   }
 
